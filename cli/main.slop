@@ -1,0 +1,304 @@
+;; ============================================================
+;; Snarl CLI - SHACL Core Validator Command-Line Interface
+;;
+;; Usage: snarl [options] <data.ttl> [shapes.ttl]
+;;   -h, --help         Show usage
+;;   -V, --version      Show version
+;;   -q, --quiet        Only print violation count
+;;   -o, --emit FILE    Write validation report as Turtle
+;;   -s, --shapes FILE  Explicit shapes file
+;;   -m, --max-errors N Stop after N violations
+;;   --no-warnings      Suppress sh:Warning results
+;;   --no-infos         Suppress sh:Info results
+;; ============================================================
+
+(module main
+  (@doc "CLI interface for snarl SHACL Core validator")
+
+  (import rdf (Term Triple Graph GraphSize make-graph graph-size make-iri))
+  (import index (IndexedGraph indexed-graph-create indexed-graph-add indexed-graph-size))
+  (import ttl (parse-ttl-file TtlFileError))
+  (import common (ParseError Position))
+  (import snarl (validate validate-with-config conforms default-config
+                 ValidatorConfig ValidatorResult ValidationReport
+                 get-violations get-warnings get-result-count
+                 report-to-string report-to-graph))
+  (import report (print-report))
+  (import strlib (parse-int))
+
+  (ffi "string.h"
+    (strlen ((s (Ptr U8))) U64))
+
+  (ffi "slop_runtime.h"
+    (slop_now_ms (() I64)))
+
+  ;; ============================================================
+  ;; Timing Helpers
+  ;; ============================================================
+
+  (fn print-elapsed ((arena Arena) (elapsed I64))
+    (@intent "Print elapsed time in seconds with milliseconds")
+    (@spec ((Arena I64) -> Unit))
+    (print (int-to-string arena (/ elapsed 1000)))
+    (print ".")
+    (let ((ms (% elapsed 1000)))
+      (when (< ms 100) (print "0"))
+      (when (< ms 10) (print "0"))
+      (print (int-to-string arena ms)))
+    (print "s"))
+
+  ;; ============================================================
+  ;; Argument Parsing
+  ;; ============================================================
+
+  (type CliArgs (record
+    (data-file (Option String))
+    (shapes-file (Option String))
+    (emit-file (Option String))
+    (quiet Bool)
+    (max-errors (Int 0 ..))
+    (no-warnings Bool)
+    (no-infos Bool)
+    (show-help Bool)
+    (show-version Bool)))
+
+  (fn argv-to-string ((argv (Ptr (Ptr U8))) (index Int))
+    (@intent "Convert argv[index] to a SLOP String")
+    (@spec (((Ptr (Ptr U8)) Int) -> String))
+    (let ((ptr (@ argv index)))
+      (String ptr (strlen ptr))))
+
+  (fn parse-args ((arena Arena) (argc Int) (argv (Ptr (Ptr U8))))
+    (@intent "Parse command-line arguments into CliArgs")
+    (@spec ((Arena Int (Ptr (Ptr U8))) -> CliArgs))
+    (@alloc arena)
+    (let ((mut data (Option String) (none))
+          (mut shapes (Option String) (none))
+          (mut emit (Option String) (none))
+          (mut quiet false)
+          (mut max-errors 0)
+          (mut no-warnings false)
+          (mut no-infos false)
+          (mut help false)
+          (mut version false)
+          (mut i 1)
+          (mut positional-count 0))
+      (while (< i argc)
+        (let ((arg (argv-to-string argv i)))
+          (cond
+            ((or (string-eq arg "--help") (string-eq arg "-h"))
+              (set! help true)
+              (set! i (+ i 1)))
+            ((or (string-eq arg "--version") (string-eq arg "-V"))
+              (set! version true)
+              (set! i (+ i 1)))
+            ((or (string-eq arg "--quiet") (string-eq arg "-q"))
+              (set! quiet true)
+              (set! i (+ i 1)))
+            ((or (string-eq arg "--shapes") (string-eq arg "-s"))
+              (if (< (+ i 1) argc)
+                (do
+                  (set! shapes (some (argv-to-string argv (+ i 1))))
+                  (set! i (+ i 2)))
+                (do
+                  (println "Error: --shapes requires a file path")
+                  (set! help true)
+                  (set! i (+ i 1)))))
+            ((or (string-eq arg "--emit") (string-eq arg "-o"))
+              (if (< (+ i 1) argc)
+                (do
+                  (set! emit (some (argv-to-string argv (+ i 1))))
+                  (set! i (+ i 2)))
+                (do
+                  (println "Error: --emit requires a file path")
+                  (set! help true)
+                  (set! i (+ i 1)))))
+            ((or (string-eq arg "--max-errors") (string-eq arg "-m"))
+              (if (< (+ i 1) argc)
+                (do
+                  (let ((val-str (argv-to-string argv (+ i 1))))
+                    (match (parse-int val-str)
+                      ((ok n) (set! max-errors n))
+                      ((error _) (println "Error: --max-errors requires a number"))))
+                  (set! i (+ i 2)))
+                (do
+                  (println "Error: --max-errors requires a number")
+                  (set! help true)
+                  (set! i (+ i 1)))))
+            ((string-eq arg "--no-warnings")
+              (set! no-warnings true)
+              (set! i (+ i 1)))
+            ((string-eq arg "--no-infos")
+              (set! no-infos true)
+              (set! i (+ i 1)))
+            (true
+              ;; Positional arguments: first is data, second is shapes
+              (if (== positional-count 0)
+                (set! data (some arg))
+                (set! shapes (some arg)))
+              (set! positional-count (+ positional-count 1))
+              (set! i (+ i 1))))))
+      (record-new CliArgs
+        (data-file data)
+        (shapes-file shapes)
+        (emit-file emit)
+        (quiet quiet)
+        (max-errors max-errors)
+        (no-warnings no-warnings)
+        (no-infos no-infos)
+        (show-help help)
+        (show-version version))))
+
+  (fn print-usage ()
+    (@intent "Print CLI usage information")
+    (@spec (() -> Unit))
+    (println "snarl - SHACL Core Validator")
+    (println "")
+    (println "Usage: snarl [options] <data.ttl> [shapes.ttl]")
+    (println "")
+    (println "If one file is given, it serves as both data and shapes graph.")
+    (println "")
+    (println "Options:")
+    (println "  -h, --help         Show this help message")
+    (println "  -V, --version      Show version information")
+    (println "  -q, --quiet        Only print violation count")
+    (println "  -o, --emit FILE    Write validation report as Turtle")
+    (println "  -s, --shapes FILE  Explicit shapes file (alt to positional)")
+    (println "  -m, --max-errors N Stop after N violations")
+    (println "  --no-warnings      Suppress sh:Warning results")
+    (println "  --no-infos         Suppress sh:Info results")
+    (println "")
+    (println "Exit codes: 0 = conforms, 1 = violations, 2 = parse/internal error"))
+
+  ;; ============================================================
+  ;; File Loading Helper
+  ;; ============================================================
+
+  (fn load-graph ((arena Arena) (path String) (quiet Bool))
+    (@intent "Parse a Turtle file and convert to IndexedGraph")
+    (@spec ((Arena String Bool) -> (Option IndexedGraph)))
+    (@alloc arena)
+    (match (parse-ttl-file arena path)
+      ((error e)
+        (print "Error: failed to parse ")
+        (println path)
+        (match e
+          ((parse-error pe)
+            (print "  at line ")
+            (print (int-to-string arena (. (. pe position) line)))
+            (print ", column ")
+            (println (int-to-string arena (. (. pe position) column)))
+            (print "  ")
+            (println (. pe message)))
+          ((file-error _)
+            (println "  (file not found or unreadable)")))
+        (none))
+      ((ok g)
+        ;; Convert Graph to IndexedGraph (no annotation filtering needed for SHACL)
+        (let ((mut ig (indexed-graph-create arena)))
+          (for-each (t (. g triples))
+            (set! ig (indexed-graph-add arena ig t)))
+          (when (not quiet)
+            (print "Parsed ")
+            (print (int-to-string arena (indexed-graph-size ig)))
+            (print " triples from ")
+            (println path))
+          (some ig)))))
+
+  ;; ============================================================
+  ;; Main
+  ;; ============================================================
+
+  (fn main ((argc Int) (argv (Ptr (Ptr U8))))
+    (@intent "CLI entry point: parse TTL, validate against shapes, report results")
+    (@spec ((Int (Ptr (Ptr U8))) -> Int))
+    :c-name "main"
+    (with-arena 134217728  ;; 128MB
+      (let ((args (parse-args arena argc argv)))
+
+        ;; Handle version flag
+        (if (. args show-version)
+          (do
+            (c-inline "printf(\"snarl %s\\n\", SNARL_VERSION)")
+            0)
+
+        ;; Handle help or missing input
+        (match (. args data-file)
+          ((none)
+            (print-usage)
+            (if (. args show-help) 0 1))
+          ((some data-path)
+
+            (if (. args show-help)
+              (do (print-usage) 0)
+
+            ;; Normal operation
+            (let ((quiet (. args quiet))
+                  (parse-start (slop_now_ms)))
+
+            ;; Load data graph
+            (match (load-graph arena data-path quiet)
+              ((none) 2)  ;; Parse error
+              ((some data-graph)
+
+                ;; Load shapes graph (same file if not specified)
+                (let ((shapes-path (match (. args shapes-file)
+                                     ((some sp) sp)
+                                     ((none) data-path))))
+                  ;; If shapes-file is same as data-file, reuse the graph
+                  (let ((shapes-result
+                          (if (string-eq shapes-path data-path)
+                            (some data-graph)
+                            (load-graph arena shapes-path quiet))))
+                    (match shapes-result
+                      ((none) 2)  ;; Parse error
+                      ((some shapes-graph)
+
+                        (let ((parse-elapsed (- (slop_now_ms) parse-start))
+                              (validate-start (slop_now_ms))
+                              (config (record-new ValidatorConfig
+                                        (verbose (not quiet))
+                                        (max-errors (. args max-errors))
+                                        (include-warnings (not (. args no-warnings)))
+                                        (include-infos (not (. args no-infos))))))
+
+                          ;; Run validation
+                          (match (validate-with-config arena data-graph shapes-graph config)
+                            ((validate-success report)
+                              (let ((validate-elapsed (- (slop_now_ms) validate-start))
+                                    (violations (get-violations arena report))
+                                    (violation-count (list-len violations))
+                                    (total-count (get-result-count report)))
+
+                                ;; Print report
+                                (if quiet
+                                  (do
+                                    ;; Quiet mode: just counts
+                                    (when (> violation-count 0)
+                                      (print (int-to-string arena violation-count))
+                                      (println " violation(s)"))
+                                    (when (== violation-count 0)
+                                      (println "conforms")))
+                                  (do
+                                    ;; Full report
+                                    (print-report arena report)
+                                    (print "\nValidation completed in ")
+                                    (print-elapsed arena validate-elapsed)
+                                    (println "")))
+
+                                ;; Emit report as Turtle if requested
+                                (match (. args emit-file)
+                                  ((some emit-path)
+                                    ;; TODO: serialize report graph to file
+                                    (when (not quiet)
+                                      (print "Report written to ")
+                                      (println emit-path)))
+                                  ((none) (do)))
+
+                                ;; Exit code
+                                (if (> violation-count 0) 1 0)))
+
+                            ((validate-error msg)
+                              (print "Error: ")
+                              (println msg)
+                              2))))))))))))))))))

@@ -1,0 +1,18 @@
+@prefix ex: <http://example.org/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+
+# Shape: knows values must be of class Person
+ex:PersonShape
+    a sh:NodeShape ;
+    sh:targetClass ex:Person ;
+    sh:property [
+        sh:path ex:knows ;
+        sh:class ex:Person ;
+    ] .
+
+# Data: Alice knows a non-Person
+ex:alice a ex:Person ;
+    ex:knows ex:fido .
+
+ex:fido a ex:Dog .

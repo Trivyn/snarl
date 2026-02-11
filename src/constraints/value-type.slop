@@ -1,0 +1,139 @@
+;; ============================================================
+;; Snarl: Value Type Constraints
+;;
+;; sh:class (4.1) — check rdf:type
+;; sh:datatype (4.2) — check literal datatype
+;; sh:nodeKind (4.3) — check term kind
+;; ============================================================
+
+(module value-type
+  (@doc "SHACL value type constraints: sh:class, sh:datatype, sh:nodeKind")
+
+  (import rdf (Term Triple term-eq term-kind make-iri triple-subject
+               triple-predicate triple-object IRI Literal TermKind))
+  (import index (IndexedGraph indexed-graph-match indexed-graph-subjects
+                 indexed-graph-contains indexed-graph-size))
+  (import vocab (RDF_TYPE
+                 SHACL_CLASS SHACL_DATATYPE SHACL_NODE_KIND
+                 XSD_STRING))
+  (import types (NodeKind Severity Constraint ValidationResult ShaclPath))
+
+  (export
+    check-class
+    check-datatype
+    check-node-kind)
+
+  ;; ============================================================
+  ;; sh:class — Value must be an instance of the given class
+  ;; ============================================================
+
+  (fn check-class ((arena Arena) (data-graph IndexedGraph) (focus-node Term)
+                   (value-node Term) (required-class Term)
+                   (path (Option ShaclPath)) (shape-id Term) (severity Severity)
+                   (message (Option String)))
+    (@intent "Check sh:class constraint: value node must have rdf:type of the required class")
+    (@spec ((Arena IndexedGraph Term Term Term (Option ShaclPath) Term Severity (Option String))
+            -> (Option ValidationResult)))
+    (@alloc arena)
+    (@pre {(indexed-graph-size data-graph) >= 0})
+    ;; Check if value-node has rdf:type required-class
+    (let ((type-pred (make-iri arena RDF_TYPE))
+          (type-triple (record-new Triple
+                         (subject value-node)
+                         (predicate type-pred)
+                         (object required-class))))
+      (if (indexed-graph-contains data-graph type-triple)
+        (none)  ;; Passes
+        (some (record-new ValidationResult
+                (focus-node focus-node)
+                (result-path path)
+                (value (some value-node))
+                (source-shape shape-id)
+                (source-constraint-component SHACL_CLASS)
+                (severity severity)
+                (message message)))))
+    :c-name "snarl_check_class")
+
+  ;; ============================================================
+  ;; sh:datatype — Value must be a literal with matching datatype
+  ;; ============================================================
+
+  (fn check-datatype ((arena Arena) (focus-node Term) (value-node Term)
+                      (required-datatype Term) (path (Option ShaclPath))
+                      (shape-id Term) (severity Severity) (message (Option String)))
+    (@intent "Check sh:datatype constraint: value node must be a literal with matching datatype IRI")
+    (@spec ((Arena Term Term Term (Option ShaclPath) Term Severity (Option String))
+            -> (Option ValidationResult)))
+    (@alloc arena)
+    ;; Value must be a literal
+    (match value-node
+      ((term-literal lit)
+        ;; Extract required datatype IRI string
+        (let ((required-dt-str (match required-datatype
+                                 ((term-iri iri) (. iri value))
+                                 (_ ""))))
+          ;; Check literal's datatype
+          (match (. lit datatype)
+            ((some dt)
+              (if (string-eq dt required-dt-str)
+                (none)  ;; Passes
+                (some (make-vr arena focus-node path value-node shape-id
+                        SHACL_DATATYPE severity message))))
+            ((none)
+              ;; Literal without explicit datatype is xsd:string
+              (if (string-eq required-dt-str XSD_STRING)
+                (none)
+                (some (make-vr arena focus-node path value-node shape-id
+                        SHACL_DATATYPE severity message)))))))
+      ;; Non-literal always fails datatype check
+      (_ (some (make-vr arena focus-node path value-node shape-id
+                 SHACL_DATATYPE severity message))))
+    :c-name "snarl_check_datatype")
+
+  ;; ============================================================
+  ;; sh:nodeKind — Value must be of the correct RDF term kind
+  ;; ============================================================
+
+  (fn check-node-kind ((arena Arena) (focus-node Term) (value-node Term)
+                       (required-kind NodeKind) (path (Option ShaclPath))
+                       (shape-id Term) (severity Severity) (message (Option String)))
+    (@intent "Check sh:nodeKind constraint: value node must match the required term kind")
+    (@spec ((Arena Term Term NodeKind (Option ShaclPath) Term Severity (Option String))
+            -> (Option ValidationResult)))
+    (@alloc arena)
+    (let ((kind (term-kind value-node))
+          (passes (match required-kind
+                    (node-kind-blank-node (match kind (blank true) (_ false)))
+                    (node-kind-iri (match kind (iri true) (_ false)))
+                    (node-kind-literal (match kind (literal true) (_ false)))
+                    (node-kind-blank-node-or-iri
+                      (match kind (blank true) (iri true) (_ false)))
+                    (node-kind-blank-node-or-literal
+                      (match kind (blank true) (literal true) (_ false)))
+                    (node-kind-iri-or-literal
+                      (match kind (iri true) (literal true) (_ false))))))
+      (if passes
+        (none)
+        (some (make-vr arena focus-node path value-node shape-id
+                SHACL_NODE_KIND severity message))))
+    :c-name "snarl_check_node_kind")
+
+  ;; ============================================================
+  ;; Helper: Make ValidationResult
+  ;; ============================================================
+
+  (fn make-vr ((arena Arena) (focus-node Term) (path (Option ShaclPath))
+               (value-node Term) (shape-id Term) (component String)
+               (severity Severity) (message (Option String)))
+    (@intent "Create a validation result for a constraint violation")
+    (@spec ((Arena Term (Option ShaclPath) Term Term String Severity (Option String))
+            -> ValidationResult))
+    (@alloc arena)
+    (record-new ValidationResult
+      (focus-node focus-node)
+      (result-path path)
+      (value (some value-node))
+      (source-shape shape-id)
+      (source-constraint-component component)
+      (severity severity)
+      (message message))))

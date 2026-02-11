@@ -1,0 +1,16 @@
+@prefix ex: <http://example.org/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+
+# Shape: id must be an IRI
+ex:ResourceShape
+    a sh:NodeShape ;
+    sh:targetClass ex:Resource ;
+    sh:property [
+        sh:path ex:id ;
+        sh:nodeKind sh:IRI ;
+    ] .
+
+# Data: Resource with literal id (violates nodeKind)
+ex:r1 a ex:Resource ;
+    ex:id "not-an-iri" .

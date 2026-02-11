@@ -1,0 +1,182 @@
+;; ============================================================
+;; Snarl: Value Range Constraints (Phase 2)
+;;
+;; sh:minInclusive, sh:maxInclusive (4.5.1, 4.5.2)
+;; sh:minExclusive, sh:maxExclusive (4.5.3, 4.5.4)
+;; ============================================================
+
+(module value-range
+  (@doc "SHACL value range constraints: sh:minInclusive, sh:maxInclusive, sh:minExclusive, sh:maxExclusive")
+
+  (import rdf (Term Literal IRI term-eq))
+  (import xsd (xsd-compare XsdCompareResult))
+  (import vocab (SHACL_MIN_INCLUSIVE SHACL_MAX_INCLUSIVE SHACL_MIN_EXCLUSIVE SHACL_MAX_EXCLUSIVE))
+  (import types (Severity Constraint ValidationResult ShaclPath))
+
+  (export
+    check-min-inclusive
+    check-max-inclusive
+    check-min-exclusive
+    check-max-exclusive)
+
+  ;; ============================================================
+  ;; sh:minInclusive — Value must be >= limit
+  ;; ============================================================
+
+  (fn check-min-inclusive ((arena Arena) (focus-node Term) (value-node Term)
+                          (limit Term) (path (Option ShaclPath))
+                          (shape-id Term) (severity Severity) (message (Option String)))
+    (@intent "Check sh:minInclusive constraint: value must be >= limit")
+    (@spec ((Arena Term Term Term (Option ShaclPath) Term Severity (Option String))
+            -> (Option ValidationResult)))
+    (@alloc arena)
+    (@post {(implies (== $result (none)) (!= (xsd-compare arena value-node limit) xsd-compare-less))})
+    (@property correctness (implies (== $result (none)) (!= (xsd-compare arena value-node limit) xsd-compare-less)))
+    (@example "(check-min-inclusive arena focus (term-literal 5 xsd:integer) (term-literal 3 xsd:integer) ...) -> (none)")
+    (@example "(check-min-inclusive arena focus (term-literal 2 xsd:integer) (term-literal 3 xsd:integer) ...) -> (some violation)")
+    (let ((cmp (xsd-compare arena value-node limit)))
+      (match cmp
+        (xsd-compare-equal (none))
+        (xsd-compare-greater (none))
+        (xsd-compare-less (some (record-new ValidationResult
+                   (focus-node focus-node)
+                   (result-path path)
+                   (value (some value-node))
+                   (source-shape shape-id)
+                   (source-constraint-component SHACL_MIN_INCLUSIVE)
+                   (severity severity)
+                   (message message))))
+        (xsd-compare-incomparable (some (record-new ValidationResult
+                   (focus-node focus-node)
+                   (result-path path)
+                   (value (some value-node))
+                   (source-shape shape-id)
+                   (source-constraint-component SHACL_MIN_INCLUSIVE)
+                   (severity severity)
+                   (message message))))))
+    :c-name "snarl_check_min_inclusive")
+
+  ;; ============================================================
+  ;; sh:maxInclusive — Value must be <= limit
+  ;; ============================================================
+
+  (fn check-max-inclusive ((arena Arena) (focus-node Term) (value-node Term)
+                          (limit Term) (path (Option ShaclPath))
+                          (shape-id Term) (severity Severity) (message (Option String)))
+    (@intent "Check sh:maxInclusive constraint: value must be <= limit")
+    (@spec ((Arena Term Term Term (Option ShaclPath) Term Severity (Option String))
+            -> (Option ValidationResult)))
+    (@alloc arena)
+    (@post {(implies (== $result (none)) (!= (xsd-compare arena value-node limit) xsd-compare-greater))})
+    (@property correctness (implies (== $result (none)) (!= (xsd-compare arena value-node limit) xsd-compare-greater)))
+    (@example "(check-max-inclusive arena focus (term-literal 3 xsd:integer) (term-literal 5 xsd:integer) ...) -> (none)")
+    (@example "(check-max-inclusive arena focus (term-literal 7 xsd:integer) (term-literal 5 xsd:integer) ...) -> (some violation)")
+    (let ((cmp (xsd-compare arena value-node limit)))
+      (match cmp
+        (xsd-compare-equal (none))
+        (xsd-compare-less (none))
+        (xsd-compare-greater (some (record-new ValidationResult
+                   (focus-node focus-node)
+                   (result-path path)
+                   (value (some value-node))
+                   (source-shape shape-id)
+                   (source-constraint-component SHACL_MAX_INCLUSIVE)
+                   (severity severity)
+                   (message message))))
+        (xsd-compare-incomparable (some (record-new ValidationResult
+                   (focus-node focus-node)
+                   (result-path path)
+                   (value (some value-node))
+                   (source-shape shape-id)
+                   (source-constraint-component SHACL_MAX_INCLUSIVE)
+                   (severity severity)
+                   (message message))))))
+    :c-name "snarl_check_max_inclusive")
+
+  ;; ============================================================
+  ;; sh:minExclusive — Value must be > limit
+  ;; ============================================================
+
+  (fn check-min-exclusive ((arena Arena) (focus-node Term) (value-node Term)
+                           (limit Term) (path (Option ShaclPath))
+                           (shape-id Term) (severity Severity) (message (Option String)))
+    (@intent "Check sh:minExclusive constraint: value must be > limit")
+    (@spec ((Arena Term Term Term (Option ShaclPath) Term Severity (Option String))
+            -> (Option ValidationResult)))
+    (@alloc arena)
+    (@post {(implies (== $result (none)) (== (xsd-compare arena value-node limit) xsd-compare-greater))})
+    (@property correctness (implies (== $result (none)) (== (xsd-compare arena value-node limit) xsd-compare-greater)))
+    (@example "(check-min-exclusive arena focus (term-literal 5 xsd:integer) (term-literal 3 xsd:integer) ...) -> (none)")
+    (@example "(check-min-exclusive arena focus (term-literal 3 xsd:integer) (term-literal 3 xsd:integer) ...) -> (some violation)")
+    (let ((cmp (xsd-compare arena value-node limit)))
+      (match cmp
+        (xsd-compare-greater (none))
+        (xsd-compare-less (some (record-new ValidationResult
+                   (focus-node focus-node)
+                   (result-path path)
+                   (value (some value-node))
+                   (source-shape shape-id)
+                   (source-constraint-component SHACL_MIN_EXCLUSIVE)
+                   (severity severity)
+                   (message message))))
+        (xsd-compare-equal (some (record-new ValidationResult
+                   (focus-node focus-node)
+                   (result-path path)
+                   (value (some value-node))
+                   (source-shape shape-id)
+                   (source-constraint-component SHACL_MIN_EXCLUSIVE)
+                   (severity severity)
+                   (message message))))
+        (xsd-compare-incomparable (some (record-new ValidationResult
+                   (focus-node focus-node)
+                   (result-path path)
+                   (value (some value-node))
+                   (source-shape shape-id)
+                   (source-constraint-component SHACL_MIN_EXCLUSIVE)
+                   (severity severity)
+                   (message message))))))
+    :c-name "snarl_check_min_exclusive")
+
+  ;; ============================================================
+  ;; sh:maxExclusive — Value must be < limit
+  ;; ============================================================
+
+  (fn check-max-exclusive ((arena Arena) (focus-node Term) (value-node Term)
+                           (limit Term) (path (Option ShaclPath))
+                           (shape-id Term) (severity Severity) (message (Option String)))
+    (@intent "Check sh:maxExclusive constraint: value must be < limit")
+    (@spec ((Arena Term Term Term (Option ShaclPath) Term Severity (Option String))
+            -> (Option ValidationResult)))
+    (@alloc arena)
+    (@post {(implies (== $result (none)) (== (xsd-compare arena value-node limit) xsd-compare-less))})
+    (@property correctness (implies (== $result (none)) (== (xsd-compare arena value-node limit) xsd-compare-less)))
+    (@example "(check-max-exclusive arena focus (term-literal 3 xsd:integer) (term-literal 5 xsd:integer) ...) -> (none)")
+    (@example "(check-max-exclusive arena focus (term-literal 5 xsd:integer) (term-literal 5 xsd:integer) ...) -> (some violation)")
+    (let ((cmp (xsd-compare arena value-node limit)))
+      (match cmp
+        (xsd-compare-less (none))
+        (xsd-compare-greater (some (record-new ValidationResult
+                   (focus-node focus-node)
+                   (result-path path)
+                   (value (some value-node))
+                   (source-shape shape-id)
+                   (source-constraint-component SHACL_MAX_EXCLUSIVE)
+                   (severity severity)
+                   (message message))))
+        (xsd-compare-equal (some (record-new ValidationResult
+                   (focus-node focus-node)
+                   (result-path path)
+                   (value (some value-node))
+                   (source-shape shape-id)
+                   (source-constraint-component SHACL_MAX_EXCLUSIVE)
+                   (severity severity)
+                   (message message))))
+        (xsd-compare-incomparable (some (record-new ValidationResult
+                   (focus-node focus-node)
+                   (result-path path)
+                   (value (some value-node))
+                   (source-shape shape-id)
+                   (source-constraint-component SHACL_MAX_EXCLUSIVE)
+                   (severity severity)
+                   (message message))))))
+    :c-name "snarl_check_max_exclusive"))

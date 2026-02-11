@@ -1,0 +1,9 @@
+build/
+dist/
+cli/tests/w3c/property/
+cli/tests/w3c/node/
+cli/tests/w3c/targets/
+cli/tests/w3c/path/
+cli/tests/w3c/misc/
+cli/tests/w3c/complex/
+cli/tests/w3c/validation-reports/

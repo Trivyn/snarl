@@ -1,0 +1,29 @@
+@prefix ex: <http://example.org/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+
+# Shape: Person must have name (string), age (integer), knows (Person)
+ex:PersonShape
+    a sh:NodeShape ;
+    sh:targetClass ex:Person ;
+    sh:property [
+        sh:path ex:name ;
+        sh:minCount 1 ;
+        sh:datatype xsd:string ;
+    ] ;
+    sh:property [
+        sh:path ex:age ;
+        sh:datatype xsd:integer ;
+    ] ;
+    sh:property [
+        sh:path ex:knows ;
+        sh:class ex:Person ;
+    ] .
+
+# Data: Multiple violations
+ex:dave a ex:Person ;
+    ex:age "old" ;
+    ex:knows ex:cat .
+
+ex:cat a ex:Animal .

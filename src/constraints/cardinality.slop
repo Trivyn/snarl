@@ -1,0 +1,67 @@
+;; ============================================================
+;; Snarl: Cardinality Constraints
+;;
+;; sh:minCount (4.4.1) — minimum number of value nodes
+;; sh:maxCount (4.4.2) — maximum number of value nodes
+;; ============================================================
+
+(module cardinality
+  (@doc "SHACL cardinality constraints: sh:minCount, sh:maxCount")
+
+  (import rdf (Term))
+  (import vocab (SHACL_MIN_COUNT SHACL_MAX_COUNT))
+  (import types (Severity Constraint ValidationResult ShaclPath))
+
+  (export
+    check-min-count
+    check-max-count)
+
+  ;; ============================================================
+  ;; sh:minCount — Value count must be >= N
+  ;; ============================================================
+
+  (fn check-min-count ((arena Arena) (focus-node Term) (value-count (Int 0 ..))
+                       (min-count (Int 0 ..)) (path (Option ShaclPath))
+                       (shape-id Term) (severity Severity) (message (Option String)))
+    (@intent "Check sh:minCount constraint: number of value nodes must be >= min-count")
+    (@spec ((Arena Term (Int 0 ..) (Int 0 ..) (Option ShaclPath) Term Severity (Option String))
+            -> (Option ValidationResult)))
+    (@alloc arena)
+    (@pre {min-count >= 0})
+    (@pre {value-count >= 0})
+    (if (>= value-count min-count)
+      (none)  ;; Passes
+      (some (record-new ValidationResult
+              (focus-node focus-node)
+              (result-path path)
+              (value (none))
+              (source-shape shape-id)
+              (source-constraint-component SHACL_MIN_COUNT)
+              (severity severity)
+              (message message))))
+    :c-name "snarl_check_min_count")
+
+  ;; ============================================================
+  ;; sh:maxCount — Value count must be <= N
+  ;; ============================================================
+
+  (fn check-max-count ((arena Arena) (focus-node Term) (value-count (Int 0 ..))
+                       (max-count (Int 0 ..)) (path (Option ShaclPath))
+                       (shape-id Term) (severity Severity) (message (Option String)))
+    (@intent "Check sh:maxCount constraint: number of value nodes must be <= max-count")
+    (@spec ((Arena Term (Int 0 ..) (Int 0 ..) (Option ShaclPath) Term Severity (Option String))
+            -> (Option ValidationResult)))
+    (@alloc arena)
+    (@pre {max-count >= 0})
+    (@pre {value-count >= 0})
+    (if (<= value-count max-count)
+      (none)  ;; Passes
+      (some (record-new ValidationResult
+              (focus-node focus-node)
+              (result-path path)
+              (value (none))
+              (source-shape shape-id)
+              (source-constraint-component SHACL_MAX_COUNT)
+              (severity severity)
+              (message message))))
+    :c-name "snarl_check_max_count"))

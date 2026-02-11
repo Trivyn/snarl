@@ -1,0 +1,152 @@
+;; ============================================================
+;; Snarl: SHACL Target Resolution
+;;
+;; Resolves target declarations to produce focus nodes.
+;; Phase 1: sh:targetNode, sh:targetClass
+;; Phase 2: sh:targetSubjectsOf, sh:targetObjectsOf, implicit class targets
+;; ============================================================
+
+(module target
+  (@doc "SHACL target resolution: determines focus nodes for each shape")
+
+  (import rdf (Term Triple term-eq term-kind make-iri triple-subject triple-predicate
+               triple-object))
+  (import index (IndexedGraph indexed-graph-match indexed-graph-subjects
+                 indexed-graph-objects indexed-graph-size indexed-graph-for-each))
+  (import vocab (RDF_TYPE RDFS_SUBCLASS_OF))
+  (import types (NodeShape))
+
+  (export
+    resolve-targets
+    resolve-target-node
+    resolve-target-class
+    resolve-target-subjects-of
+    resolve-target-objects-of
+    resolve-implicit-class-targets)
+
+  ;; ============================================================
+  ;; Main Target Resolution
+  ;; ============================================================
+
+  (fn resolve-targets ((arena Arena) (data-graph IndexedGraph) (shape NodeShape))
+    (@intent "Resolve all target declarations for a shape, returning unique focus nodes")
+    (@spec ((Arena IndexedGraph NodeShape) -> (List Term)))
+    (@alloc arena)
+    (@pre {(indexed-graph-size data-graph) >= 0})
+    (@post {(list-len $result) >= 0})
+    (let ((mut result (list-new arena Term))
+          (seen (set-new arena Term)))
+
+      ;; sh:targetNode — explicit focus nodes
+      (for-each (node (. shape target-nodes))
+        (when (not (set-has seen node))
+          (set-put seen node)
+          (list-push result node)))
+
+      ;; sh:targetClass — all instances of the class
+      (for-each (cls (. shape target-classes))
+        (let ((instances (resolve-target-class arena data-graph cls)))
+          (for-each (inst instances)
+            (when (not (set-has seen inst))
+              (set-put seen inst)
+              (list-push result inst)))))
+
+      ;; sh:targetSubjectsOf — all subjects with the given predicate
+      (for-each (pred (. shape target-subjects-of))
+        (let ((subjects (resolve-target-subjects-of arena data-graph pred)))
+          (for-each (subj subjects)
+            (when (not (set-has seen subj))
+              (set-put seen subj)
+              (list-push result subj)))))
+
+      ;; sh:targetObjectsOf — all objects with the given predicate
+      (for-each (pred (. shape target-objects-of))
+        (let ((objects (resolve-target-objects-of arena data-graph pred)))
+          (for-each (obj objects)
+            (when (not (set-has seen obj))
+              (set-put seen obj)
+              (list-push result obj)))))
+
+      ;; Implicit class target: if shape IRI is also an rdfs:Class or used as rdf:type
+      (let ((implicit (resolve-implicit-class-targets arena data-graph (. shape id))))
+        (for-each (inst implicit)
+          (when (not (set-has seen inst))
+            (set-put seen inst)
+            (list-push result inst))))
+
+      result)
+    :c-name "snarl_resolve_targets")
+
+  ;; ============================================================
+  ;; Individual Target Resolvers
+  ;; ============================================================
+
+  (fn resolve-target-node ((arena Arena) (nodes (List Term)))
+    (@intent "Return target nodes directly (they are the focus nodes)")
+    (@spec ((Arena (List Term)) -> (List Term)))
+    (@alloc arena)
+    (@pure)
+    (@post {(list-len $result) == (list-len nodes)})
+    nodes
+    :c-name "snarl_resolve_target_node")
+
+  (fn resolve-target-class ((arena Arena) (data-graph IndexedGraph) (class-term Term))
+    (@intent "Find all instances of a class via rdf:type in the data graph")
+    (@spec ((Arena IndexedGraph Term) -> (List Term)))
+    (@alloc arena)
+    (@pre {(indexed-graph-size data-graph) >= 0})
+    (@post {(list-len $result) >= 0})
+    (let ((type-pred (make-iri arena RDF_TYPE)))
+      (indexed-graph-subjects arena data-graph type-pred class-term))
+    :c-name "snarl_resolve_target_class")
+
+  (fn resolve-target-subjects-of ((arena Arena) (data-graph IndexedGraph) (predicate Term))
+    (@intent "Find all subjects that have a given predicate in the data graph")
+    (@spec ((Arena IndexedGraph Term) -> (List Term)))
+    (@alloc arena)
+    (@pre {(indexed-graph-size data-graph) >= 0})
+    (@post {(list-len $result) >= 0})
+    (let ((no-term (Option Term) (none))
+          (matches (indexed-graph-match arena data-graph no-term (some predicate) no-term))
+          (mut result (list-new arena Term))
+          (seen (set-new arena Term)))
+      (for-each (t matches)
+        (let ((subj (triple-subject t)))
+          (when (not (set-has seen subj))
+            (set-put seen subj)
+            (list-push result subj))))
+      result)
+    :c-name "snarl_resolve_target_subjects_of")
+
+  (fn resolve-target-objects-of ((arena Arena) (data-graph IndexedGraph) (predicate Term))
+    (@intent "Find all objects that have a given predicate in the data graph")
+    (@spec ((Arena IndexedGraph Term) -> (List Term)))
+    (@alloc arena)
+    (@pre {(indexed-graph-size data-graph) >= 0})
+    (@post {(list-len $result) >= 0})
+    (let ((no-term (Option Term) (none))
+          (matches (indexed-graph-match arena data-graph no-term (some predicate) no-term))
+          (mut result (list-new arena Term))
+          (seen (set-new arena Term)))
+      (for-each (t matches)
+        (let ((obj (triple-object t)))
+          (when (not (set-has seen obj))
+            (set-put seen obj)
+            (list-push result obj))))
+      result)
+    :c-name "snarl_resolve_target_objects_of")
+
+  (fn resolve-implicit-class-targets ((arena Arena) (data-graph IndexedGraph) (shape-id Term))
+    (@intent "If the shape IRI is used as an rdf:type class in the data graph, return those instances")
+    (@spec ((Arena IndexedGraph Term) -> (List Term)))
+    (@alloc arena)
+    (@pre {(indexed-graph-size data-graph) >= 0})
+    (@post {(list-len $result) >= 0})
+    ;; A shape is an implicit class target if instances use it as rdf:type
+    ;; This checks if any triple (?x rdf:type shapeId) exists
+    (let ((type-pred (make-iri arena RDF_TYPE))
+          (instances (indexed-graph-subjects arena data-graph type-pred shape-id)))
+      ;; Only return instances if there actually are some (otherwise shape
+      ;; is not being used as a class)
+      instances)
+    :c-name "snarl_resolve_implicit_class_targets"))

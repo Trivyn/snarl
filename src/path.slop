@@ -1,0 +1,176 @@
+;; ============================================================
+;; Snarl: SHACL Property Path Evaluation
+;;
+;; Resolves SHACL property paths against a data graph.
+;; Phase 1: predicate paths only.
+;; Phases 2-4: sequence, alternative, inverse, zero-or-more, one-or-more.
+;; ============================================================
+
+(module path
+  (@doc "SHACL property path evaluation against RDF data graphs")
+
+  (import rdf (Term Triple term-eq triple-subject triple-predicate triple-object
+               make-iri))
+  (import index (IndexedGraph indexed-graph-match indexed-graph-objects
+                 indexed-graph-subjects indexed-graph-size))
+  (import types (ShaclPath))
+
+  (export
+    resolve-path
+    resolve-path-from)
+
+  ;; ============================================================
+  ;; Path Resolution
+  ;; ============================================================
+
+  (fn resolve-path ((arena Arena) (data-graph IndexedGraph) (focus-node Term) (path ShaclPath))
+    (@intent "Resolve a SHACL property path from a focus node, returning all value nodes")
+    (@spec ((Arena IndexedGraph Term ShaclPath) -> (List Term)))
+    (@alloc arena)
+    (@pre {(indexed-graph-size data-graph) >= 0})
+    (@post {(list-len $result) >= 0})
+    (@example
+      ;; Given <ex:alice> <ex:name> "Alice" in graph and predicate path <ex:name>:
+      ;; resolve-path returns ("Alice")
+      )
+    (match path
+      ;; Predicate path: return all objects where (focus-node, predicate, ?)
+      ((path-predicate pred)
+        (indexed-graph-objects arena data-graph focus-node pred))
+
+      ;; Sequence path: p1 / p2 / ... — chain resolution through each step
+      ((path-sequence steps)
+        (resolve-sequence arena data-graph focus-node steps))
+
+      ;; Alternative path: p1 | p2 | ... — union of all alternatives
+      ((path-alternative alternatives)
+        (resolve-alternative arena data-graph focus-node alternatives))
+
+      ;; Inverse path: ^p — find subjects where (?, p, focus-node)
+      ((path-inverse inner)
+        (resolve-inverse arena data-graph focus-node (deref inner)))
+
+      ;; Zero-or-more: p* — transitive closure including focus-node itself
+      ((path-zero-or-more inner)
+        (resolve-zero-or-more arena data-graph focus-node (deref inner)))
+
+      ;; One-or-more: p+ — transitive closure excluding focus-node
+      ((path-one-or-more inner)
+        (resolve-one-or-more arena data-graph focus-node (deref inner))))
+    :c-name "snarl_resolve_path")
+
+  ;; ============================================================
+  ;; Inverse path helper — used by target resolution
+  ;; ============================================================
+
+  (fn resolve-path-from ((arena Arena) (data-graph IndexedGraph) (object Term) (path ShaclPath))
+    (@intent "Resolve a SHACL path in reverse: given an object, find subjects")
+    (@spec ((Arena IndexedGraph Term ShaclPath) -> (List Term)))
+    (@alloc arena)
+    (@pre {(indexed-graph-size data-graph) >= 0})
+    (@post {(list-len $result) >= 0})
+    (match path
+      ((path-predicate pred)
+        (indexed-graph-subjects arena data-graph pred object))
+      ;; For complex paths, fall back to brute-force (Phase 3+)
+      (_ (list-new arena Term)))
+    :c-name "snarl_resolve_path_from")
+
+  ;; ============================================================
+  ;; Complex Path Helpers (Phase 3+)
+  ;; ============================================================
+
+  (fn resolve-sequence ((arena Arena) (g IndexedGraph) (focus Term) (steps (List ShaclPath)))
+    (@intent "Resolve sequence path by chaining each step's results as input to the next")
+    (@spec ((Arena IndexedGraph Term (List ShaclPath)) -> (List Term)))
+    (@alloc arena)
+    ;; Start with the focus node, pipe through each step
+    (let ((mut current-nodes (list-new arena Term)))
+      (list-push current-nodes focus)
+      (for-each (step steps)
+        (let ((mut next-nodes (list-new arena Term)))
+          (for-each (node current-nodes)
+            (let ((step-results (resolve-path arena g node step)))
+              (for-each (r step-results)
+                (list-push next-nodes r))))
+          (set! current-nodes next-nodes)))
+      current-nodes))
+
+  (fn resolve-alternative ((arena Arena) (g IndexedGraph) (focus Term) (alts (List ShaclPath)))
+    (@intent "Resolve alternative path by collecting results from all alternatives")
+    (@spec ((Arena IndexedGraph Term (List ShaclPath)) -> (List Term)))
+    (@alloc arena)
+    (let ((mut result (list-new arena Term)))
+      (for-each (alt alts)
+        (let ((alt-results (resolve-path arena g focus alt)))
+          (for-each (r alt-results)
+            (list-push result r))))
+      result))
+
+  (fn resolve-inverse ((arena Arena) (g IndexedGraph) (focus Term) (inner ShaclPath))
+    (@intent "Resolve inverse path: find nodes that reach focus-node via inner path")
+    (@spec ((Arena IndexedGraph Term ShaclPath) -> (List Term)))
+    (@alloc arena)
+    (match inner
+      ;; Inverse of predicate: find subjects where (?, pred, focus)
+      ((path-predicate pred)
+        (indexed-graph-subjects arena g pred focus))
+      ;; Inverse of inverse cancels out
+      ((path-inverse inner2)
+        (resolve-path arena g focus (deref inner2)))
+      ;; Other inversions: stub for Phase 3+
+      (_ (list-new arena Term))))
+
+  (fn resolve-zero-or-more ((arena Arena) (g IndexedGraph) (focus Term) (inner ShaclPath))
+    (@intent "Resolve zero-or-more path: transitive closure including start node")
+    (@spec ((Arena IndexedGraph Term ShaclPath) -> (List Term)))
+    (@alloc arena)
+    ;; BFS with visited set to handle cycles. Use index-based queue.
+    (let ((mut result (list-new arena Term))
+          (visited (set-new arena Term))
+          (mut queue (list-new arena Term))
+          (mut qi 0))  ;; queue read index
+      ;; Zero-or-more includes the focus node itself
+      (list-push queue focus)
+      (while (< qi (list-len queue))
+        (match (list-get queue qi)
+          ((some current)
+            (set! qi (+ qi 1))
+            (when (not (set-has visited current))
+              (set-put visited current)
+              (list-push result current)
+              ;; Expand one step
+              (let ((next (resolve-path arena g current inner)))
+                (for-each (n next)
+                  (when (not (set-has visited n))
+                    (list-push queue n))))))
+          ((none) (set! qi (+ qi 1)))))
+      result))
+
+  (fn resolve-one-or-more ((arena Arena) (g IndexedGraph) (focus Term) (inner ShaclPath))
+    (@intent "Resolve one-or-more path: transitive closure excluding start node unless reachable")
+    (@spec ((Arena IndexedGraph Term ShaclPath) -> (List Term)))
+    (@alloc arena)
+    ;; First step from focus, then zero-or-more from each result
+    (let ((first-step (resolve-path arena g focus inner))
+          (mut result (list-new arena Term))
+          (visited (set-new arena Term))
+          (mut queue (list-new arena Term))
+          (mut qi 0))
+      ;; Seed queue with first-step results
+      (for-each (node first-step)
+        (list-push queue node))
+      ;; BFS
+      (while (< qi (list-len queue))
+        (match (list-get queue qi)
+          ((some current)
+            (set! qi (+ qi 1))
+            (when (not (set-has visited current))
+              (set-put visited current)
+              (list-push result current)
+              (let ((next (resolve-path arena g current inner)))
+                (for-each (n next)
+                  (when (not (set-has visited n))
+                    (list-push queue n))))))
+          ((none) (set! qi (+ qi 1)))))
+      result)))

@@ -1,0 +1,189 @@
+;; ============================================================
+;; Snarl: Property Pair Constraints (Phase 3)
+;;
+;; sh:equals (4.8.1)
+;; sh:disjoint (4.8.2)
+;; sh:lessThan (4.8.3)
+;; sh:lessThanOrEquals (4.8.4)
+;; ============================================================
+
+(module pair
+  (@doc "SHACL property pair constraints: sh:equals, sh:disjoint, sh:lessThan, sh:lessThanOrEquals")
+
+  (import rdf (Term term-eq))
+  (import index (IndexedGraph))
+  (import path (resolve-path))
+  (import xsd (xsd-compare XsdCompareResult))
+  (import vocab (SHACL_EQUALS SHACL_DISJOINT SHACL_LESS_THAN SHACL_LESS_THAN_OR_EQUALS))
+  (import types (Severity Constraint ValidationResult ShaclPath))
+
+  (export
+    check-equals
+    check-disjoint
+    check-less-than
+    check-less-than-or-equals)
+
+  ;; ============================================================
+  ;; sh:equals
+  ;; ============================================================
+
+  (fn check-equals ((arena Arena) (data-graph IndexedGraph) (focus-node Term)
+                    (value-nodes (List Term)) (other-path ShaclPath)
+                    (path (Option ShaclPath)) (shape-id Term)
+                    (severity Severity) (message (Option String)))
+    (@intent "Check sh:equals constraint: value set must equal other path's value set")
+    (@spec ((Arena IndexedGraph Term (List Term) ShaclPath (Option ShaclPath) Term Severity (Option String))
+            -> (List ValidationResult)))
+    (@alloc arena)
+    (@pre {(list-len value-nodes) >= 0})
+    (@post {(list-len $result) >= 0})
+    (@example "(check-equals arena g focus (list :a) (path-predicate :p2) ...) -> (list) when :p2 also yields (list :a)")
+    (@example "(check-equals arena g focus (list :a) (path-predicate :p2) ...) -> (list v1) when :p2 yields (list :b)")
+    (let ((mut results (list-new arena ValidationResult))
+          (other-values (resolve-path arena data-graph focus-node other-path)))
+      ;; For each value in value-nodes not in other-values, create violation
+      (for-each (v value-nodes)
+        (let ((mut found false))
+          (for-each (ov other-values)
+            (when (term-eq v ov)
+              (set! found true)))
+          (when (not found)
+            (list-push results
+              (record-new ValidationResult
+                (focus-node focus-node)
+                (result-path path)
+                (value (some v))
+                (source-shape shape-id)
+                (source-constraint-component SHACL_EQUALS)
+                (severity severity)
+                (message message))))))
+      ;; For each value in other-values not in value-nodes, create violation
+      (for-each (v other-values)
+        (let ((mut found false))
+          (for-each (vn value-nodes)
+            (when (term-eq v vn)
+              (set! found true)))
+          (when (not found)
+            (list-push results
+              (record-new ValidationResult
+                (focus-node focus-node)
+                (result-path path)
+                (value (some v))
+                (source-shape shape-id)
+                (source-constraint-component SHACL_EQUALS)
+                (severity severity)
+                (message message))))))
+      results)
+    :c-name "snarl_check_equals")
+
+  ;; ============================================================
+  ;; sh:disjoint
+  ;; ============================================================
+
+  (fn check-disjoint ((arena Arena) (data-graph IndexedGraph) (focus-node Term)
+                      (value-nodes (List Term)) (other-path ShaclPath)
+                      (path (Option ShaclPath)) (shape-id Term)
+                      (severity Severity) (message (Option String)))
+    (@intent "Check sh:disjoint constraint: value set must not overlap other path's value set")
+    (@spec ((Arena IndexedGraph Term (List Term) ShaclPath (Option ShaclPath) Term Severity (Option String))
+            -> (List ValidationResult)))
+    (@alloc arena)
+    (@pre {(list-len value-nodes) >= 0})
+    (@post {(list-len $result) >= 0})
+    (@example "(check-disjoint arena g focus (list :a) (path-predicate :p2) ...) -> (list) when :p2 yields (list :b)")
+    (@example "(check-disjoint arena g focus (list :a) (path-predicate :p2) ...) -> (list v1) when :p2 also yields (list :a)")
+    (let ((mut results (list-new arena ValidationResult))
+          (other-values (resolve-path arena data-graph focus-node other-path)))
+      ;; For each value in value-nodes that is also in other-values, create violation
+      (for-each (v value-nodes)
+        (let ((mut found false))
+          (for-each (ov other-values)
+            (when (term-eq v ov)
+              (set! found true)))
+          (when found
+            (list-push results
+              (record-new ValidationResult
+                (focus-node focus-node)
+                (result-path path)
+                (value (some v))
+                (source-shape shape-id)
+                (source-constraint-component SHACL_DISJOINT)
+                (severity severity)
+                (message message))))))
+      results)
+    :c-name "snarl_check_disjoint")
+
+  ;; ============================================================
+  ;; sh:lessThan
+  ;; ============================================================
+
+  (fn check-less-than ((arena Arena) (data-graph IndexedGraph) (focus-node Term)
+                       (value-nodes (List Term)) (other-path ShaclPath)
+                       (path (Option ShaclPath)) (shape-id Term)
+                       (severity Severity) (message (Option String)))
+    (@intent "Check sh:lessThan constraint: each value must be < each value of other path")
+    (@spec ((Arena IndexedGraph Term (List Term) ShaclPath (Option ShaclPath) Term Severity (Option String))
+            -> (List ValidationResult)))
+    (@alloc arena)
+    (@pre {(list-len value-nodes) >= 0})
+    (@post {(list-len $result) >= 0})
+    (@property correctness (== (== (list-len $result) 0) (forall v value-nodes (forall o (resolve-path data-graph focus-node other-path) (== (xsd-compare v o) xsd-compare-less)))))
+    (@example "(check-less-than arena g focus (list (lit 1)) (path-predicate :p2) ...) -> (list) when :p2 yields (list (lit 5))")
+    (@example "(check-less-than arena g focus (list (lit 5)) (path-predicate :p2) ...) -> (list v1) when :p2 yields (list (lit 3))")
+    (let ((mut results (list-new arena ValidationResult))
+          (other-values (resolve-path arena data-graph focus-node other-path)))
+      (for-each (v value-nodes)
+        (for-each (o other-values)
+          (let ((cmp (xsd-compare arena v o)))
+            ;; v must be < o; if v >= o, create violation
+            (match cmp
+              (xsd-compare-less (do))
+              (_ (list-push results
+                   (record-new ValidationResult
+                     (focus-node focus-node)
+                     (result-path path)
+                     (value (some v))
+                     (source-shape shape-id)
+                     (source-constraint-component SHACL_LESS_THAN)
+                     (severity severity)
+                     (message message))))))))
+      results)
+    :c-name "snarl_check_less_than")
+
+  ;; ============================================================
+  ;; sh:lessThanOrEquals
+  ;; ============================================================
+
+  (fn check-less-than-or-equals ((arena Arena) (data-graph IndexedGraph) (focus-node Term)
+                                 (value-nodes (List Term)) (other-path ShaclPath)
+                                 (path (Option ShaclPath)) (shape-id Term)
+                                 (severity Severity) (message (Option String)))
+    (@intent "Check sh:lessThanOrEquals constraint: each value must be <= each value of other path")
+    (@spec ((Arena IndexedGraph Term (List Term) ShaclPath (Option ShaclPath) Term Severity (Option String))
+            -> (List ValidationResult)))
+    (@alloc arena)
+    (@pre {(list-len value-nodes) >= 0})
+    (@post {(list-len $result) >= 0})
+    (@property correctness (== (== (list-len $result) 0) (forall v value-nodes (forall o (resolve-path data-graph focus-node other-path) (!= (xsd-compare v o) xsd-compare-greater)))))
+    (@example "(check-less-than-or-equals arena g focus (list (lit 3)) (path-predicate :p2) ...) -> (list) when :p2 yields (list (lit 5))")
+    (@example "(check-less-than-or-equals arena g focus (list (lit 5)) (path-predicate :p2) ...) -> (list v1) when :p2 yields (list (lit 3))")
+    (let ((mut results (list-new arena ValidationResult))
+          (other-values (resolve-path arena data-graph focus-node other-path)))
+      (for-each (v value-nodes)
+        (for-each (o other-values)
+          (let ((cmp (xsd-compare arena v o)))
+            ;; v must be <= o; if v > o, create violation
+            (match cmp
+              (xsd-compare-greater
+                (list-push results
+                  (record-new ValidationResult
+                    (focus-node focus-node)
+                    (result-path path)
+                    (value (some v))
+                    (source-shape shape-id)
+                    (source-constraint-component SHACL_LESS_THAN_OR_EQUALS)
+                    (severity severity)
+                    (message message))))
+              (_ (do))))))
+      results)
+    :c-name "snarl_check_less_than_or_equals"))

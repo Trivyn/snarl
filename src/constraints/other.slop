@@ -1,0 +1,124 @@
+;; ============================================================
+;; Snarl: Other Constraints (Phase 2)
+;;
+;; sh:closed, sh:ignoredProperties (4.11)
+;; sh:hasValue (4.12.1)
+;; sh:in (4.12.2)
+;; ============================================================
+
+(module other
+  (@doc "SHACL other constraints: sh:closed, sh:hasValue, sh:in")
+
+  (import rdf (Term Triple term-eq triple-predicate))
+  (import index (IndexedGraph indexed-graph-match))
+  (import vocab (SHACL_CLOSED SHACL_HAS_VALUE SHACL_IN))
+  (import types (Severity Constraint ValidationResult ShaclPath))
+
+  (export
+    check-has-value
+    check-in
+    check-closed)
+
+  ;; ============================================================
+  ;; sh:hasValue — At least one value node must equal the given value
+  ;; ============================================================
+
+  (fn check-has-value ((arena Arena) (focus-node Term) (value-nodes (List Term))
+                       (required-value Term) (path (Option ShaclPath))
+                       (shape-id Term) (severity Severity) (message (Option String)))
+    (@intent "Check sh:hasValue constraint: at least one value must equal the required value")
+    (@spec ((Arena Term (List Term) Term (Option ShaclPath) Term Severity (Option String))
+            -> (Option ValidationResult)))
+    (@alloc arena)
+    (@pre {(list-len value-nodes) >= 0})
+    (@post {($result == (none)) == (exists v value-nodes (term-eq v required-value))})
+    (@property correctness (== (== $result (none)) (exists v value-nodes (term-eq v required-value))))
+    (@example "(check-has-value arena focus (list :a :b) :a ...) -> (none)")
+    (@example "(check-has-value arena focus (list :a :b) :c ...) -> (some violation)")
+    (let ((mut found false))
+      (for-each (v value-nodes)
+        (when (term-eq v required-value)
+          (set! found true)))
+      (if found
+        (none)
+        (some (record-new ValidationResult
+                (focus-node focus-node)
+                (result-path path)
+                (value (none))
+                (source-shape shape-id)
+                (source-constraint-component SHACL_HAS_VALUE)
+                (severity severity)
+                (message message)))))
+    :c-name "snarl_check_has_value")
+
+  ;; ============================================================
+  ;; sh:in — Each value node must be in the given list
+  ;; ============================================================
+
+  (fn check-in ((arena Arena) (focus-node Term) (value-node Term)
+                (allowed-values (List Term)) (path (Option ShaclPath))
+                (shape-id Term) (severity Severity) (message (Option String)))
+    (@intent "Check sh:in constraint: value node must be one of the allowed values")
+    (@spec ((Arena Term Term (List Term) (Option ShaclPath) Term Severity (Option String))
+            -> (Option ValidationResult)))
+    (@alloc arena)
+    (@pre {(list-len allowed-values) > 0})
+    (@post {($result == (none)) == (exists v allowed-values (term-eq v value-node))})
+    (@property correctness (== (== $result (none)) (exists v allowed-values (term-eq v value-node))))
+    (@example "(check-in arena focus :a (list :a :b :c) ...) -> (none)")
+    (@example "(check-in arena focus :d (list :a :b :c) ...) -> (some violation)")
+    (let ((mut found false))
+      (for-each (av allowed-values)
+        (when (term-eq av value-node)
+          (set! found true)))
+      (if found
+        (none)
+        (some (record-new ValidationResult
+                (focus-node focus-node)
+                (result-path path)
+                (value (some value-node))
+                (source-shape shape-id)
+                (source-constraint-component SHACL_IN)
+                (severity severity)
+                (message message)))))
+    :c-name "snarl_check_in")
+
+  ;; ============================================================
+  ;; sh:closed — Only allowed properties may be present
+  ;; ============================================================
+
+  (fn check-closed ((arena Arena) (data-graph IndexedGraph) (focus-node Term)
+                    (allowed-paths (List ShaclPath)) (path (Option ShaclPath))
+                    (shape-id Term) (severity Severity) (message (Option String)))
+    (@intent "Check sh:closed constraint: focus node must not have unexpected properties")
+    (@spec ((Arena IndexedGraph Term (List ShaclPath) (Option ShaclPath) Term Severity (Option String))
+            -> (List ValidationResult)))
+    (@alloc arena)
+    (@pre {(list-len allowed-paths) >= 0})
+    (@post {(list-len $result) >= 0})
+    (@property soundness (forall r $result (not (exists p allowed-paths (term-eq (. r value) (path-iri p))))))
+    (@example "(check-closed arena g :alice (list (path-predicate :name)) ...) -> (list) when :alice only has :name")
+    (@example "(check-closed arena g :alice (list (path-predicate :name)) ...) -> (list v1) when :alice also has :age")
+    (let ((mut results (list-new arena ValidationResult))
+          (triples (indexed-graph-match arena data-graph (some focus-node) (none) (none))))
+      (for-each (triple triples)
+        (let ((pred (triple-predicate triple))
+              (mut allowed false))
+          (for-each (ap allowed-paths)
+            (match ap
+              ((path-predicate p)
+                (when (term-eq p pred)
+                  (set! allowed true)))
+              (_ (do))))
+          (when (not allowed)
+            (list-push results
+              (record-new ValidationResult
+                (focus-node focus-node)
+                (result-path path)
+                (value (some pred))
+                (source-shape shape-id)
+                (source-constraint-component SHACL_CLOSED)
+                (severity severity)
+                (message message))))))
+      results)
+    :c-name "snarl_check_closed"))

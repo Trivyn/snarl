@@ -1,0 +1,4 @@
+@prefix ex: <http://example.org/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+
+# Empty graph — no shapes, no data. Should conform.

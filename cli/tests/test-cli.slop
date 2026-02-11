@@ -1,0 +1,177 @@
+;; ============================================================
+;; Snarl CLI Integration Tests
+;;
+;; Tests the full pipeline: parse TTL -> validate -> report.
+;; Uses fixture files in tests/fixtures/.
+;; ============================================================
+
+(module test-cli
+  (@doc "Integration tests for snarl SHACL validator")
+
+  (import rdf (Term Triple Graph GraphSize make-graph graph-size make-iri
+               make-literal make-triple term-eq))
+  (import index (IndexedGraph indexed-graph-create indexed-graph-add indexed-graph-size))
+  (import ttl (parse-ttl-file))
+  (import snarl (validate validate-with-config conforms default-config
+                 ValidatorConfig ValidatorResult ValidationReport
+                 get-violations get-warnings get-result-count
+                 report-to-string))
+  (import types (make-validation-report report-conforms))
+
+  ;; ============================================================
+  ;; Test Utilities
+  ;; ============================================================
+
+  (fn load-test-graph ((arena Arena) (path String))
+    (@intent "Load a TTL fixture file into an IndexedGraph for testing")
+    (@spec ((Arena String) -> (Option IndexedGraph)))
+    (@alloc arena)
+    (match (parse-ttl-file arena path)
+      ((ok g)
+        (let ((mut ig (indexed-graph-create arena)))
+          (for-each (t (. g triples))
+            (set! ig (indexed-graph-add arena ig t)))
+          (some ig)))
+      ((error _) (none))))
+
+  (fn assert-conforms ((arena Arena) (path String))
+    (@intent "Assert that a file conforms (no violations)")
+    (@spec ((Arena String) -> Bool))
+    (@alloc arena)
+    (match (load-test-graph arena path)
+      ((some g)
+        (let ((result (conforms arena g g)))
+          (if result
+            (do (print "  PASS: ") (print path) (println " conforms") true)
+            (do (print "  FAIL: ") (print path) (println " expected to conform but got violations") false))))
+      ((none)
+        (print "  FAIL: could not load ") (println path) false)))
+
+  (fn assert-violations ((arena Arena) (path String) (expected-count Int))
+    (@intent "Assert that a file has exactly N violations")
+    (@spec ((Arena String Int) -> Bool))
+    (@alloc arena)
+    (match (load-test-graph arena path)
+      ((some g)
+        (match (validate arena g g)
+          ((validate-success report)
+            (let ((violations (get-violations arena report))
+                  (actual-count (list-len violations)))
+              (if (== actual-count expected-count)
+                (do (print "  PASS: ") (print path) (print " has ")
+                    (print (int-to-string arena expected-count)) (println " violation(s)") true)
+                (do (print "  FAIL: ") (print path) (print " expected ")
+                    (print (int-to-string arena expected-count)) (print " violation(s) but got ")
+                    (println (int-to-string arena actual-count)) false))))
+          ((validate-error msg)
+            (print "  FAIL: validation error: ") (println msg) false)))
+      ((none)
+        (print "  FAIL: could not load ") (println path) false)))
+
+  (fn assert-has-violations ((arena Arena) (path String))
+    (@intent "Assert that a file has at least one violation")
+    (@spec ((Arena String) -> Bool))
+    (@alloc arena)
+    (match (load-test-graph arena path)
+      ((some g)
+        (let ((result (conforms arena g g)))
+          (if (not result)
+            (do (print "  PASS: ") (print path) (println " has violations") true)
+            (do (print "  FAIL: ") (print path) (println " expected violations but conforms") false))))
+      ((none)
+        (print "  FAIL: could not load ") (println path) false)))
+
+  ;; ============================================================
+  ;; Individual Tests
+  ;; ============================================================
+
+  (fn test-empty-graph ((arena Arena))
+    (@intent "Test that an empty graph conforms")
+    (@spec ((Arena) -> Bool))
+    (assert-conforms arena "fixtures/empty.ttl"))
+
+  (fn test-valid-person ((arena Arena))
+    (@intent "Test that a valid person conforms")
+    (@spec ((Arena) -> Bool))
+    (assert-conforms arena "fixtures/valid-person.ttl"))
+
+  (fn test-cardinality-violation ((arena Arena))
+    (@intent "Test that missing required property is detected")
+    (@spec ((Arena) -> Bool))
+    (assert-has-violations arena "fixtures/cardinality-violation.ttl"))
+
+  (fn test-datatype-violation ((arena Arena))
+    (@intent "Test that wrong datatype is detected")
+    (@spec ((Arena) -> Bool))
+    (assert-has-violations arena "fixtures/datatype-violation.ttl"))
+
+  (fn test-class-violation ((arena Arena))
+    (@intent "Test that wrong class type is detected")
+    (@spec ((Arena) -> Bool))
+    (assert-has-violations arena "fixtures/class-violation.ttl"))
+
+  (fn test-nodekind-violation ((arena Arena))
+    (@intent "Test that wrong node kind is detected")
+    (@spec ((Arena) -> Bool))
+    (assert-has-violations arena "fixtures/nodekind-violation.ttl"))
+
+  (fn test-target-node ((arena Arena))
+    (@intent "Test sh:targetNode targeting")
+    (@spec ((Arena) -> Bool))
+    (assert-conforms arena "fixtures/target-node.ttl"))
+
+  (fn test-multiple-violations ((arena Arena))
+    (@intent "Test detection of multiple violations")
+    (@spec ((Arena) -> Bool))
+    (assert-has-violations arena "fixtures/multiple-violations.ttl"))
+
+  (fn test-report-string ((arena Arena))
+    (@intent "Test that report-to-string produces non-empty output")
+    (@spec ((Arena) -> Bool))
+    (match (load-test-graph arena "fixtures/cardinality-violation.ttl")
+      ((some g)
+        (match (validate arena g g)
+          ((validate-success report)
+            (let ((text (report-to-string arena report)))
+              (if (> (string-len text) 0)
+                (do (println "  PASS: report-to-string produces output") true)
+                (do (println "  FAIL: report-to-string returned empty string") false))))
+          ((validate-error _) (do (println "  FAIL: validation error") false))))
+      ((none) (do (println "  FAIL: could not load fixture") false))))
+
+  ;; ============================================================
+  ;; Main Test Runner
+  ;; ============================================================
+
+  (fn main ((argc Int) (argv (Ptr (Ptr U8))))
+    (@intent "Run all CLI integration tests")
+    (@spec ((Int (Ptr (Ptr U8))) -> Int))
+    :c-name "main"
+    (with-arena 67108864  ;; 64MB
+      (println "Snarl CLI Integration Tests")
+      (println "===========================")
+      (println "")
+
+      (let ((mut passed 0)
+            (mut failed 0))
+
+        ;; Run each test
+        (if (test-empty-graph arena) (set! passed (+ passed 1)) (set! failed (+ failed 1)))
+        (if (test-valid-person arena) (set! passed (+ passed 1)) (set! failed (+ failed 1)))
+        (if (test-cardinality-violation arena) (set! passed (+ passed 1)) (set! failed (+ failed 1)))
+        (if (test-datatype-violation arena) (set! passed (+ passed 1)) (set! failed (+ failed 1)))
+        (if (test-class-violation arena) (set! passed (+ passed 1)) (set! failed (+ failed 1)))
+        (if (test-nodekind-violation arena) (set! passed (+ passed 1)) (set! failed (+ failed 1)))
+        (if (test-target-node arena) (set! passed (+ passed 1)) (set! failed (+ failed 1)))
+        (if (test-multiple-violations arena) (set! passed (+ passed 1)) (set! failed (+ failed 1)))
+        (if (test-report-string arena) (set! passed (+ passed 1)) (set! failed (+ failed 1)))
+
+        ;; Summary
+        (println "")
+        (println "---")
+        (print (int-to-string arena passed))
+        (print " passed, ")
+        (print (int-to-string arena failed))
+        (println " failed")
+
+        (if (== failed 0) 0 1)))))

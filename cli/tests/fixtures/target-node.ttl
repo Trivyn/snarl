@@ -1,0 +1,16 @@
+@prefix ex: <http://example.org/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+
+# Shape: Specific node must have a name
+ex:AliceShape
+    a sh:NodeShape ;
+    sh:targetNode ex:alice ;
+    sh:property [
+        sh:path ex:name ;
+        sh:minCount 1 ;
+    ] .
+
+# Data: Alice has a name
+ex:alice ex:name "Alice" .

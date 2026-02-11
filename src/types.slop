@@ -1,0 +1,266 @@
+;; ============================================================
+;; Snarl Core Types
+;;
+;; Shared type definitions for the SHACL Core validator.
+;; Defines shapes, constraints, paths, config, and results.
+;; ============================================================
+
+(module types
+  (@doc "Core type definitions for the snarl SHACL validator")
+
+  (import rdf (Term Triple))
+  (import index (IndexedGraph))
+
+  (export
+    ;; Path types
+    ShaclPath
+    ;; Enums
+    NodeKind
+    Severity
+    ;; Constraint union
+    Constraint
+    ;; Shape types
+    PropertyShape
+    NodeShape
+    ShapesGraph
+    ;; Result types
+    ValidationResult
+    ValidationReport
+    ;; Config
+    ValidatorConfig
+    ValidatorResult
+    ;; Constructors / helpers
+    default-validator-config
+    make-validation-report
+    report-add-result
+    report-conforms)
+
+  ;; ============================================================
+  ;; SHACL Property Paths
+  ;; ============================================================
+
+  ;; Represents a SHACL property path expression.
+  ;; Phase 1: only predicate paths. Phases 2-4 add the rest.
+  (type ShaclPath (union
+    (path-predicate Term)                     ;; Direct predicate IRI
+    (path-sequence (List ShaclPath))          ;; Sequence: p1 / p2 / ...
+    (path-alternative (List ShaclPath))       ;; Alternative: p1 | p2 | ...
+    (path-inverse (Ptr ShaclPath))             ;; Inverse: ^p
+    (path-zero-or-more (Ptr ShaclPath))       ;; Zero-or-more: p*
+    (path-one-or-more (Ptr ShaclPath))))      ;; One-or-more: p+
+
+  ;; ============================================================
+  ;; Node Kind Enumeration
+  ;; ============================================================
+
+  ;; Maps to sh:BlankNode, sh:IRI, sh:Literal, sh:BlankNodeOrIRI,
+  ;; sh:BlankNodeOrLiteral, sh:IRIOrLiteral
+  (type NodeKind (enum
+    node-kind-blank-node
+    node-kind-iri
+    node-kind-literal
+    node-kind-blank-node-or-iri
+    node-kind-blank-node-or-literal
+    node-kind-iri-or-literal))
+
+  ;; ============================================================
+  ;; Severity Enumeration
+  ;; ============================================================
+
+  ;; Maps to sh:Violation, sh:Warning, sh:Info
+  (type Severity (enum
+    severity-violation
+    severity-warning
+    severity-info))
+
+  ;; ============================================================
+  ;; Constraints
+  ;; ============================================================
+
+  ;; A single SHACL constraint. One variant per constraint type.
+  ;; The engine dispatches on the variant tag to the appropriate
+  ;; constraint checker module.
+  (type Constraint (union
+    ;; Value type constraints (4.1-4.3)
+    (con-class Term)                          ;; sh:class — required rdf:type
+    (con-datatype Term)                       ;; sh:datatype — required literal datatype IRI
+    (con-node-kind NodeKind)                  ;; sh:nodeKind — required term kind
+
+    ;; Cardinality constraints (4.4)
+    (con-min-count (Int 0 ..))                ;; sh:minCount
+    (con-max-count (Int 0 ..))                ;; sh:maxCount
+
+    ;; Value range constraints (4.5)
+    (con-min-inclusive Term)                   ;; sh:minInclusive
+    (con-max-inclusive Term)                   ;; sh:maxInclusive
+    (con-min-exclusive Term)                   ;; sh:minExclusive
+    (con-max-exclusive Term)                   ;; sh:maxExclusive
+
+    ;; String-based constraints (4.6-4.7)
+    (con-min-length (Int 0 ..))               ;; sh:minLength
+    (con-max-length (Int 0 ..))               ;; sh:maxLength
+    (con-pattern String)                       ;; sh:pattern (with optional flags)
+    (con-language-in (List String))            ;; sh:languageIn
+    (con-unique-lang Bool)                     ;; sh:uniqueLang
+
+    ;; Property pair constraints (4.8)
+    (con-equals ShaclPath)                    ;; sh:equals
+    (con-disjoint ShaclPath)                  ;; sh:disjoint
+    (con-less-than ShaclPath)                 ;; sh:lessThan
+    (con-less-than-or-equals ShaclPath)       ;; sh:lessThanOrEquals
+
+    ;; Logical constraints (4.9)
+    (con-not Term)                            ;; sh:not — shape reference
+    (con-and (List Term))                     ;; sh:and — list of shape references
+    (con-or (List Term))                      ;; sh:or — list of shape references
+    (con-xone (List Term))                    ;; sh:xone — list of shape references
+
+    ;; Shape-based constraints (4.10)
+    (con-node Term)                           ;; sh:node — shape reference
+    (con-property Term)                       ;; sh:property — property shape reference
+    (con-qualified-value-shape Term (Int 0 ..) (Option (Int 0 ..)))
+                                               ;; sh:qualifiedValueShape + min/max count
+
+    ;; Other constraints (4.11-4.12)
+    (con-has-value Term)                      ;; sh:hasValue
+    (con-in (List Term))                      ;; sh:in
+    (con-closed Bool (List ShaclPath))))      ;; sh:closed + sh:ignoredProperties
+
+  ;; ============================================================
+  ;; Property Shape
+  ;; ============================================================
+
+  ;; A SHACL PropertyShape: a shape with a path that validates
+  ;; the value nodes reached by traversing that path from a focus node.
+  (type PropertyShape (record
+    (id Term)                                  ;; Shape IRI or blank node
+    (path ShaclPath)                           ;; The property path
+    (constraints (List Constraint))            ;; Constraints to evaluate
+    (severity Severity)                        ;; Default: violation
+    (message (Option String))                  ;; Optional human-readable message
+    (deactivated Bool)))                       ;; sh:deactivated
+
+  ;; ============================================================
+  ;; Node Shape
+  ;; ============================================================
+
+  ;; A SHACL NodeShape: targets + constraints applied to focus nodes directly.
+  ;; Also contains property shapes that validate value nodes via paths.
+  (type NodeShape (record
+    (id Term)                                  ;; Shape IRI or blank node
+    (target-nodes (List Term))                 ;; sh:targetNode values
+    (target-classes (List Term))               ;; sh:targetClass values
+    (target-subjects-of (List Term))           ;; sh:targetSubjectsOf values
+    (target-objects-of (List Term))            ;; sh:targetObjectsOf values
+    (property-shapes (List PropertyShape))     ;; sh:property declarations
+    (constraints (List Constraint))            ;; Node-level constraints
+    (severity Severity)                        ;; Default: violation
+    (message (Option String))                  ;; Optional message
+    (deactivated Bool)))                       ;; sh:deactivated
+
+  ;; ============================================================
+  ;; Shapes Graph
+  ;; ============================================================
+
+  ;; Parsed representation of all shapes in the shapes graph.
+  ;; shape-map allows cross-references for recursive shape evaluation.
+  (type ShapesGraph (record
+    (node-shapes (List NodeShape))             ;; All node shapes
+    (property-shapes (List PropertyShape))     ;; All standalone property shapes
+    (shape-map (Map Term NodeShape))))         ;; IRI/blank -> shape for lookups
+
+  ;; ============================================================
+  ;; Validation Result
+  ;; ============================================================
+
+  ;; A single validation result — one constraint violation/warning/info.
+  (type ValidationResult (record
+    (focus-node Term)                          ;; The focus node
+    (result-path (Option ShaclPath))           ;; The path (if from property shape)
+    (value (Option Term))                      ;; The offending value node
+    (source-shape Term)                        ;; The shape that produced this result
+    (source-constraint-component String)       ;; IRI of the constraint component
+    (severity Severity)                        ;; Violation/Warning/Info
+    (message (Option String))))                ;; Human-readable message
+
+  ;; ============================================================
+  ;; Validation Report
+  ;; ============================================================
+
+  ;; The final validation report containing all results.
+  (type ValidationReport (record
+    (conforms Bool)                            ;; True if no violations
+    (results (List ValidationResult))))        ;; All validation results
+
+  ;; ============================================================
+  ;; Validator Config
+  ;; ============================================================
+
+  ;; Configuration for the validation engine.
+  (type ValidatorConfig (record
+    (verbose Bool)                             ;; Print progress info
+    (max-errors (Int 0 ..))                    ;; 0 = unlimited
+    (include-warnings Bool)                    ;; Include sh:Warning results
+    (include-infos Bool)))                     ;; Include sh:Info results
+
+  ;; ============================================================
+  ;; Validator Result
+  ;; ============================================================
+
+  ;; Top-level result: success with report, or error.
+  (type ValidatorResult (union
+    (validate-success ValidationReport)
+    (validate-error String)))
+
+  ;; ============================================================
+  ;; Helper Functions
+  ;; ============================================================
+
+  (fn default-validator-config ()
+    (@intent "Create default validator configuration")
+    (@spec (() -> ValidatorConfig))
+    (@pure)
+    (@post {(. $result verbose) == false})
+    (@post {(. $result max-errors) == 0})
+    (@post {(. $result include-warnings) == true})
+    (@post {(. $result include-infos) == true})
+    (@example () -> (ValidatorConfig false 0 true true))
+    (record-new ValidatorConfig
+      (verbose false)
+      (max-errors 0)
+      (include-warnings true)
+      (include-infos true)))
+
+  (fn make-validation-report ((arena Arena))
+    (@intent "Create an empty validation report that conforms")
+    (@spec ((Arena) -> ValidationReport))
+    (@alloc arena)
+    (@post {(. $result conforms) == true})
+    (@post {(list-len (. $result results)) == 0})
+    (record-new ValidationReport
+      (conforms true)
+      (results (list-new arena ValidationResult))))
+
+  (fn report-add-result ((arena Arena) (report ValidationReport) (result ValidationResult))
+    (@intent "Add a validation result to the report, updating conforms flag")
+    (@spec ((Arena ValidationReport ValidationResult) -> ValidationReport))
+    (@alloc arena)
+    (@post {(list-len (. $result results)) == (+ (list-len (. report results)) 1)})
+    (list-push (. report results) result)
+    ;; If this is a violation, the report no longer conforms
+    (let ((still-conforms
+            (if (match (. result severity)
+                  (severity-violation true)
+                  (_ false))
+              false
+              (. report conforms))))
+      (record-new ValidationReport
+        (conforms still-conforms)
+        (results (. report results)))))
+
+  (fn report-conforms ((report ValidationReport))
+    (@intent "Check if validation report has no violations")
+    (@spec ((ValidationReport) -> Bool))
+    (@pure)
+    (@post {$result == (. report conforms)})
+    (. report conforms)))

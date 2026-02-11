@@ -1,0 +1,186 @@
+;; ============================================================
+;; Snarl: Logical Constraints (Phase 3)
+;;
+;; sh:not (4.9.1)
+;; sh:and (4.9.2)
+;; sh:or (4.9.3)
+;; sh:xone (4.9.4)
+;;
+;; These are recursive — they re-enter the engine to evaluate
+;; referenced shapes against value/focus nodes.
+;; ============================================================
+
+(module logical
+  (@doc "SHACL logical constraints: sh:not, sh:and, sh:or, sh:xone")
+
+  (import rdf (Term))
+  (import index (IndexedGraph))
+  (import vocab (SHACL_NOT SHACL_AND SHACL_OR SHACL_XONE))
+  (import types (Severity Constraint ValidationResult ShaclPath ShapesGraph NodeShape))
+  (import engine (evaluate-shape-against-node))
+
+  (export
+    check-not
+    check-and
+    check-or
+    check-xone)
+
+  ;; ============================================================
+  ;; sh:not — Focus node must NOT conform to the referenced shape
+  ;; ============================================================
+
+  (fn check-not ((arena Arena) (data-graph IndexedGraph) (shapes-graph ShapesGraph)
+                 (focus-node Term) (shape-ref Term) (visited (Set Term))
+                 (path (Option ShaclPath)) (shape-id Term)
+                 (severity Severity) (message (Option String)))
+    (@intent "Check sh:not constraint: focus node must not conform to referenced shape")
+    (@spec ((Arena IndexedGraph ShapesGraph Term Term (Set Term) (Option ShaclPath) Term Severity (Option String))
+            -> (Option ValidationResult)))
+    (@alloc arena)
+    (@pre {(not (set-has visited shape-ref))})
+    (@example "(check-not arena dg sg focus :PersonShape visited ...) -> (none) when focus fails :PersonShape")
+    (@example "(check-not arena dg sg focus :PersonShape visited ...) -> (some violation) when focus conforms to :PersonShape")
+    (if (set-has visited shape-ref)
+      ;; Cycle: treat referenced shape as conforming -> NOT fails
+      (some (record-new ValidationResult
+              (focus-node focus-node)
+              (result-path path)
+              (value (none))
+              (source-shape shape-id)
+              (source-constraint-component SHACL_NOT)
+              (severity severity)
+              (message message)))
+      (do
+        (set-put visited shape-ref)
+        (match (map-get (. shapes-graph shape-map) shape-ref)
+          ((some shape)
+            (if (evaluate-shape-against-node arena data-graph shapes-graph focus-node shape visited)
+              ;; Focus node conforms to referenced shape -> NOT constraint fails
+              (some (record-new ValidationResult
+                      (focus-node focus-node)
+                      (result-path path)
+                      (value (none))
+                      (source-shape shape-id)
+                      (source-constraint-component SHACL_NOT)
+                      (severity severity)
+                      (message message)))
+              ;; Focus node does NOT conform -> NOT constraint passes
+              (none)))
+          ;; Unknown shape reference -> treat as not conforming -> NOT passes
+          ((none) (none)))))
+    :c-name "snarl_check_not")
+
+  ;; ============================================================
+  ;; sh:and — Focus node must conform to ALL referenced shapes
+  ;; ============================================================
+
+  (fn check-and ((arena Arena) (data-graph IndexedGraph) (shapes-graph ShapesGraph)
+                 (focus-node Term) (shape-refs (List Term)) (visited (Set Term))
+                 (path (Option ShaclPath)) (shape-id Term)
+                 (severity Severity) (message (Option String)))
+    (@intent "Check sh:and constraint: focus node must conform to all referenced shapes")
+    (@spec ((Arena IndexedGraph ShapesGraph Term (List Term) (Set Term) (Option ShaclPath) Term Severity (Option String))
+            -> (Option ValidationResult)))
+    (@alloc arena)
+    (@pre {(list-len shape-refs) >= 0})
+    (@post {($result == (none)) == (forall s shape-refs (conforms-to focus-node s))})
+    (@property correctness (== (== $result (none)) (forall s shape-refs (conforms-to focus-node s))))
+    (@example "(check-and arena dg sg focus (list :S1 :S2) visited ...) -> (none) when focus conforms to both")
+    (@example "(check-and arena dg sg focus (list :S1 :S2) visited ...) -> (some violation) when focus fails :S2")
+    (let ((mut all-pass true))
+      (for (i 0 (list-len shape-refs))
+        (let ((ref (list-get shape-refs i)))
+          (when (not (set-has visited ref))
+            (set-put visited ref)
+            (match (map-get (. shapes-graph shape-map) ref)
+              ((some shape)
+                (when (not (evaluate-shape-against-node arena data-graph shapes-graph focus-node shape visited))
+                  (set! all-pass false)))
+              ((none) (do))))))
+      (if all-pass
+        (none)
+        (some (record-new ValidationResult
+                (focus-node focus-node)
+                (result-path path)
+                (value (none))
+                (source-shape shape-id)
+                (source-constraint-component SHACL_AND)
+                (severity severity)
+                (message message)))))
+    :c-name "snarl_check_and")
+
+  ;; ============================================================
+  ;; sh:or — Focus node must conform to at least one referenced shape
+  ;; ============================================================
+
+  (fn check-or ((arena Arena) (data-graph IndexedGraph) (shapes-graph ShapesGraph)
+                (focus-node Term) (shape-refs (List Term)) (visited (Set Term))
+                (path (Option ShaclPath)) (shape-id Term)
+                (severity Severity) (message (Option String)))
+    (@intent "Check sh:or constraint: focus node must conform to at least one referenced shape")
+    (@spec ((Arena IndexedGraph ShapesGraph Term (List Term) (Set Term) (Option ShaclPath) Term Severity (Option String))
+            -> (Option ValidationResult)))
+    (@alloc arena)
+    (@pre {(list-len shape-refs) >= 0})
+    (@post {($result == (none)) == (exists s shape-refs (conforms-to focus-node s))})
+    (@property correctness (== (== $result (none)) (exists s shape-refs (conforms-to focus-node s))))
+    (@example "(check-or arena dg sg focus (list :S1 :S2) visited ...) -> (none) when focus conforms to :S1")
+    (@example "(check-or arena dg sg focus (list :S1 :S2) visited ...) -> (some violation) when focus fails both")
+    (let ((mut any-pass false))
+      (for (i 0 (list-len shape-refs))
+        (let ((ref (list-get shape-refs i)))
+          (when (not (set-has visited ref))
+            (set-put visited ref)
+            (match (map-get (. shapes-graph shape-map) ref)
+              ((some shape)
+                (when (evaluate-shape-against-node arena data-graph shapes-graph focus-node shape visited)
+                  (set! any-pass true)))
+              ((none) (do))))))
+      (if any-pass
+        (none)
+        (some (record-new ValidationResult
+                (focus-node focus-node)
+                (result-path path)
+                (value (none))
+                (source-shape shape-id)
+                (source-constraint-component SHACL_OR)
+                (severity severity)
+                (message message)))))
+    :c-name "snarl_check_or")
+
+  ;; ============================================================
+  ;; sh:xone — Focus node must conform to exactly one referenced shape
+  ;; ============================================================
+
+  (fn check-xone ((arena Arena) (data-graph IndexedGraph) (shapes-graph ShapesGraph)
+                  (focus-node Term) (shape-refs (List Term)) (visited (Set Term))
+                  (path (Option ShaclPath)) (shape-id Term)
+                  (severity Severity) (message (Option String)))
+    (@intent "Check sh:xone constraint: focus node must conform to exactly one referenced shape")
+    (@spec ((Arena IndexedGraph ShapesGraph Term (List Term) (Set Term) (Option ShaclPath) Term Severity (Option String))
+            -> (Option ValidationResult)))
+    (@alloc arena)
+    (@pre {(list-len shape-refs) >= 0})
+    (@example "(check-xone arena dg sg focus (list :S1 :S2) visited ...) -> (none) when focus conforms to :S1 only")
+    (@example "(check-xone arena dg sg focus (list :S1 :S2) visited ...) -> (some violation) when focus conforms to both")
+    (let ((mut pass-count 0))
+      (for (i 0 (list-len shape-refs))
+        (let ((ref (list-get shape-refs i)))
+          (when (not (set-has visited ref))
+            (set-put visited ref)
+            (match (map-get (. shapes-graph shape-map) ref)
+              ((some shape)
+                (when (evaluate-shape-against-node arena data-graph shapes-graph focus-node shape visited)
+                  (set! pass-count (+ pass-count 1))))
+              ((none) (do))))))
+      (if (== pass-count 1)
+        (none)
+        (some (record-new ValidationResult
+                (focus-node focus-node)
+                (result-path path)
+                (value (none))
+                (source-shape shape-id)
+                (source-constraint-component SHACL_XONE)
+                (severity severity)
+                (message message)))))
+    :c-name "snarl_check_xone"))
