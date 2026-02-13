@@ -97,6 +97,7 @@
     (@pre {(list-len allowed-paths) >= 0})
     (@post {(list-len $result) >= 0})
     (@property soundness (forall r $result (not (exists p allowed-paths (term-eq (. r value) (path-iri p))))))
+    (@property result-path-correct (forall r $result (== (. r result-path) (some (path-predicate (unwrap (. r value)))))))
     (@example "(check-closed arena g :alice (list (path-predicate :name)) ...) -> (list) when :alice only has :name")
     (@example "(check-closed arena g :alice (list (path-predicate :name)) ...) -> (list v1) when :alice also has :age")
     (let ((mut results (list-new arena ValidationResult))
@@ -114,7 +115,7 @@
             (list-push results
               (record-new ValidationResult
                 (focus-node focus-node)
-                (result-path path)
+                (result-path (some (union-new ShaclPath path-predicate pred)))
                 (value (some pred))
                 (source-shape shape-id)
                 (source-constraint-component SHACL_CLOSED)

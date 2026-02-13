@@ -56,7 +56,11 @@
 
       ;; One-or-more: p+ — transitive closure excluding focus-node
       ((path-one-or-more inner)
-        (resolve-one-or-more arena data-graph focus-node (deref inner))))
+        (resolve-one-or-more arena data-graph focus-node (deref inner)))
+
+      ;; Zero-or-one: p? — focus node plus one-step results
+      ((path-zero-or-one inner)
+        (resolve-zero-or-one arena data-graph focus-node (deref inner))))
     :c-name "snarl_resolve_path")
 
   ;; ============================================================
@@ -173,4 +177,22 @@
                   (when (not (set-has visited n))
                     (list-push queue n))))))
           ((none) (set! qi (+ qi 1)))))
+      result))
+
+  (fn resolve-zero-or-one ((arena Arena) (g IndexedGraph) (focus Term) (inner ShaclPath))
+    (@intent "Resolve zero-or-one path: focus node itself plus one-step results (deduplicated)")
+    (@spec ((Arena IndexedGraph Term ShaclPath) -> (List Term)))
+    (@alloc arena)
+    ;; Return union of {focus} and resolve-path(focus, inner)
+    (let ((mut result (list-new arena Term))
+          (visited (set-new arena Term)))
+      ;; Always include focus node (zero steps)
+      (set-put visited focus)
+      (list-push result focus)
+      ;; Add one-step results
+      (let ((one-step (resolve-path arena g focus inner)))
+        (for-each (n one-step)
+          (when (not (set-has visited n))
+            (set-put visited n)
+            (list-push result n))))
       result)))

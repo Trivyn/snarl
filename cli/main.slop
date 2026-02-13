@@ -274,11 +274,11 @@
                                 (if quiet
                                   (do
                                     ;; Quiet mode: just counts
-                                    (when (> violation-count 0)
-                                      (print (int-to-string arena violation-count))
-                                      (println " violation(s)"))
-                                    (when (== violation-count 0)
-                                      (println "conforms")))
+                                    (if (. report conforms)
+                                      (println "conforms")
+                                      (do
+                                        (print (int-to-string arena total-count))
+                                        (println " result(s)"))))
                                   (do
                                     ;; Full report
                                     (print-report arena report)
@@ -295,8 +295,8 @@
                                       (println emit-path)))
                                   ((none) (do)))
 
-                                ;; Exit code
-                                (if (> violation-count 0) 1 0)))
+                                ;; Exit code: conforms=0, not-conforms=1
+                                (if (. report conforms) 0 1)))
 
                             ((validate-error msg)
                               (print "Error: ")

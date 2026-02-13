@@ -10,7 +10,7 @@ slop_list_rdf_Term snarl_resolve_implicit_class_targets(slop_arena* arena, index
 
 slop_list_rdf_Term snarl_resolve_targets(slop_arena* arena, index_IndexedGraph data_graph, types_NodeShape shape) {
     SLOP_PRE(((rdf_indexed_graph_size(data_graph) >= 0)), "(>= (indexed-graph-size data-graph) 0)");
-    slop_list_rdf_Term _retval;
+    slop_list_rdf_Term _retval = {0};
     {
         __auto_type result = ((slop_list_rdf_Term){ .data = (rdf_Term*)slop_arena_alloc(arena, 16 * sizeof(rdf_Term)), .len = 0, .cap = 16 });
         __auto_type seen = slop_map_new_ptr(arena, 16, sizeof(rdf_Term), slop_hash_rdf_Term, slop_eq_rdf_Term);
@@ -101,7 +101,7 @@ slop_list_rdf_Term snarl_resolve_targets(slop_arena* arena, index_IndexedGraph d
 }
 
 slop_list_rdf_Term snarl_resolve_target_node(slop_arena* arena, slop_list_rdf_Term nodes) {
-    slop_list_rdf_Term _retval;
+    slop_list_rdf_Term _retval = {0};
     _retval = nodes;
     SLOP_POST(((((int64_t)((_retval).len)) == ((int64_t)((nodes).len)))), "(== (list-len $result) (list-len nodes))");
     return _retval;
@@ -109,7 +109,7 @@ slop_list_rdf_Term snarl_resolve_target_node(slop_arena* arena, slop_list_rdf_Te
 
 slop_list_rdf_Term snarl_resolve_target_class(slop_arena* arena, index_IndexedGraph data_graph, rdf_Term class_term) {
     SLOP_PRE(((rdf_indexed_graph_size(data_graph) >= 0)), "(>= (indexed-graph-size data-graph) 0)");
-    slop_list_rdf_Term _retval;
+    slop_list_rdf_Term _retval = {0};
     {
         __auto_type type_pred = rdf_make_iri(arena, vocab_RDF_TYPE);
         _retval = rdf_indexed_graph_subjects(arena, data_graph, type_pred, class_term);
@@ -120,7 +120,7 @@ slop_list_rdf_Term snarl_resolve_target_class(slop_arena* arena, index_IndexedGr
 
 slop_list_rdf_Term snarl_resolve_target_subjects_of(slop_arena* arena, index_IndexedGraph data_graph, rdf_Term predicate) {
     SLOP_PRE(((rdf_indexed_graph_size(data_graph) >= 0)), "(>= (indexed-graph-size data-graph) 0)");
-    slop_list_rdf_Term _retval;
+    slop_list_rdf_Term _retval = {0};
     {
         slop_option_rdf_Term no_term = (slop_option_rdf_Term){.has_value = false};
         __auto_type matches = rdf_indexed_graph_match(arena, data_graph, no_term, (slop_option_rdf_Term){.has_value = 1, .value = predicate}, no_term);
@@ -147,7 +147,7 @@ slop_list_rdf_Term snarl_resolve_target_subjects_of(slop_arena* arena, index_Ind
 
 slop_list_rdf_Term snarl_resolve_target_objects_of(slop_arena* arena, index_IndexedGraph data_graph, rdf_Term predicate) {
     SLOP_PRE(((rdf_indexed_graph_size(data_graph) >= 0)), "(>= (indexed-graph-size data-graph) 0)");
-    slop_list_rdf_Term _retval;
+    slop_list_rdf_Term _retval = {0};
     {
         slop_option_rdf_Term no_term = (slop_option_rdf_Term){.has_value = false};
         __auto_type matches = rdf_indexed_graph_match(arena, data_graph, no_term, (slop_option_rdf_Term){.has_value = 1, .value = predicate}, no_term);
@@ -174,7 +174,7 @@ slop_list_rdf_Term snarl_resolve_target_objects_of(slop_arena* arena, index_Inde
 
 slop_list_rdf_Term snarl_resolve_implicit_class_targets(slop_arena* arena, index_IndexedGraph data_graph, rdf_Term shape_id) {
     SLOP_PRE(((rdf_indexed_graph_size(data_graph) >= 0)), "(>= (indexed-graph-size data-graph) 0)");
-    slop_list_rdf_Term _retval;
+    slop_list_rdf_Term _retval = {0};
     {
         __auto_type type_pred = rdf_make_iri(arena, vocab_RDF_TYPE);
         __auto_type instances = rdf_indexed_graph_subjects(arena, data_graph, type_pred, shape_id);

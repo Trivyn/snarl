@@ -4,16 +4,17 @@
 ;; sh:node (4.10.1)
 ;; sh:property (4.10.2) — handled by engine (property shapes)
 ;; sh:qualifiedValueShape (4.10.3)
+;;
+;; Pure result constructors — engine handles recursion and
+;; cycle detection, passes pre-evaluated Bool/Int results.
 ;; ============================================================
 
 (module shape
   (@doc "SHACL shape-based constraints: sh:node, sh:property, sh:qualifiedValueShape")
 
   (import rdf (Term))
-  (import index (IndexedGraph))
-  (import vocab (SHACL_NODE SHACL_PROPERTY SHACL_QUALIFIED_VALUE_SHAPE))
-  (import types (Severity Constraint ValidationResult ShaclPath ShapesGraph NodeShape))
-  (import engine (evaluate-shape-against-node))
+  (import vocab (SHACL_NODE SHACL_QUALIFIED_VALUE_SHAPE))
+  (import types (Severity ValidationResult ShaclPath))
 
   (export
     check-node
@@ -23,92 +24,51 @@
   ;; sh:node — Value node must conform to the referenced shape
   ;; ============================================================
 
-  (fn check-node ((arena Arena) (data-graph IndexedGraph) (shapes-graph ShapesGraph)
-                  (focus-node Term) (value-node Term) (shape-ref Term) (visited (Set Term))
+  (fn check-node ((arena Arena) (focus-node Term) (value-node Term) (value-conforms Bool)
                   (path (Option ShaclPath)) (shape-id Term)
                   (severity Severity) (message (Option String)))
-    (@intent "Check sh:node constraint: value node must conform to referenced shape")
-    (@spec ((Arena IndexedGraph ShapesGraph Term Term Term (Set Term) (Option ShaclPath) Term Severity (Option String))
+    (@intent "Check sh:node: violation if value node fails referenced shape")
+    (@spec ((Arena Term Term Bool (Option ShaclPath) Term Severity (Option String))
             -> (Option ValidationResult)))
     (@alloc arena)
-    (@pre {(not (set-has visited shape-ref))})
-    (@property cycle-safety (or (not (set-has visited shape-ref)) (== $result (none))))
-    (@example "(check-node arena dg sg focus :alice :PersonShape visited ...) -> (none) when :alice conforms")
-    (@example "(check-node arena dg sg focus :alice :PersonShape visited ...) -> (some violation) when :alice fails")
-    (if (set-has visited shape-ref)
-      ;; Cycle: treat as conforming to break cycle
+    ;; Postcondition: ($result == (none)) iff value-conforms
+    (if value-conforms
       (none)
-      (do
-        (set-put visited shape-ref)
-        (match (map-get (. shapes-graph shape-map) shape-ref)
-          ((some shape)
-            (if (evaluate-shape-against-node arena data-graph shapes-graph value-node shape visited)
-              (none)
-              (some (record-new ValidationResult
-                      (focus-node focus-node)
-                      (result-path path)
-                      (value (some value-node))
-                      (source-shape shape-id)
-                      (source-constraint-component SHACL_NODE)
-                      (severity severity)
-                      (message message)))))
-          ;; Unknown shape reference -> treat as conforming
-          ((none) (none)))))
+      (some (record-new ValidationResult
+        (focus-node focus-node) (result-path path) (value (some value-node))
+        (source-shape shape-id) (source-constraint-component SHACL_NODE)
+        (severity severity) (message message))))
     :c-name "snarl_check_node")
 
   ;; ============================================================
   ;; sh:qualifiedValueShape — Qualified cardinality over shape
   ;; ============================================================
 
-  (fn check-qualified-value-shape ((arena Arena) (data-graph IndexedGraph)
-                                   (shapes-graph ShapesGraph)
-                                   (focus-node Term) (value-nodes (List Term))
-                                   (shape-ref Term) (visited (Set Term))
+  (fn check-qualified-value-shape ((arena Arena) (focus-node Term) (conforming-count Int)
                                    (q-min (Int 0 ..)) (q-max (Option (Int 0 ..)))
                                    (path (Option ShaclPath)) (shape-id Term)
                                    (severity Severity) (message (Option String)))
     (@intent "Check sh:qualifiedValueShape: count of conforming values must be within range")
-    (@spec ((Arena IndexedGraph ShapesGraph Term (List Term) Term (Set Term)
-             (Int 0 ..) (Option (Int 0 ..)) (Option ShaclPath) Term Severity (Option String))
+    (@spec ((Arena Term Int (Int 0 ..) (Option (Int 0 ..)) (Option ShaclPath) Term Severity (Option String))
             -> (List ValidationResult)))
     (@alloc arena)
+    (@pre {conforming-count >= 0})
     (@pre {q-min >= 0})
-    (@pre {(list-len value-nodes) >= 0})
-    (@post {(list-len $result) >= 0})
-    (@example "(check-qualified-value-shape arena dg sg focus (list :a :b) :S visited 1 (none) ...) -> (list) when 1+ values conform to :S")
-    (@example "(check-qualified-value-shape arena dg sg focus (list :a :b) :S visited 2 (none) ...) -> (list violation) when only 1 conforms")
-    (let ((mut results (list-new arena ValidationResult))
-          (mut conforming-count 0))
-      ;; Count how many value nodes conform to the referenced shape
-      (for-each (vn value-nodes)
-        (match (map-get (. shapes-graph shape-map) shape-ref)
-          ((some shape)
-            (when (evaluate-shape-against-node arena data-graph shapes-graph vn shape visited)
-              (set! conforming-count (+ conforming-count 1))))
-          ((none) (do))))
-      ;; Check if count is within range
+    (let ((mut results (list-new arena ValidationResult)))
       (when (< conforming-count q-min)
-        (list-push results
-          (record-new ValidationResult
-            (focus-node focus-node)
-            (result-path path)
-            (value (none))
-            (source-shape shape-id)
-            (source-constraint-component SHACL_QUALIFIED_VALUE_SHAPE)
-            (severity severity)
-            (message message))))
+        (list-push results (record-new ValidationResult
+          (focus-node focus-node) (result-path path) (value (none))
+          (source-shape shape-id)
+          (source-constraint-component SHACL_QUALIFIED_VALUE_SHAPE)
+          (severity severity) (message message))))
       (match q-max
         ((some max-val)
           (when (> conforming-count max-val)
-            (list-push results
-              (record-new ValidationResult
-                (focus-node focus-node)
-                (result-path path)
-                (value (none))
-                (source-shape shape-id)
-                (source-constraint-component SHACL_QUALIFIED_VALUE_SHAPE)
-                (severity severity)
-                (message message)))))
+            (list-push results (record-new ValidationResult
+              (focus-node focus-node) (result-path path) (value (none))
+              (source-shape shape-id)
+              (source-constraint-component SHACL_QUALIFIED_VALUE_SHAPE)
+              (severity severity) (message message)))))
         ((none) (do)))
       results)
     :c-name "snarl_check_qualified_value_shape"))

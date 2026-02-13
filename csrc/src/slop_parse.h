@@ -16,9 +16,39 @@
 SLOP_OPTION_DEFINE(uint8_t, slop_option_u8)
 #endif
 
+#ifndef SLOP_LIST_TYPES_NODESHAPE_DEFINED
+#define SLOP_LIST_TYPES_NODESHAPE_DEFINED
+SLOP_LIST_DEFINE(types_NodeShape, slop_list_types_NodeShape)
+#endif
+
+#ifndef SLOP_LIST_TYPES_PROPERTYSHAPE_DEFINED
+#define SLOP_LIST_TYPES_PROPERTYSHAPE_DEFINED
+SLOP_LIST_DEFINE(types_PropertyShape, slop_list_types_PropertyShape)
+#endif
+
+#ifndef SLOP_LIST_RDF_TERM_DEFINED
+#define SLOP_LIST_RDF_TERM_DEFINED
+SLOP_LIST_DEFINE(rdf_Term, slop_list_rdf_Term)
+#endif
+
 #ifndef SLOP_LIST_TYPES_CONSTRAINT_DEFINED
 #define SLOP_LIST_TYPES_CONSTRAINT_DEFINED
 SLOP_LIST_DEFINE(types_Constraint, slop_list_types_Constraint)
+#endif
+
+#ifndef SLOP_OPTION_TYPES_NODESHAPE_DEFINED
+#define SLOP_OPTION_TYPES_NODESHAPE_DEFINED
+SLOP_OPTION_DEFINE(types_NodeShape, slop_option_types_NodeShape)
+#endif
+
+#ifndef SLOP_OPTION_TYPES_PROPERTYSHAPE_DEFINED
+#define SLOP_OPTION_TYPES_PROPERTYSHAPE_DEFINED
+SLOP_OPTION_DEFINE(types_PropertyShape, slop_option_types_PropertyShape)
+#endif
+
+#ifndef SLOP_OPTION_RDF_TERM_DEFINED
+#define SLOP_OPTION_RDF_TERM_DEFINED
+SLOP_OPTION_DEFINE(rdf_Term, slop_option_rdf_Term)
 #endif
 
 #ifndef SLOP_OPTION_TYPES_CONSTRAINT_DEFINED
@@ -113,9 +143,9 @@ static inline bool slop_eq_rdf_Term(const void* a, const void* b) {
     }
     return false;
 }
-SLOP_LIST_DEFINE(rdf_Term, slop_list_rdf_Term)
 #endif
 
+void parse_register_inline_shapes(slop_arena* arena, index_IndexedGraph g, slop_list_types_NodeShape node_shapes, slop_list_types_PropertyShape prop_shapes, slop_map* shape_map, slop_map* property_shape_map);
 types_ShapesGraph snarl_parse_shapes_graph(slop_arena* arena, index_IndexedGraph shapes_graph);
 types_NodeShape snarl_parse_node_shape(slop_arena* arena, index_IndexedGraph g, rdf_Term shape_id);
 types_PropertyShape snarl_parse_property_shape(slop_arena* arena, index_IndexedGraph g, rdf_Term shape_id);
@@ -139,6 +169,21 @@ slop_list_string parse_parse_string_list(slop_arena* arena, index_IndexedGraph g
 #define parse_parse_constraints snarl_parse_constraints
 #define parse_parse_node_kind snarl_parse_node_kind
 #define parse_parse_severity snarl_parse_severity
+
+#ifndef SLOP_OPTION_TYPES_NODESHAPE_DEFINED
+#define SLOP_OPTION_TYPES_NODESHAPE_DEFINED
+SLOP_OPTION_DEFINE(types_NodeShape, slop_option_types_NodeShape)
+#endif
+
+#ifndef SLOP_OPTION_TYPES_PROPERTYSHAPE_DEFINED
+#define SLOP_OPTION_TYPES_PROPERTYSHAPE_DEFINED
+SLOP_OPTION_DEFINE(types_PropertyShape, slop_option_types_PropertyShape)
+#endif
+
+#ifndef SLOP_OPTION_RDF_TERM_DEFINED
+#define SLOP_OPTION_RDF_TERM_DEFINED
+SLOP_OPTION_DEFINE(rdf_Term, slop_option_rdf_Term)
+#endif
 
 #ifndef SLOP_OPTION_TYPES_CONSTRAINT_DEFINED
 #define SLOP_OPTION_TYPES_CONSTRAINT_DEFINED

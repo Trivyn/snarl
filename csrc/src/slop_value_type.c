@@ -20,22 +20,22 @@ slop_option_types_ValidationResult snarl_check_class(slop_arena* arena, index_In
 }
 
 slop_option_types_ValidationResult snarl_check_datatype(slop_arena* arena, rdf_Term focus_node, rdf_Term value_node, rdf_Term required_datatype, slop_option_types_ShaclPath path, rdf_Term shape_id, types_Severity severity, slop_option_string message) {
-    __auto_type _mv_104 = value_node;
-    switch (_mv_104.tag) {
+    __auto_type _mv_113 = value_node;
+    switch (_mv_113.tag) {
         case rdf_Term_term_literal:
         {
-            __auto_type lit = _mv_104.data.term_literal;
+            __auto_type lit = _mv_113.data.term_literal;
             {
                 __auto_type required_dt_str = ({ __auto_type _mv = required_datatype; slop_string _mr = {0}; switch (_mv.tag) { case rdf_Term_term_iri: { __auto_type iri = _mv.data.term_iri; _mr = iri.value; break; } default: { _mr = SLOP_STR(""); break; }  } _mr; });
-                __auto_type _mv_105 = lit.datatype;
-                if (_mv_105.has_value) {
-                    __auto_type dt = _mv_105.value;
+                __auto_type _mv_114 = lit.datatype;
+                if (_mv_114.has_value) {
+                    __auto_type dt = _mv_114.value;
                     if (string_eq(dt, required_dt_str)) {
                         return (slop_option_types_ValidationResult){.has_value = false};
                     } else {
                         return (slop_option_types_ValidationResult){.has_value = 1, .value = value_type_make_vr(arena, focus_node, path, value_node, shape_id, vocab_SHACL_DATATYPE, severity, message)};
                     }
-                } else if (!_mv_105.has_value) {
+                } else if (!_mv_114.has_value) {
                     if (string_eq(required_dt_str, vocab_XSD_STRING)) {
                         return (slop_option_types_ValidationResult){.has_value = false};
                     } else {

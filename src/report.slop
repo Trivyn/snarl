@@ -327,5 +327,7 @@
       ((path-zero-or-more inner)
         (string-concat arena (path-to-display-string arena (deref inner)) "*"))
       ((path-one-or-more inner)
-        (string-concat arena (path-to-display-string arena (deref inner)) "+")))
+        (string-concat arena (path-to-display-string arena (deref inner)) "+"))
+      ((path-zero-or-one inner)
+        (string-concat arena (path-to-display-string arena (deref inner)) "?")))
     :c-name "snarl_path_to_display_string"))

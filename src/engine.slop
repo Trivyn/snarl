@@ -33,6 +33,10 @@
                        check-min-exclusive check-max-exclusive))
   (import string (check-min-length check-max-length check-pattern
                   check-language-in check-unique-lang))
+  (import other (check-has-value check-in check-closed))
+  (import pair (check-equals check-disjoint check-less-than check-less-than-or-equals))
+  (import logical (check-not check-and check-or check-xone))
+  (import shape (check-node check-qualified-value-shape))
 
   (export
     engine-validate
@@ -131,13 +135,63 @@
           (for-each (r constraint-results)
             (list-push results r))))
 
-      ;; Evaluate each property shape
-      (for-each (ps (. shape property-shapes))
-        (when (not (. ps deactivated))
-          (let ((ps-results (evaluate-property-shape arena data-graph shapes-graph
-                              ps focus-node visited config)))
-            (for-each (r ps-results)
-              (list-push results r)))))
+      ;; Evaluate sh:closed constraints (needs shape's property paths)
+      (for-each (constraint (. shape constraints))
+        (match constraint
+          ((con-closed true ignored-paths)
+            (let ((mut allowed-paths (list-new arena ShaclPath))
+                  (ign-len (list-len ignored-paths)))
+              ;; Add paths from all property shapes
+              (for-each (ps (. shape property-shapes))
+                (list-push allowed-paths (. ps path)))
+              ;; Add ignored properties
+              (let ((mut i 0))
+                (while (< i ign-len)
+                  (match (list-get ignored-paths i)
+                    ((some ip) (list-push allowed-paths ip))
+                    ((none) (do)))
+                  (set! i (+ i 1))))
+              (let ((closed-results (check-closed arena data-graph focus-node
+                                      allowed-paths no-path shape-id
+                                      shape-severity shape-message)))
+                (for-each (r closed-results)
+                  (list-push results r)))))
+          (_ (do))))
+
+      ;; Pre-collect disjoint qualified value shape refs for sibling computation
+      (let ((mut all-disjoint-qvs (list-new arena Term))
+            (mut all-disjoint-ps-ids (list-new arena Term)))
+        (for-each (ps (. shape property-shapes))
+          (when (not (. ps deactivated))
+            (for-each (c (. ps constraints))
+              (match c
+                ((con-qualified-value-shape ref _ _ disjoint)
+                  (when disjoint
+                    (list-push all-disjoint-qvs ref)
+                    (list-push all-disjoint-ps-ids (. ps id))))
+                (_ (do))))))
+
+        ;; Evaluate each property shape
+        (for-each (ps (. shape property-shapes))
+          (when (not (. ps deactivated))
+            ;; Compute sibling refs: all disjoint QVS refs except this PS's own
+            (let ((mut sibling-refs (list-new arena Term))
+                  (ps-id (. ps id))
+                  (mut i 0)
+                  (n (list-len all-disjoint-qvs)))
+              (while (< i n)
+                (match (list-get all-disjoint-ps-ids i)
+                  ((some pid)
+                    (when (not (term-eq pid ps-id))
+                      (match (list-get all-disjoint-qvs i)
+                        ((some ref) (list-push sibling-refs ref))
+                        ((none) (do)))))
+                  ((none) (do)))
+                (set! i (+ i 1)))
+              (let ((ps-results (evaluate-property-shape arena data-graph shapes-graph
+                                  ps focus-node visited config sibling-refs)))
+                (for-each (r ps-results)
+                  (list-push results r)))))))
 
       results)
     :c-name "snarl_evaluate_node_shape")
@@ -149,9 +203,10 @@
   (fn evaluate-property-shape ((arena Arena) (data-graph IndexedGraph)
                                (shapes-graph ShapesGraph) (shape PropertyShape)
                                (focus-node Term) (visited (Set Term))
-                               (config ValidatorConfig))
+                               (config ValidatorConfig)
+                               (sibling-qvs-refs (List Term)))
     (@intent "Evaluate a property shape against a focus node by resolving the path")
-    (@spec ((Arena IndexedGraph ShapesGraph PropertyShape Term (Set Term) ValidatorConfig)
+    (@spec ((Arena IndexedGraph ShapesGraph PropertyShape Term (Set Term) ValidatorConfig (List Term))
             -> (List ValidationResult)))
     (@alloc arena)
     (let ((mut results (list-new arena ValidationResult))
@@ -170,7 +225,8 @@
         (let ((constraint-results
                 (evaluate-constraint-for-property arena data-graph shapes-graph
                   focus-node value-nodes value-count constraint
-                  path-opt shape-id shape-severity shape-message visited)))
+                  path-opt shape-id shape-severity shape-message visited
+                  sibling-qvs-refs)))
           (for-each (r constraint-results)
             (list-push results r))))
 
@@ -261,26 +317,131 @@
             ((none) (do))))
 
         ;; --- Constraints that need value-nodes list (handled at property level) ---
-        ((con-language-in _) (do))
+        ((con-language-in allowed-langs)
+          (match (check-language-in arena focus-node value-node allowed-langs
+                   path shape-id severity message)
+            ((some r) (list-push results r))
+            ((none) (do))))
         ((con-unique-lang _) (do))
-        ((con-equals _) (do))
-        ((con-disjoint _) (do))
-        ((con-less-than _) (do))
-        ((con-less-than-or-equals _) (do))
-        ((con-has-value _) (do))
-        ((con-in _) (do))
+        ((con-equals other-path)
+          (let ((single-list (list-new arena Term)))
+            (list-push single-list value-node)
+            (let ((eq-results (check-equals arena data-graph focus-node single-list
+                                other-path path shape-id severity message)))
+              (for-each (r eq-results) (list-push results r)))))
+
+        ((con-disjoint other-path)
+          (let ((single-list (list-new arena Term)))
+            (list-push single-list value-node)
+            (let ((dj-results (check-disjoint arena data-graph focus-node single-list
+                                other-path path shape-id severity message)))
+              (for-each (r dj-results) (list-push results r)))))
+
+        ((con-less-than other-path)
+          (let ((single-list (list-new arena Term)))
+            (list-push single-list value-node)
+            (let ((lt-results (check-less-than arena data-graph focus-node single-list
+                                other-path path shape-id severity message)))
+              (for-each (r lt-results) (list-push results r)))))
+
+        ((con-less-than-or-equals other-path)
+          (let ((single-list (list-new arena Term)))
+            (list-push single-list value-node)
+            (let ((le-results (check-less-than-or-equals arena data-graph focus-node single-list
+                                other-path path shape-id severity message)))
+              (for-each (r le-results) (list-push results r)))))
+        ((con-has-value required-value)
+          (let ((single-list (list-new arena Term)))
+            (list-push single-list value-node)
+            (match (check-has-value arena focus-node single-list required-value
+                     path shape-id severity message)
+              ((some r) (list-push results r))
+              ((none) (do)))))
+        ((con-in allowed-values)
+          (match (check-in arena focus-node value-node allowed-values
+                   path shape-id severity message)
+            ((some r) (list-push results r))
+            ((none) (do))))
         ((con-closed _ _) (do))
 
-        ;; --- Logical constraints (Phase 3 stubs) ---
-        ((con-not _) (do))
-        ((con-and _) (do))
-        ((con-or _) (do))
-        ((con-xone _) (do))
+        ;; --- Logical constraints ---
+        ;; Each recursive evaluation gets a fresh visited set to avoid
+        ;; polluting the parent's cycle detection state.
+        ((con-not shape-ref)
+          (let ((rec-visited (set-new arena Term))
+                (conforms (do
+                  (set-put rec-visited shape-ref)
+                  (match (map-get (. shapes-graph shape-map) shape-ref)
+                    ((some ref-shape)
+                      (evaluate-shape-against-node arena data-graph shapes-graph
+                        value-node ref-shape rec-visited))
+                    ((none) false)))))
+            (match (check-not arena focus-node conforms path shape-id severity message)
+              ((some r) (list-push results r))
+              ((none) (do)))))
 
-        ;; --- Shape-based constraints (Phase 3 stubs) ---
-        ((con-node _) (do))
+        ((con-and shape-refs)
+          (let ((mut all-pass true))
+            (for-each (ref shape-refs)
+              (let ((rec-visited (set-new arena Term)))
+                (set-put rec-visited ref)
+                (match (map-get (. shapes-graph shape-map) ref)
+                  ((some ref-shape)
+                    (when (not (evaluate-shape-against-node arena data-graph shapes-graph
+                                 value-node ref-shape rec-visited))
+                      (set! all-pass false)))
+                  ((none) (do)))))
+            (match (check-and arena focus-node all-pass path shape-id severity message)
+              ((some r) (list-push results r))
+              ((none) (do)))))
+
+        ((con-or shape-refs)
+          (let ((mut any-pass false))
+            (for-each (ref shape-refs)
+              (let ((rec-visited (set-new arena Term)))
+                (set-put rec-visited ref)
+                (match (map-get (. shapes-graph shape-map) ref)
+                  ((some ref-shape)
+                    (when (evaluate-shape-against-node arena data-graph shapes-graph
+                             value-node ref-shape rec-visited)
+                      (set! any-pass true)))
+                  ((none) (do)))))
+            (match (check-or arena focus-node any-pass path shape-id severity message)
+              ((some r) (list-push results r))
+              ((none) (do)))))
+
+        ((con-xone shape-refs)
+          (let ((mut pass-count 0))
+            (for-each (ref shape-refs)
+              (let ((rec-visited (set-new arena Term)))
+                (set-put rec-visited ref)
+                (match (map-get (. shapes-graph shape-map) ref)
+                  ((some ref-shape)
+                    (when (evaluate-shape-against-node arena data-graph shapes-graph
+                             value-node ref-shape rec-visited)
+                      (set! pass-count (+ pass-count 1))))
+                  ((none) (do)))))
+            (match (check-xone arena focus-node pass-count path shape-id severity message)
+              ((some r) (list-push results r))
+              ((none) (do)))))
+
+        ;; --- Shape-based constraints ---
+        ((con-node shape-ref)
+          (let ((rec-visited (set-new arena Term))
+                (value-conforms (do
+                  (set-put rec-visited shape-ref)
+                  (match (map-get (. shapes-graph shape-map) shape-ref)
+                    ((some ref-shape)
+                      (evaluate-shape-against-node arena data-graph shapes-graph
+                        value-node ref-shape rec-visited))
+                    ((none) true)))))
+            (match (check-node arena focus-node value-node value-conforms
+                     path shape-id severity message)
+              ((some r) (list-push results r))
+              ((none) (do)))))
+
         ((con-property _) (do))
-        ((con-qualified-value-shape _ _ _) (do)))
+        ((con-qualified-value-shape _ _ _ _) (do)))
 
       results)
     :c-name "snarl_evaluate_constraint")
@@ -296,10 +457,11 @@
                                         (constraint Constraint)
                                         (path (Option ShaclPath)) (shape-id Term)
                                         (severity Severity) (message (Option String))
-                                        (visited (Set Term)))
+                                        (visited (Set Term))
+                                        (sibling-qvs-refs (List Term)))
     (@intent "Evaluate a constraint in property shape context with access to all value nodes")
     (@spec ((Arena IndexedGraph ShapesGraph Term (List Term) Int Constraint
-             (Option ShaclPath) Term Severity (Option String) (Set Term))
+             (Option ShaclPath) Term Severity (Option String) (Set Term) (List Term))
             -> (List ValidationResult)))
     (@alloc arena)
     (let ((mut results (list-new arena ValidationResult)))
@@ -326,13 +488,78 @@
                 (list-push results r)))))
 
         ;; --- sh:hasValue (checks across all values) ---
-        ((con-has-value _) (do))  ;; TODO Phase 2
+        ((con-has-value required-value)
+          (match (check-has-value arena focus-node value-nodes required-value
+                   path shape-id severity message)
+            ((some r) (list-push results r))
+            ((none) (do))))
 
-        ;; --- sh:in (per value node) ---
-        ((con-in _) (do))  ;; TODO Phase 2
+        ;; --- sh:closed (per focus node, handled at node level) ---
+        ((con-closed _ _) (do))
 
-        ;; --- sh:closed (per focus node) ---
-        ((con-closed _ _) (do))  ;; TODO Phase 2
+        ;; --- Pair constraints (operate on all values vs other path) ---
+        ((con-equals other-path)
+          (let ((eq-results (check-equals arena data-graph focus-node value-nodes
+                              other-path path shape-id severity message)))
+            (for-each (r eq-results) (list-push results r))))
+
+        ((con-disjoint other-path)
+          (let ((dj-results (check-disjoint arena data-graph focus-node value-nodes
+                              other-path path shape-id severity message)))
+            (for-each (r dj-results) (list-push results r))))
+
+        ((con-less-than other-path)
+          (let ((lt-results (check-less-than arena data-graph focus-node value-nodes
+                              other-path path shape-id severity message)))
+            (for-each (r lt-results) (list-push results r))))
+
+        ((con-less-than-or-equals other-path)
+          (let ((le-results (check-less-than-or-equals arena data-graph focus-node value-nodes
+                              other-path path shape-id severity message)))
+            (for-each (r le-results) (list-push results r))))
+
+        ;; --- sh:qualifiedValueShape (operates on all values) ---
+        ((con-qualified-value-shape shape-ref q-min q-max disjoint)
+          (let ((mut conforming-count 0))
+            (for-each (vn value-nodes)
+              (let ((rec-visited (set-new arena Term)))
+                (set-put rec-visited shape-ref)
+                (match (map-get (. shapes-graph shape-map) shape-ref)
+                  ((some ref-shape)
+                    (when (evaluate-shape-against-node arena data-graph shapes-graph
+                             vn ref-shape rec-visited)
+                      ;; If disjoint, only count if value does NOT conform to any sibling QVS
+                      (if (and disjoint (> (list-len sibling-qvs-refs) 0))
+                        (let ((mut conforms-to-sibling false))
+                          (for-each (sib-ref sibling-qvs-refs)
+                            (let ((sib-visited (set-new arena Term)))
+                              (set-put sib-visited sib-ref)
+                              (match (map-get (. shapes-graph shape-map) sib-ref)
+                                ((some sib-shape)
+                                  (when (evaluate-shape-against-node arena data-graph shapes-graph
+                                           vn sib-shape sib-visited)
+                                    (set! conforms-to-sibling true)))
+                                ((none) (do)))))
+                          (when (not conforms-to-sibling)
+                            (set! conforming-count (+ conforming-count 1))))
+                        (set! conforming-count (+ conforming-count 1)))))
+                  ((none) (do)))))
+            (let ((qvs-results (check-qualified-value-shape arena focus-node conforming-count
+                                  q-min q-max path shape-id severity message)))
+              (for-each (r qvs-results) (list-push results r)))))
+
+        ;; --- con-property (nested property shape) ---
+        ((con-property ps-ref)
+          (match (map-get (. shapes-graph property-shape-map) ps-ref)
+            ((some ref-ps)
+              (for-each (vn value-nodes)
+                (let ((rec-visited (set-new arena Term))
+                      (empty-siblings (list-new arena Term))
+                      (ps-results (evaluate-property-shape arena data-graph shapes-graph
+                                    ref-ps vn rec-visited (default-validator-config)
+                                    empty-siblings)))
+                  (for-each (r ps-results) (list-push results r)))))
+            ((none) (do))))
 
         ;; --- Per-value-node constraints: evaluate for each value ---
         (_

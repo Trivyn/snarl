@@ -7,11 +7,11 @@ slop_option_types_ValidationResult snarl_check_min_exclusive(slop_arena* arena, 
 slop_option_types_ValidationResult snarl_check_max_exclusive(slop_arena* arena, rdf_Term focus_node, rdf_Term value_node, rdf_Term limit, slop_option_types_ShaclPath path, rdf_Term shape_id, types_Severity severity, slop_option_string message);
 
 slop_option_types_ValidationResult snarl_check_min_inclusive(slop_arena* arena, rdf_Term focus_node, rdf_Term value_node, rdf_Term limit, slop_option_types_ShaclPath path, rdf_Term shape_id, types_Severity severity, slop_option_string message) {
-    slop_option_types_ValidationResult _retval;
+    slop_option_types_ValidationResult _retval = {0};
     {
         __auto_type cmp = xsd_compare(arena, value_node, limit);
-        __auto_type _mv_100 = cmp;
-        switch (_mv_100) {
+        __auto_type _mv_109 = cmp;
+        switch (_mv_109) {
             case xsd_XsdCompareResult_xsd_compare_equal: {
                 return (slop_option_types_ValidationResult){.has_value = false};
                 break;
@@ -34,11 +34,11 @@ slop_option_types_ValidationResult snarl_check_min_inclusive(slop_arena* arena, 
 }
 
 slop_option_types_ValidationResult snarl_check_max_inclusive(slop_arena* arena, rdf_Term focus_node, rdf_Term value_node, rdf_Term limit, slop_option_types_ShaclPath path, rdf_Term shape_id, types_Severity severity, slop_option_string message) {
-    slop_option_types_ValidationResult _retval;
+    slop_option_types_ValidationResult _retval = {0};
     {
         __auto_type cmp = xsd_compare(arena, value_node, limit);
-        __auto_type _mv_101 = cmp;
-        switch (_mv_101) {
+        __auto_type _mv_110 = cmp;
+        switch (_mv_110) {
             case xsd_XsdCompareResult_xsd_compare_equal: {
                 return (slop_option_types_ValidationResult){.has_value = false};
                 break;
@@ -61,11 +61,11 @@ slop_option_types_ValidationResult snarl_check_max_inclusive(slop_arena* arena, 
 }
 
 slop_option_types_ValidationResult snarl_check_min_exclusive(slop_arena* arena, rdf_Term focus_node, rdf_Term value_node, rdf_Term limit, slop_option_types_ShaclPath path, rdf_Term shape_id, types_Severity severity, slop_option_string message) {
-    slop_option_types_ValidationResult _retval;
+    slop_option_types_ValidationResult _retval = {0};
     {
         __auto_type cmp = xsd_compare(arena, value_node, limit);
-        __auto_type _mv_102 = cmp;
-        switch (_mv_102) {
+        __auto_type _mv_111 = cmp;
+        switch (_mv_111) {
             case xsd_XsdCompareResult_xsd_compare_greater: {
                 return (slop_option_types_ValidationResult){.has_value = false};
                 break;
@@ -88,11 +88,11 @@ slop_option_types_ValidationResult snarl_check_min_exclusive(slop_arena* arena, 
 }
 
 slop_option_types_ValidationResult snarl_check_max_exclusive(slop_arena* arena, rdf_Term focus_node, rdf_Term value_node, rdf_Term limit, slop_option_types_ShaclPath path, rdf_Term shape_id, types_Severity severity, slop_option_string message) {
-    slop_option_types_ValidationResult _retval;
+    slop_option_types_ValidationResult _retval = {0};
     {
         __auto_type cmp = xsd_compare(arena, value_node, limit);
-        __auto_type _mv_103 = cmp;
-        switch (_mv_103) {
+        __auto_type _mv_112 = cmp;
+        switch (_mv_112) {
             case xsd_XsdCompareResult_xsd_compare_less: {
                 return (slop_option_types_ValidationResult){.has_value = false};
                 break;

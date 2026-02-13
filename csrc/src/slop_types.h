@@ -86,7 +86,8 @@ typedef enum {
     types_ShaclPath_path_alternative,
     types_ShaclPath_path_inverse,
     types_ShaclPath_path_zero_or_more,
-    types_ShaclPath_path_one_or_more
+    types_ShaclPath_path_one_or_more,
+    types_ShaclPath_path_zero_or_one
 } types_ShaclPath_tag;
 
 struct types_ShaclPath {
@@ -98,6 +99,7 @@ struct types_ShaclPath {
         types_ShaclPath* path_inverse;
         types_ShaclPath* path_zero_or_more;
         types_ShaclPath* path_one_or_more;
+        types_ShaclPath* path_zero_or_one;
     } data;
 };
 typedef struct types_ShaclPath types_ShaclPath;
@@ -170,10 +172,18 @@ struct types_Constraint {
         slop_list_rdf_Term con_xone;
         rdf_Term con_node;
         rdf_Term con_property;
-        rdf_Term con_qualified_value_shape;
+        struct {
+            rdf_Term f0;
+            int64_t f1;
+            slop_option_int f2;
+            uint8_t f3;
+        } con_qualified_value_shape;
         rdf_Term con_has_value;
         slop_list_rdf_Term con_in;
-        uint8_t con_closed;
+        struct {
+            uint8_t f0;
+            slop_list_types_ShaclPath f1;
+        } con_closed;
     } data;
 };
 typedef struct types_Constraint types_Constraint;
@@ -236,6 +246,7 @@ struct types_ShapesGraph {
     slop_list_types_NodeShape node_shapes;
     slop_list_types_PropertyShape property_shapes;
     slop_map* shape_map;
+    slop_map* property_shape_map;
 };
 typedef struct types_ShapesGraph types_ShapesGraph;
 

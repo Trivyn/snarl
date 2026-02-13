@@ -1,101 +1,10 @@
 # W3C SHACL Core tests expected to fail.
 # One test path per line. Lines starting with # are comments.
-#
-# Calibrated against snarl 0.1.0 (Phase 1 + value-range + string).
-# Remove entries as constraints get implemented and tests start passing.
-
-# --- property/ ---
-# Unwired: sh:and (logical)
-property/and-001.ttl
-# sh:datatype with ill-formed literal detection not yet implemented
-property/datatype-003.ttl
-property/datatype-ill-formed.ttl
-# Unwired: sh:disjoint (pair)
-property/disjoint-001.ttl
-# Unwired: sh:equals (pair)
-property/equals-001.ttl
-# Unwired: sh:hasValue (other)
-property/hasValue-001.ttl
-# Unwired: sh:in (other)
-property/in-001.ttl
-# Unwired: sh:lessThan (pair)
-property/lessThan-001.ttl
-property/lessThan-002.ttl
-# Unwired: sh:lessThanOrEquals (pair)
-property/lessThanOrEquals-001.ttl
-# Unwired: sh:node (shape)
-property/node-001.ttl
-property/node-002.ttl
-# sh:nodeKind — test uses multiple node kinds or edge case
-property/nodeKind-001.ttl
-# Unwired: sh:not (logical)
-property/not-001.ttl
-# Unwired: sh:or (logical)
-property/or-001.ttl
-property/or-datatypes-001.ttl
-# Unwired: sh:property (shape)
-property/property-001.ttl
-# Unwired: sh:qualifiedValueShape (shape)
-property/qualifiedMinCountDisjoint-001.ttl
-property/qualifiedValueShape-001.ttl
-property/qualifiedValueShapesDisjoint-001.ttl
-
-# --- node/ ---
-# Unwired: sh:and (logical)
-node/and-001.ttl
-node/and-002.ttl
-# Unwired: sh:closed (other)
-node/closed-001.ttl
-node/closed-002.ttl
-# Unwired: sh:disjoint (pair)
-node/disjoint-001.ttl
-# Unwired: sh:equals (pair)
-node/equals-001.ttl
-# Unwired: sh:hasValue (other)
-node/hasValue-001.ttl
-# Unwired: sh:in (other)
-node/in-001.ttl
-# Unwired: sh:languageIn (string — no-op in engine)
-node/languageIn-001.ttl
-# Unwired: sh:node (shape)
-node/node-001.ttl
-# Unwired: sh:not (logical)
-node/not-001.ttl
-node/not-002.ttl
-# Unwired: sh:or (logical)
-node/or-001.ttl
-# Unwired: sh:xone (logical)
-node/xone-001.ttl
-node/xone-duplicate.ttl
 
 # --- targets/ ---
-# Multiple target types combined — likely needs sh:or or complex interaction
-targets/multipleTargets-001.ttl
-# Implicit class targeting edge case
+# Implicit class targeting needs rdfs:subClassOf reasoning
 targets/targetClassImplicit-001.ttl
 
 # --- path/ ---
-# Path evaluation issues (alternative, complex, sequence, oneOrMore, zeroOrMore, zeroOrOne)
-path/path-alternative-001.ttl
-path/path-complex-001.ttl
-path/path-complex-002.ttl
-path/path-oneOrMore-001.ttl
-path/path-sequence-001.ttl
-path/path-sequence-002.ttl
-path/path-strange-001.ttl
+# Ambiguous path node with both RDF list structure and sh:inversePath
 path/path-strange-002.ttl
-path/path-zeroOrMore-001.ttl
-path/path-zeroOrOne-001.ttl
-
-# --- misc/ ---
-# sh:severity tests — likely needs unwired constraints to produce violations
-misc/severity-001.ttl
-misc/severity-002.ttl
-
-# --- complex/ ---
-# personexample uses multiple unwired constraints
-complex/personexample.ttl
-
-# --- validation-reports/ ---
-# Shared validation report test — uses unwired constraints
-validation-reports/shared.ttl

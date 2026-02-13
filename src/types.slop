@@ -47,7 +47,8 @@
     (path-alternative (List ShaclPath))       ;; Alternative: p1 | p2 | ...
     (path-inverse (Ptr ShaclPath))             ;; Inverse: ^p
     (path-zero-or-more (Ptr ShaclPath))       ;; Zero-or-more: p*
-    (path-one-or-more (Ptr ShaclPath))))      ;; One-or-more: p+
+    (path-one-or-more (Ptr ShaclPath))        ;; One-or-more: p+
+    (path-zero-or-one (Ptr ShaclPath))))      ;; Zero-or-one: p?
 
   ;; ============================================================
   ;; Node Kind Enumeration
@@ -118,8 +119,8 @@
     ;; Shape-based constraints (4.10)
     (con-node Term)                           ;; sh:node — shape reference
     (con-property Term)                       ;; sh:property — property shape reference
-    (con-qualified-value-shape Term (Int 0 ..) (Option (Int 0 ..)))
-                                               ;; sh:qualifiedValueShape + min/max count
+    (con-qualified-value-shape Term (Int 0 ..) (Option (Int 0 ..)) Bool)
+                                               ;; sh:qualifiedValueShape + min/max count + disjoint
 
     ;; Other constraints (4.11-4.12)
     (con-has-value Term)                      ;; sh:hasValue
@@ -167,7 +168,8 @@
   (type ShapesGraph (record
     (node-shapes (List NodeShape))             ;; All node shapes
     (property-shapes (List PropertyShape))     ;; All standalone property shapes
-    (shape-map (Map Term NodeShape))))         ;; IRI/blank -> shape for lookups
+    (shape-map (Map Term NodeShape))           ;; IRI/blank -> NodeShape for lookups
+    (property-shape-map (Map Term PropertyShape))))  ;; IRI/blank -> PropertyShape for lookups
 
   ;; ============================================================
   ;; Validation Result
@@ -246,20 +248,16 @@
     (@spec ((Arena ValidationReport ValidationResult) -> ValidationReport))
     (@alloc arena)
     (@post {(list-len (. $result results)) == (+ (list-len (. report results)) 1)})
+    (@post {(. $result conforms) == false})
     (list-push (. report results) result)
-    ;; If this is a violation, the report no longer conforms
-    (let ((still-conforms
-            (if (match (. result severity)
-                  (severity-violation true)
-                  (_ false))
-              false
-              (. report conforms))))
+    ;; Any result means the report no longer conforms (SHACL spec 3.6.1)
+    (let ((still-conforms false))
       (record-new ValidationReport
         (conforms still-conforms)
         (results (. report results)))))
 
   (fn report-conforms ((report ValidationReport))
-    (@intent "Check if validation report has no violations")
+    (@intent "Check if validation report has no results (SHACL spec 3.6.1)")
     (@spec ((ValidationReport) -> Bool))
     (@pure)
     (@post {$result == (. report conforms)})

@@ -6,7 +6,7 @@ slop_string main_argv_to_string(uint8_t** argv, int64_t index);
 main_CliArgs main_parse_args(slop_arena* arena, int64_t argc, uint8_t** argv);
 void main_print_usage(void);
 slop_option_index_IndexedGraph main_load_graph(slop_arena* arena, slop_string path, uint8_t quiet);
-int main(int64_t argc, uint8_t** argv);
+int main(int argc, char** _c_argv);
 
 void main_print_elapsed(slop_arena* arena, int64_t elapsed) {
     printf("%.*s", (int)(int_to_string(arena, (elapsed / 1000))).len, (int_to_string(arena, (elapsed / 1000))).data);
@@ -78,12 +78,12 @@ main_CliArgs main_parse_args(slop_arena* arena, int64_t argc, uint8_t** argv) {
                     if (((i + 1) < argc)) {
                         {
                             __auto_type val_str = main_argv_to_string(argv, (i + 1));
-                            __auto_type _mv_212 = strlib_parse_int(val_str);
-                            if (_mv_212.is_ok) {
-                                __auto_type n = _mv_212.data.ok;
+                            __auto_type _mv_250 = strlib_parse_int(val_str);
+                            if (_mv_250.is_ok) {
+                                __auto_type n = _mv_250.data.ok;
                                 max_errors = n;
-                            } else if (!_mv_212.is_ok) {
-                                __auto_type _ = _mv_212.data.err;
+                            } else if (!_mv_250.is_ok) {
+                                __auto_type _ = _mv_250.data.err;
                                 printf("%s\n", "Error: --max-errors requires a number");
                             }
                         }
@@ -135,16 +135,16 @@ void main_print_usage(void) {
 }
 
 slop_option_index_IndexedGraph main_load_graph(slop_arena* arena, slop_string path, uint8_t quiet) {
-    __auto_type _mv_213 = ttl_parse_ttl_file(arena, path);
-    if (!_mv_213.is_ok) {
-        __auto_type e = _mv_213.data.err;
+    __auto_type _mv_251 = ttl_parse_ttl_file(arena, path);
+    if (!_mv_251.is_ok) {
+        __auto_type e = _mv_251.data.err;
         printf("%s", "Error: failed to parse ");
         printf("%.*s\n", (int)(path).len, (path).data);
-        __auto_type _mv_214 = e;
-        switch (_mv_214.tag) {
+        __auto_type _mv_252 = e;
+        switch (_mv_252.tag) {
             case ttl_TtlFileError_parse_error:
             {
-                __auto_type pe = _mv_214.data.parse_error;
+                __auto_type pe = _mv_252.data.parse_error;
                 printf("%s", "  at line ");
                 printf("%.*s", (int)(int_to_string(arena, pe.position.line)).len, (int_to_string(arena, pe.position.line)).data);
                 printf("%s", ", column ");
@@ -155,14 +155,14 @@ slop_option_index_IndexedGraph main_load_graph(slop_arena* arena, slop_string pa
             }
             case ttl_TtlFileError_file_error:
             {
-                __auto_type _ = _mv_214.data.file_error;
+                __auto_type _ = _mv_252.data.file_error;
                 printf("%s\n", "  (file not found or unreadable)");
                 break;
             }
         }
         return (slop_option_index_IndexedGraph){.has_value = false};
-    } else if (_mv_213.is_ok) {
-        __auto_type g = _mv_213.data.ok;
+    } else if (_mv_251.is_ok) {
+        __auto_type g = _mv_251.data.ok;
         {
             __auto_type ig = rdf_indexed_graph_create(arena);
             {
@@ -183,7 +183,8 @@ slop_option_index_IndexedGraph main_load_graph(slop_arena* arena, slop_string pa
     }
 }
 
-int main(int64_t argc, uint8_t** argv) {
+int main(int argc, char** _c_argv) {
+    uint8_t** argv = (uint8_t**)_c_argv;
     {
         #ifdef SLOP_DEBUG
         SLOP_PRE((134217728) > 0, "with-arena size must be positive");
@@ -199,16 +200,16 @@ int main(int64_t argc, uint8_t** argv) {
                 printf("snarl %s\n", SNARL_VERSION);
                 return 0;
             } else {
-                __auto_type _mv_215 = args.data_file;
-                if (!_mv_215.has_value) {
+                __auto_type _mv_253 = args.data_file;
+                if (!_mv_253.has_value) {
                     main_print_usage();
                     if (args.show_help) {
                         return 0;
                     } else {
                         return 1;
                     }
-                } else if (_mv_215.has_value) {
-                    __auto_type data_path = _mv_215.value;
+                } else if (_mv_253.has_value) {
+                    __auto_type data_path = _mv_253.value;
                     if (args.show_help) {
                         main_print_usage();
                         return 0;
@@ -216,41 +217,40 @@ int main(int64_t argc, uint8_t** argv) {
                         {
                             __auto_type quiet = args.quiet;
                             __auto_type parse_start = slop_now_ms();
-                            __auto_type _mv_216 = main_load_graph(arena, data_path, quiet);
-                            if (!_mv_216.has_value) {
+                            __auto_type _mv_254 = main_load_graph(arena, data_path, quiet);
+                            if (!_mv_254.has_value) {
                                 return 2;
-                            } else if (_mv_216.has_value) {
-                                __auto_type data_graph = _mv_216.value;
+                            } else if (_mv_254.has_value) {
+                                __auto_type data_graph = _mv_254.value;
                                 {
                                     __auto_type shapes_path = ({ __auto_type _mv = args.shapes_file; _mv.has_value ? ({ __auto_type sp = _mv.value; sp; }) : (data_path); });
                                     {
                                         __auto_type shapes_result = ((string_eq(shapes_path, data_path)) ? (slop_option_index_IndexedGraph){.has_value = 1, .value = data_graph} : main_load_graph(arena, shapes_path, quiet));
-                                        __auto_type _mv_217 = shapes_result;
-                                        if (!_mv_217.has_value) {
+                                        __auto_type _mv_255 = shapes_result;
+                                        if (!_mv_255.has_value) {
                                             return 2;
-                                        } else if (_mv_217.has_value) {
-                                            __auto_type shapes_graph = _mv_217.value;
+                                        } else if (_mv_255.has_value) {
+                                            __auto_type shapes_graph = _mv_255.value;
                                             {
                                                 __auto_type parse_elapsed = (slop_now_ms() - parse_start);
                                                 __auto_type validate_start = slop_now_ms();
                                                 __auto_type config = ((types_ValidatorConfig){.verbose = !(quiet), .max_errors = args.max_errors, .include_warnings = !(args.no_warnings), .include_infos = !(args.no_infos)});
-                                                __auto_type _mv_218 = snarl_validate_with_config(arena, data_graph, shapes_graph, config);
-                                                switch (_mv_218.tag) {
+                                                __auto_type _mv_256 = snarl_validate_with_config(arena, data_graph, shapes_graph, config);
+                                                switch (_mv_256.tag) {
                                                     case types_ValidatorResult_validate_success:
                                                     {
-                                                        __auto_type report = _mv_218.data.validate_success;
+                                                        __auto_type report = _mv_256.data.validate_success;
                                                         {
                                                             __auto_type validate_elapsed = (slop_now_ms() - validate_start);
                                                             __auto_type violations = snarl_get_violations(arena, report);
                                                             __auto_type violation_count = ((int64_t)((violations).len));
                                                             __auto_type total_count = snarl_get_result_count(report);
                                                             if (quiet) {
-                                                                if ((violation_count > 0)) {
-                                                                    printf("%.*s", (int)(int_to_string(arena, violation_count)).len, (int_to_string(arena, violation_count)).data);
-                                                                    printf("%s\n", " violation(s)");
-                                                                }
-                                                                if ((violation_count == 0)) {
+                                                                if (report.conforms) {
                                                                     printf("%s\n", "conforms");
+                                                                } else {
+                                                                    printf("%.*s", (int)(int_to_string(arena, total_count)).len, (int_to_string(arena, total_count)).data);
+                                                                    printf("%s\n", " result(s)");
                                                                 }
                                                             } else {
                                                                 snarl_print_report(arena, report);
@@ -258,25 +258,25 @@ int main(int64_t argc, uint8_t** argv) {
                                                                 main_print_elapsed(arena, validate_elapsed);
                                                                 printf("%s\n", "");
                                                             }
-                                                            __auto_type _mv_219 = args.emit_file;
-                                                            if (_mv_219.has_value) {
-                                                                __auto_type emit_path = _mv_219.value;
+                                                            __auto_type _mv_257 = args.emit_file;
+                                                            if (_mv_257.has_value) {
+                                                                __auto_type emit_path = _mv_257.value;
                                                                 if (!(quiet)) {
                                                                     printf("%s", "Report written to ");
                                                                     printf("%.*s\n", (int)(emit_path).len, (emit_path).data);
                                                                 }
-                                                            } else if (!_mv_219.has_value) {
+                                                            } else if (!_mv_257.has_value) {
                                                             }
-                                                            if ((violation_count > 0)) {
-                                                                return 1;
-                                                            } else {
+                                                            if (report.conforms) {
                                                                 return 0;
+                                                            } else {
+                                                                return 1;
                                                             }
                                                         }
                                                     }
                                                     case types_ValidatorResult_validate_error:
                                                     {
-                                                        __auto_type msg = _mv_218.data.validate_error;
+                                                        __auto_type msg = _mv_256.data.validate_error;
                                                         printf("%s", "Error: ");
                                                         printf("%.*s\n", (int)(msg).len, (msg).data);
                                                         return 2;

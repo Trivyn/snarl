@@ -28,7 +28,7 @@ uint8_t test_cli_test_nodekind_violation(slop_arena* arena);
 uint8_t test_cli_test_target_node(slop_arena* arena);
 uint8_t test_cli_test_multiple_violations(slop_arena* arena);
 uint8_t test_cli_test_report_string(slop_arena* arena);
-int main(int64_t argc, uint8_t** argv);
+int main(int argc, char** _c_argv);
 
 #ifndef SLOP_OPTION_INDEX_INDEXEDGRAPH_DEFINED
 #define SLOP_OPTION_INDEX_INDEXEDGRAPH_DEFINED

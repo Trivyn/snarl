@@ -14,12 +14,12 @@ uint8_t test_cli_test_nodekind_violation(slop_arena* arena);
 uint8_t test_cli_test_target_node(slop_arena* arena);
 uint8_t test_cli_test_multiple_violations(slop_arena* arena);
 uint8_t test_cli_test_report_string(slop_arena* arena);
-int main(int64_t argc, uint8_t** argv);
+int main(int argc, char** _c_argv);
 
 slop_option_index_IndexedGraph test_cli_load_test_graph(slop_arena* arena, slop_string path) {
-    __auto_type _mv_212 = ttl_parse_ttl_file(arena, path);
-    if (_mv_212.is_ok) {
-        __auto_type g = _mv_212.data.ok;
+    __auto_type _mv_250 = ttl_parse_ttl_file(arena, path);
+    if (_mv_250.is_ok) {
+        __auto_type g = _mv_250.data.ok;
         {
             __auto_type ig = rdf_indexed_graph_create(arena);
             {
@@ -31,16 +31,16 @@ slop_option_index_IndexedGraph test_cli_load_test_graph(slop_arena* arena, slop_
             }
             return (slop_option_index_IndexedGraph){.has_value = 1, .value = ig};
         }
-    } else if (!_mv_212.is_ok) {
-        __auto_type _ = _mv_212.data.err;
+    } else if (!_mv_250.is_ok) {
+        __auto_type _ = _mv_250.data.err;
         return (slop_option_index_IndexedGraph){.has_value = false};
     }
 }
 
 uint8_t test_cli_assert_conforms(slop_arena* arena, slop_string path) {
-    __auto_type _mv_213 = test_cli_load_test_graph(arena, path);
-    if (_mv_213.has_value) {
-        __auto_type g = _mv_213.value;
+    __auto_type _mv_251 = test_cli_load_test_graph(arena, path);
+    if (_mv_251.has_value) {
+        __auto_type g = _mv_251.value;
         {
             __auto_type result = snarl_conforms(arena, g, g);
             if (result) {
@@ -55,7 +55,7 @@ uint8_t test_cli_assert_conforms(slop_arena* arena, slop_string path) {
                 return 0;
             }
         }
-    } else if (!_mv_213.has_value) {
+    } else if (!_mv_251.has_value) {
         printf("%s", "  FAIL: could not load ");
         printf("%.*s\n", (int)(path).len, (path).data);
         return 0;
@@ -63,14 +63,14 @@ uint8_t test_cli_assert_conforms(slop_arena* arena, slop_string path) {
 }
 
 uint8_t test_cli_assert_violations(slop_arena* arena, slop_string path, int64_t expected_count) {
-    __auto_type _mv_214 = test_cli_load_test_graph(arena, path);
-    if (_mv_214.has_value) {
-        __auto_type g = _mv_214.value;
-        __auto_type _mv_215 = snarl_validate(arena, g, g);
-        switch (_mv_215.tag) {
+    __auto_type _mv_252 = test_cli_load_test_graph(arena, path);
+    if (_mv_252.has_value) {
+        __auto_type g = _mv_252.value;
+        __auto_type _mv_253 = snarl_validate(arena, g, g);
+        switch (_mv_253.tag) {
             case types_ValidatorResult_validate_success:
             {
-                __auto_type report = _mv_215.data.validate_success;
+                __auto_type report = _mv_253.data.validate_success;
                 {
                     __auto_type violations = snarl_get_violations(arena, report);
                     __auto_type actual_count = ((int64_t)((violations).len));
@@ -94,13 +94,13 @@ uint8_t test_cli_assert_violations(slop_arena* arena, slop_string path, int64_t 
             }
             case types_ValidatorResult_validate_error:
             {
-                __auto_type msg = _mv_215.data.validate_error;
+                __auto_type msg = _mv_253.data.validate_error;
                 printf("%s", "  FAIL: validation error: ");
                 printf("%.*s\n", (int)(msg).len, (msg).data);
                 return 0;
             }
         }
-    } else if (!_mv_214.has_value) {
+    } else if (!_mv_252.has_value) {
         printf("%s", "  FAIL: could not load ");
         printf("%.*s\n", (int)(path).len, (path).data);
         return 0;
@@ -108,9 +108,9 @@ uint8_t test_cli_assert_violations(slop_arena* arena, slop_string path, int64_t 
 }
 
 uint8_t test_cli_assert_has_violations(slop_arena* arena, slop_string path) {
-    __auto_type _mv_216 = test_cli_load_test_graph(arena, path);
-    if (_mv_216.has_value) {
-        __auto_type g = _mv_216.value;
+    __auto_type _mv_254 = test_cli_load_test_graph(arena, path);
+    if (_mv_254.has_value) {
+        __auto_type g = _mv_254.value;
         {
             __auto_type result = snarl_conforms(arena, g, g);
             if (!(result)) {
@@ -125,7 +125,7 @@ uint8_t test_cli_assert_has_violations(slop_arena* arena, slop_string path) {
                 return 0;
             }
         }
-    } else if (!_mv_216.has_value) {
+    } else if (!_mv_254.has_value) {
         printf("%s", "  FAIL: could not load ");
         printf("%.*s\n", (int)(path).len, (path).data);
         return 0;
@@ -165,14 +165,14 @@ uint8_t test_cli_test_multiple_violations(slop_arena* arena) {
 }
 
 uint8_t test_cli_test_report_string(slop_arena* arena) {
-    __auto_type _mv_217 = test_cli_load_test_graph(arena, SLOP_STR("fixtures/cardinality-violation.ttl"));
-    if (_mv_217.has_value) {
-        __auto_type g = _mv_217.value;
-        __auto_type _mv_218 = snarl_validate(arena, g, g);
-        switch (_mv_218.tag) {
+    __auto_type _mv_255 = test_cli_load_test_graph(arena, SLOP_STR("fixtures/cardinality-violation.ttl"));
+    if (_mv_255.has_value) {
+        __auto_type g = _mv_255.value;
+        __auto_type _mv_256 = snarl_validate(arena, g, g);
+        switch (_mv_256.tag) {
             case types_ValidatorResult_validate_success:
             {
-                __auto_type report = _mv_218.data.validate_success;
+                __auto_type report = _mv_256.data.validate_success;
                 {
                     __auto_type text = snarl_report_to_string(arena, report);
                     if ((string_len(text) > 0)) {
@@ -186,18 +186,19 @@ uint8_t test_cli_test_report_string(slop_arena* arena) {
             }
             case types_ValidatorResult_validate_error:
             {
-                __auto_type _ = _mv_218.data.validate_error;
+                __auto_type _ = _mv_256.data.validate_error;
                 printf("%s\n", "  FAIL: validation error");
                 return 0;
             }
         }
-    } else if (!_mv_217.has_value) {
+    } else if (!_mv_255.has_value) {
         printf("%s\n", "  FAIL: could not load fixture");
         return 0;
     }
 }
 
-int main(int64_t argc, uint8_t** argv) {
+int main(int argc, char** _c_argv) {
+    uint8_t** argv = (uint8_t**)_c_argv;
     {
         #ifdef SLOP_DEBUG
         SLOP_PRE((67108864) > 0, "with-arena size must be positive");

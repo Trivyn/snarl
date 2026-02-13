@@ -119,6 +119,7 @@ slop_list_rdf_Term path_resolve_alternative(slop_arena* arena, index_IndexedGrap
 slop_list_rdf_Term path_resolve_inverse(slop_arena* arena, index_IndexedGraph g, rdf_Term focus, types_ShaclPath inner);
 slop_list_rdf_Term path_resolve_zero_or_more(slop_arena* arena, index_IndexedGraph g, rdf_Term focus, types_ShaclPath inner);
 slop_list_rdf_Term path_resolve_one_or_more(slop_arena* arena, index_IndexedGraph g, rdf_Term focus, types_ShaclPath inner);
+slop_list_rdf_Term path_resolve_zero_or_one(slop_arena* arena, index_IndexedGraph g, rdf_Term focus, types_ShaclPath inner);
 
 /* Function name aliases for C interop */
 #define path_resolve_path snarl_resolve_path
