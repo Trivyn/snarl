@@ -19,7 +19,8 @@ ALL_SRCS    := $(wildcard $(CSRC)/*.c)
 SHARED_SRCS := $(filter-out $(CSRC)/slop_main.c $(CSRC)/slop_test_cli.c, $(ALL_SRCS))
 SHARED_OBJS := $(patsubst $(CSRC)/%.c,$(OBJ)/%.o,$(SHARED_SRCS))
 
-.PHONY: all cli lib test w3c-test bench clean release dist csrc slop-build
+.PHONY: all cli lib test w3c-test bench clean release dist csrc slop-build \
+       crate-vendor crate-build crate-test crate-publish
 
 PLATFORM ?= unknown
 
@@ -77,6 +78,20 @@ slop-build:
 
 csrc:
 	./csrc/update_bootstrap.sh
+
+crate-vendor:
+	@mkdir -p rust/csrc/src rust/csrc/runtime
+	cp csrc/src/*.c csrc/src/*.h rust/csrc/src/
+	cp csrc/runtime/slop_runtime.h rust/csrc/runtime/
+
+crate-build: crate-vendor
+	cd rust && cargo build
+
+crate-test: crate-vendor
+	cd rust && cargo test
+
+crate-publish: crate-vendor
+	cd rust && cargo publish --dry-run --allow-dirty
 
 dist:
 	rm -rf dist
