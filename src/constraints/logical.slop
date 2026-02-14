@@ -13,9 +13,13 @@
 (module logical
   (@doc "SHACL logical constraints: sh:not, sh:and, sh:or, sh:xone")
 
-  (import rdf (Term))
+  (import rdf (Term make-iri))
   (import vocab (SHACL_NOT SHACL_AND SHACL_OR SHACL_XONE))
   (import types (Severity ValidationResult ShaclPath))
+
+  ;; Test URI constants
+  (const EX_FOCUS String "http://example.org/focus")
+  (const EX_SHAPE String "http://example.org/Shape1")
 
   (export
     check-not
@@ -34,6 +38,8 @@
     (@spec ((Arena Term Bool (Option ShaclPath) Term Severity (Option String))
             -> (Option ValidationResult)))
     (@alloc arena)
+    (@example (arena (make-iri arena EX_FOCUS) true (none) (make-iri arena EX_SHAPE) severity-violation (none)) -> (some (ValidationResult _ _ _ _ _ _ _)))
+    (@example (arena (make-iri arena EX_FOCUS) false (none) (make-iri arena EX_SHAPE) severity-violation (none)) -> (none))
     ;; Postcondition: ($result == (none)) iff (not conforms-to-ref)
     (if conforms-to-ref
       (some (record-new ValidationResult
@@ -54,6 +60,8 @@
     (@spec ((Arena Term Bool (Option ShaclPath) Term Severity (Option String))
             -> (Option ValidationResult)))
     (@alloc arena)
+    (@example (arena (make-iri arena EX_FOCUS) true (none) (make-iri arena EX_SHAPE) severity-violation (none)) -> (none))
+    (@example (arena (make-iri arena EX_FOCUS) false (none) (make-iri arena EX_SHAPE) severity-violation (none)) -> (some (ValidationResult _ _ _ _ _ _ _)))
     ;; Postcondition: ($result == (none)) iff all-pass
     (if all-pass
       (none)
@@ -74,6 +82,8 @@
     (@spec ((Arena Term Bool (Option ShaclPath) Term Severity (Option String))
             -> (Option ValidationResult)))
     (@alloc arena)
+    (@example (arena (make-iri arena EX_FOCUS) true (none) (make-iri arena EX_SHAPE) severity-violation (none)) -> (none))
+    (@example (arena (make-iri arena EX_FOCUS) false (none) (make-iri arena EX_SHAPE) severity-violation (none)) -> (some (ValidationResult _ _ _ _ _ _ _)))
     ;; Postcondition: ($result == (none)) iff any-pass
     (if any-pass
       (none)
@@ -94,6 +104,9 @@
     (@spec ((Arena Term Int (Option ShaclPath) Term Severity (Option String))
             -> (Option ValidationResult)))
     (@alloc arena)
+    (@example (arena (make-iri arena EX_FOCUS) 1 (none) (make-iri arena EX_SHAPE) severity-violation (none)) -> (none))
+    (@example (arena (make-iri arena EX_FOCUS) 0 (none) (make-iri arena EX_SHAPE) severity-violation (none)) -> (some (ValidationResult _ _ _ _ _ _ _)))
+    (@example (arena (make-iri arena EX_FOCUS) 2 (none) (make-iri arena EX_SHAPE) severity-violation (none)) -> (some (ValidationResult _ _ _ _ _ _ _)))
     ;; Postcondition: ($result == (none)) iff (== pass-count 1)
     (if (== pass-count 1)
       (none)

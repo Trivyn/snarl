@@ -1,0 +1,24 @@
+@prefix ex: <http://example.org/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+ex:author1 a ex:Author .
+ex:author2 a ex:Author .
+ex:author3 a ex:Author .
+
+ex:book1 a ex:Book ;
+    ex:title "The Great Gatsby" ;
+    ex:isbn "9780743273565" ;
+    ex:author ex:author1 ;
+    ex:year "1925"^^xsd:integer .
+
+ex:book2 a ex:Book ;
+    ex:title "To Kill a Mockingbird" ;
+    ex:isbn "9780061120084" ;
+    ex:author ex:author2 ;
+    ex:year "1960"^^xsd:integer .
+
+ex:book3 a ex:Book ;
+    ex:title "1984" ;
+    ex:isbn "9780451524935" ;
+    ex:author ex:author3 ;
+    ex:year "1949"^^xsd:integer .

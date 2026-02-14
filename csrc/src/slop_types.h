@@ -6,6 +6,7 @@
 #include <stdbool.h>
 #include "slop_rdf.h"
 #include "slop_index.h"
+#include "slop_vocab.h"
 
 typedef struct types_ShaclPath types_ShaclPath;
 typedef struct types_Constraint types_Constraint;
@@ -306,6 +307,7 @@ typedef struct types_ValidatorResult types_ValidatorResult;
 SLOP_OPTION_DEFINE(types_ValidatorResult, slop_option_types_ValidatorResult)
 #endif
 
+types_ValidationResult types_fixture_violation(slop_arena* arena);
 types_ValidatorConfig types_default_validator_config(void);
 types_ValidationReport types_make_validation_report(slop_arena* arena);
 types_ValidationReport types_report_add_result(slop_arena* arena, types_ValidationReport report, types_ValidationResult result);

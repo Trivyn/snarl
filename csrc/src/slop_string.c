@@ -1,6 +1,9 @@
 #include "../runtime/slop_runtime.h"
 #include "slop_string.h"
 
+static const slop_string string_EX_FOCUS = SLOP_STR("http://example.org/focus");
+static const slop_string string_EX_SHAPE = SLOP_STR("http://example.org/Shape1");
+
 slop_string string_term_string_value(rdf_Term t);
 slop_string string_term_lang(rdf_Term t);
 uint8_t string_term_is_literal(rdf_Term t);
@@ -9,9 +12,12 @@ slop_option_types_ValidationResult snarl_check_min_length(slop_arena* arena, rdf
 slop_option_types_ValidationResult snarl_check_max_length(slop_arena* arena, rdf_Term focus_node, rdf_Term value_node, int64_t max_len, slop_option_types_ShaclPath path, rdf_Term shape_id, types_Severity severity, slop_option_string message);
 slop_option_types_ValidationResult snarl_check_pattern(slop_arena* arena, rdf_Term focus_node, rdf_Term value_node, slop_string pattern, slop_option_types_ShaclPath path, rdf_Term shape_id, types_Severity severity, slop_option_string message);
 slop_option_types_ValidationResult snarl_check_language_in(slop_arena* arena, rdf_Term focus_node, rdf_Term value_node, slop_list_string allowed_langs, slop_option_types_ShaclPath path, rdf_Term shape_id, types_Severity severity, slop_option_string message);
+slop_list_string string_fixture_allowed_langs(slop_arena* arena);
+slop_list_rdf_Term string_fixture_unique_langs(slop_arena* arena);
 slop_list_types_ValidationResult snarl_check_unique_lang(slop_arena* arena, rdf_Term focus_node, slop_list_rdf_Term value_nodes, slop_option_types_ShaclPath path, rdf_Term shape_id, types_Severity severity, slop_option_string message);
 
 slop_string string_term_string_value(rdf_Term t) {
+    slop_string _retval = {0};
     __auto_type _mv_101 = t;
     switch (_mv_101.tag) {
         case rdf_Term_term_literal:
@@ -30,6 +36,8 @@ slop_string string_term_string_value(rdf_Term t) {
             return SLOP_STR("");
         }
     }
+    SLOP_POST((({ __auto_type _mv = t; uint8_t _mr = {0}; switch (_mv.tag) { case rdf_Term_term_literal: { __auto_type lit = _mv.data.term_literal; _mr = slop_string_eq(_retval, lit.value); break; } case rdf_Term_term_iri: { __auto_type iri = _mv.data.term_iri; _mr = slop_string_eq(_retval, iri.value); break; } case rdf_Term_term_blank: { __auto_type _ = _mv.data.term_blank; _mr = slop_string_eq(_retval, SLOP_STR("")); break; }  } _mr; })), "(match t ((term-literal lit) (== $result (. lit value))) ((term-iri iri) (== $result (. iri value))) ((term-blank _) (== $result \"\")))");
+    return _retval;
 }
 
 slop_string string_term_lang(rdf_Term t) {
@@ -92,7 +100,7 @@ slop_option_types_ValidationResult snarl_check_min_length(slop_arena* arena, rdf
             return (slop_option_types_ValidationResult){.has_value = 1, .value = ((types_ValidationResult){.focus_node = focus_node, .result_path = path, .value = (slop_option_rdf_Term){.has_value = 1, .value = value_node}, .source_shape = shape_id, .source_constraint_component = vocab_SHACL_MIN_LENGTH, .severity = severity, .message = message})};
         }
     }
-    SLOP_POST((((_retval != ((slop_option_types_ValidationResult){.has_value = false})) || (string_len(string_term_string_value(value_node)) >= min_len))), "(or (!= $result (none)) (>= (string-len (term-string-value value-node)) min-len))");
+    SLOP_POST((((_retval == ((slop_option_types_ValidationResult){.has_value = false})) == (string_len(string_term_string_value(value_node)) >= min_len))), "(== (== $result (none)) (>= (string-len (term-string-value value-node)) min-len))");
     return _retval;
 }
 
@@ -107,7 +115,7 @@ slop_option_types_ValidationResult snarl_check_max_length(slop_arena* arena, rdf
             return (slop_option_types_ValidationResult){.has_value = 1, .value = ((types_ValidationResult){.focus_node = focus_node, .result_path = path, .value = (slop_option_rdf_Term){.has_value = 1, .value = value_node}, .source_shape = shape_id, .source_constraint_component = vocab_SHACL_MAX_LENGTH, .severity = severity, .message = message})};
         }
     }
-    SLOP_POST((((_retval != ((slop_option_types_ValidationResult){.has_value = false})) || (string_len(string_term_string_value(value_node)) <= max_len))), "(or (!= $result (none)) (<= (string-len (term-string-value value-node)) max-len))");
+    SLOP_POST((((_retval == ((slop_option_types_ValidationResult){.has_value = false})) == (string_len(string_term_string_value(value_node)) <= max_len))), "(== (== $result (none)) (<= (string-len (term-string-value value-node)) max-len))");
     return _retval;
 }
 
@@ -159,7 +167,26 @@ slop_option_types_ValidationResult snarl_check_language_in(slop_arena* arena, rd
             return (slop_option_types_ValidationResult){.has_value = 1, .value = ((types_ValidationResult){.focus_node = focus_node, .result_path = path, .value = (slop_option_rdf_Term){.has_value = 1, .value = value_node}, .source_shape = shape_id, .source_constraint_component = vocab_SHACL_LANGUAGE_IN, .severity = severity, .message = message})};
         }
     }
+    SLOP_POST((({ __auto_type _mv = value_node; uint8_t _mr = {0}; switch (_mv.tag) { case rdf_Term_term_literal: { __auto_type _ = _mv.data.term_literal; _mr = 1; break; } default: { _mr = (_retval != ((slop_option_types_ValidationResult){.has_value = false})); break; }  } _mr; })), "(match value-node ((term-literal _) true) (_ (!= $result (none))))");
     return _retval;
+}
+
+slop_list_string string_fixture_allowed_langs(slop_arena* arena) {
+    {
+        __auto_type langs = ((slop_list_string){ .data = (slop_string*)slop_arena_alloc(arena, 16 * sizeof(slop_string)), .len = 0, .cap = 16 });
+        ({ __auto_type _lst_p = &(langs); __auto_type _item = (SLOP_STR("en")); if (_lst_p->len >= _lst_p->cap) { size_t _new_cap = _lst_p->cap == 0 ? 16 : _lst_p->cap * 2; __typeof__(_lst_p->data) _new_data = (__typeof__(_lst_p->data))slop_arena_alloc(arena, _new_cap * sizeof(*_lst_p->data)); if (_lst_p->len > 0) memcpy(_new_data, _lst_p->data, _lst_p->len * sizeof(*_lst_p->data)); _lst_p->data = _new_data; _lst_p->cap = _new_cap; } _lst_p->data[_lst_p->len++] = _item; (void)0; });
+        ({ __auto_type _lst_p = &(langs); __auto_type _item = (SLOP_STR("fr")); if (_lst_p->len >= _lst_p->cap) { size_t _new_cap = _lst_p->cap == 0 ? 16 : _lst_p->cap * 2; __typeof__(_lst_p->data) _new_data = (__typeof__(_lst_p->data))slop_arena_alloc(arena, _new_cap * sizeof(*_lst_p->data)); if (_lst_p->len > 0) memcpy(_new_data, _lst_p->data, _lst_p->len * sizeof(*_lst_p->data)); _lst_p->data = _new_data; _lst_p->cap = _new_cap; } _lst_p->data[_lst_p->len++] = _item; (void)0; });
+        return langs;
+    }
+}
+
+slop_list_rdf_Term string_fixture_unique_langs(slop_arena* arena) {
+    {
+        __auto_type terms = ((slop_list_rdf_Term){ .data = (rdf_Term*)slop_arena_alloc(arena, 16 * sizeof(rdf_Term)), .len = 0, .cap = 16 });
+        ({ __auto_type _lst_p = &(terms); __auto_type _item = (rdf_make_literal(arena, SLOP_STR("hi"), ((slop_option_string){.has_value = false}), (slop_option_string){.has_value = 1, .value = SLOP_STR("en")})); if (_lst_p->len >= _lst_p->cap) { size_t _new_cap = _lst_p->cap == 0 ? 16 : _lst_p->cap * 2; __typeof__(_lst_p->data) _new_data = (__typeof__(_lst_p->data))slop_arena_alloc(arena, _new_cap * sizeof(*_lst_p->data)); if (_lst_p->len > 0) memcpy(_new_data, _lst_p->data, _lst_p->len * sizeof(*_lst_p->data)); _lst_p->data = _new_data; _lst_p->cap = _new_cap; } _lst_p->data[_lst_p->len++] = _item; (void)0; });
+        ({ __auto_type _lst_p = &(terms); __auto_type _item = (rdf_make_literal(arena, SLOP_STR("bonjour"), ((slop_option_string){.has_value = false}), (slop_option_string){.has_value = 1, .value = SLOP_STR("fr")})); if (_lst_p->len >= _lst_p->cap) { size_t _new_cap = _lst_p->cap == 0 ? 16 : _lst_p->cap * 2; __typeof__(_lst_p->data) _new_data = (__typeof__(_lst_p->data))slop_arena_alloc(arena, _new_cap * sizeof(*_lst_p->data)); if (_lst_p->len > 0) memcpy(_new_data, _lst_p->data, _lst_p->len * sizeof(*_lst_p->data)); _lst_p->data = _new_data; _lst_p->cap = _new_cap; } _lst_p->data[_lst_p->len++] = _item; (void)0; });
+        return terms;
+    }
 }
 
 slop_list_types_ValidationResult snarl_check_unique_lang(slop_arena* arena, rdf_Term focus_node, slop_list_rdf_Term value_nodes, slop_option_types_ShaclPath path, rdf_Term shape_id, types_Severity severity, slop_option_string message) {

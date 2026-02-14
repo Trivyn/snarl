@@ -1,10 +1,34 @@
 #include "../runtime/slop_runtime.h"
 #include "slop_pair.h"
 
+static const slop_string pair_EX_FOCUS = SLOP_STR("http://example.org/focus");
+static const slop_string pair_EX_SHAPE = SLOP_STR("http://example.org/Shape1");
+static const slop_string pair_EX_A = SLOP_STR("http://example.org/a");
+static const slop_string pair_EX_B = SLOP_STR("http://example.org/b");
+static const slop_string pair_EX_P2 = SLOP_STR("http://example.org/p2");
+
+index_IndexedGraph pair_fixture_g_focus_p2_a(slop_arena* arena);
+slop_list_rdf_Term pair_fixture_term_list_a(slop_arena* arena);
 slop_list_types_ValidationResult snarl_check_equals(slop_arena* arena, index_IndexedGraph data_graph, rdf_Term focus_node, slop_list_rdf_Term value_nodes, types_ShaclPath other_path, slop_option_types_ShaclPath path, rdf_Term shape_id, types_Severity severity, slop_option_string message);
 slop_list_types_ValidationResult snarl_check_disjoint(slop_arena* arena, index_IndexedGraph data_graph, rdf_Term focus_node, slop_list_rdf_Term value_nodes, types_ShaclPath other_path, slop_option_types_ShaclPath path, rdf_Term shape_id, types_Severity severity, slop_option_string message);
 slop_list_types_ValidationResult snarl_check_less_than(slop_arena* arena, index_IndexedGraph data_graph, rdf_Term focus_node, slop_list_rdf_Term value_nodes, types_ShaclPath other_path, slop_option_types_ShaclPath path, rdf_Term shape_id, types_Severity severity, slop_option_string message);
 slop_list_types_ValidationResult snarl_check_less_than_or_equals(slop_arena* arena, index_IndexedGraph data_graph, rdf_Term focus_node, slop_list_rdf_Term value_nodes, types_ShaclPath other_path, slop_option_types_ShaclPath path, rdf_Term shape_id, types_Severity severity, slop_option_string message);
+
+index_IndexedGraph pair_fixture_g_focus_p2_a(slop_arena* arena) {
+    {
+        __auto_type g = rdf_indexed_graph_create(arena);
+        g = rdf_indexed_graph_add(arena, g, rdf_make_triple(arena, rdf_make_iri(arena, pair_EX_FOCUS), rdf_make_iri(arena, pair_EX_P2), rdf_make_iri(arena, pair_EX_A)));
+        return g;
+    }
+}
+
+slop_list_rdf_Term pair_fixture_term_list_a(slop_arena* arena) {
+    {
+        __auto_type terms = ((slop_list_rdf_Term){ .data = (rdf_Term*)slop_arena_alloc(arena, 16 * sizeof(rdf_Term)), .len = 0, .cap = 16 });
+        ({ __auto_type _lst_p = &(terms); __auto_type _item = (rdf_make_iri(arena, pair_EX_A)); if (_lst_p->len >= _lst_p->cap) { size_t _new_cap = _lst_p->cap == 0 ? 16 : _lst_p->cap * 2; __typeof__(_lst_p->data) _new_data = (__typeof__(_lst_p->data))slop_arena_alloc(arena, _new_cap * sizeof(*_lst_p->data)); if (_lst_p->len > 0) memcpy(_new_data, _lst_p->data, _lst_p->len * sizeof(*_lst_p->data)); _lst_p->data = _new_data; _lst_p->cap = _new_cap; } _lst_p->data[_lst_p->len++] = _item; (void)0; });
+        return terms;
+    }
+}
 
 slop_list_types_ValidationResult snarl_check_equals(slop_arena* arena, index_IndexedGraph data_graph, rdf_Term focus_node, slop_list_rdf_Term value_nodes, types_ShaclPath other_path, slop_option_types_ShaclPath path, rdf_Term shape_id, types_Severity severity, slop_option_string message) {
     SLOP_PRE(((((int64_t)((value_nodes).len)) >= 0)), "(>= (list-len value-nodes) 0)");

@@ -1,6 +1,9 @@
 #include "../runtime/slop_runtime.h"
 #include "slop_value_range.h"
 
+static const slop_string value_range_EX_FOCUS = SLOP_STR("http://example.org/focus");
+static const slop_string value_range_EX_SHAPE = SLOP_STR("http://example.org/Shape1");
+
 slop_option_types_ValidationResult snarl_check_min_inclusive(slop_arena* arena, rdf_Term focus_node, rdf_Term value_node, rdf_Term limit, slop_option_types_ShaclPath path, rdf_Term shape_id, types_Severity severity, slop_option_string message);
 slop_option_types_ValidationResult snarl_check_max_inclusive(slop_arena* arena, rdf_Term focus_node, rdf_Term value_node, rdf_Term limit, slop_option_types_ShaclPath path, rdf_Term shape_id, types_Severity severity, slop_option_string message);
 slop_option_types_ValidationResult snarl_check_min_exclusive(slop_arena* arena, rdf_Term focus_node, rdf_Term value_node, rdf_Term limit, slop_option_types_ShaclPath path, rdf_Term shape_id, types_Severity severity, slop_option_string message);
@@ -30,6 +33,7 @@ slop_option_types_ValidationResult snarl_check_min_inclusive(slop_arena* arena, 
             }
         }
     }
+    SLOP_POST((((_retval != ((slop_option_types_ValidationResult){.has_value = false})) || (xsd_compare(arena, value_node, limit) != xsd_XsdCompareResult_xsd_compare_less))), "(or (!= $result (none)) (!= (xsd-compare arena value-node limit) xsd-compare-less))");
     return _retval;
 }
 
@@ -57,6 +61,7 @@ slop_option_types_ValidationResult snarl_check_max_inclusive(slop_arena* arena, 
             }
         }
     }
+    SLOP_POST((((_retval != ((slop_option_types_ValidationResult){.has_value = false})) || (xsd_compare(arena, value_node, limit) != xsd_XsdCompareResult_xsd_compare_greater))), "(or (!= $result (none)) (!= (xsd-compare arena value-node limit) xsd-compare-greater))");
     return _retval;
 }
 
@@ -84,6 +89,7 @@ slop_option_types_ValidationResult snarl_check_min_exclusive(slop_arena* arena, 
             }
         }
     }
+    SLOP_POST((((_retval != ((slop_option_types_ValidationResult){.has_value = false})) || (xsd_compare(arena, value_node, limit) == xsd_XsdCompareResult_xsd_compare_greater))), "(or (!= $result (none)) (== (xsd-compare arena value-node limit) xsd-compare-greater))");
     return _retval;
 }
 
@@ -111,6 +117,7 @@ slop_option_types_ValidationResult snarl_check_max_exclusive(slop_arena* arena, 
             }
         }
     }
+    SLOP_POST((((_retval != ((slop_option_types_ValidationResult){.has_value = false})) || (xsd_compare(arena, value_node, limit) == xsd_XsdCompareResult_xsd_compare_less))), "(or (!= $result (none)) (== (xsd-compare arena value-node limit) xsd-compare-less))");
     return _retval;
 }
 

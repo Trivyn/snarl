@@ -13,7 +13,7 @@
                Literal IRI TermKind))
   (import index (IndexedGraph indexed-graph-match indexed-graph-objects
                  indexed-graph-subjects indexed-graph-size indexed-graph-contains
-                 indexed-graph-for-each))
+                 indexed-graph-for-each indexed-graph-create))
   (import list (rdf-list-elements-indexed))
   (import vocab (RDF_TYPE SHACL_NODE_SHAPE SHACL_PROPERTY_SHAPE
                  SHACL_TARGET_NODE SHACL_TARGET_CLASS
@@ -64,6 +64,9 @@
     (@spec ((Arena IndexedGraph (List NodeShape) (List PropertyShape)
              (Map Term NodeShape) (Map Term PropertyShape)) -> Unit))
     (@alloc arena)
+    (@example (arena (indexed-graph-create arena) (list-new arena NodeShape) (list-new arena PropertyShape) (map-new arena Term NodeShape) (map-new arena Term PropertyShape))
+      ;; Registers inline blank node shapes into shape maps
+      )
     ;; Queue-based approach: collect shape refs, process until exhausted.
     ;; All list pushes are inlined (not via helper) because SLOP lists are
     ;; passed by value — a helper function would push to local copies.
@@ -187,6 +190,9 @@
     (@alloc arena)
     (@pre {(indexed-graph-size shapes-graph) >= 0})
     (@post {(list-len (. $result node-shapes)) >= 0})
+    (@example (arena (indexed-graph-create arena))
+      ;; Returns ShapesGraph with parsed node and property shapes
+      )
     (let ((type-pred (make-iri arena RDF_TYPE))
           (ns-type (make-iri arena SHACL_NODE_SHAPE))
           (ps-type (make-iri arena SHACL_PROPERTY_SHAPE))
@@ -319,6 +325,9 @@
     (@intent "Parse a single NodeShape from the shapes graph by its identifier")
     (@spec ((Arena IndexedGraph Term) -> NodeShape))
     (@alloc arena)
+    (@example (arena (indexed-graph-create arena) (make-iri arena "http://example.org/Shape"))
+      ;; Returns NodeShape with targets, property shapes, and constraints
+      )
     (let (;; Target declarations
           (target-nodes (indexed-graph-objects arena g shape-id
                           (make-iri arena SHACL_TARGET_NODE)))
@@ -371,6 +380,9 @@
     (@intent "Parse a single PropertyShape from the shapes graph by its identifier")
     (@spec ((Arena IndexedGraph Term) -> PropertyShape))
     (@alloc arena)
+    (@example (arena (indexed-graph-create arena) (make-iri arena "http://example.org/ps"))
+      ;; Returns PropertyShape with path and constraints
+      )
     (let (;; Path — required for property shapes
           (path-objects (indexed-graph-objects arena g shape-id (make-iri arena SHACL_PATH)))
           (path (if (> (list-len path-objects) 0)
@@ -409,9 +421,16 @@
     (@intent "Parse a SHACL path expression from an RDF node in the shapes graph")
     (@spec ((Arena IndexedGraph Term) -> ShaclPath))
     (@alloc arena)
+    (@example (arena (indexed-graph-create arena) (make-iri arena "http://example.org/name"))
+      ;; Simple predicate IRI returns path-predicate
+      )
     ;; Check if path-node is a complex path (blank node with sh:inversePath etc.)
     ;; or a simple predicate IRI
     (let ((no-term (Option Term) (none))
+          ;; Check for RDF list structure (sequence path) — must be first,
+          ;; as a blank node may have both rdf:first/rdf:rest AND sh:inversePath
+          (first-pred (make-iri arena RDF_FIRST))
+          (first-objs (indexed-graph-objects arena g path-node first-pred))
           ;; Check for sh:inversePath
           (inverse-objs (indexed-graph-objects arena g path-node
                           (make-iri arena SHACL_INVERSE_PATH)))
@@ -429,6 +448,14 @@
                       (make-iri arena SHACL_ZERO_OR_ONE_PATH))))
 
       (cond
+        ;; RDF list (sequence path) — takes priority over SHACL path properties
+        ((> (list-len first-objs) 0)
+          (let ((elements (rdf-list-elements-indexed arena g path-node))
+                (mut paths (list-new arena ShaclPath)))
+            (for-each (elem elements)
+              (list-push paths (parse-path arena g elem)))
+            (union-new ShaclPath path-sequence paths)))
+
         ;; Inverse path: [ sh:inversePath <pred> ]
         ((> (list-len inverse-objs) 0)
           (match (list-get inverse-objs 0)
@@ -480,19 +507,8 @@
                 (union-new ShaclPath path-zero-or-one ptr)))
             ((none) (union-new ShaclPath path-predicate path-node))))
 
-        ;; Check if this is an RDF list (sequence path)
-        (true
-          (let ((first-pred (make-iri arena RDF_FIRST))
-                (first-objs (indexed-graph-objects arena g path-node first-pred)))
-            (if (> (list-len first-objs) 0)
-              ;; It's a list — sequence path
-              (let ((elements (rdf-list-elements-indexed arena g path-node))
-                    (mut paths (list-new arena ShaclPath)))
-                (for-each (elem elements)
-                  (list-push paths (parse-path arena g elem)))
-                (union-new ShaclPath path-sequence paths))
-              ;; Simple predicate path
-              (union-new ShaclPath path-predicate path-node))))))
+        ;; Simple predicate path (fallback)
+        (true (union-new ShaclPath path-predicate path-node))))
     :c-name "snarl_parse_path")
 
   ;; ============================================================
@@ -504,6 +520,9 @@
     (@spec ((Arena IndexedGraph Term) -> (List Constraint)))
     (@alloc arena)
     (@post {(list-len $result) >= 0})
+    (@example (arena (indexed-graph-create arena) (make-iri arena "http://example.org/Shape"))
+      ;; Returns list of parsed Constraint values from shape's triples
+      )
     (let ((mut constraints (list-new arena Constraint)))
 
       ;; --- Value type constraints ---
@@ -736,6 +755,12 @@
     (@intent "Parse an sh:nodeKind value from its IRI term")
     (@spec ((Term) -> (Option NodeKind)))
     (@pure)
+    (@example ((term-iri (IRI "http://www.w3.org/ns/shacl#IRI")))
+      ;; Returns (some node-kind-iri)
+      )
+    (@example ((term-literal (Literal "foo" (none) (none))))
+      ;; Returns (none) for non-IRI terms
+      )
     (match term
       ((term-iri iri)
         (cond
@@ -763,6 +788,12 @@
     (@intent "Parse sh:severity value from IRI term")
     (@spec ((Term) -> Severity))
     (@pure)
+    (@example ((term-iri (IRI "http://www.w3.org/ns/shacl#Warning")))
+      ;; Returns severity-warning
+      )
+    (@example ((term-iri (IRI "http://www.w3.org/ns/shacl#Violation")))
+      ;; Returns severity-violation
+      )
     (match term
       ((term-iri iri)
         (cond
@@ -780,6 +811,9 @@
     (@intent "Get the severity declared on a shape, defaulting to violation")
     (@spec ((Arena IndexedGraph Term) -> Severity))
     (@alloc arena)
+    (@example (arena (indexed-graph-create arena) (make-iri arena "http://example.org/Shape"))
+      ;; Returns severity from shape declaration, defaults to violation
+      )
     (let ((sev-vals (indexed-graph-objects arena g shape-id
                       (make-iri arena "http://www.w3.org/ns/shacl#severity"))))
       (if (> (list-len sev-vals) 0)
@@ -796,6 +830,9 @@
     (@intent "Get the sh:message declared on a shape, if any")
     (@spec ((Arena IndexedGraph Term) -> (Option String)))
     (@alloc arena)
+    (@example (arena (indexed-graph-create arena) (make-iri arena "http://example.org/Shape"))
+      ;; Returns (none) when no message declared
+      )
     (let ((msg-vals (indexed-graph-objects arena g shape-id
                       (make-iri arena "http://www.w3.org/ns/shacl#message"))))
       (if (> (list-len msg-vals) 0)
@@ -812,6 +849,9 @@
     (@intent "Check if a shape has sh:deactivated true")
     (@spec ((Arena IndexedGraph Term) -> Bool))
     (@alloc arena)
+    (@example (arena (indexed-graph-create arena) (make-iri arena "http://example.org/Shape"))
+      ;; Returns false when no deactivated declaration
+      )
     (let ((vals (indexed-graph-objects arena g shape-id
                   (make-iri arena "http://www.w3.org/ns/shacl#deactivated"))))
       (if (> (list-len vals) 0)
@@ -828,6 +868,9 @@
     (@intent "Extract integer value from a literal term")
     (@spec ((Term) -> (Option (Int 0 ..))))
     (@pure)
+    (@example ((term-literal (Literal "42" (some "http://www.w3.org/2001/XMLSchema#integer") (none)))) -> (some 42))
+    (@example ((term-literal (Literal "hello" (none) (none)))) -> (none))
+    (@example ((term-iri (IRI "http://example.org/x"))) -> (none))
     (match t
       ((term-literal lit)
         (match (parse-int (. lit value))
@@ -839,6 +882,8 @@
     (@intent "Extract string value from a literal term")
     (@spec ((Term) -> (Option String)))
     (@pure)
+    (@example ((term-literal (Literal "hello" (none) (none)))) -> (some "hello"))
+    (@example ((term-iri (IRI "http://example.org/x"))) -> (none))
     (match t
       ((term-literal lit) (some (. lit value)))
       (_ (none))))
@@ -847,6 +892,9 @@
     (@intent "Extract boolean value from a literal term")
     (@spec ((Term) -> (Option Bool)))
     (@pure)
+    (@example ((term-literal (Literal "true" (some "http://www.w3.org/2001/XMLSchema#boolean") (none)))) -> (some true))
+    (@example ((term-literal (Literal "false" (some "http://www.w3.org/2001/XMLSchema#boolean") (none)))) -> (some false))
+    (@example ((term-iri (IRI "http://example.org/x"))) -> (none))
     (match t
       ((term-literal lit)
         (cond
@@ -861,6 +909,9 @@
     (@intent "Parse an RDF list of literal strings")
     (@spec ((Arena IndexedGraph Term) -> (List String)))
     (@alloc arena)
+    (@example (arena (indexed-graph-create arena) (make-iri arena "http://example.org/list"))
+      ;; Returns list of strings from RDF list
+      )
     (let ((elements (rdf-list-elements-indexed arena g list-head))
           (mut result (list-new arena String)))
       (for-each (elem elements)

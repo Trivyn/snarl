@@ -55,6 +55,9 @@
     (@intent "Evaluate whether a node conforms to a given shape, returning true if no violations")
     (@spec ((Arena IndexedGraph ShapesGraph Term NodeShape (Set Term)) -> Bool))
     (@alloc arena)
+    (@example
+      ;; Returns true if node conforms to shape (no violations), false otherwise
+      )
     (let ((config (default-validator-config))
           (results (evaluate-node-shape arena data-graph shapes-graph shape node visited config)))
       (== (list-len results) 0))
@@ -70,6 +73,9 @@
     (@spec ((Arena IndexedGraph ShapesGraph ValidatorConfig) -> ValidatorResult))
     (@alloc arena)
     (@pre {(indexed-graph-size data-graph) >= 0})
+    (@example
+      ;; Returns (validate-success report) with all shapes evaluated
+      )
     (let ((mut report (make-validation-report arena))
           (mut error-count 0)
           (max-errors (. config max-errors)))
@@ -120,6 +126,9 @@
     (@spec ((Arena IndexedGraph ShapesGraph NodeShape Term (Set Term) ValidatorConfig)
             -> (List ValidationResult)))
     (@alloc arena)
+    (@example
+      ;; Returns list of violations for the focus node against the shape
+      )
     (let ((mut results (list-new arena ValidationResult))
           (shape-severity (. shape severity))
           (shape-message (. shape message))
@@ -209,6 +218,9 @@
     (@spec ((Arena IndexedGraph ShapesGraph PropertyShape Term (Set Term) ValidatorConfig (List Term))
             -> (List ValidationResult)))
     (@alloc arena)
+    (@example
+      ;; Returns list of violations for the property shape against the focus node
+      )
     (let ((mut results (list-new arena ValidationResult))
           (shape-severity (. shape severity))
           (shape-message (. shape message))
@@ -247,6 +259,9 @@
     (@spec ((Arena IndexedGraph ShapesGraph Term Term Constraint (Option ShaclPath) Term Severity (Option String) (Set Term))
             -> (List ValidationResult)))
     (@alloc arena)
+    (@example
+      ;; Returns violations for a single constraint against a value node
+      )
     (let ((mut results (list-new arena ValidationResult)))
       (match constraint
         ;; --- Value type constraints ---
@@ -464,6 +479,9 @@
              (Option ShaclPath) Term Severity (Option String) (Set Term) (List Term))
             -> (List ValidationResult)))
     (@alloc arena)
+    (@example
+      ;; Evaluates constraint in property context with all value nodes available
+      )
     (let ((mut results (list-new arena ValidationResult)))
       (match constraint
         ;; --- Cardinality constraints (operate on count) ---

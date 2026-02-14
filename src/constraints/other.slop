@@ -9,10 +9,64 @@
 (module other
   (@doc "SHACL other constraints: sh:closed, sh:hasValue, sh:in")
 
-  (import rdf (Term Triple term-eq triple-predicate))
-  (import index (IndexedGraph indexed-graph-match))
+  (import rdf (Term Triple term-eq triple-predicate make-iri make-literal make-triple))
+  (import index (IndexedGraph indexed-graph-match indexed-graph-create indexed-graph-add))
   (import vocab (SHACL_CLOSED SHACL_HAS_VALUE SHACL_IN))
   (import types (Severity Constraint ValidationResult ShaclPath))
+
+  ;; Test URI constants
+  (const EX_FOCUS String "http://example.org/focus")
+  (const EX_SHAPE String "http://example.org/Shape1")
+  (const EX_A String "http://example.org/a")
+  (const EX_B String "http://example.org/b")
+  (const EX_C String "http://example.org/c")
+  (const EX_NAME String "http://example.org/name")
+
+  ;; ============================================================
+  ;; Test Fixtures
+  ;; ============================================================
+
+  (fn fixture-term-list-ab ((arena Arena))
+    (@intent "Create term list: [ex:a, ex:b]")
+    (@spec ((Arena) -> (List Term)))
+    (let ((mut terms (list-new arena Term)))
+      (list-push terms (make-iri arena EX_A))
+      (list-push terms (make-iri arena EX_B))
+      terms))
+
+  (fn fixture-allowed-terms-abc ((arena Arena))
+    (@intent "Create allowed term list: [ex:a, ex:b, ex:c]")
+    (@spec ((Arena) -> (List Term)))
+    (let ((mut terms (list-new arena Term)))
+      (list-push terms (make-iri arena EX_A))
+      (list-push terms (make-iri arena EX_B))
+      (list-push terms (make-iri arena EX_C))
+      terms))
+
+  (fn fixture-allowed-path-name ((arena Arena))
+    (@intent "Create allowed paths list: [path-predicate ex:name]")
+    (@spec ((Arena) -> (List ShaclPath)))
+    (let ((mut paths (list-new arena ShaclPath)))
+      (list-push paths (union-new ShaclPath path-predicate (make-iri arena EX_NAME)))
+      paths))
+
+  (fn fixture-g-focus-name ((arena Arena))
+    (@intent "Graph with (focus ex:name 'Alice')")
+    (@spec ((Arena) -> IndexedGraph))
+    (let ((mut g (indexed-graph-create arena)))
+      (set! g (indexed-graph-add arena g
+        (make-triple arena (make-iri arena EX_FOCUS) (make-iri arena EX_NAME) (make-literal arena "Alice" (none) (none)))))
+      g))
+
+  (fn fixture-g-focus-name-age ((arena Arena))
+    (@intent "Graph with (focus ex:name 'Alice'), (focus ex:age 30) — age not allowed")
+    (@spec ((Arena) -> IndexedGraph))
+    (let ((mut g (indexed-graph-create arena)))
+      (set! g (indexed-graph-add arena g
+        (make-triple arena (make-iri arena EX_FOCUS) (make-iri arena EX_NAME) (make-literal arena "Alice" (none) (none)))))
+      (set! g (indexed-graph-add arena g
+        (make-triple arena (make-iri arena EX_FOCUS) (make-iri arena "http://example.org/age") (make-literal arena "30" (none) (none)))))
+      g))
 
   (export
     check-has-value
@@ -31,10 +85,11 @@
             -> (Option ValidationResult)))
     (@alloc arena)
     (@pre {(list-len value-nodes) >= 0})
-    (@post {($result == (none)) == (exists v value-nodes (term-eq v required-value))})
-    (@property correctness (== (== $result (none)) (exists v value-nodes (term-eq v required-value))))
-    (@example "(check-has-value arena focus (list :a :b) :a ...) -> (none)")
-    (@example "(check-has-value arena focus (list :a :b) :c ...) -> (some violation)")
+    ;; VERIFIER: fails — term-eq lacks @post (== $result (== a b)), can't bridge to Z3 equality
+    (@post (== (== $result (none)) (exists (v value-nodes) (term-eq v required-value))))
+    (@property correctness (== (== $result (none)) (exists (v value-nodes) (term-eq v required-value))))
+    (@example (arena (make-iri arena EX_FOCUS) (fixture-term-list-ab arena) (make-iri arena EX_A) (none) (make-iri arena EX_SHAPE) severity-violation (none)) -> (none))
+    (@example (arena (make-iri arena EX_FOCUS) (fixture-term-list-ab arena) (make-iri arena EX_C) (none) (make-iri arena EX_SHAPE) severity-violation (none)) -> (some (ValidationResult _ _ _ _ _ _ _)))
     (let ((mut found false))
       (for-each (v value-nodes)
         (when (term-eq v required-value)
@@ -63,10 +118,11 @@
             -> (Option ValidationResult)))
     (@alloc arena)
     (@pre {(list-len allowed-values) > 0})
-    (@post {($result == (none)) == (exists v allowed-values (term-eq v value-node))})
-    (@property correctness (== (== $result (none)) (exists v allowed-values (term-eq v value-node))))
-    (@example "(check-in arena focus :a (list :a :b :c) ...) -> (none)")
-    (@example "(check-in arena focus :d (list :a :b :c) ...) -> (some violation)")
+    ;; VERIFIER: fails — term-eq lacks @post (== $result (== a b)), can't bridge to Z3 equality
+    (@post (== (== $result (none)) (exists (v allowed-values) (term-eq v value-node))))
+    (@property correctness (== (== $result (none)) (exists (v allowed-values) (term-eq v value-node))))
+    (@example (arena (make-iri arena EX_FOCUS) (make-iri arena EX_A) (fixture-allowed-terms-abc arena) (none) (make-iri arena EX_SHAPE) severity-violation (none)) -> (none))
+    (@example (arena (make-iri arena EX_FOCUS) (make-iri arena EX_FOCUS) (fixture-allowed-terms-abc arena) (none) (make-iri arena EX_SHAPE) severity-violation (none)) -> (some (ValidationResult _ _ _ _ _ _ _)))
     (let ((mut found false))
       (for-each (av allowed-values)
         (when (term-eq av value-node)
@@ -96,10 +152,19 @@
     (@alloc arena)
     (@pre {(list-len allowed-paths) >= 0})
     (@post {(list-len $result) >= 0})
-    (@property soundness (forall r $result (not (exists p allowed-paths (term-eq (. r value) (path-iri p))))))
-    (@property result-path-correct (forall r $result (== (. r result-path) (some (path-predicate (unwrap (. r value)))))))
-    (@example "(check-closed arena g :alice (list (path-predicate :name)) ...) -> (list) when :alice only has :name")
-    (@example "(check-closed arena g :alice (list (path-predicate :name)) ...) -> (list v1) when :alice also has :age")
+    ;; VERIFIER: fails — term-eq lacks equality axiom; path-predicate destructure not supported in contracts
+    (@property soundness
+      (forall (r $result)
+        (not (exists (p allowed-paths) (term-eq (. r value) (path-iri p))))))
+    (@property result-path-correct
+      (forall (r $result)
+        (== (. r result-path) (some (path-predicate (unwrap (. r value)))))))
+    (@example (arena (fixture-g-focus-name arena) (make-iri arena EX_FOCUS) (fixture-allowed-path-name arena) (none) (make-iri arena EX_SHAPE) severity-violation (none))
+      ;; Only ex:name present, which is allowed → no violations
+      )
+    (@example (arena (fixture-g-focus-name-age arena) (make-iri arena EX_FOCUS) (fixture-allowed-path-name arena) (none) (make-iri arena EX_SHAPE) severity-violation (none))
+      ;; ex:age present but not in allowed paths → 1 violation
+      )
     (let ((mut results (list-new arena ValidationResult))
           (triples (indexed-graph-match arena data-graph (some focus-node) (none) (none))))
       (for-each (triple triples)

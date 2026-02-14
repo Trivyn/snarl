@@ -1,0 +1,22 @@
+@prefix ex: <http://example.org/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# Valid contact
+ex:alice a ex:Contact ;
+    ex:name "Alice" ;
+    ex:phone "+1234567890" ;
+    ex:contactType ex:Personal ;
+    ex:email "alice@example.com" .
+
+# Invalid: no name — minCount fail
+ex:bob a ex:Contact ;
+    ex:phone "+9876543210" ;
+    ex:contactType ex:Business ;
+    ex:email "bob@example.com" .
+
+# Invalid: contactType ex:Friend — sh:in fail
+ex:carol a ex:Contact ;
+    ex:name "Carol" ;
+    ex:phone "+5551234567" ;
+    ex:contactType ex:Friend ;
+    ex:email "carol@example.com" .

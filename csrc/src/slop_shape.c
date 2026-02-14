@@ -1,6 +1,10 @@
 #include "../runtime/slop_runtime.h"
 #include "slop_shape.h"
 
+static const slop_string shape_EX_FOCUS = SLOP_STR("http://example.org/focus");
+static const slop_string shape_EX_SHAPE = SLOP_STR("http://example.org/Shape1");
+static const slop_string shape_EX_VALUE = SLOP_STR("http://example.org/value");
+
 slop_option_types_ValidationResult snarl_check_node(slop_arena* arena, rdf_Term focus_node, rdf_Term value_node, uint8_t value_conforms, slop_option_types_ShaclPath path, rdf_Term shape_id, types_Severity severity, slop_option_string message);
 slop_list_types_ValidationResult snarl_check_qualified_value_shape(slop_arena* arena, rdf_Term focus_node, int64_t conforming_count, int64_t q_min, slop_option_int q_max, slop_option_types_ShaclPath path, rdf_Term shape_id, types_Severity severity, slop_option_string message);
 

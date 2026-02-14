@@ -1,6 +1,19 @@
 #include "../runtime/slop_runtime.h"
 #include "slop_path.h"
 
+static const slop_string path_EX_ALICE = SLOP_STR("http://example.org/alice");
+static const slop_string path_EX_BOB = SLOP_STR("http://example.org/bob");
+static const slop_string path_EX_NAME = SLOP_STR("http://example.org/name");
+static const slop_string path_EX_KNOWS = SLOP_STR("http://example.org/knows");
+static const slop_string path_EX_NEXT = SLOP_STR("http://example.org/next");
+static const slop_string path_EX_A = SLOP_STR("http://example.org/a");
+static const slop_string path_EX_B = SLOP_STR("http://example.org/b");
+static const slop_string path_EX_C = SLOP_STR("http://example.org/c");
+
+index_IndexedGraph path_fixture_g_alice_name(slop_arena* arena);
+index_IndexedGraph path_fixture_g_chain(slop_arena* arena);
+index_IndexedGraph path_fixture_g_alice_knows_bob(slop_arena* arena);
+slop_list_types_ShaclPath path_fixture_path_seq_knows_name(slop_arena* arena);
 slop_list_rdf_Term snarl_resolve_path(slop_arena* arena, index_IndexedGraph data_graph, rdf_Term focus_node, types_ShaclPath path);
 slop_list_rdf_Term snarl_resolve_path_from(slop_arena* arena, index_IndexedGraph data_graph, rdf_Term object, types_ShaclPath path);
 slop_list_rdf_Term path_resolve_sequence(slop_arena* arena, index_IndexedGraph g, rdf_Term focus, slop_list_types_ShaclPath steps);
@@ -9,6 +22,41 @@ slop_list_rdf_Term path_resolve_inverse(slop_arena* arena, index_IndexedGraph g,
 slop_list_rdf_Term path_resolve_zero_or_more(slop_arena* arena, index_IndexedGraph g, rdf_Term focus, types_ShaclPath inner);
 slop_list_rdf_Term path_resolve_one_or_more(slop_arena* arena, index_IndexedGraph g, rdf_Term focus, types_ShaclPath inner);
 slop_list_rdf_Term path_resolve_zero_or_one(slop_arena* arena, index_IndexedGraph g, rdf_Term focus, types_ShaclPath inner);
+
+index_IndexedGraph path_fixture_g_alice_name(slop_arena* arena) {
+    {
+        __auto_type g = rdf_indexed_graph_create(arena);
+        g = rdf_indexed_graph_add(arena, g, rdf_make_triple(arena, rdf_make_iri(arena, path_EX_ALICE), rdf_make_iri(arena, path_EX_NAME), rdf_make_literal(arena, SLOP_STR("Alice"), ((slop_option_string){.has_value = false}), ((slop_option_string){.has_value = false}))));
+        return g;
+    }
+}
+
+index_IndexedGraph path_fixture_g_chain(slop_arena* arena) {
+    {
+        __auto_type g = rdf_indexed_graph_create(arena);
+        g = rdf_indexed_graph_add(arena, g, rdf_make_triple(arena, rdf_make_iri(arena, path_EX_A), rdf_make_iri(arena, path_EX_NEXT), rdf_make_iri(arena, path_EX_B)));
+        g = rdf_indexed_graph_add(arena, g, rdf_make_triple(arena, rdf_make_iri(arena, path_EX_B), rdf_make_iri(arena, path_EX_NEXT), rdf_make_iri(arena, path_EX_C)));
+        return g;
+    }
+}
+
+index_IndexedGraph path_fixture_g_alice_knows_bob(slop_arena* arena) {
+    {
+        __auto_type g = rdf_indexed_graph_create(arena);
+        g = rdf_indexed_graph_add(arena, g, rdf_make_triple(arena, rdf_make_iri(arena, path_EX_ALICE), rdf_make_iri(arena, path_EX_KNOWS), rdf_make_iri(arena, path_EX_BOB)));
+        g = rdf_indexed_graph_add(arena, g, rdf_make_triple(arena, rdf_make_iri(arena, path_EX_BOB), rdf_make_iri(arena, path_EX_NAME), rdf_make_literal(arena, SLOP_STR("Bob"), ((slop_option_string){.has_value = false}), ((slop_option_string){.has_value = false}))));
+        return g;
+    }
+}
+
+slop_list_types_ShaclPath path_fixture_path_seq_knows_name(slop_arena* arena) {
+    {
+        __auto_type steps = ((slop_list_types_ShaclPath){ .data = (types_ShaclPath*)slop_arena_alloc(arena, 16 * sizeof(types_ShaclPath)), .len = 0, .cap = 16 });
+        ({ __auto_type _lst_p = &(steps); __auto_type _item = (((types_ShaclPath){ .tag = types_ShaclPath_path_predicate, .data.path_predicate = rdf_make_iri(arena, path_EX_KNOWS) })); if (_lst_p->len >= _lst_p->cap) { size_t _new_cap = _lst_p->cap == 0 ? 16 : _lst_p->cap * 2; __typeof__(_lst_p->data) _new_data = (__typeof__(_lst_p->data))slop_arena_alloc(arena, _new_cap * sizeof(*_lst_p->data)); if (_lst_p->len > 0) memcpy(_new_data, _lst_p->data, _lst_p->len * sizeof(*_lst_p->data)); _lst_p->data = _new_data; _lst_p->cap = _new_cap; } _lst_p->data[_lst_p->len++] = _item; (void)0; });
+        ({ __auto_type _lst_p = &(steps); __auto_type _item = (((types_ShaclPath){ .tag = types_ShaclPath_path_predicate, .data.path_predicate = rdf_make_iri(arena, path_EX_NAME) })); if (_lst_p->len >= _lst_p->cap) { size_t _new_cap = _lst_p->cap == 0 ? 16 : _lst_p->cap * 2; __typeof__(_lst_p->data) _new_data = (__typeof__(_lst_p->data))slop_arena_alloc(arena, _new_cap * sizeof(*_lst_p->data)); if (_lst_p->len > 0) memcpy(_new_data, _lst_p->data, _lst_p->len * sizeof(*_lst_p->data)); _lst_p->data = _new_data; _lst_p->cap = _new_cap; } _lst_p->data[_lst_p->len++] = _item; (void)0; });
+        return steps;
+    }
+}
 
 slop_list_rdf_Term snarl_resolve_path(slop_arena* arena, index_IndexedGraph data_graph, rdf_Term focus_node, types_ShaclPath path) {
     SLOP_PRE(((rdf_indexed_graph_size(data_graph) >= 0)), "(>= (indexed-graph-size data-graph) 0)");

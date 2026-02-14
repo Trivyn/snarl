@@ -8,8 +8,26 @@
 (module types
   (@doc "Core type definitions for the snarl SHACL validator")
 
-  (import rdf (Term Triple))
+  (import rdf (Term Triple make-iri))
   (import index (IndexedGraph))
+  (import vocab (SHACL_CLASS))
+
+  ;; Test URI constants
+  (const EX_FOCUS String "http://example.org/focus")
+  (const EX_SHAPE String "http://example.org/Shape1")
+
+  ;; Test fixture: create a sample violation result
+  (fn fixture-violation ((arena Arena))
+    (@intent "Create a sample validation result for testing")
+    (@spec ((Arena) -> ValidationResult))
+    (record-new ValidationResult
+      (focus-node (make-iri arena EX_FOCUS))
+      (result-path (none))
+      (value (none))
+      (source-shape (make-iri arena EX_SHAPE))
+      (source-constraint-component SHACL_CLASS)
+      (severity severity-violation)
+      (message (none))))
 
   (export
     ;; Path types
@@ -239,6 +257,9 @@
     (@alloc arena)
     (@post {(. $result conforms) == true})
     (@post {(list-len (. $result results)) == 0})
+    (@example (arena)
+      ;; Returns a report with conforms=true and empty results list
+      )
     (record-new ValidationReport
       (conforms true)
       (results (list-new arena ValidationResult))))
@@ -247,6 +268,10 @@
     (@intent "Add a validation result to the report, updating conforms flag")
     (@spec ((Arena ValidationReport ValidationResult) -> ValidationReport))
     (@alloc arena)
+    (@example (arena (make-validation-report arena) (fixture-violation arena))
+      ;; Returns report with conforms=false and one result
+      )
+    ;; VERIFIER: fails — list-push mutates in-place, so $result.results IS report.results at @post time
     (@post {(list-len (. $result results)) == (+ (list-len (. report results)) 1)})
     (@post {(. $result conforms) == false})
     (list-push (. report results) result)
@@ -261,4 +286,10 @@
     (@spec ((ValidationReport) -> Bool))
     (@pure)
     (@post {$result == (. report conforms)})
+    (@example ((make-validation-report arena))
+      ;; Empty report conforms → true
+      )
+    (@example ((report-add-result arena (make-validation-report arena) (fixture-violation arena)))
+      ;; Report with violation → false
+      )
     (. report conforms)))

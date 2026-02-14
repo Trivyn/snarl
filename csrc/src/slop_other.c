@@ -1,9 +1,65 @@
 #include "../runtime/slop_runtime.h"
 #include "slop_other.h"
 
+static const slop_string other_EX_FOCUS = SLOP_STR("http://example.org/focus");
+static const slop_string other_EX_SHAPE = SLOP_STR("http://example.org/Shape1");
+static const slop_string other_EX_A = SLOP_STR("http://example.org/a");
+static const slop_string other_EX_B = SLOP_STR("http://example.org/b");
+static const slop_string other_EX_C = SLOP_STR("http://example.org/c");
+static const slop_string other_EX_NAME = SLOP_STR("http://example.org/name");
+
+slop_list_rdf_Term other_fixture_term_list_ab(slop_arena* arena);
+slop_list_rdf_Term other_fixture_allowed_terms_abc(slop_arena* arena);
+slop_list_types_ShaclPath other_fixture_allowed_path_name(slop_arena* arena);
+index_IndexedGraph other_fixture_g_focus_name(slop_arena* arena);
+index_IndexedGraph other_fixture_g_focus_name_age(slop_arena* arena);
 slop_option_types_ValidationResult snarl_check_has_value(slop_arena* arena, rdf_Term focus_node, slop_list_rdf_Term value_nodes, rdf_Term required_value, slop_option_types_ShaclPath path, rdf_Term shape_id, types_Severity severity, slop_option_string message);
 slop_option_types_ValidationResult snarl_check_in(slop_arena* arena, rdf_Term focus_node, rdf_Term value_node, slop_list_rdf_Term allowed_values, slop_option_types_ShaclPath path, rdf_Term shape_id, types_Severity severity, slop_option_string message);
 slop_list_types_ValidationResult snarl_check_closed(slop_arena* arena, index_IndexedGraph data_graph, rdf_Term focus_node, slop_list_types_ShaclPath allowed_paths, slop_option_types_ShaclPath path, rdf_Term shape_id, types_Severity severity, slop_option_string message);
+
+slop_list_rdf_Term other_fixture_term_list_ab(slop_arena* arena) {
+    {
+        __auto_type terms = ((slop_list_rdf_Term){ .data = (rdf_Term*)slop_arena_alloc(arena, 16 * sizeof(rdf_Term)), .len = 0, .cap = 16 });
+        ({ __auto_type _lst_p = &(terms); __auto_type _item = (rdf_make_iri(arena, other_EX_A)); if (_lst_p->len >= _lst_p->cap) { size_t _new_cap = _lst_p->cap == 0 ? 16 : _lst_p->cap * 2; __typeof__(_lst_p->data) _new_data = (__typeof__(_lst_p->data))slop_arena_alloc(arena, _new_cap * sizeof(*_lst_p->data)); if (_lst_p->len > 0) memcpy(_new_data, _lst_p->data, _lst_p->len * sizeof(*_lst_p->data)); _lst_p->data = _new_data; _lst_p->cap = _new_cap; } _lst_p->data[_lst_p->len++] = _item; (void)0; });
+        ({ __auto_type _lst_p = &(terms); __auto_type _item = (rdf_make_iri(arena, other_EX_B)); if (_lst_p->len >= _lst_p->cap) { size_t _new_cap = _lst_p->cap == 0 ? 16 : _lst_p->cap * 2; __typeof__(_lst_p->data) _new_data = (__typeof__(_lst_p->data))slop_arena_alloc(arena, _new_cap * sizeof(*_lst_p->data)); if (_lst_p->len > 0) memcpy(_new_data, _lst_p->data, _lst_p->len * sizeof(*_lst_p->data)); _lst_p->data = _new_data; _lst_p->cap = _new_cap; } _lst_p->data[_lst_p->len++] = _item; (void)0; });
+        return terms;
+    }
+}
+
+slop_list_rdf_Term other_fixture_allowed_terms_abc(slop_arena* arena) {
+    {
+        __auto_type terms = ((slop_list_rdf_Term){ .data = (rdf_Term*)slop_arena_alloc(arena, 16 * sizeof(rdf_Term)), .len = 0, .cap = 16 });
+        ({ __auto_type _lst_p = &(terms); __auto_type _item = (rdf_make_iri(arena, other_EX_A)); if (_lst_p->len >= _lst_p->cap) { size_t _new_cap = _lst_p->cap == 0 ? 16 : _lst_p->cap * 2; __typeof__(_lst_p->data) _new_data = (__typeof__(_lst_p->data))slop_arena_alloc(arena, _new_cap * sizeof(*_lst_p->data)); if (_lst_p->len > 0) memcpy(_new_data, _lst_p->data, _lst_p->len * sizeof(*_lst_p->data)); _lst_p->data = _new_data; _lst_p->cap = _new_cap; } _lst_p->data[_lst_p->len++] = _item; (void)0; });
+        ({ __auto_type _lst_p = &(terms); __auto_type _item = (rdf_make_iri(arena, other_EX_B)); if (_lst_p->len >= _lst_p->cap) { size_t _new_cap = _lst_p->cap == 0 ? 16 : _lst_p->cap * 2; __typeof__(_lst_p->data) _new_data = (__typeof__(_lst_p->data))slop_arena_alloc(arena, _new_cap * sizeof(*_lst_p->data)); if (_lst_p->len > 0) memcpy(_new_data, _lst_p->data, _lst_p->len * sizeof(*_lst_p->data)); _lst_p->data = _new_data; _lst_p->cap = _new_cap; } _lst_p->data[_lst_p->len++] = _item; (void)0; });
+        ({ __auto_type _lst_p = &(terms); __auto_type _item = (rdf_make_iri(arena, other_EX_C)); if (_lst_p->len >= _lst_p->cap) { size_t _new_cap = _lst_p->cap == 0 ? 16 : _lst_p->cap * 2; __typeof__(_lst_p->data) _new_data = (__typeof__(_lst_p->data))slop_arena_alloc(arena, _new_cap * sizeof(*_lst_p->data)); if (_lst_p->len > 0) memcpy(_new_data, _lst_p->data, _lst_p->len * sizeof(*_lst_p->data)); _lst_p->data = _new_data; _lst_p->cap = _new_cap; } _lst_p->data[_lst_p->len++] = _item; (void)0; });
+        return terms;
+    }
+}
+
+slop_list_types_ShaclPath other_fixture_allowed_path_name(slop_arena* arena) {
+    {
+        __auto_type paths = ((slop_list_types_ShaclPath){ .data = (types_ShaclPath*)slop_arena_alloc(arena, 16 * sizeof(types_ShaclPath)), .len = 0, .cap = 16 });
+        ({ __auto_type _lst_p = &(paths); __auto_type _item = (((types_ShaclPath){ .tag = types_ShaclPath_path_predicate, .data.path_predicate = rdf_make_iri(arena, other_EX_NAME) })); if (_lst_p->len >= _lst_p->cap) { size_t _new_cap = _lst_p->cap == 0 ? 16 : _lst_p->cap * 2; __typeof__(_lst_p->data) _new_data = (__typeof__(_lst_p->data))slop_arena_alloc(arena, _new_cap * sizeof(*_lst_p->data)); if (_lst_p->len > 0) memcpy(_new_data, _lst_p->data, _lst_p->len * sizeof(*_lst_p->data)); _lst_p->data = _new_data; _lst_p->cap = _new_cap; } _lst_p->data[_lst_p->len++] = _item; (void)0; });
+        return paths;
+    }
+}
+
+index_IndexedGraph other_fixture_g_focus_name(slop_arena* arena) {
+    {
+        __auto_type g = rdf_indexed_graph_create(arena);
+        g = rdf_indexed_graph_add(arena, g, rdf_make_triple(arena, rdf_make_iri(arena, other_EX_FOCUS), rdf_make_iri(arena, other_EX_NAME), rdf_make_literal(arena, SLOP_STR("Alice"), ((slop_option_string){.has_value = false}), ((slop_option_string){.has_value = false}))));
+        return g;
+    }
+}
+
+index_IndexedGraph other_fixture_g_focus_name_age(slop_arena* arena) {
+    {
+        __auto_type g = rdf_indexed_graph_create(arena);
+        g = rdf_indexed_graph_add(arena, g, rdf_make_triple(arena, rdf_make_iri(arena, other_EX_FOCUS), rdf_make_iri(arena, other_EX_NAME), rdf_make_literal(arena, SLOP_STR("Alice"), ((slop_option_string){.has_value = false}), ((slop_option_string){.has_value = false}))));
+        g = rdf_indexed_graph_add(arena, g, rdf_make_triple(arena, rdf_make_iri(arena, other_EX_FOCUS), rdf_make_iri(arena, SLOP_STR("http://example.org/age")), rdf_make_literal(arena, SLOP_STR("30"), ((slop_option_string){.has_value = false}), ((slop_option_string){.has_value = false}))));
+        return g;
+    }
+}
 
 slop_option_types_ValidationResult snarl_check_has_value(slop_arena* arena, rdf_Term focus_node, slop_list_rdf_Term value_nodes, rdf_Term required_value, slop_option_types_ShaclPath path, rdf_Term shape_id, types_Severity severity, slop_option_string message) {
     SLOP_PRE(((((int64_t)((value_nodes).len)) >= 0)), "(>= (list-len value-nodes) 0)");

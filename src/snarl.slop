@@ -10,7 +10,7 @@
   (@doc "SHACL Core validator with stable C FFI")
 
   (import rdf (Term Triple))
-  (import index (IndexedGraph indexed-graph-size))
+  (import index (IndexedGraph indexed-graph-size indexed-graph-create))
   (import types (ShaclPath NodeKind Severity Constraint PropertyShape NodeShape
                  ShapesGraph ValidationResult ValidationReport ValidatorConfig
                  ValidatorResult
@@ -73,6 +73,9 @@
     (@post (match $result
              ((validate-success report) true)
              ((validate-error _) true)))
+    (@example (arena (indexed-graph-create arena) (indexed-graph-create arena))
+      ;; Returns (validate-success report) for empty graphs
+      )
     :c-name "snarl_validate"
     (validate-with-config arena data-graph shapes-graph (default-config)))
 
@@ -83,6 +86,9 @@
     (@alloc arena)
     (@pre {(indexed-graph-size data-graph) >= 0})
     (@pre {(indexed-graph-size shapes-graph) >= 0})
+    (@example (arena (indexed-graph-create arena) (indexed-graph-create arena) (default-config))
+      ;; Returns (validate-success report) for empty graphs with default config
+      )
     :c-name "snarl_validate_with_config"
     ;; Parse the shapes graph into structured form
     (let ((shapes (parse-shapes-graph arena shapes-graph)))
@@ -110,6 +116,9 @@
     (@spec ((Arena ValidationReport) -> (List ValidationResult)))
     (@alloc arena)
     (@post {(list-len $result) >= 0})
+    (@example (arena (make-validation-report arena))
+      ;; Returns empty list for conforming report
+      )
     :c-name "snarl_get_violations"
     (let ((mut result (list-new arena ValidationResult)))
       (for-each (r (. report results))
@@ -123,6 +132,9 @@
     (@spec ((Arena ValidationReport) -> (List ValidationResult)))
     (@alloc arena)
     (@post {(list-len $result) >= 0})
+    (@example (arena (make-validation-report arena))
+      ;; Returns empty list for conforming report
+      )
     :c-name "snarl_get_warnings"
     (let ((mut result (list-new arena ValidationResult)))
       (for-each (r (. report results))
@@ -137,5 +149,8 @@
     (@pure)
     (@post {$result >= 0})
     (@post {$result == (list-len (. report results))})
+    (@example ((make-validation-report arena))
+      ;; Returns 0 for conforming report
+      )
     :c-name "snarl_get_result_count"
     (list-len (. report results))))

@@ -1,0 +1,38 @@
+@prefix ex: <http://example.org/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+ex:engineering a ex:Department .
+
+# Valid employee — all fields correct
+ex:alice a ex:Employee ;
+    ex:name "Alice Smith" ;
+    ex:email "alice@example.com" ;
+    ex:age "35"^^xsd:integer ;
+    ex:department ex:engineering ;
+    ex:manager ex:alice .
+
+# Invalid: age 15 — minInclusive 18 fail
+ex:bob a ex:Employee ;
+    ex:name "Bob Jones" ;
+    ex:email "bob@example.com" ;
+    ex:age "15"^^xsd:integer ;
+    ex:department ex:engineering .
+
+# Invalid: missing name — minCount 1 fail
+ex:carol a ex:Employee ;
+    ex:email "carol@example.com" ;
+    ex:age "28"^^xsd:integer ;
+    ex:department ex:engineering .
+
+# Invalid: bad email — pattern fail
+ex:dave a ex:Employee ;
+    ex:name "Dave Brown" ;
+    ex:email "not-an-email" ;
+    ex:age "40"^^xsd:integer ;
+    ex:department ex:engineering .
+
+# Invalid: department is literal string — nodeKind sh:IRI fail, sh:class fail
+ex:eve a ex:Employee ;
+    ex:name "Eve White" ;
+    ex:age "30"^^xsd:integer ;
+    ex:department "Engineering" .

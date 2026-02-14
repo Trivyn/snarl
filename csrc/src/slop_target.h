@@ -103,8 +103,14 @@ static inline bool slop_eq_rdf_Term(const void* a, const void* b) {
 }
 #endif
 
+index_IndexedGraph target_fixture_g_typed(slop_arena* arena);
+index_IndexedGraph target_fixture_g_alice_name(slop_arena* arena);
+index_IndexedGraph target_fixture_g_alice_knows_bob(slop_arena* arena);
+slop_list_rdf_Term target_fixture_target_nodes_alice(slop_arena* arena);
+types_NodeShape target_fixture_ns_target_class(slop_arena* arena);
 slop_list_rdf_Term snarl_resolve_targets(slop_arena* arena, index_IndexedGraph data_graph, types_NodeShape shape);
 slop_list_rdf_Term snarl_resolve_target_node(slop_arena* arena, slop_list_rdf_Term nodes);
+slop_list_rdf_Term target_find_subclasses(slop_arena* arena, index_IndexedGraph data_graph, rdf_Term class_term);
 slop_list_rdf_Term snarl_resolve_target_class(slop_arena* arena, index_IndexedGraph data_graph, rdf_Term class_term);
 slop_list_rdf_Term snarl_resolve_target_subjects_of(slop_arena* arena, index_IndexedGraph data_graph, rdf_Term predicate);
 slop_list_rdf_Term snarl_resolve_target_objects_of(slop_arena* arena, index_IndexedGraph data_graph, rdf_Term predicate);

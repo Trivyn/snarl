@@ -12,9 +12,14 @@
 (module shape
   (@doc "SHACL shape-based constraints: sh:node, sh:property, sh:qualifiedValueShape")
 
-  (import rdf (Term))
+  (import rdf (Term make-iri))
   (import vocab (SHACL_NODE SHACL_QUALIFIED_VALUE_SHAPE))
   (import types (Severity ValidationResult ShaclPath))
+
+  ;; Test URI constants
+  (const EX_FOCUS String "http://example.org/focus")
+  (const EX_SHAPE String "http://example.org/Shape1")
+  (const EX_VALUE String "http://example.org/value")
 
   (export
     check-node
@@ -31,6 +36,8 @@
     (@spec ((Arena Term Term Bool (Option ShaclPath) Term Severity (Option String))
             -> (Option ValidationResult)))
     (@alloc arena)
+    (@example (arena (make-iri arena EX_FOCUS) (make-iri arena EX_VALUE) true (none) (make-iri arena EX_SHAPE) severity-violation (none)) -> (none))
+    (@example (arena (make-iri arena EX_FOCUS) (make-iri arena EX_VALUE) false (none) (make-iri arena EX_SHAPE) severity-violation (none)) -> (some (ValidationResult _ _ _ _ _ _ _)))
     ;; Postcondition: ($result == (none)) iff value-conforms
     (if value-conforms
       (none)
@@ -54,6 +61,10 @@
     (@alloc arena)
     (@pre {conforming-count >= 0})
     (@pre {q-min >= 0})
+    (@example
+      ;; conforming-count=3 >= q-min=2, <= q-max=5 → no violations
+      (arena (make-iri arena EX_FOCUS) 3 2 (some 5) (none) (make-iri arena EX_SHAPE) severity-violation (none))
+      )
     (let ((mut results (list-new arena ValidationResult)))
       (when (< conforming-count q-min)
         (list-push results (record-new ValidationResult

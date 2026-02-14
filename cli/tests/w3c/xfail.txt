@@ -1,10 +1,2 @@
 # W3C SHACL Core tests expected to fail.
 # One test path per line. Lines starting with # are comments.
-
-# --- targets/ ---
-# Implicit class targeting needs rdfs:subClassOf reasoning
-targets/targetClassImplicit-001.ttl
-
-# --- path/ ---
-# Ambiguous path node with both RDF list structure and sh:inversePath
-path/path-strange-002.ttl

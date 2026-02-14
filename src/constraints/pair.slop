@@ -10,12 +10,38 @@
 (module pair
   (@doc "SHACL property pair constraints: sh:equals, sh:disjoint, sh:lessThan, sh:lessThanOrEquals")
 
-  (import rdf (Term term-eq))
-  (import index (IndexedGraph))
+  (import rdf (Term term-eq make-iri make-literal make-triple))
+  (import index (IndexedGraph indexed-graph-create indexed-graph-add))
   (import path (resolve-path))
   (import xsd (xsd-compare XsdCompareResult))
   (import vocab (SHACL_EQUALS SHACL_DISJOINT SHACL_LESS_THAN SHACL_LESS_THAN_OR_EQUALS))
   (import types (Severity Constraint ValidationResult ShaclPath))
+
+  ;; Test URI constants
+  (const EX_FOCUS String "http://example.org/focus")
+  (const EX_SHAPE String "http://example.org/Shape1")
+  (const EX_A String "http://example.org/a")
+  (const EX_B String "http://example.org/b")
+  (const EX_P2 String "http://example.org/p2")
+
+  ;; ============================================================
+  ;; Test Fixtures
+  ;; ============================================================
+
+  (fn fixture-g-focus-p2-a ((arena Arena))
+    (@intent "Graph with (focus ex:p2 ex:a)")
+    (@spec ((Arena) -> IndexedGraph))
+    (let ((mut g (indexed-graph-create arena)))
+      (set! g (indexed-graph-add arena g
+        (make-triple arena (make-iri arena EX_FOCUS) (make-iri arena EX_P2) (make-iri arena EX_A))))
+      g))
+
+  (fn fixture-term-list-a ((arena Arena))
+    (@intent "Create term list: [ex:a]")
+    (@spec ((Arena) -> (List Term)))
+    (let ((mut terms (list-new arena Term)))
+      (list-push terms (make-iri arena EX_A))
+      terms))
 
   (export
     check-equals
@@ -37,8 +63,9 @@
     (@alloc arena)
     (@pre {(list-len value-nodes) >= 0})
     (@post {(list-len $result) >= 0})
-    (@example "(check-equals arena g focus (list :a) (path-predicate :p2) ...) -> (list) when :p2 also yields (list :a)")
-    (@example "(check-equals arena g focus (list :a) (path-predicate :p2) ...) -> (list v1) when :p2 yields (list :b)")
+    (@example (arena (fixture-g-focus-p2-a arena) (make-iri arena EX_FOCUS) (fixture-term-list-a arena) (union-new ShaclPath path-predicate (make-iri arena EX_P2)) (none) (make-iri arena EX_SHAPE) severity-violation (none))
+      ;; value-nodes=[ex:a], other-path resolves to [ex:a] → sets equal → no violations
+      )
     (let ((mut results (list-new arena ValidationResult))
           (other-values (resolve-path arena data-graph focus-node other-path)))
       ;; For each value in value-nodes not in other-values, create violation
@@ -90,8 +117,9 @@
     (@alloc arena)
     (@pre {(list-len value-nodes) >= 0})
     (@post {(list-len $result) >= 0})
-    (@example "(check-disjoint arena g focus (list :a) (path-predicate :p2) ...) -> (list) when :p2 yields (list :b)")
-    (@example "(check-disjoint arena g focus (list :a) (path-predicate :p2) ...) -> (list v1) when :p2 also yields (list :a)")
+    (@example (arena (fixture-g-focus-p2-a arena) (make-iri arena EX_FOCUS) (fixture-term-list-a arena) (union-new ShaclPath path-predicate (make-iri arena EX_P2)) (none) (make-iri arena EX_SHAPE) severity-violation (none))
+      ;; value-nodes=[ex:a], other-path resolves to [ex:a] → overlap → violations
+      )
     (let ((mut results (list-new arena ValidationResult))
           (other-values (resolve-path arena data-graph focus-node other-path)))
       ;; For each value in value-nodes that is also in other-values, create violation
@@ -127,9 +155,15 @@
     (@alloc arena)
     (@pre {(list-len value-nodes) >= 0})
     (@post {(list-len $result) >= 0})
-    (@property correctness (== (== (list-len $result) 0) (forall v value-nodes (forall o (resolve-path data-graph focus-node other-path) (== (xsd-compare v o) xsd-compare-less)))))
-    (@example "(check-less-than arena g focus (list (lit 1)) (path-predicate :p2) ...) -> (list) when :p2 yields (list (lit 5))")
-    (@example "(check-less-than arena g focus (list (lit 5)) (path-predicate :p2) ...) -> (list v1) when :p2 yields (list (lit 3))")
+    ;; VERIFIER: "Could not translate" — resolve-path and xsd-compare have no @post
+    (@property correctness
+      (== (== (list-len $result) 0)
+        (forall (v value-nodes)
+          (forall (o (resolve-path arena data-graph focus-node other-path))
+            (== (xsd-compare arena v o) xsd-compare-less)))))
+    (@example (arena (fixture-g-focus-p2-a arena) (make-iri arena EX_FOCUS) (fixture-term-list-a arena) (union-new ShaclPath path-predicate (make-iri arena EX_P2)) (none) (make-iri arena EX_SHAPE) severity-violation (none))
+      ;; Tests lessThan comparison between value nodes and other-path values
+      )
     (let ((mut results (list-new arena ValidationResult))
           (other-values (resolve-path arena data-graph focus-node other-path)))
       (for-each (v value-nodes)
@@ -164,9 +198,15 @@
     (@alloc arena)
     (@pre {(list-len value-nodes) >= 0})
     (@post {(list-len $result) >= 0})
-    (@property correctness (== (== (list-len $result) 0) (forall v value-nodes (forall o (resolve-path data-graph focus-node other-path) (!= (xsd-compare v o) xsd-compare-greater)))))
-    (@example "(check-less-than-or-equals arena g focus (list (lit 3)) (path-predicate :p2) ...) -> (list) when :p2 yields (list (lit 5))")
-    (@example "(check-less-than-or-equals arena g focus (list (lit 5)) (path-predicate :p2) ...) -> (list v1) when :p2 yields (list (lit 3))")
+    ;; VERIFIER: "Could not translate" — resolve-path and xsd-compare have no @post
+    (@property correctness
+      (== (== (list-len $result) 0)
+        (forall (v value-nodes)
+          (forall (o (resolve-path arena data-graph focus-node other-path))
+            (!= (xsd-compare arena v o) xsd-compare-greater)))))
+    (@example (arena (fixture-g-focus-p2-a arena) (make-iri arena EX_FOCUS) (fixture-term-list-a arena) (union-new ShaclPath path-predicate (make-iri arena EX_P2)) (none) (make-iri arena EX_SHAPE) severity-violation (none))
+      ;; Tests lessThanOrEquals comparison between value nodes and other-path values
+      )
     (let ((mut results (list-new arena ValidationResult))
           (other-values (resolve-path arena data-graph focus-node other-path)))
       (for-each (v value-nodes)

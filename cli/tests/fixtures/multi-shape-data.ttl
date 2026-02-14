@@ -1,0 +1,21 @@
+@prefix ex: <http://example.org/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# Valid person
+ex:alice a ex:Person ;
+    ex:name "Alice" ;
+    ex:age "30"^^xsd:integer .
+
+# Invalid person: age "old" — datatype fail
+ex:bob a ex:Person ;
+    ex:name "Bob" ;
+    ex:age "old" .
+
+# Valid animal
+ex:fido a ex:Animal ;
+    ex:species "Dog" ;
+    ex:legs "4"^^xsd:integer .
+
+# Invalid animal: no species — minCount fail; legs -1 — minInclusive fail
+ex:kitty a ex:Animal ;
+    ex:legs "-1"^^xsd:integer .

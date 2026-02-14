@@ -1,0 +1,32 @@
+@prefix ex: <http://example.org/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+
+# ProductShape: value ranges, sh:in, pattern
+ex:ProductShape
+    a sh:NodeShape ;
+    sh:targetClass ex:Product ;
+    sh:property [
+        sh:path ex:name ;
+        sh:minCount 1 ;
+        sh:datatype xsd:string ;
+        sh:maxLength 200 ;
+    ] ;
+    sh:property [
+        sh:path ex:price ;
+        sh:minExclusive 0 ;
+        sh:datatype xsd:decimal ;
+    ] ;
+    sh:property [
+        sh:path ex:category ;
+        sh:in ( ex:Electronics ex:Clothing ex:Food ) ;
+    ] ;
+    sh:property [
+        sh:path ex:sku ;
+        sh:pattern "^[A-Z]{2}-[0-9]{4}$" ;
+    ] ;
+    sh:property [
+        sh:path ex:weight ;
+        sh:minInclusive 0 ;
+    ] .

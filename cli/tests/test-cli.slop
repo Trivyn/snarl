@@ -81,6 +81,48 @@
       ((none)
         (print "  FAIL: could not load ") (println path) false)))
 
+  (fn assert-conforms-separate ((arena Arena) (data-path String) (shapes-path String))
+    (@intent "Assert that separate data/shapes files conform (no violations)")
+    (@spec ((Arena String String) -> Bool))
+    (@alloc arena)
+    (match (load-test-graph arena data-path)
+      ((some dg)
+        (match (load-test-graph arena shapes-path)
+          ((some sg)
+            (let ((result (conforms arena dg sg)))
+              (if result
+                (do (print "  PASS: ") (print data-path) (println " conforms") true)
+                (do (print "  FAIL: ") (print data-path) (println " expected to conform but got violations") false))))
+          ((none)
+            (print "  FAIL: could not load shapes ") (println shapes-path) false)))
+      ((none)
+        (print "  FAIL: could not load data ") (println data-path) false)))
+
+  (fn assert-violations-separate ((arena Arena) (data-path String) (shapes-path String) (expected-count Int))
+    (@intent "Assert that separate data/shapes files produce exactly N violations")
+    (@spec ((Arena String String Int) -> Bool))
+    (@alloc arena)
+    (match (load-test-graph arena data-path)
+      ((some dg)
+        (match (load-test-graph arena shapes-path)
+          ((some sg)
+            (match (validate arena dg sg)
+              ((validate-success report)
+                (let ((violations (get-violations arena report))
+                      (actual-count (list-len violations)))
+                  (if (== actual-count expected-count)
+                    (do (print "  PASS: ") (print data-path) (print " has ")
+                        (print (int-to-string arena expected-count)) (println " violation(s)") true)
+                    (do (print "  FAIL: ") (print data-path) (print " expected ")
+                        (print (int-to-string arena expected-count)) (print " violation(s) but got ")
+                        (println (int-to-string arena actual-count)) false))))
+              ((validate-error msg)
+                (print "  FAIL: validation error: ") (println msg) false)))
+          ((none)
+            (print "  FAIL: could not load shapes ") (println shapes-path) false)))
+      ((none)
+        (print "  FAIL: could not load data ") (println data-path) false)))
+
   ;; ============================================================
   ;; Individual Tests
   ;; ============================================================
@@ -140,6 +182,35 @@
       ((none) (do (println "  FAIL: could not load fixture") false))))
 
   ;; ============================================================
+  ;; Separate Data/Shapes Tests
+  ;; ============================================================
+
+  (fn test-employee-directory ((arena Arena))
+    (@intent "Test employee directory with closed shape, value ranges, patterns")
+    (@spec ((Arena) -> Bool))
+    (assert-violations-separate arena "fixtures/employee-dir-data.ttl" "fixtures/employee-dir-shapes.ttl" 5))
+
+  (fn test-product-catalog ((arena Arena))
+    (@intent "Test product catalog with minExclusive, sh:in, pattern")
+    (@spec ((Arena) -> Bool))
+    (assert-violations-separate arena "fixtures/product-catalog-data.ttl" "fixtures/product-catalog-shapes.ttl" 3))
+
+  (fn test-address-book ((arena Arena))
+    (@intent "Test address book with logical constraints and sh:in")
+    (@spec ((Arena) -> Bool))
+    (assert-violations-separate arena "fixtures/address-book-data.ttl" "fixtures/address-book-shapes.ttl" 2))
+
+  (fn test-valid-library ((arena Arena))
+    (@intent "Test all-valid library data conforms")
+    (@spec ((Arena) -> Bool))
+    (assert-conforms-separate arena "fixtures/library-data.ttl" "fixtures/library-shapes.ttl"))
+
+  (fn test-multi-shape ((arena Arena))
+    (@intent "Test multiple shapes targeting different classes")
+    (@spec ((Arena) -> Bool))
+    (assert-violations-separate arena "fixtures/multi-shape-data.ttl" "fixtures/multi-shape-shapes.ttl" 3))
+
+  ;; ============================================================
   ;; Main Test Runner
   ;; ============================================================
 
@@ -165,6 +236,13 @@
         (if (test-target-node arena) (set! passed (+ passed 1)) (set! failed (+ failed 1)))
         (if (test-multiple-violations arena) (set! passed (+ passed 1)) (set! failed (+ failed 1)))
         (if (test-report-string arena) (set! passed (+ passed 1)) (set! failed (+ failed 1)))
+
+        ;; Separate data/shapes tests
+        (if (test-employee-directory arena) (set! passed (+ passed 1)) (set! failed (+ failed 1)))
+        (if (test-product-catalog arena) (set! passed (+ passed 1)) (set! failed (+ failed 1)))
+        (if (test-address-book arena) (set! passed (+ passed 1)) (set! failed (+ failed 1)))
+        (if (test-valid-library arena) (set! passed (+ passed 1)) (set! failed (+ failed 1)))
+        (if (test-multi-shape arena) (set! passed (+ passed 1)) (set! failed (+ failed 1)))
 
         ;; Summary
         (println "")

@@ -20,6 +20,7 @@ SLOP_LIST_DEFINE(types_ShaclPath, slop_list_types_ShaclPath)
 SLOP_OPTION_DEFINE(types_ShaclPath, slop_option_types_ShaclPath)
 #endif
 
+slop_list_types_ShaclPath report_fixture_path_list_ab(slop_arena* arena);
 void snarl_print_report(slop_arena* arena, types_ValidationReport report);
 slop_string snarl_report_to_string(slop_arena* arena, types_ValidationReport report);
 index_IndexedGraph snarl_report_to_graph(slop_arena* arena, types_ValidationReport report);

@@ -9,14 +9,38 @@
 (module value-type
   (@doc "SHACL value type constraints: sh:class, sh:datatype, sh:nodeKind")
 
-  (import rdf (Term Triple term-eq term-kind make-iri triple-subject
-               triple-predicate triple-object IRI Literal TermKind))
+  (import rdf (Term Triple term-eq term-kind make-iri make-literal make-triple
+               triple-subject triple-predicate triple-object IRI Literal TermKind))
   (import index (IndexedGraph indexed-graph-match indexed-graph-subjects
-                 indexed-graph-contains indexed-graph-size))
+                 indexed-graph-contains indexed-graph-size
+                 indexed-graph-create indexed-graph-add))
   (import vocab (RDF_TYPE
                  SHACL_CLASS SHACL_DATATYPE SHACL_NODE_KIND
-                 XSD_STRING))
+                 XSD_STRING XSD_INTEGER))
   (import types (NodeKind Severity Constraint ValidationResult ShaclPath))
+
+  ;; Test URI constants
+  (const EX_FOCUS String "http://example.org/focus")
+  (const EX_SHAPE String "http://example.org/Shape1")
+  (const EX_PERSON String "http://example.org/Person")
+  (const EX_VALUE String "http://example.org/value")
+
+  ;; ============================================================
+  ;; Test Fixtures
+  ;; ============================================================
+
+  (fn fixture-g-focus-is-person ((arena Arena))
+    (@intent "Graph with (focus rdf:type Person)")
+    (@spec ((Arena) -> IndexedGraph))
+    (let ((mut g (indexed-graph-create arena)))
+      (set! g (indexed-graph-add arena g
+        (make-triple arena (make-iri arena EX_FOCUS) (make-iri arena RDF_TYPE) (make-iri arena EX_PERSON))))
+      g))
+
+  (fn fixture-g-empty ((arena Arena))
+    (@intent "Empty graph for testing")
+    (@spec ((Arena) -> IndexedGraph))
+    (indexed-graph-create arena))
 
   (export
     check-class
@@ -36,6 +60,8 @@
             -> (Option ValidationResult)))
     (@alloc arena)
     (@pre {(indexed-graph-size data-graph) >= 0})
+    (@example (arena (fixture-g-focus-is-person arena) (make-iri arena EX_FOCUS) (make-iri arena EX_FOCUS) (make-iri arena EX_PERSON) (none) (make-iri arena EX_SHAPE) severity-violation (none)) -> (none))
+    (@example (arena (fixture-g-empty arena) (make-iri arena EX_FOCUS) (make-iri arena EX_FOCUS) (make-iri arena EX_PERSON) (none) (make-iri arena EX_SHAPE) severity-violation (none)) -> (some (ValidationResult _ _ _ _ _ _ _)))
     ;; Check if value-node has rdf:type required-class
     (let ((type-pred (make-iri arena RDF_TYPE))
           (type-triple (record-new Triple
@@ -65,6 +91,9 @@
     (@spec ((Arena Term Term Term (Option ShaclPath) Term Severity (Option String))
             -> (Option ValidationResult)))
     (@alloc arena)
+    (@example (arena (make-iri arena EX_FOCUS) (make-literal arena "42" (some "http://www.w3.org/2001/XMLSchema#integer") (none)) (make-iri arena "http://www.w3.org/2001/XMLSchema#integer") (none) (make-iri arena EX_SHAPE) severity-violation (none)) -> (none))
+    (@example (arena (make-iri arena EX_FOCUS) (make-literal arena "hello" (none) (none)) (make-iri arena "http://www.w3.org/2001/XMLSchema#integer") (none) (make-iri arena EX_SHAPE) severity-violation (none)) -> (some (ValidationResult _ _ _ _ _ _ _)))
+    (@example (arena (make-iri arena EX_FOCUS) (make-iri arena EX_VALUE) (make-iri arena "http://www.w3.org/2001/XMLSchema#integer") (none) (make-iri arena EX_SHAPE) severity-violation (none)) -> (some (ValidationResult _ _ _ _ _ _ _)))
     ;; Value must be a literal
     (match value-node
       ((term-literal lit)
@@ -101,6 +130,9 @@
     (@spec ((Arena Term Term NodeKind (Option ShaclPath) Term Severity (Option String))
             -> (Option ValidationResult)))
     (@alloc arena)
+    (@example (arena (make-iri arena EX_FOCUS) (make-iri arena EX_VALUE) node-kind-iri (none) (make-iri arena EX_SHAPE) severity-violation (none)) -> (none))
+    (@example (arena (make-iri arena EX_FOCUS) (make-literal arena "hi" (none) (none)) node-kind-iri (none) (make-iri arena EX_SHAPE) severity-violation (none)) -> (some (ValidationResult _ _ _ _ _ _ _)))
+    (@example (arena (make-iri arena EX_FOCUS) (make-iri arena EX_VALUE) node-kind-iri-or-literal (none) (make-iri arena EX_SHAPE) severity-violation (none)) -> (none))
     (let ((kind (term-kind value-node))
           (passes (match required-kind
                     (node-kind-blank-node (match kind (blank true) (_ false)))
@@ -129,6 +161,9 @@
     (@spec ((Arena Term (Option ShaclPath) Term Term String Severity (Option String))
             -> ValidationResult))
     (@alloc arena)
+    (@example (arena (make-iri arena EX_FOCUS) (none) (make-iri arena EX_VALUE) (make-iri arena EX_SHAPE) SHACL_CLASS severity-violation (none))
+      ;; Returns a ValidationResult with the given fields
+      )
     (record-new ValidationResult
       (focus-node focus-node)
       (result-path path)

@@ -1,0 +1,26 @@
+@prefix ex: <http://example.org/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# Valid product
+ex:widget a ex:Product ;
+    ex:name "Widget" ;
+    ex:price "9.99"^^xsd:decimal ;
+    ex:category ex:Electronics ;
+    ex:sku "EL-1234" ;
+    ex:weight "0.5"^^xsd:decimal .
+
+# Invalid: price 0 — minExclusive fail; sku "bad" — pattern fail
+ex:gadget a ex:Product ;
+    ex:name "Gadget" ;
+    ex:price "0"^^xsd:decimal ;
+    ex:category ex:Electronics ;
+    ex:sku "bad" ;
+    ex:weight "1.0"^^xsd:decimal .
+
+# Invalid: category ex:Toys — sh:in fail
+ex:thingamajig a ex:Product ;
+    ex:name "Thingamajig" ;
+    ex:price "4.99"^^xsd:decimal ;
+    ex:category ex:Toys ;
+    ex:sku "FD-5678" ;
+    ex:weight "0.2"^^xsd:decimal .

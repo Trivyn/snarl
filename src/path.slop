@@ -10,10 +10,61 @@
   (@doc "SHACL property path evaluation against RDF data graphs")
 
   (import rdf (Term Triple term-eq triple-subject triple-predicate triple-object
-               make-iri))
+               make-iri make-literal make-triple))
   (import index (IndexedGraph indexed-graph-match indexed-graph-objects
-                 indexed-graph-subjects indexed-graph-size))
+                 indexed-graph-subjects indexed-graph-size
+                 indexed-graph-create indexed-graph-add))
   (import types (ShaclPath))
+
+  ;; Test URI constants
+  (const EX_ALICE String "http://example.org/alice")
+  (const EX_BOB String "http://example.org/bob")
+  (const EX_NAME String "http://example.org/name")
+  (const EX_KNOWS String "http://example.org/knows")
+  (const EX_NEXT String "http://example.org/next")
+  (const EX_A String "http://example.org/a")
+  (const EX_B String "http://example.org/b")
+  (const EX_C String "http://example.org/c")
+
+  ;; ============================================================
+  ;; Test Fixtures
+  ;; ============================================================
+
+  (fn fixture-g-alice-name ((arena Arena))
+    (@intent "Graph with (alice name 'Alice')")
+    (@spec ((Arena) -> IndexedGraph))
+    (let ((mut g (indexed-graph-create arena)))
+      (set! g (indexed-graph-add arena g
+        (make-triple arena (make-iri arena EX_ALICE) (make-iri arena EX_NAME) (make-literal arena "Alice" (none) (none)))))
+      g))
+
+  (fn fixture-g-chain ((arena Arena))
+    (@intent "Graph with (a next b), (b next c)")
+    (@spec ((Arena) -> IndexedGraph))
+    (let ((mut g (indexed-graph-create arena)))
+      (set! g (indexed-graph-add arena g
+        (make-triple arena (make-iri arena EX_A) (make-iri arena EX_NEXT) (make-iri arena EX_B))))
+      (set! g (indexed-graph-add arena g
+        (make-triple arena (make-iri arena EX_B) (make-iri arena EX_NEXT) (make-iri arena EX_C))))
+      g))
+
+  (fn fixture-g-alice-knows-bob ((arena Arena))
+    (@intent "Graph with (alice knows bob), (bob name 'Bob')")
+    (@spec ((Arena) -> IndexedGraph))
+    (let ((mut g (indexed-graph-create arena)))
+      (set! g (indexed-graph-add arena g
+        (make-triple arena (make-iri arena EX_ALICE) (make-iri arena EX_KNOWS) (make-iri arena EX_BOB))))
+      (set! g (indexed-graph-add arena g
+        (make-triple arena (make-iri arena EX_BOB) (make-iri arena EX_NAME) (make-literal arena "Bob" (none) (none)))))
+      g))
+
+  (fn fixture-path-seq-knows-name ((arena Arena))
+    (@intent "Create sequence path list: [path-predicate knows, path-predicate name]")
+    (@spec ((Arena) -> (List ShaclPath)))
+    (let ((mut steps (list-new arena ShaclPath)))
+      (list-push steps (union-new ShaclPath path-predicate (make-iri arena EX_KNOWS)))
+      (list-push steps (union-new ShaclPath path-predicate (make-iri arena EX_NAME)))
+      steps))
 
   (export
     resolve-path
@@ -29,9 +80,8 @@
     (@alloc arena)
     (@pre {(indexed-graph-size data-graph) >= 0})
     (@post {(list-len $result) >= 0})
-    (@example
-      ;; Given <ex:alice> <ex:name> "Alice" in graph and predicate path <ex:name>:
-      ;; resolve-path returns ("Alice")
+    (@example (arena (fixture-g-alice-name arena) (make-iri arena EX_ALICE) (union-new ShaclPath path-predicate (make-iri arena EX_NAME)))
+      ;; Returns list containing "Alice"
       )
     (match path
       ;; Predicate path: return all objects where (focus-node, predicate, ?)
@@ -73,6 +123,9 @@
     (@alloc arena)
     (@pre {(indexed-graph-size data-graph) >= 0})
     (@post {(list-len $result) >= 0})
+    (@example (arena (fixture-g-alice-name arena) (make-iri arena EX_ALICE) (union-new ShaclPath path-predicate (make-iri arena EX_NAME)))
+      ;; Returns subjects that have the given predicate pointing to object
+      )
     (match path
       ((path-predicate pred)
         (indexed-graph-subjects arena data-graph pred object))
@@ -88,6 +141,9 @@
     (@intent "Resolve sequence path by chaining each step's results as input to the next")
     (@spec ((Arena IndexedGraph Term (List ShaclPath)) -> (List Term)))
     (@alloc arena)
+    (@example (arena (fixture-g-alice-knows-bob arena) (make-iri arena EX_ALICE) (fixture-path-seq-knows-name arena))
+      ;; Resolves knows/name sequence from alice → "Bob"
+      )
     ;; Start with the focus node, pipe through each step
     (let ((mut current-nodes (list-new arena Term)))
       (list-push current-nodes focus)
@@ -104,6 +160,9 @@
     (@intent "Resolve alternative path by collecting results from all alternatives")
     (@spec ((Arena IndexedGraph Term (List ShaclPath)) -> (List Term)))
     (@alloc arena)
+    (@example (arena (fixture-g-alice-name arena) (make-iri arena EX_ALICE) (fixture-path-seq-knows-name arena))
+      ;; Collects results from all alternative paths
+      )
     (let ((mut result (list-new arena Term)))
       (for-each (alt alts)
         (let ((alt-results (resolve-path arena g focus alt)))
@@ -115,6 +174,9 @@
     (@intent "Resolve inverse path: find nodes that reach focus-node via inner path")
     (@spec ((Arena IndexedGraph Term ShaclPath) -> (List Term)))
     (@alloc arena)
+    (@example (arena (fixture-g-alice-knows-bob arena) (make-iri arena EX_BOB) (union-new ShaclPath path-predicate (make-iri arena EX_KNOWS)))
+      ;; Returns alice (who knows bob)
+      )
     (match inner
       ;; Inverse of predicate: find subjects where (?, pred, focus)
       ((path-predicate pred)
@@ -129,6 +191,9 @@
     (@intent "Resolve zero-or-more path: transitive closure including start node")
     (@spec ((Arena IndexedGraph Term ShaclPath) -> (List Term)))
     (@alloc arena)
+    (@example (arena (fixture-g-chain arena) (make-iri arena EX_A) (union-new ShaclPath path-predicate (make-iri arena EX_NEXT)))
+      ;; Returns a, b, c (transitive closure including start)
+      )
     ;; BFS with visited set to handle cycles. Use index-based queue.
     (let ((mut result (list-new arena Term))
           (visited (set-new arena Term))
@@ -155,6 +220,9 @@
     (@intent "Resolve one-or-more path: transitive closure excluding start node unless reachable")
     (@spec ((Arena IndexedGraph Term ShaclPath) -> (List Term)))
     (@alloc arena)
+    (@example (arena (fixture-g-chain arena) (make-iri arena EX_A) (union-new ShaclPath path-predicate (make-iri arena EX_NEXT)))
+      ;; Returns b, c (transitive closure excluding start unless reachable)
+      )
     ;; First step from focus, then zero-or-more from each result
     (let ((first-step (resolve-path arena g focus inner))
           (mut result (list-new arena Term))
@@ -183,6 +251,9 @@
     (@intent "Resolve zero-or-one path: focus node itself plus one-step results (deduplicated)")
     (@spec ((Arena IndexedGraph Term ShaclPath) -> (List Term)))
     (@alloc arena)
+    (@example (arena (fixture-g-chain arena) (make-iri arena EX_A) (union-new ShaclPath path-predicate (make-iri arena EX_NEXT)))
+      ;; Returns a, b (focus node plus one step)
+      )
     ;; Return union of {focus} and resolve-path(focus, inner)
     (let ((mut result (list-new arena Term))
           (visited (set-new arena Term)))

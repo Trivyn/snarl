@@ -18,7 +18,19 @@
                  SHACL_RESULT_SEVERITY SHACL_SOURCE_CONSTRAINT_COMPONENT
                  SHACL_SOURCE_SHAPE SHACL_VIOLATION SHACL_WARNING SHACL_INFO))
   (import strlib (string-build))
-  (import types (ShaclPath Severity ValidationResult ValidationReport))
+  (import types (ShaclPath Severity ValidationResult ValidationReport make-validation-report))
+
+  ;; ============================================================
+  ;; Test Fixtures
+  ;; ============================================================
+
+  (fn fixture-path-list-ab ((arena Arena))
+    (@intent "Create path list: [path-predicate ex:a, path-predicate ex:b]")
+    (@spec ((Arena) -> (List ShaclPath)))
+    (let ((mut paths (list-new arena ShaclPath)))
+      (list-push paths (union-new ShaclPath path-predicate (make-iri arena "http://example.org/a")))
+      (list-push paths (union-new ShaclPath path-predicate (make-iri arena "http://example.org/b")))
+      paths))
 
   (export
     report-to-string
@@ -36,6 +48,9 @@
     (@intent "Print a validation report to stdout in human-readable form")
     (@spec ((Arena ValidationReport) -> Unit))
     (@alloc arena)
+    (@example (arena (make-validation-report arena))
+      ;; Prints conforming report to stdout
+      )
     (let ((results (. report results))
           (result-count (list-len results)))
 
@@ -99,6 +114,9 @@
     (@intent "Serialize a validation report to a human-readable string")
     (@spec ((Arena ValidationReport) -> String))
     (@alloc arena)
+    (@example (arena (make-validation-report arena))
+      ;; Returns "Validation Report: CONFORMS\n---\n" for conforming report
+      )
     (let ((results (. report results))
           (result-count (list-len results))
           (mut parts (list-new arena String)))
@@ -172,6 +190,9 @@
     (@intent "Serialize a validation report to an RDF graph (IndexedGraph)")
     (@spec ((Arena ValidationReport) -> IndexedGraph))
     (@alloc arena)
+    (@example (arena (make-validation-report arena))
+      ;; Returns an IndexedGraph with report triples
+      )
     (let ((mut g (indexed-graph-create arena))
           (report-node (make-blank arena 0))
           (type-pred (make-iri arena RDF_TYPE))
@@ -253,6 +274,15 @@
     (@intent "Convert severity enum to display string")
     (@spec ((Severity) -> String))
     (@pure)
+    (@example (severity-violation)
+      ;; Returns "Violation"
+      )
+    (@example (severity-warning)
+      ;; Returns "Warning"
+      )
+    (@example (severity-info)
+      ;; Returns "Info"
+      )
     (match sev
       (severity-violation "Violation")
       (severity-warning "Warning")
@@ -263,6 +293,9 @@
     (@intent "Convert an RDF term to a human-readable display string")
     (@spec ((Arena Term) -> String))
     (@alloc arena)
+    (@example (arena (make-iri arena "http://example.org/x")) -> "http://example.org/x")
+    (@example (arena (make-blank arena 1)) -> "_:1")
+    (@example (arena (make-literal arena "hi" (none) (some "en"))) -> "\"hi\"@en")
     (match t
       ((term-iri iri) (. iri value))
       ((term-blank blank)
@@ -289,6 +322,9 @@
     (@intent "Join sequence path steps with /")
     (@spec ((Arena (List ShaclPath)) -> String))
     (@alloc arena)
+    (@example (arena (fixture-path-list-ab arena))
+      ;; Returns "http://example.org/a / http://example.org/b"
+      )
     (let ((mut s ""))
       (let ((mut first true))
         (for-each (step steps)
@@ -302,6 +338,9 @@
     (@intent "Join alternative path alts with |")
     (@spec ((Arena (List ShaclPath)) -> String))
     (@alloc arena)
+    (@example (arena (fixture-path-list-ab arena))
+      ;; Returns "http://example.org/a | http://example.org/b"
+      )
     (let ((mut s ""))
       (let ((mut first true))
         (for-each (alt alts)
@@ -315,6 +354,7 @@
     (@intent "Convert a SHACL path to a human-readable display string")
     (@spec ((Arena ShaclPath) -> String))
     (@alloc arena)
+    (@example (arena (union-new ShaclPath path-predicate (make-iri arena "http://example.org/name"))) -> "http://example.org/name")
     (match p
       ((path-predicate pred)
         (term-to-display-string arena pred))

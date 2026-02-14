@@ -8,10 +8,15 @@
 (module value-range
   (@doc "SHACL value range constraints: sh:minInclusive, sh:maxInclusive, sh:minExclusive, sh:maxExclusive")
 
-  (import rdf (Term Literal IRI term-eq))
+  (import rdf (Term Literal IRI term-eq make-iri make-literal))
   (import xsd (xsd-compare XsdCompareResult))
-  (import vocab (SHACL_MIN_INCLUSIVE SHACL_MAX_INCLUSIVE SHACL_MIN_EXCLUSIVE SHACL_MAX_EXCLUSIVE))
+  (import vocab (SHACL_MIN_INCLUSIVE SHACL_MAX_INCLUSIVE SHACL_MIN_EXCLUSIVE SHACL_MAX_EXCLUSIVE
+                 XSD_INTEGER))
   (import types (Severity Constraint ValidationResult ShaclPath))
+
+  ;; Test URI constants
+  (const EX_FOCUS String "http://example.org/focus")
+  (const EX_SHAPE String "http://example.org/Shape1")
 
   (export
     check-min-inclusive
@@ -30,10 +35,11 @@
     (@spec ((Arena Term Term Term (Option ShaclPath) Term Severity (Option String))
             -> (Option ValidationResult)))
     (@alloc arena)
-    (@post {(implies (== $result (none)) (!= (xsd-compare arena value-node limit) xsd-compare-less))})
-    (@property correctness (implies (== $result (none)) (!= (xsd-compare arena value-node limit) xsd-compare-less)))
-    (@example "(check-min-inclusive arena focus (term-literal 5 xsd:integer) (term-literal 3 xsd:integer) ...) -> (none)")
-    (@example "(check-min-inclusive arena focus (term-literal 2 xsd:integer) (term-literal 3 xsd:integer) ...) -> (some violation)")
+    ;; VERIFIER: "Could not translate" — xsd-compare has no @post, verifier can't model it
+    (@post (or (!= $result (none)) (!= (xsd-compare arena value-node limit) xsd-compare-less)))
+    (@property correctness (or (!= $result (none)) (!= (xsd-compare arena value-node limit) xsd-compare-less)))
+    (@example (arena (make-iri arena EX_FOCUS) (make-literal arena "5" (some "http://www.w3.org/2001/XMLSchema#integer") (none)) (make-literal arena "3" (some "http://www.w3.org/2001/XMLSchema#integer") (none)) (none) (make-iri arena EX_SHAPE) severity-violation (none)) -> (none))
+    (@example (arena (make-iri arena EX_FOCUS) (make-literal arena "2" (some "http://www.w3.org/2001/XMLSchema#integer") (none)) (make-literal arena "3" (some "http://www.w3.org/2001/XMLSchema#integer") (none)) (none) (make-iri arena EX_SHAPE) severity-violation (none)) -> (some (ValidationResult _ _ _ _ _ _ _)))
     (let ((cmp (xsd-compare arena value-node limit)))
       (match cmp
         (xsd-compare-equal (none))
@@ -67,10 +73,11 @@
     (@spec ((Arena Term Term Term (Option ShaclPath) Term Severity (Option String))
             -> (Option ValidationResult)))
     (@alloc arena)
-    (@post {(implies (== $result (none)) (!= (xsd-compare arena value-node limit) xsd-compare-greater))})
-    (@property correctness (implies (== $result (none)) (!= (xsd-compare arena value-node limit) xsd-compare-greater)))
-    (@example "(check-max-inclusive arena focus (term-literal 3 xsd:integer) (term-literal 5 xsd:integer) ...) -> (none)")
-    (@example "(check-max-inclusive arena focus (term-literal 7 xsd:integer) (term-literal 5 xsd:integer) ...) -> (some violation)")
+    ;; VERIFIER: "Could not translate" — xsd-compare has no @post, verifier can't model it
+    (@post (or (!= $result (none)) (!= (xsd-compare arena value-node limit) xsd-compare-greater)))
+    (@property correctness (or (!= $result (none)) (!= (xsd-compare arena value-node limit) xsd-compare-greater)))
+    (@example (arena (make-iri arena EX_FOCUS) (make-literal arena "3" (some "http://www.w3.org/2001/XMLSchema#integer") (none)) (make-literal arena "5" (some "http://www.w3.org/2001/XMLSchema#integer") (none)) (none) (make-iri arena EX_SHAPE) severity-violation (none)) -> (none))
+    (@example (arena (make-iri arena EX_FOCUS) (make-literal arena "7" (some "http://www.w3.org/2001/XMLSchema#integer") (none)) (make-literal arena "5" (some "http://www.w3.org/2001/XMLSchema#integer") (none)) (none) (make-iri arena EX_SHAPE) severity-violation (none)) -> (some (ValidationResult _ _ _ _ _ _ _)))
     (let ((cmp (xsd-compare arena value-node limit)))
       (match cmp
         (xsd-compare-equal (none))
@@ -104,10 +111,11 @@
     (@spec ((Arena Term Term Term (Option ShaclPath) Term Severity (Option String))
             -> (Option ValidationResult)))
     (@alloc arena)
-    (@post {(implies (== $result (none)) (== (xsd-compare arena value-node limit) xsd-compare-greater))})
-    (@property correctness (implies (== $result (none)) (== (xsd-compare arena value-node limit) xsd-compare-greater)))
-    (@example "(check-min-exclusive arena focus (term-literal 5 xsd:integer) (term-literal 3 xsd:integer) ...) -> (none)")
-    (@example "(check-min-exclusive arena focus (term-literal 3 xsd:integer) (term-literal 3 xsd:integer) ...) -> (some violation)")
+    ;; VERIFIER: "Could not translate" — xsd-compare has no @post, verifier can't model it
+    (@post (or (!= $result (none)) (== (xsd-compare arena value-node limit) xsd-compare-greater)))
+    (@property correctness (or (!= $result (none)) (== (xsd-compare arena value-node limit) xsd-compare-greater)))
+    (@example (arena (make-iri arena EX_FOCUS) (make-literal arena "5" (some "http://www.w3.org/2001/XMLSchema#integer") (none)) (make-literal arena "3" (some "http://www.w3.org/2001/XMLSchema#integer") (none)) (none) (make-iri arena EX_SHAPE) severity-violation (none)) -> (none))
+    (@example (arena (make-iri arena EX_FOCUS) (make-literal arena "3" (some "http://www.w3.org/2001/XMLSchema#integer") (none)) (make-literal arena "3" (some "http://www.w3.org/2001/XMLSchema#integer") (none)) (none) (make-iri arena EX_SHAPE) severity-violation (none)) -> (some (ValidationResult _ _ _ _ _ _ _)))
     (let ((cmp (xsd-compare arena value-node limit)))
       (match cmp
         (xsd-compare-greater (none))
@@ -148,10 +156,11 @@
     (@spec ((Arena Term Term Term (Option ShaclPath) Term Severity (Option String))
             -> (Option ValidationResult)))
     (@alloc arena)
-    (@post {(implies (== $result (none)) (== (xsd-compare arena value-node limit) xsd-compare-less))})
-    (@property correctness (implies (== $result (none)) (== (xsd-compare arena value-node limit) xsd-compare-less)))
-    (@example "(check-max-exclusive arena focus (term-literal 3 xsd:integer) (term-literal 5 xsd:integer) ...) -> (none)")
-    (@example "(check-max-exclusive arena focus (term-literal 5 xsd:integer) (term-literal 5 xsd:integer) ...) -> (some violation)")
+    ;; VERIFIER: "Could not translate" — xsd-compare has no @post, verifier can't model it
+    (@post (or (!= $result (none)) (== (xsd-compare arena value-node limit) xsd-compare-less)))
+    (@property correctness (or (!= $result (none)) (== (xsd-compare arena value-node limit) xsd-compare-less)))
+    (@example (arena (make-iri arena EX_FOCUS) (make-literal arena "3" (some "http://www.w3.org/2001/XMLSchema#integer") (none)) (make-literal arena "5" (some "http://www.w3.org/2001/XMLSchema#integer") (none)) (none) (make-iri arena EX_SHAPE) severity-violation (none)) -> (none))
+    (@example (arena (make-iri arena EX_FOCUS) (make-literal arena "5" (some "http://www.w3.org/2001/XMLSchema#integer") (none)) (make-literal arena "5" (some "http://www.w3.org/2001/XMLSchema#integer") (none)) (none) (make-iri arena EX_SHAPE) severity-violation (none)) -> (some (ValidationResult _ _ _ _ _ _ _)))
     (let ((cmp (xsd-compare arena value-node limit)))
       (match cmp
         (xsd-compare-less (none))

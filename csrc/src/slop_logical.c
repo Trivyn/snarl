@@ -1,6 +1,9 @@
 #include "../runtime/slop_runtime.h"
 #include "slop_logical.h"
 
+static const slop_string logical_EX_FOCUS = SLOP_STR("http://example.org/focus");
+static const slop_string logical_EX_SHAPE = SLOP_STR("http://example.org/Shape1");
+
 slop_option_types_ValidationResult snarl_check_not(slop_arena* arena, rdf_Term focus_node, uint8_t conforms_to_ref, slop_option_types_ShaclPath path, rdf_Term shape_id, types_Severity severity, slop_option_string message);
 slop_option_types_ValidationResult snarl_check_and(slop_arena* arena, rdf_Term focus_node, uint8_t all_pass, slop_option_types_ShaclPath path, rdf_Term shape_id, types_Severity severity, slop_option_string message);
 slop_option_types_ValidationResult snarl_check_or(slop_arena* arena, rdf_Term focus_node, uint8_t any_pass, slop_option_types_ShaclPath path, rdf_Term shape_id, types_Severity severity, slop_option_string message);

@@ -8,24 +8,24 @@
 #include "slop_index.h"
 #include "slop_types.h"
 
-#ifndef SLOP_LIST_RDF_TERM_DEFINED
-#define SLOP_LIST_RDF_TERM_DEFINED
-SLOP_LIST_DEFINE(rdf_Term, slop_list_rdf_Term)
-#endif
-
 #ifndef SLOP_LIST_TYPES_SHACLPATH_DEFINED
 #define SLOP_LIST_TYPES_SHACLPATH_DEFINED
 SLOP_LIST_DEFINE(types_ShaclPath, slop_list_types_ShaclPath)
 #endif
 
-#ifndef SLOP_OPTION_RDF_TERM_DEFINED
-#define SLOP_OPTION_RDF_TERM_DEFINED
-SLOP_OPTION_DEFINE(rdf_Term, slop_option_rdf_Term)
+#ifndef SLOP_LIST_RDF_TERM_DEFINED
+#define SLOP_LIST_RDF_TERM_DEFINED
+SLOP_LIST_DEFINE(rdf_Term, slop_list_rdf_Term)
 #endif
 
 #ifndef SLOP_OPTION_TYPES_SHACLPATH_DEFINED
 #define SLOP_OPTION_TYPES_SHACLPATH_DEFINED
 SLOP_OPTION_DEFINE(types_ShaclPath, slop_option_types_ShaclPath)
+#endif
+
+#ifndef SLOP_OPTION_RDF_TERM_DEFINED
+#define SLOP_OPTION_RDF_TERM_DEFINED
+SLOP_OPTION_DEFINE(rdf_Term, slop_option_rdf_Term)
 #endif
 
 
@@ -112,6 +112,10 @@ static inline bool slop_eq_rdf_Term(const void* a, const void* b) {
 }
 #endif
 
+index_IndexedGraph path_fixture_g_alice_name(slop_arena* arena);
+index_IndexedGraph path_fixture_g_chain(slop_arena* arena);
+index_IndexedGraph path_fixture_g_alice_knows_bob(slop_arena* arena);
+slop_list_types_ShaclPath path_fixture_path_seq_knows_name(slop_arena* arena);
 slop_list_rdf_Term snarl_resolve_path(slop_arena* arena, index_IndexedGraph data_graph, rdf_Term focus_node, types_ShaclPath path);
 slop_list_rdf_Term snarl_resolve_path_from(slop_arena* arena, index_IndexedGraph data_graph, rdf_Term object, types_ShaclPath path);
 slop_list_rdf_Term path_resolve_sequence(slop_arena* arena, index_IndexedGraph g, rdf_Term focus, slop_list_types_ShaclPath steps);
@@ -125,14 +129,14 @@ slop_list_rdf_Term path_resolve_zero_or_one(slop_arena* arena, index_IndexedGrap
 #define path_resolve_path snarl_resolve_path
 #define path_resolve_path_from snarl_resolve_path_from
 
-#ifndef SLOP_OPTION_RDF_TERM_DEFINED
-#define SLOP_OPTION_RDF_TERM_DEFINED
-SLOP_OPTION_DEFINE(rdf_Term, slop_option_rdf_Term)
-#endif
-
 #ifndef SLOP_OPTION_TYPES_SHACLPATH_DEFINED
 #define SLOP_OPTION_TYPES_SHACLPATH_DEFINED
 SLOP_OPTION_DEFINE(types_ShaclPath, slop_option_types_ShaclPath)
+#endif
+
+#ifndef SLOP_OPTION_RDF_TERM_DEFINED
+#define SLOP_OPTION_RDF_TERM_DEFINED
+SLOP_OPTION_DEFINE(rdf_Term, slop_option_rdf_Term)
 #endif
 
 

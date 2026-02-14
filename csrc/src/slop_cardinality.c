@@ -1,6 +1,9 @@
 #include "../runtime/slop_runtime.h"
 #include "slop_cardinality.h"
 
+static const slop_string cardinality_EX_FOCUS = SLOP_STR("http://example.org/focus");
+static const slop_string cardinality_EX_SHAPE = SLOP_STR("http://example.org/Shape1");
+
 slop_option_types_ValidationResult snarl_check_min_count(slop_arena* arena, rdf_Term focus_node, int64_t value_count, int64_t min_count, slop_option_types_ShaclPath path, rdf_Term shape_id, types_Severity severity, slop_option_string message);
 slop_option_types_ValidationResult snarl_check_max_count(slop_arena* arena, rdf_Term focus_node, int64_t value_count, int64_t max_count, slop_option_types_ShaclPath path, rdf_Term shape_id, types_Severity severity, slop_option_string message);
 
