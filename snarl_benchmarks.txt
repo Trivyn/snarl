@@ -1,0 +1,114 @@
+Building snarl...
+cc -O2 -Wall -Wno-unused-function -Wno-unused-variable -Wno-return-type -Wno-pointer-sign -DSLOP_ARENA_NO_CAP -DSNARL_VERSION=\"0.1.0\" -Icsrc/runtime -Icsrc/src csrc/src/slop_cardinality.c csrc/src/slop_common.c csrc/src/slop_engine.c csrc/src/slop_file.c csrc/src/slop_index.c csrc/src/slop_list.c csrc/src/slop_logical.c csrc/src/slop_other.c csrc/src/slop_pair.c csrc/src/slop_parse.c csrc/src/slop_path.c csrc/src/slop_rdf.c csrc/src/slop_report.c csrc/src/slop_shape.c csrc/src/slop_snarl.c csrc/src/slop_string.c csrc/src/slop_strlib.c csrc/src/slop_target.c csrc/src/slop_ttl.c csrc/src/slop_types.c csrc/src/slop_value_range.c csrc/src/slop_value_type.c csrc/src/slop_vocab.c csrc/src/slop_xsd.c csrc/src/slop_main.c  -o build/snarl
+  -> build/snarl
+Generating benchmark fixtures...
+  Generated fixtures/benchmarks/employees-1k-data.ttl: 1000 employees, ~242 expected violations
+  Generated fixtures/benchmarks/employees-10k-data.ttl: 10000 employees, ~2471 expected violations
+  Generated fixtures/benchmarks/employees-100k-data.ttl: 100000 employees, ~25180 expected violations
+Done.
+
+========================================================================
+  SHACL Validator Comparison: pySHACL (ref) vs Rudof vs Snarl
+========================================================================
+
+--- employee-dir (28 triples) ---
+  Running snarl... done (2ms)
+  Running pyshacl (ref)... done (97ms)
+  Running rudof... done (93ms)
+
+                          Results      Time
+                          -------    ------
+  snarl                         5       2ms
+  pyshacl (ref)                 5      97ms
+  rudof                         5      93ms
+  Snarl is 59.0x faster than pyshacl
+  Snarl is 56.9x faster than rudof
+
+--- library (18 triples) ---
+  Running snarl... done (2ms)
+  Running pyshacl (ref)... done (94ms)
+  Running rudof... done (91ms)
+
+                          Results      Time
+                          -------    ------
+  snarl                  conforms       2ms
+  pyshacl (ref)          conforms      94ms
+  rudof                  conforms      91ms
+  Snarl is 49.1x faster than pyshacl
+  Snarl is 47.6x faster than rudof
+
+--- product-catalog (23 triples) ---
+  Running snarl... done (2ms)
+  Running pyshacl (ref)... done (98ms)
+  Running rudof... done (90ms)
+
+                          Results      Time
+                          -------    ------
+  snarl                         3       2ms
+  pyshacl (ref)                 3      98ms
+  rudof                   5 (!=3)      90ms
+  Snarl is 53.0x faster than pyshacl
+  Snarl is 49.0x faster than rudof
+
+--- address-book (17 triples) ---
+  Running snarl... done (2ms)
+  Running pyshacl (ref)... done (94ms)
+  Running rudof... done (88ms)
+
+                          Results      Time
+                          -------    ------
+  snarl                         2       2ms
+  pyshacl (ref)                 2      94ms
+  rudof                   4 (!=2)      88ms
+  Snarl is 48.0x faster than pyshacl
+  Snarl is 45.0x faster than rudof
+
+--- multi-shape (11 triples) ---
+  Running snarl... done (1ms)
+  Running pyshacl (ref)... done (97ms)
+  Running rudof... done (90ms)
+
+                          Results      Time
+                          -------    ------
+  snarl                         3       1ms
+  pyshacl (ref)                 3      97ms
+  rudof                         3      90ms
+  Snarl is 93.9x faster than pyshacl
+  Snarl is 87.9x faster than rudof
+
+--- employees-1k (7811 triples) ---
+  Running snarl... done (48ms)
+  Running pyshacl (ref)... done (397ms)
+  Running rudof... done (1.86s)
+
+                          Results      Time
+                          -------    ------
+  snarl                       242      48ms
+  pyshacl (ref)               242     397ms
+  rudof                       242     1.86s
+  Snarl is 8.3x faster than pyshacl
+  Snarl is 38.8x faster than rudof
+
+--- employees-10k (78050 triples) ---
+  Running snarl... done (525ms)
+  Running pyshacl (ref)... done (4.25s)
+  Running rudof... SKIPPED (>10000 triples)
+
+                          Results      Time
+                          -------    ------
+  snarl                      2471     525ms
+  pyshacl (ref)              2471     4.25s
+  rudof                         -         -
+  Snarl is 8.1x faster than pyshacl
+
+--- employees-100k (779833 triples) ---
+  Running snarl... done (5.73s)
+  Running pyshacl (ref)... done (45.84s)
+  Running rudof... SKIPPED (>10000 triples)
+
+                          Results      Time
+                          -------    ------
+  snarl                     25180     5.73s
+  pyshacl (ref)             25180    45.84s
+  rudof                         -         -
+  Snarl is 8.0x faster than pyshacl
