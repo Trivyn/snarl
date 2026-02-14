@@ -19,7 +19,7 @@ ALL_SRCS    := $(wildcard $(CSRC)/*.c)
 SHARED_SRCS := $(filter-out $(CSRC)/slop_main.c $(CSRC)/slop_test_cli.c, $(ALL_SRCS))
 SHARED_OBJS := $(patsubst $(CSRC)/%.c,$(OBJ)/%.o,$(SHARED_SRCS))
 
-.PHONY: all cli lib test w3c-test clean release dist csrc slop-build
+.PHONY: all cli lib test w3c-test bench clean release dist csrc slop-build
 
 PLATFORM ?= unknown
 
@@ -54,6 +54,10 @@ test: $(BIN)
 w3c-test: cli
 	@echo "Running W3C SHACL conformance tests..."
 	cd cli/tests && bash w3c/run-w3c-tests.sh ../../build/snarl
+
+bench: cli
+	@cd cli/tests && uv run benchmark_compare.py --generate 2>/dev/null; \
+	python benchmark_compare.py
 
 clean:
 	rm -rf $(BIN) dist

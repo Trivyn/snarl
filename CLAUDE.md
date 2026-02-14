@@ -40,6 +40,7 @@ make all        # Build CLI executable (default)
 make lib        # Build build/libsnarl.a static library
 make cli        # Build build/snarl executable
 make test       # Build + run CLI integration tests
+make bench      # Build + run benchmark comparison (pySHACL, Rudof, Snarl)
 make release    # Optimized -O3 build
 make slop-build # Transpile SLOP sources, update include/snarl.h
 make csrc       # Update pre-transpiled C

@@ -1,0 +1,5959 @@
+@prefix ex: <http://example.org/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+ex:engineering a ex:Department .
+ex:marketing a ex:Department .
+ex:sales a ex:Department .
+ex:hr a ex:Department .
+ex:finance a ex:Department .
+ex:legal a ex:Department .
+ex:ops a ex:Department .
+ex:research a ex:Department .
+ex:support a ex:Department .
+ex:design a ex:Department .
+
+ex:emp00000 a ex:Employee ;
+    ex:name "Dave Smith" ;
+    ex:age "65"^^xsd:integer ;
+    ex:email "dave.smith.0@example.com" ;
+    ex:department ex:finance .
+
+ex:emp00001 a ex:Employee ;
+    ex:name "Eve White" ;
+    ex:age "16"^^xsd:integer ;
+    ex:email "eve.white.1@example.com" ;
+    ex:department ex:support .
+
+ex:emp00002 a ex:Employee ;
+    ex:name "Bob Smith" ;
+    ex:age "23"^^xsd:integer ;
+    ex:email "bob.smith.2@example.com" ;
+    ex:department ex:hr .
+
+ex:emp00003 a ex:Employee ;
+    ex:name "Tina Smith" ;
+    ex:age "53"^^xsd:integer ;
+    ex:email "tina.smith.3@example.com" ;
+    ex:department ex:hr .
+
+ex:emp00004 a ex:Employee ;
+    ex:name "Ruth Baker" ;
+    ex:age "32"^^xsd:integer ;
+    ex:email "ruth.baker.4@example.com" ;
+    ex:department ex:research .
+
+ex:emp00005 a ex:Employee ;
+    ex:name "Alice Green" ;
+    ex:age "62"^^xsd:integer ;
+    ex:email "alice.green.5@example.com" ;
+    ex:department ex:ops .
+
+ex:emp00006 a ex:Employee ;
+    ex:name "Eve Clark" ;
+    ex:age "11"^^xsd:integer ;
+    ex:email "eve.clark.6@example.com" ;
+    ex:department ex:marketing .
+
+ex:emp00007 a ex:Employee ;
+    ex:name "Laura Wright" ;
+    ex:age "56"^^xsd:integer ;
+    ex:email "laura.wright.7@example.com" ;
+    ex:department ex:finance .
+
+ex:emp00008 a ex:Employee ;
+    ex:name "Oscar Taylor" ;
+    ex:age "14"^^xsd:integer ;
+    ex:email "oscar.taylor.8@example.com" ;
+    ex:department ex:ops .
+
+ex:emp00009 a ex:Employee ;
+    ex:name "Tina Wright" ;
+    ex:age "54"^^xsd:integer ;
+    ex:email "tina.wright.9@example.com" ;
+    ex:department ex:hr .
+
+ex:emp00010 a ex:Employee ;
+    ex:name "Bob Lewis" ;
+    ex:age "36"^^xsd:integer ;
+    ex:email "bob.lewis.10@example.com" ;
+    ex:department ex:marketing .
+
+ex:emp00011 a ex:Employee ;
+    ex:name "Dave Adams" ;
+    ex:age "35"^^xsd:integer ;
+    ex:email "dave.adams.11@example.com" ;
+    ex:department ex:research .
+
+ex:emp00012 a ex:Employee ;
+    ex:name "Laura Green" ;
+    ex:age "41"^^xsd:integer ;
+    ex:email "laura.green.12@example.com" ;
+    ex:department ex:legal .
+
+ex:emp00013 a ex:Employee ;
+    ex:name "Ivan Brown" ;
+    ex:age "56"^^xsd:integer ;
+    ex:email "ivan.brown.13@example.com" ;
+    ex:department ex:sales .
+
+ex:emp00014 a ex:Employee ;
+    ex:name "Heidi Green" ;
+    ex:age "47"^^xsd:integer ;
+    ex:email "heidi.green.14@example.com" ;
+    ex:department ex:ops .
+
+ex:emp00015 a ex:Employee ;
+    ex:name "Ruth Lewis" ;
+    ex:age "61"^^xsd:integer ;
+    ex:email "ruth.lewis.15@example.com" ;
+    ex:department ex:legal .
+
+ex:emp00016 a ex:Employee ;
+    ex:name "Bob Lewis" ;
+    ex:age "20"^^xsd:integer ;
+    ex:email "bob.lewis.16@example.com" ;
+    ex:department ex:legal .
+
+ex:emp00017 a ex:Employee ;
+    ex:name "Carol Clark" ;
+    ex:age "54"^^xsd:integer ;
+    ex:email "carol.clark.17@example.com" ;
+    ex:department ex:legal .
+
+ex:emp00018 a ex:Employee ;
+    ex:name "Pam Adams" ;
+    ex:age "59"^^xsd:integer ;
+    ex:email "pam-no-at-sign" ;
+    ex:department ex:research .
+
+ex:emp00019 a ex:Employee ;
+    ex:name "Eve Lewis" ;
+    ex:age "65"^^xsd:integer ;
+    ex:email "eve.lewis.19@example.com" ;
+    ex:department ex:support .
+
+ex:emp00020 a ex:Employee ;
+    ex:name "Steve Baker" ;
+    ex:age "55"^^xsd:integer ;
+    ex:email "steve.baker.20@example.com" ;
+    ex:department ex:ops .
+
+ex:emp00021 a ex:Employee ;
+    ex:name "Eve Moore" ;
+    ex:age "49"^^xsd:integer ;
+    ex:email "eve.moore.21@example.com" ;
+    ex:department ex:marketing .
+
+ex:emp00022 a ex:Employee ;
+    ex:name "Dave Black" ;
+    ex:age "58"^^xsd:integer ;
+    ex:email "dave.black.22@example.com" ;
+    ex:department ex:sales .
+
+ex:emp00023 a ex:Employee ;
+    ex:name "Nina Brown" ;
+    ex:age "42"^^xsd:integer ;
+    ex:email "nina.brown.23@example.com" ;
+    ex:department ex:ops .
+
+ex:emp00024 a ex:Employee ;
+    ex:name "Oscar Moore" ;
+    ex:age "34"^^xsd:integer ;
+    ex:email "oscar.moore.24@example.com" ;
+    ex:department ex:support .
+
+ex:emp00025 a ex:Employee ;
+    ex:name "Alice White" ;
+    ex:age "61"^^xsd:integer ;
+    ex:email "alice.white.25@example.com" ;
+    ex:department ex:support .
+
+ex:emp00026 a ex:Employee ;
+    ex:name "Karl White" ;
+    ex:age "36"^^xsd:integer ;
+    ex:email "karl.white.26@example.com" ;
+    ex:department "ops" .
+
+ex:emp00027 a ex:Employee ;
+    ex:name "Alice Hall" ;
+    ex:age "50"^^xsd:integer ;
+    ex:email "alice.hall.27@example.com" ;
+    ex:department ex:sales .
+
+ex:emp00028 a ex:Employee ;
+    ex:name "Dave Young" ;
+    ex:age "58"^^xsd:integer ;
+    ex:email "dave.young.28@example.com" ;
+    ex:department ex:support .
+
+ex:emp00029 a ex:Employee ;
+    ex:name "Eve Wright" ;
+    ex:age "28"^^xsd:integer ;
+    ex:email "eve.wright.29@example.com" ;
+    ex:department ex:support .
+
+ex:emp00030 a ex:Employee ;
+    ex:name "Quinn Smith" ;
+    ex:age "56"^^xsd:integer ;
+    ex:email "quinn.smith.30@example.com" ;
+    ex:department ex:legal .
+
+ex:emp00031 a ex:Employee ;
+    ex:name "Dave Wright" ;
+    ex:age "11"^^xsd:integer ;
+    ex:email "dave.wright.31@example.com" ;
+    ex:department ex:hr .
+
+ex:emp00032 a ex:Employee ;
+    ex:name "Carol Evans" ;
+    ex:age "22"^^xsd:integer ;
+    ex:email "carol.evans.32@example.com" ;
+    ex:department ex:support .
+
+ex:emp00033 a ex:Employee ;
+    ex:name "Eve Evans" ;
+    ex:age "53"^^xsd:integer ;
+    ex:email "eve.evans.33@example.com" ;
+    ex:department ex:sales .
+
+ex:emp00034 a ex:Employee ;
+    ex:name "Tina Baker" ;
+    ex:age "31"^^xsd:integer ;
+    ex:email "tina.baker.34@example.com" ;
+    ex:department ex:support .
+
+ex:emp00035 a ex:Employee ;
+    ex:name "Grace Young" ;
+    ex:age "43"^^xsd:integer ;
+    ex:email "grace.young.35@example.com" ;
+    ex:department ex:legal .
+
+ex:emp00036 a ex:Employee ;
+    ex:name "Quinn Davis" ;
+    ex:age "25"^^xsd:integer ;
+    ex:email "quinn.davis.36@example.com" ;
+    ex:department ex:hr .
+
+ex:emp00037 a ex:Employee ;
+    ex:name "Karl Smith" ;
+    ex:age "55"^^xsd:integer ;
+    ex:email "karl.smith.37@example.com" ;
+    ex:department ex:support .
+
+ex:emp00038 a ex:Employee ;
+    ex:name "Heidi Smith" ;
+    ex:age "22"^^xsd:integer ;
+    ex:email "heidi.smith.38@example.com" ;
+    ex:department ex:engineering .
+
+ex:emp00039 a ex:Employee ;
+    ex:name "Bob King" ;
+    ex:age "22"^^xsd:integer ;
+    ex:email "bob.king.39@example.com" ;
+    ex:department ex:support .
+
+ex:emp00040 a ex:Employee ;
+    ex:name "Pam Clark" ;
+    ex:age "52"^^xsd:integer ;
+    ex:email "pam.clark.40@example.com" ;
+    ex:department ex:sales .
+
+ex:emp00041 a ex:Employee ;
+    ex:name "Steve Evans" ;
+    ex:age "33"^^xsd:integer ;
+    ex:email "steve.evans.41@example.com" ;
+    ex:department ex:research .
+
+ex:emp00042 a ex:Employee ;
+    ex:name "Grace White" ;
+    ex:age "24"^^xsd:integer ;
+    ex:email "grace.white.42@example.com" ;
+    ex:department ex:ops .
+
+ex:emp00043 a ex:Employee ;
+    ex:name "Nina Davis" ;
+    ex:age "64"^^xsd:integer ;
+    ex:email "nina.davis.43@example.com" ;
+    ex:department ex:engineering .
+
+ex:emp00044 a ex:Employee ;
+    ex:name "Dave Jones" ;
+    ex:age "43"^^xsd:integer ;
+    ex:email "dave.jones.44@example.com" ;
+    ex:department ex:legal .
+
+ex:emp00045 a ex:Employee ;
+    ex:name "Dave Lewis" ;
+    ex:age "30"^^xsd:integer ;
+    ex:email "dave.lewis.45@example.com" ;
+    ex:department ex:hr .
+
+ex:emp00046 a ex:Employee ;
+    ex:name "Eve Baker" ;
+    ex:age "29"^^xsd:integer ;
+    ex:email "eve.baker.46@example.com" ;
+    ex:department ex:finance .
+
+ex:emp00047 a ex:Employee ;
+    ex:name "Carol Davis" ;
+    ex:age "10"^^xsd:integer ;
+    ex:email "carol.davis.47@example.com" ;
+    ex:department ex:marketing .
+
+ex:emp00048 a ex:Employee ;
+    ex:name "Carol Lewis" ;
+    ex:age "28"^^xsd:integer ;
+    ex:email "carol.lewis.48@example.com" ;
+    ex:department ex:ops .
+
+ex:emp00049 a ex:Employee ;
+    ex:name "Grace Adams" ;
+    ex:age "21"^^xsd:integer ;
+    ex:email "grace.adams.49@example.com" ;
+    ex:department ex:sales .
+
+ex:emp00050 a ex:Employee ;
+    ex:name "Mike Hall" ;
+    ex:age "47"^^xsd:integer ;
+    ex:email "mike.hall.50@example.com" ;
+    ex:department ex:finance .
+
+ex:emp00051 a ex:Employee ;
+    ex:name "Ruth Evans" ;
+    ex:age "27"^^xsd:integer ;
+    ex:email "ruth.evans.51@example.com" ;
+    ex:department ex:hr .
+
+ex:emp00052 a ex:Employee ;
+    ex:name "Bob Taylor" ;
+    ex:age "17"^^xsd:integer ;
+    ex:email "bob.taylor.52@example.com" ;
+    ex:department ex:legal .
+
+ex:emp00053 a ex:Employee ;
+    ex:name "Quinn Moore" ;
+    ex:age "28"^^xsd:integer ;
+    ex:email "quinn.moore.53@example.com" ;
+    ex:department ex:engineering .
+
+ex:emp00054 a ex:Employee ;
+    ex:name "Carol Green" ;
+    ex:age "13"^^xsd:integer ;
+    ex:email "carol.green.54@example.com" ;
+    ex:department ex:design .
+
+ex:emp00055 a ex:Employee ;
+    ex:name "Mike White" ;
+    ex:age "54"^^xsd:integer ;
+    ex:email "mike.white.55@example.com" ;
+    ex:department ex:hr .
+
+ex:emp00056 a ex:Employee ;
+    ex:name "Bob Brown" ;
+    ex:age "44"^^xsd:integer ;
+    ex:email "bob.brown.56@example.com" ;
+    ex:department ex:design .
+
+ex:emp00057 a ex:Employee ;
+    ex:name "Karl Hall" ;
+    ex:age "31"^^xsd:integer ;
+    ex:email "karl.hall.57@example.com" ;
+    ex:department ex:legal .
+
+ex:emp00058 a ex:Employee ;
+    ex:name "Mike Black" ;
+    ex:age "60"^^xsd:integer ;
+    ex:email "mike.black.58@example.com" ;
+    ex:department ex:finance .
+
+ex:emp00059 a ex:Employee ;
+    ex:name "Carol Smith" ;
+    ex:age "47"^^xsd:integer ;
+    ex:email "carol.smith.59@example.com" ;
+    ex:department ex:design .
+
+ex:emp00060 a ex:Employee ;
+    ex:name "Dave Brown" ;
+    ex:age "52"^^xsd:integer ;
+    ex:email "dave.brown.60@example.com" ;
+    ex:department ex:hr .
+
+ex:emp00061 a ex:Employee ;
+    ex:name "Eve Wright" ;
+    ex:age "22"^^xsd:integer ;
+    ex:email "eve.wright.61@example.com" ;
+    ex:department ex:hr .
+
+ex:emp00062 a ex:Employee ;
+    ex:name "Frank Davis" ;
+    ex:age "52"^^xsd:integer ;
+    ex:email "frank.davis.62@example.com" ;
+    ex:department ex:finance .
+
+ex:emp00063 a ex:Employee ;
+    ex:name "Quinn Smith" ;
+    ex:age "60"^^xsd:integer ;
+    ex:email "quinn.smith.63@example.com" ;
+    ex:department ex:support .
+
+ex:emp00064 a ex:Employee ;
+    ex:name "Dave Black" ;
+    ex:age "34"^^xsd:integer ;
+    ex:email "dave.black.64@example.com" ;
+    ex:department ex:marketing .
+
+ex:emp00065 a ex:Employee ;
+    ex:name "Ruth Black" ;
+    ex:age "35"^^xsd:integer ;
+    ex:email "ruth.black.65@example.com" ;
+    ex:department ex:finance .
+
+ex:emp00066 a ex:Employee ;
+    ex:name "Karl Clark" ;
+    ex:age "61"^^xsd:integer ;
+    ex:email "karl.clark.66@example.com" ;
+    ex:department ex:finance .
+
+ex:emp00067 a ex:Employee ;
+    ex:name "Ivan Jones" ;
+    ex:age "23"^^xsd:integer ;
+    ex:email "ivan.jones.67@example.com" ;
+    ex:department ex:ops .
+
+ex:emp00068 a ex:Employee ;
+    ex:name "Bob Smith" ;
+    ex:age "39"^^xsd:integer ;
+    ex:email "bob.smith.68@example.com" ;
+    ex:department ex:sales .
+
+ex:emp00069 a ex:Employee ;
+    ex:name "Ivan Green" ;
+    ex:age "65"^^xsd:integer ;
+    ex:email "ivan.green.69@example.com" ;
+    ex:department ex:research .
+
+ex:emp00070 a ex:Employee ;
+    ex:name "Nina Taylor" ;
+    ex:age "12"^^xsd:integer ;
+    ex:email "nina.taylor.70@example.com" ;
+    ex:department ex:marketing .
+
+ex:emp00071 a ex:Employee ;
+    ex:name "Ruth Jones" ;
+    ex:age "41"^^xsd:integer ;
+    ex:email "ruth.jones.71@example.com" ;
+    ex:department ex:design .
+
+ex:emp00072 a ex:Employee ;
+    ex:name "Nina Black" ;
+    ex:age "20"^^xsd:integer ;
+    ex:email "nina.black.72@example.com" ;
+    ex:department ex:finance .
+
+ex:emp00073 a ex:Employee ;
+    ex:name "Bob Wright" ;
+    ex:age "31"^^xsd:integer ;
+    ex:email "bob.wright.73@example.com" ;
+    ex:department ex:hr .
+
+ex:emp00074 a ex:Employee ;
+    ex:name "Laura Taylor" ;
+    ex:age "44"^^xsd:integer ;
+    ex:email "laura.taylor.74@example.com" ;
+    ex:department ex:design .
+
+ex:emp00075 a ex:Employee ;
+    ex:age "29"^^xsd:integer ;
+    ex:email "heidi.green.75@example.com" ;
+    ex:department ex:ops .
+
+ex:emp00076 a ex:Employee ;
+    ex:name "Karl Baker" ;
+    ex:age "60"^^xsd:integer ;
+    ex:email "karl.baker.76@example.com" ;
+    ex:department ex:hr .
+
+ex:emp00077 a ex:Employee ;
+    ex:name "Dave Adams" ;
+    ex:age "20"^^xsd:integer ;
+    ex:email "dave.adams.77@example.com" ;
+    ex:department ex:research .
+
+ex:emp00078 a ex:Employee ;
+    ex:name "Oscar Wright" ;
+    ex:age "37"^^xsd:integer ;
+    ex:email "oscar.wright.78@example.com" ;
+    ex:department ex:hr .
+
+ex:emp00079 a ex:Employee ;
+    ex:name "Grace Adams" ;
+    ex:age "39"^^xsd:integer ;
+    ex:email "grace.adams.79@example.com" ;
+    ex:department ex:finance .
+
+ex:emp00080 a ex:Employee ;
+    ex:name "Ivan Wright" ;
+    ex:age "59"^^xsd:integer ;
+    ex:email "ivan.wright.80@example.com" ;
+    ex:department ex:support .
+
+ex:emp00081 a ex:Employee ;
+    ex:name "Ruth King" ;
+    ex:age "19"^^xsd:integer ;
+    ex:email "ruth.king.81@example.com" ;
+    ex:department ex:marketing .
+
+ex:emp00082 a ex:Employee ;
+    ex:age "55"^^xsd:integer ;
+    ex:email "ivan.green.82@example.com" ;
+    ex:department ex:finance .
+
+ex:emp00083 a ex:Employee ;
+    ex:name "Tina Baker" ;
+    ex:age "40"^^xsd:integer ;
+    ex:email "tina.baker.83@example.com" ;
+    ex:department ex:legal .
+
+ex:emp00084 a ex:Employee ;
+    ex:name "Quinn White" ;
+    ex:age "42"^^xsd:integer ;
+    ex:email "quinn.white.84@example.com" ;
+    ex:department "design" .
+
+ex:emp00085 a ex:Employee ;
+    ex:name "Bob Baker" ;
+    ex:age "18"^^xsd:integer ;
+    ex:email "bob.baker.85@example.com" ;
+    ex:department ex:support .
+
+ex:emp00086 a ex:Employee ;
+    ex:name "Ruth Clark" ;
+    ex:age "15"^^xsd:integer ;
+    ex:email "ruth.clark.86@example.com" ;
+    ex:department ex:ops .
+
+ex:emp00087 a ex:Employee ;
+    ex:name "Tina King" ;
+    ex:age "60"^^xsd:integer ;
+    ex:email "tina.king.87@example.com" ;
+    ex:department ex:marketing .
+
+ex:emp00088 a ex:Employee ;
+    ex:name "Judy Moore" ;
+    ex:age "37"^^xsd:integer ;
+    ex:email "judy.moore.88@example.com" ;
+    ex:department ex:ops .
+
+ex:emp00089 a ex:Employee ;
+    ex:name "Judy Taylor" ;
+    ex:age "26"^^xsd:integer ;
+    ex:email "judy.taylor.89@example.com" ;
+    ex:department ex:hr .
+
+ex:emp00090 a ex:Employee ;
+    ex:name "Mike Green" ;
+    ex:age "57"^^xsd:integer ;
+    ex:email "mike.green.90@example.com" ;
+    ex:department ex:design .
+
+ex:emp00091 a ex:Employee ;
+    ex:name "Ruth Smith" ;
+    ex:age "37"^^xsd:integer ;
+    ex:email "ruth.smith.91@example.com" ;
+    ex:department ex:finance .
+
+ex:emp00092 a ex:Employee ;
+    ex:name "Steve King" ;
+    ex:age "47"^^xsd:integer ;
+    ex:email "steve.king.92@example.com" ;
+    ex:department ex:research .
+
+ex:emp00093 a ex:Employee ;
+    ex:name "Grace Moore" ;
+    ex:age "48"^^xsd:integer ;
+    ex:email "grace.moore.93@example.com" ;
+    ex:department ex:sales .
+
+ex:emp00094 a ex:Employee ;
+    ex:name "Judy Moore" ;
+    ex:age "60"^^xsd:integer ;
+    ex:email "judy.moore.94@example.com" ;
+    ex:department ex:design .
+
+ex:emp00095 a ex:Employee ;
+    ex:name "Heidi Young" ;
+    ex:age "32"^^xsd:integer ;
+    ex:email "heidi-no-at-sign" ;
+    ex:department ex:hr .
+
+ex:emp00096 a ex:Employee ;
+    ex:name "Bob Lewis" ;
+    ex:age "48"^^xsd:integer ;
+    ex:email "bob.lewis.96@example.com" ;
+    ex:department ex:design .
+
+ex:emp00097 a ex:Employee ;
+    ex:name "Carol Davis" ;
+    ex:age "44"^^xsd:integer ;
+    ex:email "carol.davis.97@example.com" ;
+    ex:department "design" .
+
+ex:emp00098 a ex:Employee ;
+    ex:name "Mike Evans" ;
+    ex:age "43"^^xsd:integer ;
+    ex:email "mike-no-at-sign" ;
+    ex:department ex:hr .
+
+ex:emp00099 a ex:Employee ;
+    ex:name "Alice White" ;
+    ex:age "45"^^xsd:integer ;
+    ex:email "alice.white.99@example.com" ;
+    ex:department "hr" .
+
+ex:emp00100 a ex:Employee ;
+    ex:name "Quinn Davis" ;
+    ex:age "21"^^xsd:integer ;
+    ex:email "quinn.davis.100@example.com" ;
+    ex:department ex:support .
+
+ex:emp00101 a ex:Employee ;
+    ex:name "Dave Davis" ;
+    ex:age "26"^^xsd:integer ;
+    ex:email "dave.davis.101@example.com" ;
+    ex:department ex:research .
+
+ex:emp00102 a ex:Employee ;
+    ex:name "Ruth King" ;
+    ex:age "46"^^xsd:integer ;
+    ex:email "ruth.king.102@example.com" ;
+    ex:department ex:design .
+
+ex:emp00103 a ex:Employee ;
+    ex:name "Quinn Baker" ;
+    ex:age "53"^^xsd:integer ;
+    ex:email "quinn.baker.103@example.com" ;
+    ex:department ex:research .
+
+ex:emp00104 a ex:Employee ;
+    ex:name "Pam Davis" ;
+    ex:age "34"^^xsd:integer ;
+    ex:email "pam.davis.104@example.com" ;
+    ex:department ex:hr .
+
+ex:emp00105 a ex:Employee ;
+    ex:name "Ivan Moore" ;
+    ex:age "49"^^xsd:integer ;
+    ex:email "ivan.moore.105@example.com" ;
+    ex:department ex:hr .
+
+ex:emp00106 a ex:Employee ;
+    ex:name "Carol Young" ;
+    ex:age "33"^^xsd:integer ;
+    ex:email "carol.young.106@example.com" ;
+    ex:department ex:finance .
+
+ex:emp00107 a ex:Employee ;
+    ex:name "Ruth Brown" ;
+    ex:age "26"^^xsd:integer ;
+    ex:email "ruth.brown.107@example.com" ;
+    ex:department ex:sales .
+
+ex:emp00108 a ex:Employee ;
+    ex:name "Eve Clark" ;
+    ex:age "22"^^xsd:integer ;
+    ex:email "eve.clark.108@example.com" ;
+    ex:department ex:ops .
+
+ex:emp00109 a ex:Employee ;
+    ex:name "Ruth Davis" ;
+    ex:age "44"^^xsd:integer ;
+    ex:email "ruth.davis.109@example.com" ;
+    ex:department ex:engineering .
+
+ex:emp00110 a ex:Employee ;
+    ex:name "Nina Adams" ;
+    ex:age "55"^^xsd:integer ;
+    ex:email "nina.adams.110@example.com" ;
+    ex:department ex:engineering .
+
+ex:emp00111 a ex:Employee ;
+    ex:name "Steve Adams" ;
+    ex:age "48"^^xsd:integer ;
+    ex:email "steve.adams.111@example.com" ;
+    ex:department ex:engineering .
+
+ex:emp00112 a ex:Employee ;
+    ex:name "Judy Adams" ;
+    ex:age "44"^^xsd:integer ;
+    ex:email "judy.adams.112@example.com" ;
+    ex:department ex:support .
+
+ex:emp00113 a ex:Employee ;
+    ex:name "Ruth Lewis" ;
+    ex:age "49"^^xsd:integer ;
+    ex:email "ruth.lewis.113@example.com" ;
+    ex:department ex:hr .
+
+ex:emp00114 a ex:Employee ;
+    ex:name "Pam Smith" ;
+    ex:age "42"^^xsd:integer ;
+    ex:email "pam.smith.114@example.com" ;
+    ex:department ex:legal .
+
+ex:emp00115 a ex:Employee ;
+    ex:name "Mike Green" ;
+    ex:age "47"^^xsd:integer ;
+    ex:email "mike.green.115@example.com" ;
+    ex:department ex:sales .
+
+ex:emp00116 a ex:Employee ;
+    ex:name "Ruth Smith" ;
+    ex:age "43"^^xsd:integer ;
+    ex:email "ruth.smith.116@example.com" ;
+    ex:department ex:design .
+
+ex:emp00117 a ex:Employee ;
+    ex:name "Alice Brown" ;
+    ex:age "59"^^xsd:integer ;
+    ex:email "alice-no-at-sign" ;
+    ex:department ex:ops .
+
+ex:emp00118 a ex:Employee ;
+    ex:name "Oscar Green" ;
+    ex:age "21"^^xsd:integer ;
+    ex:email "oscar.green.118@example.com" ;
+    ex:department ex:finance .
+
+ex:emp00119 a ex:Employee ;
+    ex:name "Grace Davis" ;
+    ex:age "38"^^xsd:integer ;
+    ex:email "grace.davis.119@example.com" ;
+    ex:department ex:legal .
+
+ex:emp00120 a ex:Employee ;
+    ex:name "Mike Hall" ;
+    ex:age "44"^^xsd:integer ;
+    ex:email "mike.hall.120@example.com" ;
+    ex:department ex:finance .
+
+ex:emp00121 a ex:Employee ;
+    ex:name "Pam Smith" ;
+    ex:age "15"^^xsd:integer ;
+    ex:email "pam.smith.121@example.com" ;
+    ex:department ex:support .
+
+ex:emp00122 a ex:Employee ;
+    ex:name "Heidi Brown" ;
+    ex:age "59"^^xsd:integer ;
+    ex:email "heidi.brown.122@example.com" ;
+    ex:department ex:engineering .
+
+ex:emp00123 a ex:Employee ;
+    ex:name "Heidi Clark" ;
+    ex:age "19"^^xsd:integer ;
+    ex:email "heidi.clark.123@example.com" ;
+    ex:department "design" .
+
+ex:emp00124 a ex:Employee ;
+    ex:name "Eve Evans" ;
+    ex:age "60"^^xsd:integer ;
+    ex:email "eve.evans.124@example.com" ;
+    ex:department ex:marketing .
+
+ex:emp00125 a ex:Employee ;
+    ex:name "Grace Davis" ;
+    ex:age "62"^^xsd:integer ;
+    ex:email "grace.davis.125@example.com" ;
+    ex:department ex:finance .
+
+ex:emp00126 a ex:Employee ;
+    ex:name "Frank White" ;
+    ex:age "28"^^xsd:integer ;
+    ex:email "frank-no-at-sign" ;
+    ex:department ex:finance .
+
+ex:emp00127 a ex:Employee ;
+    ex:name "Alice Young" ;
+    ex:age "54"^^xsd:integer ;
+    ex:email "alice.young.127@example.com" ;
+    ex:department ex:ops .
+
+ex:emp00128 a ex:Employee ;
+    ex:name "Grace Brown" ;
+    ex:age "55"^^xsd:integer ;
+    ex:email "grace-no-at-sign" ;
+    ex:department ex:hr .
+
+ex:emp00129 a ex:Employee ;
+    ex:name "Judy White" ;
+    ex:age "54"^^xsd:integer ;
+    ex:email "judy.white.129@example.com" ;
+    ex:department ex:engineering .
+
+ex:emp00130 a ex:Employee ;
+    ex:name "Nina Wright" ;
+    ex:age "22"^^xsd:integer ;
+    ex:email "nina.wright.130@example.com" ;
+    ex:department ex:support .
+
+ex:emp00131 a ex:Employee ;
+    ex:name "Alice Baker" ;
+    ex:age "49"^^xsd:integer ;
+    ex:email "alice.baker.131@example.com" ;
+    ex:department ex:marketing .
+
+ex:emp00132 a ex:Employee ;
+    ex:name "Laura Davis" ;
+    ex:age "63"^^xsd:integer ;
+    ex:email "laura.davis.132@example.com" ;
+    ex:department ex:sales .
+
+ex:emp00133 a ex:Employee ;
+    ex:name "Quinn Hall" ;
+    ex:age "57"^^xsd:integer ;
+    ex:email "quinn.hall.133@example.com" ;
+    ex:department ex:support .
+
+ex:emp00134 a ex:Employee ;
+    ex:name "Oscar Baker" ;
+    ex:age "64"^^xsd:integer ;
+    ex:email "oscar.baker.134@example.com" ;
+    ex:department ex:design .
+
+ex:emp00135 a ex:Employee ;
+    ex:name "Heidi Brown" ;
+    ex:age "35"^^xsd:integer ;
+    ex:email "heidi.brown.135@example.com" ;
+    ex:department ex:research .
+
+ex:emp00136 a ex:Employee ;
+    ex:name "Oscar Adams" ;
+    ex:age "39"^^xsd:integer ;
+    ex:email "oscar.adams.136@example.com" ;
+    ex:department ex:engineering .
+
+ex:emp00137 a ex:Employee ;
+    ex:name "Karl Green" ;
+    ex:age "49"^^xsd:integer ;
+    ex:email "karl.green.137@example.com" ;
+    ex:department ex:hr .
+
+ex:emp00138 a ex:Employee ;
+    ex:name "Ivan King" ;
+    ex:age "35"^^xsd:integer ;
+    ex:email "ivan.king.138@example.com" ;
+    ex:department ex:design .
+
+ex:emp00139 a ex:Employee ;
+    ex:name "Ivan Taylor" ;
+    ex:age "18"^^xsd:integer ;
+    ex:email "ivan.taylor.139@example.com" ;
+    ex:department ex:support .
+
+ex:emp00140 a ex:Employee ;
+    ex:name "Carol Lewis" ;
+    ex:age "64"^^xsd:integer ;
+    ex:email "carol.lewis.140@example.com" ;
+    ex:department ex:ops .
+
+ex:emp00141 a ex:Employee ;
+    ex:name "Heidi Evans" ;
+    ex:age "59"^^xsd:integer ;
+    ex:email "heidi.evans.141@example.com" ;
+    ex:department ex:research .
+
+ex:emp00142 a ex:Employee ;
+    ex:name "Alice Brown" ;
+    ex:age "36"^^xsd:integer ;
+    ex:email "alice.brown.142@example.com" ;
+    ex:department ex:hr .
+
+ex:emp00143 a ex:Employee ;
+    ex:name "Heidi Young" ;
+    ex:age "60"^^xsd:integer ;
+    ex:email "heidi.young.143@example.com" ;
+    ex:department ex:design .
+
+ex:emp00144 a ex:Employee ;
+    ex:name "Ruth Moore" ;
+    ex:age "40"^^xsd:integer ;
+    ex:email "ruth.moore.144@example.com" ;
+    ex:department ex:ops .
+
+ex:emp00145 a ex:Employee ;
+    ex:name "Ruth King" ;
+    ex:age "40"^^xsd:integer ;
+    ex:email "ruth.king.145@example.com" ;
+    ex:department ex:research .
+
+ex:emp00146 a ex:Employee ;
+    ex:name "Ivan Lewis" ;
+    ex:age "25"^^xsd:integer ;
+    ex:email "ivan.lewis.146@example.com" ;
+    ex:department ex:hr .
+
+ex:emp00147 a ex:Employee ;
+    ex:name "Ruth Green" ;
+    ex:age "30"^^xsd:integer ;
+    ex:email "ruth.green.147@example.com" ;
+    ex:department ex:hr .
+
+ex:emp00148 a ex:Employee ;
+    ex:name "Ivan Moore" ;
+    ex:age "56"^^xsd:integer ;
+    ex:email "ivan.moore.148@example.com" ;
+    ex:department ex:finance .
+
+ex:emp00149 a ex:Employee ;
+    ex:name "Grace Young" ;
+    ex:age "32"^^xsd:integer ;
+    ex:email "grace.young.149@example.com" ;
+    ex:department "legal" .
+
+ex:emp00150 a ex:Employee ;
+    ex:age "26"^^xsd:integer ;
+    ex:email "alice.taylor.150@example.com" ;
+    ex:department ex:finance .
+
+ex:emp00151 a ex:Employee ;
+    ex:name "Bob Taylor" ;
+    ex:age "36"^^xsd:integer ;
+    ex:email "bob.taylor.151@example.com" ;
+    ex:department ex:sales .
+
+ex:emp00152 a ex:Employee ;
+    ex:name "Pam White" ;
+    ex:age "18"^^xsd:integer ;
+    ex:email "pam.white.152@example.com" ;
+    ex:department ex:design .
+
+ex:emp00153 a ex:Employee ;
+    ex:name "Pam Davis" ;
+    ex:age "39"^^xsd:integer ;
+    ex:email "pam.davis.153@example.com" ;
+    ex:department ex:sales .
+
+ex:emp00154 a ex:Employee ;
+    ex:name "Ivan Evans" ;
+    ex:age "25"^^xsd:integer ;
+    ex:email "ivan.evans.154@example.com" ;
+    ex:department ex:marketing .
+
+ex:emp00155 a ex:Employee ;
+    ex:name "Carol Jones" ;
+    ex:age "27"^^xsd:integer ;
+    ex:email "carol.jones.155@example.com" ;
+    ex:department ex:sales .
+
+ex:emp00156 a ex:Employee ;
+    ex:name "Judy Brown" ;
+    ex:age "33"^^xsd:integer ;
+    ex:email "judy.brown.156@example.com" ;
+    ex:department ex:marketing .
+
+ex:emp00157 a ex:Employee ;
+    ex:name "Nina Lewis" ;
+    ex:age "51"^^xsd:integer ;
+    ex:email "nina.lewis.157@example.com" ;
+    ex:department ex:ops .
+
+ex:emp00158 a ex:Employee ;
+    ex:name "Oscar Young" ;
+    ex:age "55"^^xsd:integer ;
+    ex:email "oscar.young.158@example.com" ;
+    ex:department ex:ops .
+
+ex:emp00159 a ex:Employee ;
+    ex:name "Tina Jones" ;
+    ex:age "57"^^xsd:integer ;
+    ex:email "tina.jones.159@example.com" ;
+    ex:department ex:marketing .
+
+ex:emp00160 a ex:Employee ;
+    ex:name "Grace Clark" ;
+    ex:age "34"^^xsd:integer ;
+    ex:email "grace.clark.160@example.com" ;
+    ex:department "marketing" .
+
+ex:emp00161 a ex:Employee ;
+    ex:age "22"^^xsd:integer ;
+    ex:email "frank.taylor.161@example.com" ;
+    ex:department ex:sales .
+
+ex:emp00162 a ex:Employee ;
+    ex:name "Oscar Evans" ;
+    ex:age "36"^^xsd:integer ;
+    ex:email "oscar.evans.162@example.com" ;
+    ex:department ex:engineering .
+
+ex:emp00163 a ex:Employee ;
+    ex:name "Judy Davis" ;
+    ex:age "22"^^xsd:integer ;
+    ex:email "judy.davis.163@example.com" ;
+    ex:department ex:hr .
+
+ex:emp00164 a ex:Employee ;
+    ex:name "Steve Clark" ;
+    ex:age "45"^^xsd:integer ;
+    ex:email "steve.clark.164@example.com" ;
+    ex:department ex:marketing .
+
+ex:emp00165 a ex:Employee ;
+    ex:name "Eve Hall" ;
+    ex:age "14"^^xsd:integer ;
+    ex:email "eve.hall.165@example.com" ;
+    ex:department ex:marketing .
+
+ex:emp00166 a ex:Employee ;
+    ex:name "Tina Young" ;
+    ex:age "46"^^xsd:integer ;
+    ex:email "tina.young.166@example.com" ;
+    ex:department ex:marketing .
+
+ex:emp00167 a ex:Employee ;
+    ex:name "Judy Adams" ;
+    ex:age "35"^^xsd:integer ;
+    ex:email "judy.adams.167@example.com" ;
+    ex:department ex:support .
+
+ex:emp00168 a ex:Employee ;
+    ex:name "Oscar Brown" ;
+    ex:age "56"^^xsd:integer ;
+    ex:email "oscar.brown.168@example.com" ;
+    ex:department ex:engineering .
+
+ex:emp00169 a ex:Employee ;
+    ex:name "Karl Hall" ;
+    ex:age "19"^^xsd:integer ;
+    ex:email "karl.hall.169@example.com" ;
+    ex:department ex:marketing .
+
+ex:emp00170 a ex:Employee ;
+    ex:name "Steve Smith" ;
+    ex:age "61"^^xsd:integer ;
+    ex:email "steve.smith.170@example.com" ;
+    ex:department ex:finance .
+
+ex:emp00171 a ex:Employee ;
+    ex:name "Frank Evans" ;
+    ex:age "51"^^xsd:integer ;
+    ex:email "frank.evans.171@example.com" ;
+    ex:department ex:research .
+
+ex:emp00172 a ex:Employee ;
+    ex:name "Frank Baker" ;
+    ex:age "58"^^xsd:integer ;
+    ex:email "frank.baker.172@example.com" ;
+    ex:department ex:research .
+
+ex:emp00173 a ex:Employee ;
+    ex:name "Pam Wright" ;
+    ex:age "44"^^xsd:integer ;
+    ex:email "pam.wright.173@example.com" ;
+    ex:department ex:legal .
+
+ex:emp00174 a ex:Employee ;
+    ex:name "Dave Green" ;
+    ex:age "39"^^xsd:integer ;
+    ex:email "dave.green.174@example.com" ;
+    ex:department ex:ops .
+
+ex:emp00175 a ex:Employee ;
+    ex:name "Judy Adams" ;
+    ex:age "53"^^xsd:integer ;
+    ex:email "judy.adams.175@example.com" ;
+    ex:department ex:engineering .
+
+ex:emp00176 a ex:Employee ;
+    ex:name "Karl Hall" ;
+    ex:age "38"^^xsd:integer ;
+    ex:email "karl.hall.176@example.com" ;
+    ex:department ex:marketing .
+
+ex:emp00177 a ex:Employee ;
+    ex:name "Mike Moore" ;
+    ex:age "18"^^xsd:integer ;
+    ex:email "mike.moore.177@example.com" ;
+    ex:department ex:support .
+
+ex:emp00178 a ex:Employee ;
+    ex:name "Bob Clark" ;
+    ex:age "51"^^xsd:integer ;
+    ex:email "bob.clark.178@example.com" ;
+    ex:department ex:legal .
+
+ex:emp00179 a ex:Employee ;
+    ex:name "Pam Davis" ;
+    ex:age "21"^^xsd:integer ;
+    ex:email "pam.davis.179@example.com" ;
+    ex:department ex:hr .
+
+ex:emp00180 a ex:Employee ;
+    ex:name "Eve Young" ;
+    ex:age "46"^^xsd:integer ;
+    ex:email "eve-no-at-sign" ;
+    ex:department ex:research .
+
+ex:emp00181 a ex:Employee ;
+    ex:name "Tina Lewis" ;
+    ex:age "63"^^xsd:integer ;
+    ex:email "tina.lewis.181@example.com" ;
+    ex:department ex:sales .
+
+ex:emp00182 a ex:Employee ;
+    ex:name "Alice Taylor" ;
+    ex:age "44"^^xsd:integer ;
+    ex:email "alice.taylor.182@example.com" ;
+    ex:department ex:marketing .
+
+ex:emp00183 a ex:Employee ;
+    ex:name "Dave Davis" ;
+    ex:age "25"^^xsd:integer ;
+    ex:email "dave.davis.183@example.com" ;
+    ex:department ex:sales .
+
+ex:emp00184 a ex:Employee ;
+    ex:name "Judy Moore" ;
+    ex:age "63"^^xsd:integer ;
+    ex:email "judy.moore.184@example.com" ;
+    ex:department ex:finance .
+
+ex:emp00185 a ex:Employee ;
+    ex:name "Pam Evans" ;
+    ex:age "33"^^xsd:integer ;
+    ex:email "pam.evans.185@example.com" ;
+    ex:department ex:research .
+
+ex:emp00186 a ex:Employee ;
+    ex:name "Mike Clark" ;
+    ex:age "56"^^xsd:integer ;
+    ex:email "mike.clark.186@example.com" ;
+    ex:department ex:support .
+
+ex:emp00187 a ex:Employee ;
+    ex:name "Eve Brown" ;
+    ex:age "35"^^xsd:integer ;
+    ex:email "eve.brown.187@example.com" ;
+    ex:department ex:ops .
+
+ex:emp00188 a ex:Employee ;
+    ex:name "Quinn Hall" ;
+    ex:age "18"^^xsd:integer ;
+    ex:email "quinn.hall.188@example.com" ;
+    ex:department ex:finance .
+
+ex:emp00189 a ex:Employee ;
+    ex:name "Steve Evans" ;
+    ex:age "27"^^xsd:integer ;
+    ex:email "steve.evans.189@example.com" ;
+    ex:department ex:research .
+
+ex:emp00190 a ex:Employee ;
+    ex:name "Laura King" ;
+    ex:age "53"^^xsd:integer ;
+    ex:email "laura.king.190@example.com" ;
+    ex:department ex:support .
+
+ex:emp00191 a ex:Employee ;
+    ex:name "Karl Clark" ;
+    ex:age "62"^^xsd:integer ;
+    ex:email "karl.clark.191@example.com" ;
+    ex:department ex:hr .
+
+ex:emp00192 a ex:Employee ;
+    ex:name "Heidi Baker" ;
+    ex:age "20"^^xsd:integer ;
+    ex:email "heidi.baker.192@example.com" ;
+    ex:department ex:legal .
+
+ex:emp00193 a ex:Employee ;
+    ex:name "Mike Adams" ;
+    ex:age "60"^^xsd:integer ;
+    ex:email "mike.adams.193@example.com" ;
+    ex:department ex:sales .
+
+ex:emp00194 a ex:Employee ;
+    ex:name "Bob Black" ;
+    ex:age "50"^^xsd:integer ;
+    ex:email "bob.black.194@example.com" ;
+    ex:department ex:design .
+
+ex:emp00195 a ex:Employee ;
+    ex:name "Dave Davis" ;
+    ex:age "24"^^xsd:integer ;
+    ex:email "dave.davis.195@example.com" ;
+    ex:department ex:support .
+
+ex:emp00196 a ex:Employee ;
+    ex:name "Alice Black" ;
+    ex:age "14"^^xsd:integer ;
+    ex:email "alice.black.196@example.com" ;
+    ex:department ex:sales .
+
+ex:emp00197 a ex:Employee ;
+    ex:name "Karl Adams" ;
+    ex:age "59"^^xsd:integer ;
+    ex:email "karl.adams.197@example.com" ;
+    ex:department ex:marketing .
+
+ex:emp00198 a ex:Employee ;
+    ex:name "Ruth Adams" ;
+    ex:age "38"^^xsd:integer ;
+    ex:email "ruth.adams.198@example.com" ;
+    ex:department ex:research .
+
+ex:emp00199 a ex:Employee ;
+    ex:name "Bob Brown" ;
+    ex:age "33"^^xsd:integer ;
+    ex:email "bob.brown.199@example.com" ;
+    ex:department ex:finance .
+
+ex:emp00200 a ex:Employee ;
+    ex:name "Carol Baker" ;
+    ex:age "24"^^xsd:integer ;
+    ex:email "carol.baker.200@example.com" ;
+    ex:department ex:marketing .
+
+ex:emp00201 a ex:Employee ;
+    ex:name "Judy Smith" ;
+    ex:age "20"^^xsd:integer ;
+    ex:email "judy.smith.201@example.com" ;
+    ex:department ex:legal .
+
+ex:emp00202 a ex:Employee ;
+    ex:name "Judy Wright" ;
+    ex:age "41"^^xsd:integer ;
+    ex:email "judy-no-at-sign" ;
+    ex:department ex:ops .
+
+ex:emp00203 a ex:Employee ;
+    ex:name "Quinn Baker" ;
+    ex:age "54"^^xsd:integer ;
+    ex:email "quinn.baker.203@example.com" ;
+    ex:department "sales" .
+
+ex:emp00204 a ex:Employee ;
+    ex:name "Carol Adams" ;
+    ex:age "57"^^xsd:integer ;
+    ex:email "carol.adams.204@example.com" ;
+    ex:department ex:hr .
+
+ex:emp00205 a ex:Employee ;
+    ex:name "Steve Black" ;
+    ex:age "32"^^xsd:integer ;
+    ex:email "steve.black.205@example.com" ;
+    ex:department ex:research .
+
+ex:emp00206 a ex:Employee ;
+    ex:name "Oscar Hall" ;
+    ex:age "60"^^xsd:integer ;
+    ex:email "oscar.hall.206@example.com" ;
+    ex:department ex:engineering .
+
+ex:emp00207 a ex:Employee ;
+    ex:name "Oscar Young" ;
+    ex:age "61"^^xsd:integer ;
+    ex:email "oscar.young.207@example.com" ;
+    ex:department "support" .
+
+ex:emp00208 a ex:Employee ;
+    ex:name "Oscar Wright" ;
+    ex:age "55"^^xsd:integer ;
+    ex:email "oscar.wright.208@example.com" ;
+    ex:department ex:finance .
+
+ex:emp00209 a ex:Employee ;
+    ex:name "Nina Hall" ;
+    ex:age "47"^^xsd:integer ;
+    ex:email "nina.hall.209@example.com" ;
+    ex:department "finance" .
+
+ex:emp00210 a ex:Employee ;
+    ex:name "Mike Evans" ;
+    ex:age "24"^^xsd:integer ;
+    ex:email "mike.evans.210@example.com" ;
+    ex:department ex:hr .
+
+ex:emp00211 a ex:Employee ;
+    ex:age "62"^^xsd:integer ;
+    ex:email "laura.young.211@example.com" ;
+    ex:department ex:finance .
+
+ex:emp00212 a ex:Employee ;
+    ex:name "Mike Hall" ;
+    ex:age "18"^^xsd:integer ;
+    ex:email "mike.hall.212@example.com" ;
+    ex:department ex:design .
+
+ex:emp00213 a ex:Employee ;
+    ex:name "Bob Evans" ;
+    ex:age "36"^^xsd:integer ;
+    ex:email "bob.evans.213@example.com" ;
+    ex:department ex:hr .
+
+ex:emp00214 a ex:Employee ;
+    ex:name "Laura Lewis" ;
+    ex:age "58"^^xsd:integer ;
+    ex:email "laura.lewis.214@example.com" ;
+    ex:department ex:hr .
+
+ex:emp00215 a ex:Employee ;
+    ex:name "Eve White" ;
+    ex:age "58"^^xsd:integer ;
+    ex:email "eve.white.215@example.com" ;
+    ex:department ex:engineering .
+
+ex:emp00216 a ex:Employee ;
+    ex:name "Oscar Jones" ;
+    ex:age "55"^^xsd:integer ;
+    ex:email "oscar.jones.216@example.com" ;
+    ex:department ex:legal .
+
+ex:emp00217 a ex:Employee ;
+    ex:name "Carol Young" ;
+    ex:age "38"^^xsd:integer ;
+    ex:email "carol.young.217@example.com" ;
+    ex:department "ops" .
+
+ex:emp00218 a ex:Employee ;
+    ex:name "Eve Taylor" ;
+    ex:age "41"^^xsd:integer ;
+    ex:email "eve.taylor.218@example.com" ;
+    ex:department ex:support .
+
+ex:emp00219 a ex:Employee ;
+    ex:name "Ivan Green" ;
+    ex:age "34"^^xsd:integer ;
+    ex:email "ivan.green.219@example.com" ;
+    ex:department ex:research .
+
+ex:emp00220 a ex:Employee ;
+    ex:name "Judy King" ;
+    ex:age "25"^^xsd:integer ;
+    ex:email "judy.king.220@example.com" ;
+    ex:department ex:research .
+
+ex:emp00221 a ex:Employee ;
+    ex:name "Eve Lewis" ;
+    ex:age "61"^^xsd:integer ;
+    ex:email "eve.lewis.221@example.com" ;
+    ex:department ex:ops .
+
+ex:emp00222 a ex:Employee ;
+    ex:age "23"^^xsd:integer ;
+    ex:email "ruth.wright.222@example.com" ;
+    ex:department ex:ops .
+
+ex:emp00223 a ex:Employee ;
+    ex:name "Ruth White" ;
+    ex:age "47"^^xsd:integer ;
+    ex:email "ruth.white.223@example.com" ;
+    ex:department ex:legal .
+
+ex:emp00224 a ex:Employee ;
+    ex:name "Ivan Adams" ;
+    ex:age "58"^^xsd:integer ;
+    ex:email "ivan-no-at-sign" ;
+    ex:department ex:legal .
+
+ex:emp00225 a ex:Employee ;
+    ex:name "Heidi Evans" ;
+    ex:age "19"^^xsd:integer ;
+    ex:email "heidi.evans.225@example.com" ;
+    ex:department ex:design .
+
+ex:emp00226 a ex:Employee ;
+    ex:name "Ruth King" ;
+    ex:age "57"^^xsd:integer ;
+    ex:email "ruth.king.226@example.com" ;
+    ex:department ex:hr .
+
+ex:emp00227 a ex:Employee ;
+    ex:name "Oscar Young" ;
+    ex:age "59"^^xsd:integer ;
+    ex:email "oscar-no-at-sign" ;
+    ex:department ex:ops .
+
+ex:emp00228 a ex:Employee ;
+    ex:name "Bob Jones" ;
+    ex:age "37"^^xsd:integer ;
+    ex:email "bob-no-at-sign" ;
+    ex:department ex:research .
+
+ex:emp00229 a ex:Employee ;
+    ex:name "Heidi Taylor" ;
+    ex:age "26"^^xsd:integer ;
+    ex:email "heidi.taylor.229@example.com" ;
+    ex:department ex:ops .
+
+ex:emp00230 a ex:Employee ;
+    ex:name "Ruth Baker" ;
+    ex:age "55"^^xsd:integer ;
+    ex:email "ruth.baker.230@example.com" ;
+    ex:department ex:sales .
+
+ex:emp00231 a ex:Employee ;
+    ex:name "Dave Evans" ;
+    ex:age "57"^^xsd:integer ;
+    ex:email "dave.evans.231@example.com" ;
+    ex:department ex:ops .
+
+ex:emp00232 a ex:Employee ;
+    ex:name "Ivan Jones" ;
+    ex:age "62"^^xsd:integer ;
+    ex:email "ivan.jones.232@example.com" ;
+    ex:department ex:legal .
+
+ex:emp00233 a ex:Employee ;
+    ex:name "Oscar Lewis" ;
+    ex:age "41"^^xsd:integer ;
+    ex:email "oscar.lewis.233@example.com" ;
+    ex:department ex:marketing .
+
+ex:emp00234 a ex:Employee ;
+    ex:name "Laura Taylor" ;
+    ex:age "14"^^xsd:integer ;
+    ex:email "laura.taylor.234@example.com" ;
+    ex:department ex:legal .
+
+ex:emp00235 a ex:Employee ;
+    ex:name "Grace White" ;
+    ex:age "47"^^xsd:integer ;
+    ex:email "grace.white.235@example.com" ;
+    ex:department ex:marketing .
+
+ex:emp00236 a ex:Employee ;
+    ex:name "Tina Smith" ;
+    ex:age "21"^^xsd:integer ;
+    ex:email "tina.smith.236@example.com" ;
+    ex:department ex:legal .
+
+ex:emp00237 a ex:Employee ;
+    ex:name "Eve Clark" ;
+    ex:age "22"^^xsd:integer ;
+    ex:email "eve.clark.237@example.com" ;
+    ex:department ex:support .
+
+ex:emp00238 a ex:Employee ;
+    ex:name "Grace Lewis" ;
+    ex:age "39"^^xsd:integer ;
+    ex:email "grace.lewis.238@example.com" ;
+    ex:department ex:sales .
+
+ex:emp00239 a ex:Employee ;
+    ex:name "Tina Smith" ;
+    ex:age "35"^^xsd:integer ;
+    ex:email "tina.smith.239@example.com" ;
+    ex:department ex:sales .
+
+ex:emp00240 a ex:Employee ;
+    ex:name "Ruth Hall" ;
+    ex:age "29"^^xsd:integer ;
+    ex:email "ruth.hall.240@example.com" ;
+    ex:department ex:marketing .
+
+ex:emp00241 a ex:Employee ;
+    ex:name "Alice Black" ;
+    ex:age "18"^^xsd:integer ;
+    ex:email "alice.black.241@example.com" ;
+    ex:department ex:legal .
+
+ex:emp00242 a ex:Employee ;
+    ex:name "Heidi King" ;
+    ex:age "19"^^xsd:integer ;
+    ex:email "heidi.king.242@example.com" ;
+    ex:department ex:sales .
+
+ex:emp00243 a ex:Employee ;
+    ex:name "Eve Baker" ;
+    ex:age "51"^^xsd:integer ;
+    ex:email "eve.baker.243@example.com" ;
+    ex:department ex:marketing .
+
+ex:emp00244 a ex:Employee ;
+    ex:name "Pam Davis" ;
+    ex:age "41"^^xsd:integer ;
+    ex:email "pam.davis.244@example.com" ;
+    ex:department ex:support .
+
+ex:emp00245 a ex:Employee ;
+    ex:age "32"^^xsd:integer ;
+    ex:email "oscar.moore.245@example.com" ;
+    ex:department ex:design .
+
+ex:emp00246 a ex:Employee ;
+    ex:name "Quinn Young" ;
+    ex:age "17"^^xsd:integer ;
+    ex:email "quinn.young.246@example.com" ;
+    ex:department ex:engineering .
+
+ex:emp00247 a ex:Employee ;
+    ex:name "Mike Baker" ;
+    ex:age "61"^^xsd:integer ;
+    ex:email "mike.baker.247@example.com" ;
+    ex:department ex:marketing .
+
+ex:emp00248 a ex:Employee ;
+    ex:name "Oscar Brown" ;
+    ex:age "23"^^xsd:integer ;
+    ex:email "oscar.brown.248@example.com" ;
+    ex:department ex:legal .
+
+ex:emp00249 a ex:Employee ;
+    ex:name "Carol Black" ;
+    ex:age "35"^^xsd:integer ;
+    ex:email "carol.black.249@example.com" ;
+    ex:department ex:design .
+
+ex:emp00250 a ex:Employee ;
+    ex:name "Ruth King" ;
+    ex:age "42"^^xsd:integer ;
+    ex:email "ruth.king.250@example.com" ;
+    ex:department ex:design .
+
+ex:emp00251 a ex:Employee ;
+    ex:name "Oscar Moore" ;
+    ex:age "11"^^xsd:integer ;
+    ex:email "oscar.moore.251@example.com" ;
+    ex:department ex:ops .
+
+ex:emp00252 a ex:Employee ;
+    ex:name "Ruth Clark" ;
+    ex:age "45"^^xsd:integer ;
+    ex:email "ruth.clark.252@example.com" ;
+    ex:department ex:research .
+
+ex:emp00253 a ex:Employee ;
+    ex:name "Nina King" ;
+    ex:age "47"^^xsd:integer ;
+    ex:email "nina.king.253@example.com" ;
+    ex:department ex:ops .
+
+ex:emp00254 a ex:Employee ;
+    ex:name "Dave King" ;
+    ex:age "45"^^xsd:integer ;
+    ex:email "dave.king.254@example.com" ;
+    ex:department ex:legal .
+
+ex:emp00255 a ex:Employee ;
+    ex:name "Laura Black" ;
+    ex:age "11"^^xsd:integer ;
+    ex:email "laura.black.255@example.com" ;
+    ex:department ex:research .
+
+ex:emp00256 a ex:Employee ;
+    ex:name "Carol Baker" ;
+    ex:age "24"^^xsd:integer ;
+    ex:email "carol.baker.256@example.com" ;
+    ex:department ex:legal .
+
+ex:emp00257 a ex:Employee ;
+    ex:name "Ruth Jones" ;
+    ex:age "55"^^xsd:integer ;
+    ex:email "ruth.jones.257@example.com" ;
+    ex:department ex:support .
+
+ex:emp00258 a ex:Employee ;
+    ex:name "Dave Baker" ;
+    ex:age "40"^^xsd:integer ;
+    ex:email "dave.baker.258@example.com" ;
+    ex:department ex:ops .
+
+ex:emp00259 a ex:Employee ;
+    ex:name "Bob Young" ;
+    ex:age "56"^^xsd:integer ;
+    ex:email "bob.young.259@example.com" ;
+    ex:department ex:finance .
+
+ex:emp00260 a ex:Employee ;
+    ex:name "Steve Moore" ;
+    ex:age "31"^^xsd:integer ;
+    ex:email "steve.moore.260@example.com" ;
+    ex:department ex:sales .
+
+ex:emp00261 a ex:Employee ;
+    ex:name "Heidi White" ;
+    ex:age "40"^^xsd:integer ;
+    ex:email "heidi.white.261@example.com" ;
+    ex:department ex:support .
+
+ex:emp00262 a ex:Employee ;
+    ex:name "Ivan Lewis" ;
+    ex:age "45"^^xsd:integer ;
+    ex:email "ivan.lewis.262@example.com" ;
+    ex:department ex:support .
+
+ex:emp00263 a ex:Employee ;
+    ex:name "Tina Taylor" ;
+    ex:age "19"^^xsd:integer ;
+    ex:email "tina.taylor.263@example.com" ;
+    ex:department ex:design .
+
+ex:emp00264 a ex:Employee ;
+    ex:name "Ivan Smith" ;
+    ex:age "29"^^xsd:integer ;
+    ex:email "ivan.smith.264@example.com" ;
+    ex:department ex:finance .
+
+ex:emp00265 a ex:Employee ;
+    ex:name "Judy King" ;
+    ex:age "40"^^xsd:integer ;
+    ex:email "judy.king.265@example.com" ;
+    ex:department "engineering" .
+
+ex:emp00266 a ex:Employee ;
+    ex:name "Eve Adams" ;
+    ex:age "22"^^xsd:integer ;
+    ex:email "eve.adams.266@example.com" ;
+    ex:department ex:sales .
+
+ex:emp00267 a ex:Employee ;
+    ex:name "Alice Brown" ;
+    ex:age "65"^^xsd:integer ;
+    ex:email "alice.brown.267@example.com" ;
+    ex:department ex:support .
+
+ex:emp00268 a ex:Employee ;
+    ex:name "Nina Davis" ;
+    ex:age "39"^^xsd:integer ;
+    ex:email "nina.davis.268@example.com" ;
+    ex:department ex:sales .
+
+ex:emp00269 a ex:Employee ;
+    ex:name "Karl Brown" ;
+    ex:age "21"^^xsd:integer ;
+    ex:email "karl.brown.269@example.com" ;
+    ex:department "sales" .
+
+ex:emp00270 a ex:Employee ;
+    ex:name "Tina Jones" ;
+    ex:age "61"^^xsd:integer ;
+    ex:email "tina.jones.270@example.com" ;
+    ex:department ex:marketing .
+
+ex:emp00271 a ex:Employee ;
+    ex:name "Nina Evans" ;
+    ex:age "56"^^xsd:integer ;
+    ex:email "nina.evans.271@example.com" ;
+    ex:department ex:research .
+
+ex:emp00272 a ex:Employee ;
+    ex:name "Grace Moore" ;
+    ex:age "25"^^xsd:integer ;
+    ex:email "grace.moore.272@example.com" ;
+    ex:department ex:legal .
+
+ex:emp00273 a ex:Employee ;
+    ex:age "51"^^xsd:integer ;
+    ex:email "judy.evans.273@example.com" ;
+    ex:department ex:finance .
+
+ex:emp00274 a ex:Employee ;
+    ex:name "Mike Jones" ;
+    ex:age "18"^^xsd:integer ;
+    ex:email "mike.jones.274@example.com" ;
+    ex:department ex:hr .
+
+ex:emp00275 a ex:Employee ;
+    ex:name "Grace Black" ;
+    ex:age "34"^^xsd:integer ;
+    ex:email "grace.black.275@example.com" ;
+    ex:department ex:finance .
+
+ex:emp00276 a ex:Employee ;
+    ex:name "Alice Evans" ;
+    ex:age "65"^^xsd:integer ;
+    ex:email "alice.evans.276@example.com" ;
+    ex:department "ops" .
+
+ex:emp00277 a ex:Employee ;
+    ex:name "Mike Taylor" ;
+    ex:age "63"^^xsd:integer ;
+    ex:email "mike.taylor.277@example.com" ;
+    ex:department ex:hr .
+
+ex:emp00278 a ex:Employee ;
+    ex:name "Laura Brown" ;
+    ex:age "43"^^xsd:integer ;
+    ex:email "laura.brown.278@example.com" ;
+    ex:department ex:engineering .
+
+ex:emp00279 a ex:Employee ;
+    ex:name "Oscar Brown" ;
+    ex:age "38"^^xsd:integer ;
+    ex:email "oscar.brown.279@example.com" ;
+    ex:department ex:design .
+
+ex:emp00280 a ex:Employee ;
+    ex:name "Mike Baker" ;
+    ex:age "36"^^xsd:integer ;
+    ex:email "mike.baker.280@example.com" ;
+    ex:department ex:marketing .
+
+ex:emp00281 a ex:Employee ;
+    ex:name "Karl Green" ;
+    ex:age "57"^^xsd:integer ;
+    ex:email "karl.green.281@example.com" ;
+    ex:department ex:research .
+
+ex:emp00282 a ex:Employee ;
+    ex:name "Laura Brown" ;
+    ex:age "45"^^xsd:integer ;
+    ex:email "laura.brown.282@example.com" ;
+    ex:department ex:marketing .
+
+ex:emp00283 a ex:Employee ;
+    ex:name "Steve Adams" ;
+    ex:age "51"^^xsd:integer ;
+    ex:email "steve.adams.283@example.com" ;
+    ex:department ex:marketing .
+
+ex:emp00284 a ex:Employee ;
+    ex:name "Judy King" ;
+    ex:age "32"^^xsd:integer ;
+    ex:email "judy.king.284@example.com" ;
+    ex:department ex:legal .
+
+ex:emp00285 a ex:Employee ;
+    ex:name "Carol Moore" ;
+    ex:age "58"^^xsd:integer ;
+    ex:email "carol.moore.285@example.com" ;
+    ex:department ex:marketing .
+
+ex:emp00286 a ex:Employee ;
+    ex:name "Grace Wright" ;
+    ex:age "40"^^xsd:integer ;
+    ex:email "grace.wright.286@example.com" ;
+    ex:department ex:sales .
+
+ex:emp00287 a ex:Employee ;
+    ex:name "Eve Hall" ;
+    ex:age "30"^^xsd:integer ;
+    ex:email "eve.hall.287@example.com" ;
+    ex:department ex:sales .
+
+ex:emp00288 a ex:Employee ;
+    ex:name "Carol Green" ;
+    ex:age "58"^^xsd:integer ;
+    ex:email "carol.green.288@example.com" ;
+    ex:department ex:research .
+
+ex:emp00289 a ex:Employee ;
+    ex:name "Steve Davis" ;
+    ex:age "61"^^xsd:integer ;
+    ex:email "steve.davis.289@example.com" ;
+    ex:department ex:design .
+
+ex:emp00290 a ex:Employee ;
+    ex:name "Tina King" ;
+    ex:age "58"^^xsd:integer ;
+    ex:email "tina.king.290@example.com" ;
+    ex:department "legal" .
+
+ex:emp00291 a ex:Employee ;
+    ex:name "Carol Evans" ;
+    ex:age "46"^^xsd:integer ;
+    ex:email "carol.evans.291@example.com" ;
+    ex:department ex:finance .
+
+ex:emp00292 a ex:Employee ;
+    ex:name "Steve Jones" ;
+    ex:age "17"^^xsd:integer ;
+    ex:email "steve.jones.292@example.com" ;
+    ex:department ex:support .
+
+ex:emp00293 a ex:Employee ;
+    ex:name "Oscar Jones" ;
+    ex:age "21"^^xsd:integer ;
+    ex:email "oscar.jones.293@example.com" ;
+    ex:department ex:legal .
+
+ex:emp00294 a ex:Employee ;
+    ex:name "Carol Brown" ;
+    ex:age "57"^^xsd:integer ;
+    ex:email "carol.brown.294@example.com" ;
+    ex:department ex:design .
+
+ex:emp00295 a ex:Employee ;
+    ex:name "Oscar Taylor" ;
+    ex:age "65"^^xsd:integer ;
+    ex:email "oscar.taylor.295@example.com" ;
+    ex:department ex:engineering .
+
+ex:emp00296 a ex:Employee ;
+    ex:name "Steve Clark" ;
+    ex:age "38"^^xsd:integer ;
+    ex:email "steve.clark.296@example.com" ;
+    ex:department ex:design .
+
+ex:emp00297 a ex:Employee ;
+    ex:name "Eve Jones" ;
+    ex:age "46"^^xsd:integer ;
+    ex:email "eve.jones.297@example.com" ;
+    ex:department ex:marketing .
+
+ex:emp00298 a ex:Employee ;
+    ex:age "50"^^xsd:integer ;
+    ex:email "karl.brown.298@example.com" ;
+    ex:department ex:sales .
+
+ex:emp00299 a ex:Employee ;
+    ex:name "Oscar Davis" ;
+    ex:age "51"^^xsd:integer ;
+    ex:email "oscar.davis.299@example.com" ;
+    ex:department ex:support .
+
+ex:emp00300 a ex:Employee ;
+    ex:name "Laura Wright" ;
+    ex:age "36"^^xsd:integer ;
+    ex:email "laura.wright.300@example.com" ;
+    ex:department ex:ops .
+
+ex:emp00301 a ex:Employee ;
+    ex:name "Karl Jones" ;
+    ex:age "11"^^xsd:integer ;
+    ex:email "karl.jones.301@example.com" ;
+    ex:department ex:legal .
+
+ex:emp00302 a ex:Employee ;
+    ex:name "Ruth Adams" ;
+    ex:age "36"^^xsd:integer ;
+    ex:email "ruth.adams.302@example.com" ;
+    ex:department ex:finance .
+
+ex:emp00303 a ex:Employee ;
+    ex:name "Tina Black" ;
+    ex:age "39"^^xsd:integer ;
+    ex:email "tina.black.303@example.com" ;
+    ex:department ex:marketing .
+
+ex:emp00304 a ex:Employee ;
+    ex:name "Eve Wright" ;
+    ex:age "37"^^xsd:integer ;
+    ex:email "eve-no-at-sign" ;
+    ex:department ex:ops .
+
+ex:emp00305 a ex:Employee ;
+    ex:name "Carol Young" ;
+    ex:age "53"^^xsd:integer ;
+    ex:email "carol.young.305@example.com" ;
+    ex:department ex:ops .
+
+ex:emp00306 a ex:Employee ;
+    ex:name "Karl Black" ;
+    ex:age "16"^^xsd:integer ;
+    ex:email "karl.black.306@example.com" ;
+    ex:department ex:support .
+
+ex:emp00307 a ex:Employee ;
+    ex:name "Quinn Wright" ;
+    ex:age "19"^^xsd:integer ;
+    ex:email "quinn.wright.307@example.com" ;
+    ex:department ex:legal .
+
+ex:emp00308 a ex:Employee ;
+    ex:name "Grace King" ;
+    ex:age "49"^^xsd:integer ;
+    ex:email "grace.king.308@example.com" ;
+    ex:department ex:hr .
+
+ex:emp00309 a ex:Employee ;
+    ex:name "Eve Black" ;
+    ex:age "22"^^xsd:integer ;
+    ex:email "eve.black.309@example.com" ;
+    ex:department ex:finance .
+
+ex:emp00310 a ex:Employee ;
+    ex:age "52"^^xsd:integer ;
+    ex:email "dave.moore.310@example.com" ;
+    ex:department ex:support .
+
+ex:emp00311 a ex:Employee ;
+    ex:name "Karl Black" ;
+    ex:age "56"^^xsd:integer ;
+    ex:email "karl.black.311@example.com" ;
+    ex:department "ops" .
+
+ex:emp00312 a ex:Employee ;
+    ex:age "64"^^xsd:integer ;
+    ex:email "frank.green.312@example.com" ;
+    ex:department ex:research .
+
+ex:emp00313 a ex:Employee ;
+    ex:name "Laura Lewis" ;
+    ex:age "46"^^xsd:integer ;
+    ex:email "laura.lewis.313@example.com" ;
+    ex:department ex:design .
+
+ex:emp00314 a ex:Employee ;
+    ex:name "Oscar Lewis" ;
+    ex:age "52"^^xsd:integer ;
+    ex:email "oscar.lewis.314@example.com" ;
+    ex:department ex:hr .
+
+ex:emp00315 a ex:Employee ;
+    ex:name "Pam Clark" ;
+    ex:age "41"^^xsd:integer ;
+    ex:email "pam.clark.315@example.com" ;
+    ex:department ex:design .
+
+ex:emp00316 a ex:Employee ;
+    ex:name "Oscar Young" ;
+    ex:age "42"^^xsd:integer ;
+    ex:email "oscar.young.316@example.com" ;
+    ex:department ex:support .
+
+ex:emp00317 a ex:Employee ;
+    ex:name "Frank Clark" ;
+    ex:age "56"^^xsd:integer ;
+    ex:email "frank.clark.317@example.com" ;
+    ex:department ex:sales .
+
+ex:emp00318 a ex:Employee ;
+    ex:name "Bob Evans" ;
+    ex:age "41"^^xsd:integer ;
+    ex:email "bob.evans.318@example.com" ;
+    ex:department ex:support .
+
+ex:emp00319 a ex:Employee ;
+    ex:name "Quinn White" ;
+    ex:age "36"^^xsd:integer ;
+    ex:email "quinn.white.319@example.com" ;
+    ex:department ex:marketing .
+
+ex:emp00320 a ex:Employee ;
+    ex:name "Ivan Davis" ;
+    ex:age "50"^^xsd:integer ;
+    ex:email "ivan.davis.320@example.com" ;
+    ex:department ex:sales .
+
+ex:emp00321 a ex:Employee ;
+    ex:name "Carol Lewis" ;
+    ex:age "46"^^xsd:integer ;
+    ex:email "carol.lewis.321@example.com" ;
+    ex:department ex:legal .
+
+ex:emp00322 a ex:Employee ;
+    ex:name "Nina Jones" ;
+    ex:age "43"^^xsd:integer ;
+    ex:email "nina.jones.322@example.com" ;
+    ex:department ex:support .
+
+ex:emp00323 a ex:Employee ;
+    ex:age "41"^^xsd:integer ;
+    ex:email "mike.brown.323@example.com" ;
+    ex:department ex:hr .
+
+ex:emp00324 a ex:Employee ;
+    ex:age "27"^^xsd:integer ;
+    ex:email "dave.king.324@example.com" ;
+    ex:department ex:sales .
+
+ex:emp00325 a ex:Employee ;
+    ex:name "Pam Black" ;
+    ex:age "63"^^xsd:integer ;
+    ex:email "pam.black.325@example.com" ;
+    ex:department ex:research .
+
+ex:emp00326 a ex:Employee ;
+    ex:name "Alice Brown" ;
+    ex:age "19"^^xsd:integer ;
+    ex:email "alice.brown.326@example.com" ;
+    ex:department ex:finance .
+
+ex:emp00327 a ex:Employee ;
+    ex:name "Eve Taylor" ;
+    ex:age "64"^^xsd:integer ;
+    ex:email "eve.taylor.327@example.com" ;
+    ex:department ex:design .
+
+ex:emp00328 a ex:Employee ;
+    ex:name "Dave Young" ;
+    ex:age "33"^^xsd:integer ;
+    ex:email "dave-no-at-sign" ;
+    ex:department ex:finance .
+
+ex:emp00329 a ex:Employee ;
+    ex:name "Heidi Baker" ;
+    ex:age "58"^^xsd:integer ;
+    ex:email "heidi.baker.329@example.com" ;
+    ex:department ex:design .
+
+ex:emp00330 a ex:Employee ;
+    ex:age "56"^^xsd:integer ;
+    ex:email "dave.evans.330@example.com" ;
+    ex:department ex:support .
+
+ex:emp00331 a ex:Employee ;
+    ex:name "Quinn Lewis" ;
+    ex:age "63"^^xsd:integer ;
+    ex:email "quinn.lewis.331@example.com" ;
+    ex:department ex:sales .
+
+ex:emp00332 a ex:Employee ;
+    ex:name "Alice Wright" ;
+    ex:age "33"^^xsd:integer ;
+    ex:email "alice.wright.332@example.com" ;
+    ex:department ex:design .
+
+ex:emp00333 a ex:Employee ;
+    ex:name "Carol Moore" ;
+    ex:age "41"^^xsd:integer ;
+    ex:email "carol.moore.333@example.com" ;
+    ex:department ex:marketing .
+
+ex:emp00334 a ex:Employee ;
+    ex:age "50"^^xsd:integer ;
+    ex:email "ruth.moore.334@example.com" ;
+    ex:department ex:support .
+
+ex:emp00335 a ex:Employee ;
+    ex:name "Pam Jones" ;
+    ex:age "58"^^xsd:integer ;
+    ex:email "pam.jones.335@example.com" ;
+    ex:department ex:ops .
+
+ex:emp00336 a ex:Employee ;
+    ex:name "Ivan Smith" ;
+    ex:age "40"^^xsd:integer ;
+    ex:email "ivan.smith.336@example.com" ;
+    ex:department ex:marketing .
+
+ex:emp00337 a ex:Employee ;
+    ex:name "Dave King" ;
+    ex:age "26"^^xsd:integer ;
+    ex:email "dave.king.337@example.com" ;
+    ex:department ex:engineering .
+
+ex:emp00338 a ex:Employee ;
+    ex:name "Karl Green" ;
+    ex:age "61"^^xsd:integer ;
+    ex:email "karl.green.338@example.com" ;
+    ex:department ex:research .
+
+ex:emp00339 a ex:Employee ;
+    ex:name "Pam Green" ;
+    ex:age "26"^^xsd:integer ;
+    ex:email "pam.green.339@example.com" ;
+    ex:department ex:marketing .
+
+ex:emp00340 a ex:Employee ;
+    ex:age "36"^^xsd:integer ;
+    ex:email "oscar.jones.340@example.com" ;
+    ex:department ex:hr .
+
+ex:emp00341 a ex:Employee ;
+    ex:name "Grace Jones" ;
+    ex:age "38"^^xsd:integer ;
+    ex:email "grace.jones.341@example.com" ;
+    ex:department ex:finance .
+
+ex:emp00342 a ex:Employee ;
+    ex:name "Ruth Evans" ;
+    ex:age "34"^^xsd:integer ;
+    ex:email "ruth.evans.342@example.com" ;
+    ex:department ex:engineering .
+
+ex:emp00343 a ex:Employee ;
+    ex:name "Grace Young" ;
+    ex:age "40"^^xsd:integer ;
+    ex:email "grace.young.343@example.com" ;
+    ex:department ex:engineering .
+
+ex:emp00344 a ex:Employee ;
+    ex:name "Karl Hall" ;
+    ex:age "25"^^xsd:integer ;
+    ex:email "karl.hall.344@example.com" ;
+    ex:department ex:legal .
+
+ex:emp00345 a ex:Employee ;
+    ex:name "Mike Davis" ;
+    ex:age "42"^^xsd:integer ;
+    ex:email "mike.davis.345@example.com" ;
+    ex:department ex:legal .
+
+ex:emp00346 a ex:Employee ;
+    ex:name "Pam Evans" ;
+    ex:age "41"^^xsd:integer ;
+    ex:email "pam.evans.346@example.com" ;
+    ex:department ex:support .
+
+ex:emp00347 a ex:Employee ;
+    ex:name "Carol Baker" ;
+    ex:age "23"^^xsd:integer ;
+    ex:email "carol.baker.347@example.com" ;
+    ex:department ex:ops .
+
+ex:emp00348 a ex:Employee ;
+    ex:name "Frank Taylor" ;
+    ex:age "36"^^xsd:integer ;
+    ex:email "frank-no-at-sign" ;
+    ex:department ex:legal .
+
+ex:emp00349 a ex:Employee ;
+    ex:name "Karl Young" ;
+    ex:age "37"^^xsd:integer ;
+    ex:email "karl.young.349@example.com" ;
+    ex:department ex:research .
+
+ex:emp00350 a ex:Employee ;
+    ex:name "Nina Green" ;
+    ex:age "62"^^xsd:integer ;
+    ex:email "nina.green.350@example.com" ;
+    ex:department ex:research .
+
+ex:emp00351 a ex:Employee ;
+    ex:name "Bob Wright" ;
+    ex:age "57"^^xsd:integer ;
+    ex:email "bob.wright.351@example.com" ;
+    ex:department ex:ops .
+
+ex:emp00352 a ex:Employee ;
+    ex:name "Bob Brown" ;
+    ex:age "60"^^xsd:integer ;
+    ex:email "bob.brown.352@example.com" ;
+    ex:department ex:ops .
+
+ex:emp00353 a ex:Employee ;
+    ex:name "Frank Smith" ;
+    ex:age "27"^^xsd:integer ;
+    ex:email "frank.smith.353@example.com" ;
+    ex:department ex:design .
+
+ex:emp00354 a ex:Employee ;
+    ex:name "Oscar Jones" ;
+    ex:age "26"^^xsd:integer ;
+    ex:email "oscar.jones.354@example.com" ;
+    ex:department ex:marketing .
+
+ex:emp00355 a ex:Employee ;
+    ex:age "42"^^xsd:integer ;
+    ex:email "laura.wright.355@example.com" ;
+    ex:department ex:design .
+
+ex:emp00356 a ex:Employee ;
+    ex:name "Eve Davis" ;
+    ex:age "41"^^xsd:integer ;
+    ex:email "eve.davis.356@example.com" ;
+    ex:department ex:legal .
+
+ex:emp00357 a ex:Employee ;
+    ex:name "Carol Black" ;
+    ex:age "51"^^xsd:integer ;
+    ex:email "carol.black.357@example.com" ;
+    ex:department ex:legal .
+
+ex:emp00358 a ex:Employee ;
+    ex:name "Ivan Lewis" ;
+    ex:age "25"^^xsd:integer ;
+    ex:email "ivan.lewis.358@example.com" ;
+    ex:department ex:engineering .
+
+ex:emp00359 a ex:Employee ;
+    ex:name "Pam Moore" ;
+    ex:age "42"^^xsd:integer ;
+    ex:email "pam-no-at-sign" ;
+    ex:department ex:support .
+
+ex:emp00360 a ex:Employee ;
+    ex:name "Ivan Davis" ;
+    ex:age "31"^^xsd:integer ;
+    ex:email "ivan.davis.360@example.com" ;
+    ex:department ex:design .
+
+ex:emp00361 a ex:Employee ;
+    ex:name "Pam Clark" ;
+    ex:age "25"^^xsd:integer ;
+    ex:email "pam.clark.361@example.com" ;
+    ex:department ex:sales .
+
+ex:emp00362 a ex:Employee ;
+    ex:name "Oscar Green" ;
+    ex:age "63"^^xsd:integer ;
+    ex:email "oscar.green.362@example.com" ;
+    ex:department ex:research .
+
+ex:emp00363 a ex:Employee ;
+    ex:name "Karl Wright" ;
+    ex:age "63"^^xsd:integer ;
+    ex:email "karl.wright.363@example.com" ;
+    ex:department ex:marketing .
+
+ex:emp00364 a ex:Employee ;
+    ex:name "Judy Young" ;
+    ex:age "28"^^xsd:integer ;
+    ex:email "judy.young.364@example.com" ;
+    ex:department ex:sales .
+
+ex:emp00365 a ex:Employee ;
+    ex:name "Quinn Lewis" ;
+    ex:age "25"^^xsd:integer ;
+    ex:email "quinn.lewis.365@example.com" ;
+    ex:department ex:hr .
+
+ex:emp00366 a ex:Employee ;
+    ex:name "Heidi Evans" ;
+    ex:age "19"^^xsd:integer ;
+    ex:email "heidi.evans.366@example.com" ;
+    ex:department ex:legal .
+
+ex:emp00367 a ex:Employee ;
+    ex:name "Laura Davis" ;
+    ex:age "53"^^xsd:integer ;
+    ex:email "laura.davis.367@example.com" ;
+    ex:department ex:sales .
+
+ex:emp00368 a ex:Employee ;
+    ex:name "Carol Brown" ;
+    ex:age "37"^^xsd:integer ;
+    ex:email "carol.brown.368@example.com" ;
+    ex:department ex:ops .
+
+ex:emp00369 a ex:Employee ;
+    ex:name "Pam Moore" ;
+    ex:age "44"^^xsd:integer ;
+    ex:email "pam.moore.369@example.com" ;
+    ex:department ex:ops .
+
+ex:emp00370 a ex:Employee ;
+    ex:name "Carol Black" ;
+    ex:age "38"^^xsd:integer ;
+    ex:email "carol.black.370@example.com" ;
+    ex:department ex:marketing .
+
+ex:emp00371 a ex:Employee ;
+    ex:name "Quinn Wright" ;
+    ex:age "26"^^xsd:integer ;
+    ex:email "quinn.wright.371@example.com" ;
+    ex:department ex:support .
+
+ex:emp00372 a ex:Employee ;
+    ex:name "Frank Black" ;
+    ex:age "45"^^xsd:integer ;
+    ex:email "frank.black.372@example.com" ;
+    ex:department ex:support .
+
+ex:emp00373 a ex:Employee ;
+    ex:name "Bob White" ;
+    ex:age "51"^^xsd:integer ;
+    ex:email "bob.white.373@example.com" ;
+    ex:department ex:sales .
+
+ex:emp00374 a ex:Employee ;
+    ex:name "Frank King" ;
+    ex:age "63"^^xsd:integer ;
+    ex:email "frank.king.374@example.com" ;
+    ex:department ex:hr .
+
+ex:emp00375 a ex:Employee ;
+    ex:name "Quinn Young" ;
+    ex:age "23"^^xsd:integer ;
+    ex:email "quinn.young.375@example.com" ;
+    ex:department "finance" .
+
+ex:emp00376 a ex:Employee ;
+    ex:name "Ruth Hall" ;
+    ex:age "26"^^xsd:integer ;
+    ex:email "ruth.hall.376@example.com" ;
+    ex:department ex:finance .
+
+ex:emp00377 a ex:Employee ;
+    ex:name "Carol Moore" ;
+    ex:age "59"^^xsd:integer ;
+    ex:email "carol.moore.377@example.com" ;
+    ex:department ex:sales .
+
+ex:emp00378 a ex:Employee ;
+    ex:name "Steve Black" ;
+    ex:age "28"^^xsd:integer ;
+    ex:email "steve.black.378@example.com" ;
+    ex:department ex:design .
+
+ex:emp00379 a ex:Employee ;
+    ex:name "Tina King" ;
+    ex:age "54"^^xsd:integer ;
+    ex:email "tina.king.379@example.com" ;
+    ex:department ex:engineering .
+
+ex:emp00380 a ex:Employee ;
+    ex:name "Alice Brown" ;
+    ex:age "20"^^xsd:integer ;
+    ex:email "alice.brown.380@example.com" ;
+    ex:department ex:design .
+
+ex:emp00381 a ex:Employee ;
+    ex:name "Grace Baker" ;
+    ex:age "57"^^xsd:integer ;
+    ex:email "grace.baker.381@example.com" ;
+    ex:department ex:engineering .
+
+ex:emp00382 a ex:Employee ;
+    ex:name "Ruth Young" ;
+    ex:age "59"^^xsd:integer ;
+    ex:email "ruth.young.382@example.com" ;
+    ex:department ex:finance .
+
+ex:emp00383 a ex:Employee ;
+    ex:name "Mike Young" ;
+    ex:age "47"^^xsd:integer ;
+    ex:email "mike.young.383@example.com" ;
+    ex:department ex:marketing .
+
+ex:emp00384 a ex:Employee ;
+    ex:name "Frank Davis" ;
+    ex:age "44"^^xsd:integer ;
+    ex:email "frank.davis.384@example.com" ;
+    ex:department ex:research .
+
+ex:emp00385 a ex:Employee ;
+    ex:name "Karl Black" ;
+    ex:age "38"^^xsd:integer ;
+    ex:email "karl.black.385@example.com" ;
+    ex:department ex:legal .
+
+ex:emp00386 a ex:Employee ;
+    ex:name "Laura Adams" ;
+    ex:age "26"^^xsd:integer ;
+    ex:email "laura.adams.386@example.com" ;
+    ex:department ex:legal .
+
+ex:emp00387 a ex:Employee ;
+    ex:name "Dave King" ;
+    ex:age "33"^^xsd:integer ;
+    ex:email "dave-no-at-sign" ;
+    ex:department ex:research .
+
+ex:emp00388 a ex:Employee ;
+    ex:name "Oscar Lewis" ;
+    ex:age "16"^^xsd:integer ;
+    ex:email "oscar.lewis.388@example.com" ;
+    ex:department ex:marketing .
+
+ex:emp00389 a ex:Employee ;
+    ex:name "Tina Baker" ;
+    ex:age "33"^^xsd:integer ;
+    ex:email "tina.baker.389@example.com" ;
+    ex:department ex:sales .
+
+ex:emp00390 a ex:Employee ;
+    ex:name "Steve King" ;
+    ex:age "30"^^xsd:integer ;
+    ex:email "steve.king.390@example.com" ;
+    ex:department ex:sales .
+
+ex:emp00391 a ex:Employee ;
+    ex:name "Quinn Davis" ;
+    ex:age "49"^^xsd:integer ;
+    ex:email "quinn.davis.391@example.com" ;
+    ex:department ex:finance .
+
+ex:emp00392 a ex:Employee ;
+    ex:name "Carol Adams" ;
+    ex:age "50"^^xsd:integer ;
+    ex:email "carol.adams.392@example.com" ;
+    ex:department ex:research .
+
+ex:emp00393 a ex:Employee ;
+    ex:name "Grace Wright" ;
+    ex:age "21"^^xsd:integer ;
+    ex:email "grace.wright.393@example.com" ;
+    ex:department ex:engineering .
+
+ex:emp00394 a ex:Employee ;
+    ex:age "36"^^xsd:integer ;
+    ex:email "tina.evans.394@example.com" ;
+    ex:department ex:support .
+
+ex:emp00395 a ex:Employee ;
+    ex:name "Dave Baker" ;
+    ex:age "26"^^xsd:integer ;
+    ex:email "dave.baker.395@example.com" ;
+    ex:department ex:finance .
+
+ex:emp00396 a ex:Employee ;
+    ex:name "Mike Wright" ;
+    ex:age "13"^^xsd:integer ;
+    ex:email "mike.wright.396@example.com" ;
+    ex:department ex:ops .
+
+ex:emp00397 a ex:Employee ;
+    ex:name "Laura Taylor" ;
+    ex:age "36"^^xsd:integer ;
+    ex:email "laura.taylor.397@example.com" ;
+    ex:department ex:marketing .
+
+ex:emp00398 a ex:Employee ;
+    ex:name "Oscar Taylor" ;
+    ex:age "35"^^xsd:integer ;
+    ex:email "oscar.taylor.398@example.com" ;
+    ex:department ex:design .
+
+ex:emp00399 a ex:Employee ;
+    ex:name "Dave Black" ;
+    ex:age "24"^^xsd:integer ;
+    ex:email "dave.black.399@example.com" ;
+    ex:department ex:ops .
+
+ex:emp00400 a ex:Employee ;
+    ex:name "Karl Taylor" ;
+    ex:age "41"^^xsd:integer ;
+    ex:email "karl.taylor.400@example.com" ;
+    ex:department "sales" .
+
+ex:emp00401 a ex:Employee ;
+    ex:age "50"^^xsd:integer ;
+    ex:email "quinn.adams.401@example.com" ;
+    ex:department ex:engineering .
+
+ex:emp00402 a ex:Employee ;
+    ex:name "Eve King" ;
+    ex:age "48"^^xsd:integer ;
+    ex:email "eve.king.402@example.com" ;
+    ex:department ex:support .
+
+ex:emp00403 a ex:Employee ;
+    ex:name "Tina Moore" ;
+    ex:age "26"^^xsd:integer ;
+    ex:email "tina.moore.403@example.com" ;
+    ex:department ex:legal .
+
+ex:emp00404 a ex:Employee ;
+    ex:name "Karl Green" ;
+    ex:age "43"^^xsd:integer ;
+    ex:email "karl.green.404@example.com" ;
+    ex:department ex:design .
+
+ex:emp00405 a ex:Employee ;
+    ex:name "Judy King" ;
+    ex:age "50"^^xsd:integer ;
+    ex:email "judy.king.405@example.com" ;
+    ex:department ex:support .
+
+ex:emp00406 a ex:Employee ;
+    ex:name "Steve Young" ;
+    ex:age "48"^^xsd:integer ;
+    ex:email "steve.young.406@example.com" ;
+    ex:department ex:engineering .
+
+ex:emp00407 a ex:Employee ;
+    ex:name "Dave Baker" ;
+    ex:age "55"^^xsd:integer ;
+    ex:email "dave.baker.407@example.com" ;
+    ex:department ex:finance .
+
+ex:emp00408 a ex:Employee ;
+    ex:name "Alice Evans" ;
+    ex:age "34"^^xsd:integer ;
+    ex:email "alice.evans.408@example.com" ;
+    ex:department ex:design .
+
+ex:emp00409 a ex:Employee ;
+    ex:name "Bob Evans" ;
+    ex:age "28"^^xsd:integer ;
+    ex:email "bob.evans.409@example.com" ;
+    ex:department ex:support .
+
+ex:emp00410 a ex:Employee ;
+    ex:age "27"^^xsd:integer ;
+    ex:email "tina.adams.410@example.com" ;
+    ex:department ex:hr .
+
+ex:emp00411 a ex:Employee ;
+    ex:name "Dave Clark" ;
+    ex:age "19"^^xsd:integer ;
+    ex:email "dave.clark.411@example.com" ;
+    ex:department ex:research .
+
+ex:emp00412 a ex:Employee ;
+    ex:name "Eve Baker" ;
+    ex:age "62"^^xsd:integer ;
+    ex:email "eve.baker.412@example.com" ;
+    ex:department ex:hr .
+
+ex:emp00413 a ex:Employee ;
+    ex:name "Tina Evans" ;
+    ex:age "65"^^xsd:integer ;
+    ex:email "tina.evans.413@example.com" ;
+    ex:department ex:engineering .
+
+ex:emp00414 a ex:Employee ;
+    ex:name "Quinn Clark" ;
+    ex:age "53"^^xsd:integer ;
+    ex:email "quinn.clark.414@example.com" ;
+    ex:department ex:legal .
+
+ex:emp00415 a ex:Employee ;
+    ex:name "Pam Moore" ;
+    ex:age "42"^^xsd:integer ;
+    ex:email "pam.moore.415@example.com" ;
+    ex:department ex:legal .
+
+ex:emp00416 a ex:Employee ;
+    ex:name "Oscar Taylor" ;
+    ex:age "39"^^xsd:integer ;
+    ex:email "oscar.taylor.416@example.com" ;
+    ex:department ex:support .
+
+ex:emp00417 a ex:Employee ;
+    ex:name "Ivan Evans" ;
+    ex:age "30"^^xsd:integer ;
+    ex:email "ivan.evans.417@example.com" ;
+    ex:department ex:hr .
+
+ex:emp00418 a ex:Employee ;
+    ex:name "Judy Lewis" ;
+    ex:age "37"^^xsd:integer ;
+    ex:email "judy.lewis.418@example.com" ;
+    ex:department ex:finance .
+
+ex:emp00419 a ex:Employee ;
+    ex:name "Pam King" ;
+    ex:age "48"^^xsd:integer ;
+    ex:email "pam.king.419@example.com" ;
+    ex:department ex:legal .
+
+ex:emp00420 a ex:Employee ;
+    ex:name "Ivan Young" ;
+    ex:age "25"^^xsd:integer ;
+    ex:email "ivan.young.420@example.com" ;
+    ex:department ex:design .
+
+ex:emp00421 a ex:Employee ;
+    ex:name "Mike Adams" ;
+    ex:age "40"^^xsd:integer ;
+    ex:email "mike.adams.421@example.com" ;
+    ex:department ex:sales .
+
+ex:emp00422 a ex:Employee ;
+    ex:name "Judy Brown" ;
+    ex:age "40"^^xsd:integer ;
+    ex:email "judy.brown.422@example.com" ;
+    ex:department ex:research .
+
+ex:emp00423 a ex:Employee ;
+    ex:name "Pam Clark" ;
+    ex:age "30"^^xsd:integer ;
+    ex:email "pam.clark.423@example.com" ;
+    ex:department ex:support .
+
+ex:emp00424 a ex:Employee ;
+    ex:name "Ruth Hall" ;
+    ex:age "26"^^xsd:integer ;
+    ex:email "ruth.hall.424@example.com" ;
+    ex:department ex:marketing .
+
+ex:emp00425 a ex:Employee ;
+    ex:name "Steve Lewis" ;
+    ex:age "33"^^xsd:integer ;
+    ex:email "steve.lewis.425@example.com" ;
+    ex:department ex:engineering .
+
+ex:emp00426 a ex:Employee ;
+    ex:name "Quinn Lewis" ;
+    ex:age "16"^^xsd:integer ;
+    ex:email "quinn.lewis.426@example.com" ;
+    ex:department ex:hr .
+
+ex:emp00427 a ex:Employee ;
+    ex:age "24"^^xsd:integer ;
+    ex:email "karl.evans.427@example.com" ;
+    ex:department ex:sales .
+
+ex:emp00428 a ex:Employee ;
+    ex:name "Ruth Green" ;
+    ex:age "44"^^xsd:integer ;
+    ex:email "ruth.green.428@example.com" ;
+    ex:department ex:research .
+
+ex:emp00429 a ex:Employee ;
+    ex:name "Grace Young" ;
+    ex:age "38"^^xsd:integer ;
+    ex:email "grace.young.429@example.com" ;
+    ex:department ex:finance .
+
+ex:emp00430 a ex:Employee ;
+    ex:name "Carol Lewis" ;
+    ex:age "52"^^xsd:integer ;
+    ex:email "carol.lewis.430@example.com" ;
+    ex:department ex:engineering .
+
+ex:emp00431 a ex:Employee ;
+    ex:name "Frank Baker" ;
+    ex:age "29"^^xsd:integer ;
+    ex:email "frank.baker.431@example.com" ;
+    ex:department ex:engineering .
+
+ex:emp00432 a ex:Employee ;
+    ex:name "Mike Evans" ;
+    ex:age "29"^^xsd:integer ;
+    ex:email "mike.evans.432@example.com" ;
+    ex:department ex:finance .
+
+ex:emp00433 a ex:Employee ;
+    ex:name "Alice Young" ;
+    ex:age "54"^^xsd:integer ;
+    ex:email "alice-no-at-sign" ;
+    ex:department ex:design .
+
+ex:emp00434 a ex:Employee ;
+    ex:name "Karl Young" ;
+    ex:age "47"^^xsd:integer ;
+    ex:email "karl.young.434@example.com" ;
+    ex:department ex:support .
+
+ex:emp00435 a ex:Employee ;
+    ex:name "Eve Moore" ;
+    ex:age "47"^^xsd:integer ;
+    ex:email "eve.moore.435@example.com" ;
+    ex:department "finance" .
+
+ex:emp00436 a ex:Employee ;
+    ex:name "Dave King" ;
+    ex:age "28"^^xsd:integer ;
+    ex:email "dave.king.436@example.com" ;
+    ex:department ex:research .
+
+ex:emp00437 a ex:Employee ;
+    ex:name "Frank Smith" ;
+    ex:age "65"^^xsd:integer ;
+    ex:email "frank.smith.437@example.com" ;
+    ex:department ex:legal .
+
+ex:emp00438 a ex:Employee ;
+    ex:name "Steve Clark" ;
+    ex:age "29"^^xsd:integer ;
+    ex:email "steve.clark.438@example.com" ;
+    ex:department ex:design .
+
+ex:emp00439 a ex:Employee ;
+    ex:name "Mike Baker" ;
+    ex:age "11"^^xsd:integer ;
+    ex:email "mike.baker.439@example.com" ;
+    ex:department ex:legal .
+
+ex:emp00440 a ex:Employee ;
+    ex:name "Frank Black" ;
+    ex:age "48"^^xsd:integer ;
+    ex:email "frank.black.440@example.com" ;
+    ex:department ex:legal .
+
+ex:emp00441 a ex:Employee ;
+    ex:name "Alice Hall" ;
+    ex:age "42"^^xsd:integer ;
+    ex:email "alice.hall.441@example.com" ;
+    ex:department ex:hr .
+
+ex:emp00442 a ex:Employee ;
+    ex:name "Ivan King" ;
+    ex:age "37"^^xsd:integer ;
+    ex:email "ivan.king.442@example.com" ;
+    ex:department ex:design .
+
+ex:emp00443 a ex:Employee ;
+    ex:name "Alice Hall" ;
+    ex:age "59"^^xsd:integer ;
+    ex:email "alice.hall.443@example.com" ;
+    ex:department ex:legal .
+
+ex:emp00444 a ex:Employee ;
+    ex:name "Bob White" ;
+    ex:age "47"^^xsd:integer ;
+    ex:email "bob.white.444@example.com" ;
+    ex:department "finance" .
+
+ex:emp00445 a ex:Employee ;
+    ex:name "Quinn Young" ;
+    ex:age "62"^^xsd:integer ;
+    ex:email "quinn.young.445@example.com" ;
+    ex:department ex:marketing .
+
+ex:emp00446 a ex:Employee ;
+    ex:name "Judy Wright" ;
+    ex:age "57"^^xsd:integer ;
+    ex:email "judy.wright.446@example.com" ;
+    ex:department ex:hr .
+
+ex:emp00447 a ex:Employee ;
+    ex:name "Eve Evans" ;
+    ex:age "27"^^xsd:integer ;
+    ex:email "eve.evans.447@example.com" ;
+    ex:department ex:research .
+
+ex:emp00448 a ex:Employee ;
+    ex:name "Tina Wright" ;
+    ex:age "44"^^xsd:integer ;
+    ex:email "tina.wright.448@example.com" ;
+    ex:department ex:support .
+
+ex:emp00449 a ex:Employee ;
+    ex:name "Ruth Clark" ;
+    ex:age "33"^^xsd:integer ;
+    ex:email "ruth.clark.449@example.com" ;
+    ex:department ex:design .
+
+ex:emp00450 a ex:Employee ;
+    ex:name "Carol Moore" ;
+    ex:age "46"^^xsd:integer ;
+    ex:email "carol.moore.450@example.com" ;
+    ex:department ex:support .
+
+ex:emp00451 a ex:Employee ;
+    ex:name "Carol White" ;
+    ex:age "21"^^xsd:integer ;
+    ex:email "carol.white.451@example.com" ;
+    ex:department ex:support .
+
+ex:emp00452 a ex:Employee ;
+    ex:name "Grace Taylor" ;
+    ex:age "27"^^xsd:integer ;
+    ex:email "grace.taylor.452@example.com" ;
+    ex:department ex:sales .
+
+ex:emp00453 a ex:Employee ;
+    ex:name "Quinn Davis" ;
+    ex:age "25"^^xsd:integer ;
+    ex:email "quinn.davis.453@example.com" ;
+    ex:department ex:hr .
+
+ex:emp00454 a ex:Employee ;
+    ex:name "Pam Brown" ;
+    ex:age "50"^^xsd:integer ;
+    ex:email "pam.brown.454@example.com" ;
+    ex:department ex:research .
+
+ex:emp00455 a ex:Employee ;
+    ex:name "Oscar Black" ;
+    ex:age "50"^^xsd:integer ;
+    ex:email "oscar.black.455@example.com" ;
+    ex:department ex:ops .
+
+ex:emp00456 a ex:Employee ;
+    ex:name "Bob Taylor" ;
+    ex:age "47"^^xsd:integer ;
+    ex:email "bob.taylor.456@example.com" ;
+    ex:department ex:finance .
+
+ex:emp00457 a ex:Employee ;
+    ex:name "Mike Hall" ;
+    ex:age "18"^^xsd:integer ;
+    ex:email "mike.hall.457@example.com" ;
+    ex:department ex:hr .
+
+ex:emp00458 a ex:Employee ;
+    ex:name "Bob Baker" ;
+    ex:age "40"^^xsd:integer ;
+    ex:email "bob.baker.458@example.com" ;
+    ex:department ex:marketing .
+
+ex:emp00459 a ex:Employee ;
+    ex:name "Bob Brown" ;
+    ex:age "48"^^xsd:integer ;
+    ex:email "bob.brown.459@example.com" ;
+    ex:department ex:engineering .
+
+ex:emp00460 a ex:Employee ;
+    ex:name "Frank Black" ;
+    ex:age "59"^^xsd:integer ;
+    ex:email "frank.black.460@example.com" ;
+    ex:department ex:ops .
+
+ex:emp00461 a ex:Employee ;
+    ex:name "Mike Davis" ;
+    ex:age "12"^^xsd:integer ;
+    ex:email "mike.davis.461@example.com" ;
+    ex:department ex:ops .
+
+ex:emp00462 a ex:Employee ;
+    ex:name "Laura White" ;
+    ex:age "29"^^xsd:integer ;
+    ex:email "laura.white.462@example.com" ;
+    ex:department ex:support .
+
+ex:emp00463 a ex:Employee ;
+    ex:name "Eve Lewis" ;
+    ex:age "18"^^xsd:integer ;
+    ex:email "eve.lewis.463@example.com" ;
+    ex:department ex:engineering .
+
+ex:emp00464 a ex:Employee ;
+    ex:name "Oscar Taylor" ;
+    ex:age "45"^^xsd:integer ;
+    ex:email "oscar.taylor.464@example.com" ;
+    ex:department ex:support .
+
+ex:emp00465 a ex:Employee ;
+    ex:name "Heidi Lewis" ;
+    ex:age "47"^^xsd:integer ;
+    ex:email "heidi.lewis.465@example.com" ;
+    ex:department "legal" .
+
+ex:emp00466 a ex:Employee ;
+    ex:name "Grace White" ;
+    ex:age "20"^^xsd:integer ;
+    ex:email "grace.white.466@example.com" ;
+    ex:department ex:ops .
+
+ex:emp00467 a ex:Employee ;
+    ex:name "Alice Lewis" ;
+    ex:age "31"^^xsd:integer ;
+    ex:email "alice-no-at-sign" ;
+    ex:department ex:marketing .
+
+ex:emp00468 a ex:Employee ;
+    ex:name "Bob Davis" ;
+    ex:age "56"^^xsd:integer ;
+    ex:email "bob.davis.468@example.com" ;
+    ex:department ex:engineering .
+
+ex:emp00469 a ex:Employee ;
+    ex:name "Bob Adams" ;
+    ex:age "46"^^xsd:integer ;
+    ex:email "bob.adams.469@example.com" ;
+    ex:department ex:hr .
+
+ex:emp00470 a ex:Employee ;
+    ex:name "Bob Black" ;
+    ex:age "50"^^xsd:integer ;
+    ex:email "bob.black.470@example.com" ;
+    ex:department ex:finance .
+
+ex:emp00471 a ex:Employee ;
+    ex:name "Steve King" ;
+    ex:age "54"^^xsd:integer ;
+    ex:email "steve.king.471@example.com" ;
+    ex:department ex:design .
+
+ex:emp00472 a ex:Employee ;
+    ex:name "Karl Lewis" ;
+    ex:age "37"^^xsd:integer ;
+    ex:email "karl.lewis.472@example.com" ;
+    ex:department ex:sales .
+
+ex:emp00473 a ex:Employee ;
+    ex:name "Quinn Lewis" ;
+    ex:age "44"^^xsd:integer ;
+    ex:email "quinn.lewis.473@example.com" ;
+    ex:department ex:finance .
+
+ex:emp00474 a ex:Employee ;
+    ex:name "Ruth Green" ;
+    ex:age "58"^^xsd:integer ;
+    ex:email "ruth.green.474@example.com" ;
+    ex:department ex:ops .
+
+ex:emp00475 a ex:Employee ;
+    ex:name "Bob Wright" ;
+    ex:age "59"^^xsd:integer ;
+    ex:email "bob.wright.475@example.com" ;
+    ex:department ex:ops .
+
+ex:emp00476 a ex:Employee ;
+    ex:name "Karl Baker" ;
+    ex:age "44"^^xsd:integer ;
+    ex:email "karl.baker.476@example.com" ;
+    ex:department ex:sales .
+
+ex:emp00477 a ex:Employee ;
+    ex:name "Frank Taylor" ;
+    ex:age "48"^^xsd:integer ;
+    ex:email "frank.taylor.477@example.com" ;
+    ex:department ex:hr .
+
+ex:emp00478 a ex:Employee ;
+    ex:name "Judy Black" ;
+    ex:age "47"^^xsd:integer ;
+    ex:email "judy.black.478@example.com" ;
+    ex:department ex:engineering .
+
+ex:emp00479 a ex:Employee ;
+    ex:name "Nina Taylor" ;
+    ex:age "51"^^xsd:integer ;
+    ex:email "nina.taylor.479@example.com" ;
+    ex:department ex:sales .
+
+ex:emp00480 a ex:Employee ;
+    ex:name "Ivan Clark" ;
+    ex:age "39"^^xsd:integer ;
+    ex:email "ivan.clark.480@example.com" ;
+    ex:department ex:marketing .
+
+ex:emp00481 a ex:Employee ;
+    ex:name "Laura Brown" ;
+    ex:age "16"^^xsd:integer ;
+    ex:email "laura.brown.481@example.com" ;
+    ex:department ex:hr .
+
+ex:emp00482 a ex:Employee ;
+    ex:name "Tina Jones" ;
+    ex:age "22"^^xsd:integer ;
+    ex:email "tina.jones.482@example.com" ;
+    ex:department ex:hr .
+
+ex:emp00483 a ex:Employee ;
+    ex:name "Steve Taylor" ;
+    ex:age "31"^^xsd:integer ;
+    ex:email "steve.taylor.483@example.com" ;
+    ex:department ex:research .
+
+ex:emp00484 a ex:Employee ;
+    ex:name "Karl Young" ;
+    ex:age "18"^^xsd:integer ;
+    ex:email "karl.young.484@example.com" ;
+    ex:department ex:hr .
+
+ex:emp00485 a ex:Employee ;
+    ex:name "Dave Evans" ;
+    ex:age "33"^^xsd:integer ;
+    ex:email "dave.evans.485@example.com" ;
+    ex:department ex:design .
+
+ex:emp00486 a ex:Employee ;
+    ex:name "Mike Lewis" ;
+    ex:age "53"^^xsd:integer ;
+    ex:email "mike.lewis.486@example.com" ;
+    ex:department ex:legal .
+
+ex:emp00487 a ex:Employee ;
+    ex:name "Mike Davis" ;
+    ex:age "52"^^xsd:integer ;
+    ex:email "mike.davis.487@example.com" ;
+    ex:department ex:legal .
+
+ex:emp00488 a ex:Employee ;
+    ex:name "Laura Moore" ;
+    ex:age "17"^^xsd:integer ;
+    ex:email "laura.moore.488@example.com" ;
+    ex:department ex:research .
+
+ex:emp00489 a ex:Employee ;
+    ex:name "Karl Clark" ;
+    ex:age "41"^^xsd:integer ;
+    ex:email "karl.clark.489@example.com" ;
+    ex:department ex:legal .
+
+ex:emp00490 a ex:Employee ;
+    ex:age "65"^^xsd:integer ;
+    ex:email "steve.lewis.490@example.com" ;
+    ex:department ex:sales .
+
+ex:emp00491 a ex:Employee ;
+    ex:name "Ruth Baker" ;
+    ex:age "36"^^xsd:integer ;
+    ex:email "ruth.baker.491@example.com" ;
+    ex:department "sales" .
+
+ex:emp00492 a ex:Employee ;
+    ex:name "Heidi Adams" ;
+    ex:age "54"^^xsd:integer ;
+    ex:email "heidi.adams.492@example.com" ;
+    ex:department ex:hr .
+
+ex:emp00493 a ex:Employee ;
+    ex:name "Karl Hall" ;
+    ex:age "49"^^xsd:integer ;
+    ex:email "karl.hall.493@example.com" ;
+    ex:department ex:research .
+
+ex:emp00494 a ex:Employee ;
+    ex:name "Laura Green" ;
+    ex:age "26"^^xsd:integer ;
+    ex:email "laura.green.494@example.com" ;
+    ex:department ex:support .
+
+ex:emp00495 a ex:Employee ;
+    ex:name "Ruth Jones" ;
+    ex:age "51"^^xsd:integer ;
+    ex:email "ruth.jones.495@example.com" ;
+    ex:department ex:engineering .
+
+ex:emp00496 a ex:Employee ;
+    ex:name "Carol Jones" ;
+    ex:age "18"^^xsd:integer ;
+    ex:email "carol-no-at-sign" ;
+    ex:department ex:ops .
+
+ex:emp00497 a ex:Employee ;
+    ex:age "63"^^xsd:integer ;
+    ex:email "heidi.brown.497@example.com" ;
+    ex:department ex:sales .
+
+ex:emp00498 a ex:Employee ;
+    ex:name "Quinn Davis" ;
+    ex:age "41"^^xsd:integer ;
+    ex:email "quinn.davis.498@example.com" ;
+    ex:department ex:engineering .
+
+ex:emp00499 a ex:Employee ;
+    ex:age "60"^^xsd:integer ;
+    ex:email "tina.evans.499@example.com" ;
+    ex:department ex:research .
+
+ex:emp00500 a ex:Employee ;
+    ex:age "44"^^xsd:integer ;
+    ex:email "ruth.taylor.500@example.com" ;
+    ex:department ex:engineering .
+
+ex:emp00501 a ex:Employee ;
+    ex:name "Ivan Taylor" ;
+    ex:age "36"^^xsd:integer ;
+    ex:email "ivan.taylor.501@example.com" ;
+    ex:department ex:engineering .
+
+ex:emp00502 a ex:Employee ;
+    ex:name "Nina Green" ;
+    ex:age "24"^^xsd:integer ;
+    ex:email "nina.green.502@example.com" ;
+    ex:department ex:marketing .
+
+ex:emp00503 a ex:Employee ;
+    ex:name "Heidi Clark" ;
+    ex:age "57"^^xsd:integer ;
+    ex:email "heidi.clark.503@example.com" ;
+    ex:department ex:support .
+
+ex:emp00504 a ex:Employee ;
+    ex:name "Laura Hall" ;
+    ex:age "43"^^xsd:integer ;
+    ex:email "laura.hall.504@example.com" ;
+    ex:department ex:marketing .
+
+ex:emp00505 a ex:Employee ;
+    ex:name "Mike Davis" ;
+    ex:age "54"^^xsd:integer ;
+    ex:email "mike.davis.505@example.com" ;
+    ex:department ex:hr .
+
+ex:emp00506 a ex:Employee ;
+    ex:name "Heidi Young" ;
+    ex:age "61"^^xsd:integer ;
+    ex:email "heidi.young.506@example.com" ;
+    ex:department ex:marketing .
+
+ex:emp00507 a ex:Employee ;
+    ex:name "Bob Brown" ;
+    ex:age "43"^^xsd:integer ;
+    ex:email "bob.brown.507@example.com" ;
+    ex:department ex:ops .
+
+ex:emp00508 a ex:Employee ;
+    ex:name "Pam Jones" ;
+    ex:age "58"^^xsd:integer ;
+    ex:email "pam.jones.508@example.com" ;
+    ex:department ex:engineering .
+
+ex:emp00509 a ex:Employee ;
+    ex:name "Carol Evans" ;
+    ex:age "45"^^xsd:integer ;
+    ex:email "carol.evans.509@example.com" ;
+    ex:department ex:legal .
+
+ex:emp00510 a ex:Employee ;
+    ex:name "Dave Moore" ;
+    ex:age "20"^^xsd:integer ;
+    ex:email "dave.moore.510@example.com" ;
+    ex:department ex:hr .
+
+ex:emp00511 a ex:Employee ;
+    ex:name "Steve Evans" ;
+    ex:age "35"^^xsd:integer ;
+    ex:email "steve.evans.511@example.com" ;
+    ex:department ex:engineering .
+
+ex:emp00512 a ex:Employee ;
+    ex:name "Ivan Taylor" ;
+    ex:age "54"^^xsd:integer ;
+    ex:email "ivan.taylor.512@example.com" ;
+    ex:department "engineering" .
+
+ex:emp00513 a ex:Employee ;
+    ex:name "Karl Smith" ;
+    ex:age "31"^^xsd:integer ;
+    ex:email "karl-no-at-sign" ;
+    ex:department ex:design .
+
+ex:emp00514 a ex:Employee ;
+    ex:name "Mike Brown" ;
+    ex:age "37"^^xsd:integer ;
+    ex:email "mike.brown.514@example.com" ;
+    ex:department ex:sales .
+
+ex:emp00515 a ex:Employee ;
+    ex:name "Steve Adams" ;
+    ex:age "61"^^xsd:integer ;
+    ex:email "steve.adams.515@example.com" ;
+    ex:department ex:support .
+
+ex:emp00516 a ex:Employee ;
+    ex:name "Eve Brown" ;
+    ex:age "16"^^xsd:integer ;
+    ex:email "eve.brown.516@example.com" ;
+    ex:department ex:legal .
+
+ex:emp00517 a ex:Employee ;
+    ex:name "Heidi Brown" ;
+    ex:age "39"^^xsd:integer ;
+    ex:email "heidi.brown.517@example.com" ;
+    ex:department ex:design .
+
+ex:emp00518 a ex:Employee ;
+    ex:name "Tina Adams" ;
+    ex:age "38"^^xsd:integer ;
+    ex:email "tina.adams.518@example.com" ;
+    ex:department ex:engineering .
+
+ex:emp00519 a ex:Employee ;
+    ex:name "Oscar Evans" ;
+    ex:age "32"^^xsd:integer ;
+    ex:email "oscar.evans.519@example.com" ;
+    ex:department ex:legal .
+
+ex:emp00520 a ex:Employee ;
+    ex:name "Mike Baker" ;
+    ex:age "29"^^xsd:integer ;
+    ex:email "mike.baker.520@example.com" ;
+    ex:department ex:design .
+
+ex:emp00521 a ex:Employee ;
+    ex:name "Carol Young" ;
+    ex:age "12"^^xsd:integer ;
+    ex:email "carol.young.521@example.com" ;
+    ex:department ex:marketing .
+
+ex:emp00522 a ex:Employee ;
+    ex:name "Mike Black" ;
+    ex:age "65"^^xsd:integer ;
+    ex:email "mike.black.522@example.com" ;
+    ex:department ex:ops .
+
+ex:emp00523 a ex:Employee ;
+    ex:name "Dave Brown" ;
+    ex:age "18"^^xsd:integer ;
+    ex:email "dave.brown.523@example.com" ;
+    ex:department ex:finance .
+
+ex:emp00524 a ex:Employee ;
+    ex:name "Ivan White" ;
+    ex:age "26"^^xsd:integer ;
+    ex:email "ivan.white.524@example.com" ;
+    ex:department "marketing" .
+
+ex:emp00525 a ex:Employee ;
+    ex:name "Oscar Taylor" ;
+    ex:age "53"^^xsd:integer ;
+    ex:email "oscar.taylor.525@example.com" ;
+    ex:department ex:support .
+
+ex:emp00526 a ex:Employee ;
+    ex:name "Alice Brown" ;
+    ex:age "15"^^xsd:integer ;
+    ex:email "alice.brown.526@example.com" ;
+    ex:department ex:support .
+
+ex:emp00527 a ex:Employee ;
+    ex:name "Mike Smith" ;
+    ex:age "36"^^xsd:integer ;
+    ex:email "mike.smith.527@example.com" ;
+    ex:department ex:ops .
+
+ex:emp00528 a ex:Employee ;
+    ex:name "Carol Taylor" ;
+    ex:age "33"^^xsd:integer ;
+    ex:email "carol.taylor.528@example.com" ;
+    ex:department ex:design .
+
+ex:emp00529 a ex:Employee ;
+    ex:name "Mike Green" ;
+    ex:age "26"^^xsd:integer ;
+    ex:email "mike.green.529@example.com" ;
+    ex:department ex:finance .
+
+ex:emp00530 a ex:Employee ;
+    ex:name "Pam Black" ;
+    ex:age "22"^^xsd:integer ;
+    ex:email "pam.black.530@example.com" ;
+    ex:department ex:sales .
+
+ex:emp00531 a ex:Employee ;
+    ex:name "Nina Young" ;
+    ex:age "48"^^xsd:integer ;
+    ex:email "nina.young.531@example.com" ;
+    ex:department ex:marketing .
+
+ex:emp00532 a ex:Employee ;
+    ex:name "Heidi Evans" ;
+    ex:age "56"^^xsd:integer ;
+    ex:email "heidi.evans.532@example.com" ;
+    ex:department "design" .
+
+ex:emp00533 a ex:Employee ;
+    ex:name "Dave Black" ;
+    ex:age "37"^^xsd:integer ;
+    ex:email "dave.black.533@example.com" ;
+    ex:department ex:engineering .
+
+ex:emp00534 a ex:Employee ;
+    ex:name "Karl Adams" ;
+    ex:age "39"^^xsd:integer ;
+    ex:email "karl.adams.534@example.com" ;
+    ex:department ex:research .
+
+ex:emp00535 a ex:Employee ;
+    ex:name "Tina Black" ;
+    ex:age "37"^^xsd:integer ;
+    ex:email "tina.black.535@example.com" ;
+    ex:department ex:legal .
+
+ex:emp00536 a ex:Employee ;
+    ex:name "Grace Evans" ;
+    ex:age "38"^^xsd:integer ;
+    ex:email "grace.evans.536@example.com" ;
+    ex:department ex:sales .
+
+ex:emp00537 a ex:Employee ;
+    ex:name "Karl Young" ;
+    ex:age "65"^^xsd:integer ;
+    ex:email "karl.young.537@example.com" ;
+    ex:department ex:research .
+
+ex:emp00538 a ex:Employee ;
+    ex:name "Heidi King" ;
+    ex:age "42"^^xsd:integer ;
+    ex:email "heidi.king.538@example.com" ;
+    ex:department ex:finance .
+
+ex:emp00539 a ex:Employee ;
+    ex:name "Mike Wright" ;
+    ex:age "25"^^xsd:integer ;
+    ex:email "mike.wright.539@example.com" ;
+    ex:department "design" .
+
+ex:emp00540 a ex:Employee ;
+    ex:age "61"^^xsd:integer ;
+    ex:email "ruth.green.540@example.com" ;
+    ex:department ex:support .
+
+ex:emp00541 a ex:Employee ;
+    ex:name "Oscar Clark" ;
+    ex:age "46"^^xsd:integer ;
+    ex:email "oscar.clark.541@example.com" ;
+    ex:department ex:finance .
+
+ex:emp00542 a ex:Employee ;
+    ex:name "Carol Baker" ;
+    ex:age "61"^^xsd:integer ;
+    ex:email "carol-no-at-sign" ;
+    ex:department ex:research .
+
+ex:emp00543 a ex:Employee ;
+    ex:name "Judy Lewis" ;
+    ex:age "34"^^xsd:integer ;
+    ex:email "judy.lewis.543@example.com" ;
+    ex:department ex:sales .
+
+ex:emp00544 a ex:Employee ;
+    ex:name "Mike Brown" ;
+    ex:age "46"^^xsd:integer ;
+    ex:email "mike.brown.544@example.com" ;
+    ex:department ex:design .
+
+ex:emp00545 a ex:Employee ;
+    ex:name "Mike Taylor" ;
+    ex:age "50"^^xsd:integer ;
+    ex:email "mike.taylor.545@example.com" ;
+    ex:department ex:ops .
+
+ex:emp00546 a ex:Employee ;
+    ex:name "Laura Taylor" ;
+    ex:age "56"^^xsd:integer ;
+    ex:email "laura-no-at-sign" ;
+    ex:department ex:marketing .
+
+ex:emp00547 a ex:Employee ;
+    ex:age "28"^^xsd:integer ;
+    ex:email "heidi.wright.547@example.com" ;
+    ex:department ex:design .
+
+ex:emp00548 a ex:Employee ;
+    ex:age "45"^^xsd:integer ;
+    ex:email "mike.king.548@example.com" ;
+    ex:department ex:marketing .
+
+ex:emp00549 a ex:Employee ;
+    ex:name "Ivan Lewis" ;
+    ex:age "50"^^xsd:integer ;
+    ex:email "ivan.lewis.549@example.com" ;
+    ex:department ex:support .
+
+ex:emp00550 a ex:Employee ;
+    ex:name "Steve Lewis" ;
+    ex:age "46"^^xsd:integer ;
+    ex:email "steve.lewis.550@example.com" ;
+    ex:department ex:legal .
+
+ex:emp00551 a ex:Employee ;
+    ex:name "Steve Moore" ;
+    ex:age "27"^^xsd:integer ;
+    ex:email "steve.moore.551@example.com" ;
+    ex:department ex:legal .
+
+ex:emp00552 a ex:Employee ;
+    ex:name "Pam White" ;
+    ex:age "36"^^xsd:integer ;
+    ex:email "pam.white.552@example.com" ;
+    ex:department ex:ops .
+
+ex:emp00553 a ex:Employee ;
+    ex:name "Carol White" ;
+    ex:age "64"^^xsd:integer ;
+    ex:email "carol.white.553@example.com" ;
+    ex:department ex:sales .
+
+ex:emp00554 a ex:Employee ;
+    ex:name "Karl Davis" ;
+    ex:age "31"^^xsd:integer ;
+    ex:email "karl.davis.554@example.com" ;
+    ex:department ex:support .
+
+ex:emp00555 a ex:Employee ;
+    ex:name "Pam White" ;
+    ex:age "46"^^xsd:integer ;
+    ex:email "pam.white.555@example.com" ;
+    ex:department ex:research .
+
+ex:emp00556 a ex:Employee ;
+    ex:age "63"^^xsd:integer ;
+    ex:email "judy.jones.556@example.com" ;
+    ex:department ex:marketing .
+
+ex:emp00557 a ex:Employee ;
+    ex:name "Karl White" ;
+    ex:age "61"^^xsd:integer ;
+    ex:email "karl.white.557@example.com" ;
+    ex:department ex:sales .
+
+ex:emp00558 a ex:Employee ;
+    ex:name "Heidi Moore" ;
+    ex:age "29"^^xsd:integer ;
+    ex:email "heidi.moore.558@example.com" ;
+    ex:department "support" .
+
+ex:emp00559 a ex:Employee ;
+    ex:name "Ruth Baker" ;
+    ex:age "47"^^xsd:integer ;
+    ex:email "ruth.baker.559@example.com" ;
+    ex:department ex:hr .
+
+ex:emp00560 a ex:Employee ;
+    ex:name "Frank Green" ;
+    ex:age "58"^^xsd:integer ;
+    ex:email "frank.green.560@example.com" ;
+    ex:department ex:ops .
+
+ex:emp00561 a ex:Employee ;
+    ex:name "Tina Clark" ;
+    ex:age "46"^^xsd:integer ;
+    ex:email "tina.clark.561@example.com" ;
+    ex:department ex:design .
+
+ex:emp00562 a ex:Employee ;
+    ex:name "Alice Clark" ;
+    ex:age "31"^^xsd:integer ;
+    ex:email "alice.clark.562@example.com" ;
+    ex:department ex:finance .
+
+ex:emp00563 a ex:Employee ;
+    ex:name "Carol White" ;
+    ex:age "52"^^xsd:integer ;
+    ex:email "carol.white.563@example.com" ;
+    ex:department ex:sales .
+
+ex:emp00564 a ex:Employee ;
+    ex:name "Grace Davis" ;
+    ex:age "25"^^xsd:integer ;
+    ex:email "grace.davis.564@example.com" ;
+    ex:department ex:finance .
+
+ex:emp00565 a ex:Employee ;
+    ex:name "Pam Moore" ;
+    ex:age "58"^^xsd:integer ;
+    ex:email "pam.moore.565@example.com" ;
+    ex:department ex:legal .
+
+ex:emp00566 a ex:Employee ;
+    ex:name "Tina Adams" ;
+    ex:age "55"^^xsd:integer ;
+    ex:email "tina.adams.566@example.com" ;
+    ex:department ex:marketing .
+
+ex:emp00567 a ex:Employee ;
+    ex:name "Oscar Green" ;
+    ex:age "61"^^xsd:integer ;
+    ex:email "oscar.green.567@example.com" ;
+    ex:department ex:finance .
+
+ex:emp00568 a ex:Employee ;
+    ex:name "Steve Brown" ;
+    ex:age "61"^^xsd:integer ;
+    ex:email "steve.brown.568@example.com" ;
+    ex:department ex:sales .
+
+ex:emp00569 a ex:Employee ;
+    ex:name "Heidi Young" ;
+    ex:age "25"^^xsd:integer ;
+    ex:email "heidi.young.569@example.com" ;
+    ex:department ex:sales .
+
+ex:emp00570 a ex:Employee ;
+    ex:name "Eve Moore" ;
+    ex:age "42"^^xsd:integer ;
+    ex:email "eve.moore.570@example.com" ;
+    ex:department ex:ops .
+
+ex:emp00571 a ex:Employee ;
+    ex:name "Steve Adams" ;
+    ex:age "45"^^xsd:integer ;
+    ex:email "steve.adams.571@example.com" ;
+    ex:department ex:sales .
+
+ex:emp00572 a ex:Employee ;
+    ex:name "Ruth Green" ;
+    ex:age "53"^^xsd:integer ;
+    ex:email "ruth.green.572@example.com" ;
+    ex:department ex:sales .
+
+ex:emp00573 a ex:Employee ;
+    ex:name "Eve Green" ;
+    ex:age "38"^^xsd:integer ;
+    ex:email "eve.green.573@example.com" ;
+    ex:department ex:research .
+
+ex:emp00574 a ex:Employee ;
+    ex:name "Laura Smith" ;
+    ex:age "49"^^xsd:integer ;
+    ex:email "laura.smith.574@example.com" ;
+    ex:department "sales" .
+
+ex:emp00575 a ex:Employee ;
+    ex:name "Mike Taylor" ;
+    ex:age "50"^^xsd:integer ;
+    ex:email "mike.taylor.575@example.com" ;
+    ex:department ex:research .
+
+ex:emp00576 a ex:Employee ;
+    ex:name "Pam Baker" ;
+    ex:age "63"^^xsd:integer ;
+    ex:email "pam.baker.576@example.com" ;
+    ex:department ex:research .
+
+ex:emp00577 a ex:Employee ;
+    ex:age "32"^^xsd:integer ;
+    ex:email "carol.smith.577@example.com" ;
+    ex:department ex:finance .
+
+ex:emp00578 a ex:Employee ;
+    ex:name "Heidi Taylor" ;
+    ex:age "36"^^xsd:integer ;
+    ex:email "heidi.taylor.578@example.com" ;
+    ex:department ex:sales .
+
+ex:emp00579 a ex:Employee ;
+    ex:name "Steve Evans" ;
+    ex:age "53"^^xsd:integer ;
+    ex:email "steve-no-at-sign" ;
+    ex:department ex:support .
+
+ex:emp00580 a ex:Employee ;
+    ex:name "Dave Hall" ;
+    ex:age "52"^^xsd:integer ;
+    ex:email "dave.hall.580@example.com" ;
+    ex:department ex:legal .
+
+ex:emp00581 a ex:Employee ;
+    ex:name "Bob Davis" ;
+    ex:age "52"^^xsd:integer ;
+    ex:email "bob.davis.581@example.com" ;
+    ex:department ex:hr .
+
+ex:emp00582 a ex:Employee ;
+    ex:name "Dave Lewis" ;
+    ex:age "37"^^xsd:integer ;
+    ex:email "dave.lewis.582@example.com" ;
+    ex:department ex:engineering .
+
+ex:emp00583 a ex:Employee ;
+    ex:name "Laura Brown" ;
+    ex:age "46"^^xsd:integer ;
+    ex:email "laura.brown.583@example.com" ;
+    ex:department ex:marketing .
+
+ex:emp00584 a ex:Employee ;
+    ex:name "Heidi Clark" ;
+    ex:age "65"^^xsd:integer ;
+    ex:email "heidi.clark.584@example.com" ;
+    ex:department ex:design .
+
+ex:emp00585 a ex:Employee ;
+    ex:name "Tina Baker" ;
+    ex:age "28"^^xsd:integer ;
+    ex:email "tina-no-at-sign" ;
+    ex:department ex:design .
+
+ex:emp00586 a ex:Employee ;
+    ex:name "Grace Clark" ;
+    ex:age "21"^^xsd:integer ;
+    ex:email "grace.clark.586@example.com" ;
+    ex:department ex:design .
+
+ex:emp00587 a ex:Employee ;
+    ex:name "Ivan Taylor" ;
+    ex:age "28"^^xsd:integer ;
+    ex:email "ivan.taylor.587@example.com" ;
+    ex:department ex:legal .
+
+ex:emp00588 a ex:Employee ;
+    ex:name "Judy Young" ;
+    ex:age "54"^^xsd:integer ;
+    ex:email "judy.young.588@example.com" ;
+    ex:department ex:finance .
+
+ex:emp00589 a ex:Employee ;
+    ex:name "Quinn White" ;
+    ex:age "26"^^xsd:integer ;
+    ex:email "quinn.white.589@example.com" ;
+    ex:department ex:ops .
+
+ex:emp00590 a ex:Employee ;
+    ex:name "Ivan Black" ;
+    ex:age "62"^^xsd:integer ;
+    ex:email "ivan.black.590@example.com" ;
+    ex:department ex:sales .
+
+ex:emp00591 a ex:Employee ;
+    ex:name "Karl Lewis" ;
+    ex:age "61"^^xsd:integer ;
+    ex:email "karl.lewis.591@example.com" ;
+    ex:department ex:ops .
+
+ex:emp00592 a ex:Employee ;
+    ex:name "Steve Hall" ;
+    ex:age "58"^^xsd:integer ;
+    ex:email "steve.hall.592@example.com" ;
+    ex:department ex:ops .
+
+ex:emp00593 a ex:Employee ;
+    ex:name "Carol Brown" ;
+    ex:age "43"^^xsd:integer ;
+    ex:email "carol.brown.593@example.com" ;
+    ex:department ex:support .
+
+ex:emp00594 a ex:Employee ;
+    ex:name "Laura Davis" ;
+    ex:age "49"^^xsd:integer ;
+    ex:email "laura.davis.594@example.com" ;
+    ex:department ex:legal .
+
+ex:emp00595 a ex:Employee ;
+    ex:name "Carol Davis" ;
+    ex:age "58"^^xsd:integer ;
+    ex:email "carol.davis.595@example.com" ;
+    ex:department ex:legal .
+
+ex:emp00596 a ex:Employee ;
+    ex:name "Ruth Adams" ;
+    ex:age "31"^^xsd:integer ;
+    ex:email "ruth.adams.596@example.com" ;
+    ex:department ex:ops .
+
+ex:emp00597 a ex:Employee ;
+    ex:name "Pam Hall" ;
+    ex:age "38"^^xsd:integer ;
+    ex:email "pam.hall.597@example.com" ;
+    ex:department ex:finance .
+
+ex:emp00598 a ex:Employee ;
+    ex:name "Steve Black" ;
+    ex:age "54"^^xsd:integer ;
+    ex:email "steve.black.598@example.com" ;
+    ex:department ex:research .
+
+ex:emp00599 a ex:Employee ;
+    ex:age "24"^^xsd:integer ;
+    ex:email "bob.jones.599@example.com" ;
+    ex:department ex:research .
+
+ex:emp00600 a ex:Employee ;
+    ex:name "Frank Davis" ;
+    ex:age "47"^^xsd:integer ;
+    ex:email "frank.davis.600@example.com" ;
+    ex:department ex:engineering .
+
+ex:emp00601 a ex:Employee ;
+    ex:name "Nina Clark" ;
+    ex:age "62"^^xsd:integer ;
+    ex:email "nina.clark.601@example.com" ;
+    ex:department ex:sales .
+
+ex:emp00602 a ex:Employee ;
+    ex:name "Judy Green" ;
+    ex:age "35"^^xsd:integer ;
+    ex:email "judy.green.602@example.com" ;
+    ex:department ex:marketing .
+
+ex:emp00603 a ex:Employee ;
+    ex:name "Ivan Brown" ;
+    ex:age "14"^^xsd:integer ;
+    ex:email "ivan.brown.603@example.com" ;
+    ex:department ex:sales .
+
+ex:emp00604 a ex:Employee ;
+    ex:name "Heidi Baker" ;
+    ex:age "59"^^xsd:integer ;
+    ex:email "heidi.baker.604@example.com" ;
+    ex:department ex:marketing .
+
+ex:emp00605 a ex:Employee ;
+    ex:name "Alice Clark" ;
+    ex:age "48"^^xsd:integer ;
+    ex:email "alice-no-at-sign" ;
+    ex:department ex:marketing .
+
+ex:emp00606 a ex:Employee ;
+    ex:age "61"^^xsd:integer ;
+    ex:email "heidi.moore.606@example.com" ;
+    ex:department ex:research .
+
+ex:emp00607 a ex:Employee ;
+    ex:name "Karl White" ;
+    ex:age "45"^^xsd:integer ;
+    ex:email "karl.white.607@example.com" ;
+    ex:department ex:sales .
+
+ex:emp00608 a ex:Employee ;
+    ex:name "Heidi Adams" ;
+    ex:age "23"^^xsd:integer ;
+    ex:email "heidi-no-at-sign" ;
+    ex:department ex:marketing .
+
+ex:emp00609 a ex:Employee ;
+    ex:name "Laura Young" ;
+    ex:age "26"^^xsd:integer ;
+    ex:email "laura.young.609@example.com" ;
+    ex:department ex:ops .
+
+ex:emp00610 a ex:Employee ;
+    ex:name "Eve Black" ;
+    ex:age "22"^^xsd:integer ;
+    ex:email "eve.black.610@example.com" ;
+    ex:department ex:support .
+
+ex:emp00611 a ex:Employee ;
+    ex:name "Tina Green" ;
+    ex:age "46"^^xsd:integer ;
+    ex:email "tina.green.611@example.com" ;
+    ex:department ex:legal .
+
+ex:emp00612 a ex:Employee ;
+    ex:name "Eve Baker" ;
+    ex:age "57"^^xsd:integer ;
+    ex:email "eve.baker.612@example.com" ;
+    ex:department ex:research .
+
+ex:emp00613 a ex:Employee ;
+    ex:name "Carol White" ;
+    ex:age "26"^^xsd:integer ;
+    ex:email "carol.white.613@example.com" ;
+    ex:department ex:marketing .
+
+ex:emp00614 a ex:Employee ;
+    ex:name "Mike Wright" ;
+    ex:age "45"^^xsd:integer ;
+    ex:email "mike.wright.614@example.com" ;
+    ex:department ex:legal .
+
+ex:emp00615 a ex:Employee ;
+    ex:name "Heidi Hall" ;
+    ex:age "59"^^xsd:integer ;
+    ex:email "heidi.hall.615@example.com" ;
+    ex:department ex:marketing .
+
+ex:emp00616 a ex:Employee ;
+    ex:name "Tina Young" ;
+    ex:age "62"^^xsd:integer ;
+    ex:email "tina.young.616@example.com" ;
+    ex:department ex:engineering .
+
+ex:emp00617 a ex:Employee ;
+    ex:name "Judy Clark" ;
+    ex:age "51"^^xsd:integer ;
+    ex:email "judy.clark.617@example.com" ;
+    ex:department ex:design .
+
+ex:emp00618 a ex:Employee ;
+    ex:name "Mike Young" ;
+    ex:age "59"^^xsd:integer ;
+    ex:email "mike.young.618@example.com" ;
+    ex:department ex:engineering .
+
+ex:emp00619 a ex:Employee ;
+    ex:name "Heidi Evans" ;
+    ex:age "42"^^xsd:integer ;
+    ex:email "heidi.evans.619@example.com" ;
+    ex:department ex:marketing .
+
+ex:emp00620 a ex:Employee ;
+    ex:name "Tina Brown" ;
+    ex:age "51"^^xsd:integer ;
+    ex:email "tina.brown.620@example.com" ;
+    ex:department ex:engineering .
+
+ex:emp00621 a ex:Employee ;
+    ex:name "Karl Black" ;
+    ex:age "42"^^xsd:integer ;
+    ex:email "karl.black.621@example.com" ;
+    ex:department ex:design .
+
+ex:emp00622 a ex:Employee ;
+    ex:age "48"^^xsd:integer ;
+    ex:email "ruth.green.622@example.com" ;
+    ex:department ex:marketing .
+
+ex:emp00623 a ex:Employee ;
+    ex:age "34"^^xsd:integer ;
+    ex:email "carol.smith.623@example.com" ;
+    ex:department ex:hr .
+
+ex:emp00624 a ex:Employee ;
+    ex:name "Bob Adams" ;
+    ex:age "50"^^xsd:integer ;
+    ex:email "bob.adams.624@example.com" ;
+    ex:department ex:finance .
+
+ex:emp00625 a ex:Employee ;
+    ex:name "Quinn Baker" ;
+    ex:age "12"^^xsd:integer ;
+    ex:email "quinn.baker.625@example.com" ;
+    ex:department ex:ops .
+
+ex:emp00626 a ex:Employee ;
+    ex:name "Ivan Brown" ;
+    ex:age "37"^^xsd:integer ;
+    ex:email "ivan.brown.626@example.com" ;
+    ex:department ex:marketing .
+
+ex:emp00627 a ex:Employee ;
+    ex:name "Grace Black" ;
+    ex:age "52"^^xsd:integer ;
+    ex:email "grace.black.627@example.com" ;
+    ex:department ex:legal .
+
+ex:emp00628 a ex:Employee ;
+    ex:name "Carol Young" ;
+    ex:age "62"^^xsd:integer ;
+    ex:email "carol.young.628@example.com" ;
+    ex:department ex:ops .
+
+ex:emp00629 a ex:Employee ;
+    ex:name "Heidi Jones" ;
+    ex:age "33"^^xsd:integer ;
+    ex:email "heidi.jones.629@example.com" ;
+    ex:department ex:marketing .
+
+ex:emp00630 a ex:Employee ;
+    ex:name "Dave Davis" ;
+    ex:age "12"^^xsd:integer ;
+    ex:email "dave.davis.630@example.com" ;
+    ex:department ex:design .
+
+ex:emp00631 a ex:Employee ;
+    ex:name "Dave Smith" ;
+    ex:age "63"^^xsd:integer ;
+    ex:email "dave.smith.631@example.com" ;
+    ex:department ex:sales .
+
+ex:emp00632 a ex:Employee ;
+    ex:name "Frank Evans" ;
+    ex:age "40"^^xsd:integer ;
+    ex:email "frank.evans.632@example.com" ;
+    ex:department ex:support .
+
+ex:emp00633 a ex:Employee ;
+    ex:name "Ivan Green" ;
+    ex:age "41"^^xsd:integer ;
+    ex:email "ivan.green.633@example.com" ;
+    ex:department ex:sales .
+
+ex:emp00634 a ex:Employee ;
+    ex:name "Ivan White" ;
+    ex:age "19"^^xsd:integer ;
+    ex:email "ivan.white.634@example.com" ;
+    ex:department ex:legal .
+
+ex:emp00635 a ex:Employee ;
+    ex:name "Ivan Moore" ;
+    ex:age "22"^^xsd:integer ;
+    ex:email "ivan.moore.635@example.com" ;
+    ex:department ex:finance .
+
+ex:emp00636 a ex:Employee ;
+    ex:name "Steve Brown" ;
+    ex:age "49"^^xsd:integer ;
+    ex:email "steve.brown.636@example.com" ;
+    ex:department ex:research .
+
+ex:emp00637 a ex:Employee ;
+    ex:name "Bob Evans" ;
+    ex:age "54"^^xsd:integer ;
+    ex:email "bob.evans.637@example.com" ;
+    ex:department ex:sales .
+
+ex:emp00638 a ex:Employee ;
+    ex:name "Ivan White" ;
+    ex:age "54"^^xsd:integer ;
+    ex:email "ivan.white.638@example.com" ;
+    ex:department ex:marketing .
+
+ex:emp00639 a ex:Employee ;
+    ex:name "Quinn Smith" ;
+    ex:age "20"^^xsd:integer ;
+    ex:email "quinn.smith.639@example.com" ;
+    ex:department ex:engineering .
+
+ex:emp00640 a ex:Employee ;
+    ex:name "Pam Wright" ;
+    ex:age "42"^^xsd:integer ;
+    ex:email "pam.wright.640@example.com" ;
+    ex:department "sales" .
+
+ex:emp00641 a ex:Employee ;
+    ex:name "Bob Taylor" ;
+    ex:age "63"^^xsd:integer ;
+    ex:email "bob.taylor.641@example.com" ;
+    ex:department ex:ops .
+
+ex:emp00642 a ex:Employee ;
+    ex:name "Heidi Baker" ;
+    ex:age "64"^^xsd:integer ;
+    ex:email "heidi.baker.642@example.com" ;
+    ex:department ex:legal .
+
+ex:emp00643 a ex:Employee ;
+    ex:name "Carol Wright" ;
+    ex:age "25"^^xsd:integer ;
+    ex:email "carol.wright.643@example.com" ;
+    ex:department ex:support .
+
+ex:emp00644 a ex:Employee ;
+    ex:name "Bob Green" ;
+    ex:age "32"^^xsd:integer ;
+    ex:email "bob.green.644@example.com" ;
+    ex:department ex:support .
+
+ex:emp00645 a ex:Employee ;
+    ex:name "Mike Brown" ;
+    ex:age "47"^^xsd:integer ;
+    ex:email "mike.brown.645@example.com" ;
+    ex:department ex:finance .
+
+ex:emp00646 a ex:Employee ;
+    ex:name "Judy King" ;
+    ex:age "23"^^xsd:integer ;
+    ex:email "judy.king.646@example.com" ;
+    ex:department ex:support .
+
+ex:emp00647 a ex:Employee ;
+    ex:name "Laura Clark" ;
+    ex:age "36"^^xsd:integer ;
+    ex:email "laura.clark.647@example.com" ;
+    ex:department ex:design .
+
+ex:emp00648 a ex:Employee ;
+    ex:name "Tina Lewis" ;
+    ex:age "47"^^xsd:integer ;
+    ex:email "tina.lewis.648@example.com" ;
+    ex:department ex:legal .
+
+ex:emp00649 a ex:Employee ;
+    ex:name "Pam Clark" ;
+    ex:age "64"^^xsd:integer ;
+    ex:email "pam.clark.649@example.com" ;
+    ex:department ex:support .
+
+ex:emp00650 a ex:Employee ;
+    ex:age "18"^^xsd:integer ;
+    ex:email "heidi.black.650@example.com" ;
+    ex:department ex:ops .
+
+ex:emp00651 a ex:Employee ;
+    ex:name "Ruth Wright" ;
+    ex:age "58"^^xsd:integer ;
+    ex:email "ruth.wright.651@example.com" ;
+    ex:department ex:engineering .
+
+ex:emp00652 a ex:Employee ;
+    ex:name "Alice Adams" ;
+    ex:age "65"^^xsd:integer ;
+    ex:email "alice-no-at-sign" ;
+    ex:department ex:finance .
+
+ex:emp00653 a ex:Employee ;
+    ex:name "Quinn Lewis" ;
+    ex:age "44"^^xsd:integer ;
+    ex:email "quinn.lewis.653@example.com" ;
+    ex:department ex:research .
+
+ex:emp00654 a ex:Employee ;
+    ex:name "Eve Hall" ;
+    ex:age "23"^^xsd:integer ;
+    ex:email "eve.hall.654@example.com" ;
+    ex:department ex:engineering .
+
+ex:emp00655 a ex:Employee ;
+    ex:name "Quinn Baker" ;
+    ex:age "62"^^xsd:integer ;
+    ex:email "quinn.baker.655@example.com" ;
+    ex:department ex:legal .
+
+ex:emp00656 a ex:Employee ;
+    ex:name "Carol White" ;
+    ex:age "50"^^xsd:integer ;
+    ex:email "carol.white.656@example.com" ;
+    ex:department ex:sales .
+
+ex:emp00657 a ex:Employee ;
+    ex:name "Mike Brown" ;
+    ex:age "12"^^xsd:integer ;
+    ex:email "mike.brown.657@example.com" ;
+    ex:department ex:design .
+
+ex:emp00658 a ex:Employee ;
+    ex:name "Heidi Young" ;
+    ex:age "34"^^xsd:integer ;
+    ex:email "heidi.young.658@example.com" ;
+    ex:department ex:legal .
+
+ex:emp00659 a ex:Employee ;
+    ex:name "Mike King" ;
+    ex:age "38"^^xsd:integer ;
+    ex:email "mike.king.659@example.com" ;
+    ex:department ex:research .
+
+ex:emp00660 a ex:Employee ;
+    ex:name "Carol Clark" ;
+    ex:age "26"^^xsd:integer ;
+    ex:email "carol-no-at-sign" ;
+    ex:department ex:design .
+
+ex:emp00661 a ex:Employee ;
+    ex:name "Dave Green" ;
+    ex:age "46"^^xsd:integer ;
+    ex:email "dave.green.661@example.com" ;
+    ex:department ex:research .
+
+ex:emp00662 a ex:Employee ;
+    ex:name "Dave Taylor" ;
+    ex:age "40"^^xsd:integer ;
+    ex:email "dave.taylor.662@example.com" ;
+    ex:department ex:hr .
+
+ex:emp00663 a ex:Employee ;
+    ex:name "Oscar Hall" ;
+    ex:age "25"^^xsd:integer ;
+    ex:email "oscar.hall.663@example.com" ;
+    ex:department "marketing" .
+
+ex:emp00664 a ex:Employee ;
+    ex:name "Judy Jones" ;
+    ex:age "31"^^xsd:integer ;
+    ex:email "judy-no-at-sign" ;
+    ex:department ex:legal .
+
+ex:emp00665 a ex:Employee ;
+    ex:age "43"^^xsd:integer ;
+    ex:email "heidi.wright.665@example.com" ;
+    ex:department ex:support .
+
+ex:emp00666 a ex:Employee ;
+    ex:name "Judy Hall" ;
+    ex:age "29"^^xsd:integer ;
+    ex:email "judy.hall.666@example.com" ;
+    ex:department ex:engineering .
+
+ex:emp00667 a ex:Employee ;
+    ex:name "Oscar Taylor" ;
+    ex:age "65"^^xsd:integer ;
+    ex:email "oscar.taylor.667@example.com" ;
+    ex:department ex:support .
+
+ex:emp00668 a ex:Employee ;
+    ex:age "26"^^xsd:integer ;
+    ex:email "oscar.white.668@example.com" ;
+    ex:department ex:marketing .
+
+ex:emp00669 a ex:Employee ;
+    ex:name "Heidi Black" ;
+    ex:age "30"^^xsd:integer ;
+    ex:email "heidi.black.669@example.com" ;
+    ex:department ex:ops .
+
+ex:emp00670 a ex:Employee ;
+    ex:name "Carol Hall" ;
+    ex:age "22"^^xsd:integer ;
+    ex:email "carol.hall.670@example.com" ;
+    ex:department ex:engineering .
+
+ex:emp00671 a ex:Employee ;
+    ex:name "Grace Davis" ;
+    ex:age "26"^^xsd:integer ;
+    ex:email "grace.davis.671@example.com" ;
+    ex:department ex:marketing .
+
+ex:emp00672 a ex:Employee ;
+    ex:name "Karl White" ;
+    ex:age "16"^^xsd:integer ;
+    ex:email "karl.white.672@example.com" ;
+    ex:department ex:research .
+
+ex:emp00673 a ex:Employee ;
+    ex:name "Mike Evans" ;
+    ex:age "19"^^xsd:integer ;
+    ex:email "mike.evans.673@example.com" ;
+    ex:department ex:ops .
+
+ex:emp00674 a ex:Employee ;
+    ex:name "Frank Wright" ;
+    ex:age "31"^^xsd:integer ;
+    ex:email "frank.wright.674@example.com" ;
+    ex:department ex:sales .
+
+ex:emp00675 a ex:Employee ;
+    ex:name "Oscar Black" ;
+    ex:age "20"^^xsd:integer ;
+    ex:email "oscar.black.675@example.com" ;
+    ex:department ex:design .
+
+ex:emp00676 a ex:Employee ;
+    ex:name "Heidi Young" ;
+    ex:age "49"^^xsd:integer ;
+    ex:email "heidi.young.676@example.com" ;
+    ex:department ex:ops .
+
+ex:emp00677 a ex:Employee ;
+    ex:name "Pam Jones" ;
+    ex:age "23"^^xsd:integer ;
+    ex:email "pam.jones.677@example.com" ;
+    ex:department ex:finance .
+
+ex:emp00678 a ex:Employee ;
+    ex:name "Nina Clark" ;
+    ex:age "59"^^xsd:integer ;
+    ex:email "nina.clark.678@example.com" ;
+    ex:department ex:support .
+
+ex:emp00679 a ex:Employee ;
+    ex:name "Ruth Smith" ;
+    ex:age "42"^^xsd:integer ;
+    ex:email "ruth.smith.679@example.com" ;
+    ex:department ex:legal .
+
+ex:emp00680 a ex:Employee ;
+    ex:name "Pam Wright" ;
+    ex:age "54"^^xsd:integer ;
+    ex:email "pam.wright.680@example.com" ;
+    ex:department ex:support .
+
+ex:emp00681 a ex:Employee ;
+    ex:name "Ivan Green" ;
+    ex:age "19"^^xsd:integer ;
+    ex:email "ivan.green.681@example.com" ;
+    ex:department ex:legal .
+
+ex:emp00682 a ex:Employee ;
+    ex:name "Alice Hall" ;
+    ex:age "21"^^xsd:integer ;
+    ex:email "alice.hall.682@example.com" ;
+    ex:department ex:research .
+
+ex:emp00683 a ex:Employee ;
+    ex:name "Steve Lewis" ;
+    ex:age "28"^^xsd:integer ;
+    ex:email "steve.lewis.683@example.com" ;
+    ex:department ex:marketing .
+
+ex:emp00684 a ex:Employee ;
+    ex:name "Heidi Hall" ;
+    ex:age "52"^^xsd:integer ;
+    ex:email "heidi.hall.684@example.com" ;
+    ex:department ex:engineering .
+
+ex:emp00685 a ex:Employee ;
+    ex:name "Heidi Adams" ;
+    ex:age "40"^^xsd:integer ;
+    ex:email "heidi.adams.685@example.com" ;
+    ex:department "sales" .
+
+ex:emp00686 a ex:Employee ;
+    ex:name "Steve King" ;
+    ex:age "65"^^xsd:integer ;
+    ex:email "steve.king.686@example.com" ;
+    ex:department ex:legal .
+
+ex:emp00687 a ex:Employee ;
+    ex:name "Alice Wright" ;
+    ex:age "54"^^xsd:integer ;
+    ex:email "alice-no-at-sign" ;
+    ex:department ex:design .
+
+ex:emp00688 a ex:Employee ;
+    ex:name "Grace Evans" ;
+    ex:age "52"^^xsd:integer ;
+    ex:email "grace.evans.688@example.com" ;
+    ex:department "finance" .
+
+ex:emp00689 a ex:Employee ;
+    ex:name "Bob Brown" ;
+    ex:age "21"^^xsd:integer ;
+    ex:email "bob.brown.689@example.com" ;
+    ex:department ex:hr .
+
+ex:emp00690 a ex:Employee ;
+    ex:name "Alice Moore" ;
+    ex:age "48"^^xsd:integer ;
+    ex:email "alice.moore.690@example.com" ;
+    ex:department ex:engineering .
+
+ex:emp00691 a ex:Employee ;
+    ex:name "Tina Clark" ;
+    ex:age "26"^^xsd:integer ;
+    ex:email "tina.clark.691@example.com" ;
+    ex:department ex:legal .
+
+ex:emp00692 a ex:Employee ;
+    ex:name "Karl Jones" ;
+    ex:age "19"^^xsd:integer ;
+    ex:email "karl.jones.692@example.com" ;
+    ex:department ex:sales .
+
+ex:emp00693 a ex:Employee ;
+    ex:name "Eve White" ;
+    ex:age "51"^^xsd:integer ;
+    ex:email "eve.white.693@example.com" ;
+    ex:department ex:legal .
+
+ex:emp00694 a ex:Employee ;
+    ex:name "Laura Adams" ;
+    ex:age "55"^^xsd:integer ;
+    ex:email "laura.adams.694@example.com" ;
+    ex:department ex:marketing .
+
+ex:emp00695 a ex:Employee ;
+    ex:name "Karl Black" ;
+    ex:age "28"^^xsd:integer ;
+    ex:email "karl.black.695@example.com" ;
+    ex:department ex:ops .
+
+ex:emp00696 a ex:Employee ;
+    ex:name "Pam King" ;
+    ex:age "29"^^xsd:integer ;
+    ex:email "pam.king.696@example.com" ;
+    ex:department ex:support .
+
+ex:emp00697 a ex:Employee ;
+    ex:name "Tina Wright" ;
+    ex:age "32"^^xsd:integer ;
+    ex:email "tina.wright.697@example.com" ;
+    ex:department ex:design .
+
+ex:emp00698 a ex:Employee ;
+    ex:name "Mike Young" ;
+    ex:age "64"^^xsd:integer ;
+    ex:email "mike-no-at-sign" ;
+    ex:department ex:finance .
+
+ex:emp00699 a ex:Employee ;
+    ex:name "Alice Adams" ;
+    ex:age "54"^^xsd:integer ;
+    ex:email "alice.adams.699@example.com" ;
+    ex:department "engineering" .
+
+ex:emp00700 a ex:Employee ;
+    ex:name "Karl Lewis" ;
+    ex:age "58"^^xsd:integer ;
+    ex:email "karl-no-at-sign" ;
+    ex:department ex:design .
+
+ex:emp00701 a ex:Employee ;
+    ex:name "Pam Black" ;
+    ex:age "39"^^xsd:integer ;
+    ex:email "pam.black.701@example.com" ;
+    ex:department ex:marketing .
+
+ex:emp00702 a ex:Employee ;
+    ex:name "Karl Green" ;
+    ex:age "58"^^xsd:integer ;
+    ex:email "karl.green.702@example.com" ;
+    ex:department ex:marketing .
+
+ex:emp00703 a ex:Employee ;
+    ex:name "Karl Davis" ;
+    ex:age "18"^^xsd:integer ;
+    ex:email "karl.davis.703@example.com" ;
+    ex:department ex:finance .
+
+ex:emp00704 a ex:Employee ;
+    ex:name "Carol Wright" ;
+    ex:age "34"^^xsd:integer ;
+    ex:email "carol.wright.704@example.com" ;
+    ex:department ex:marketing .
+
+ex:emp00705 a ex:Employee ;
+    ex:name "Bob Adams" ;
+    ex:age "46"^^xsd:integer ;
+    ex:email "bob.adams.705@example.com" ;
+    ex:department ex:ops .
+
+ex:emp00706 a ex:Employee ;
+    ex:name "Nina Evans" ;
+    ex:age "42"^^xsd:integer ;
+    ex:email "nina.evans.706@example.com" ;
+    ex:department ex:legal .
+
+ex:emp00707 a ex:Employee ;
+    ex:name "Dave Evans" ;
+    ex:age "54"^^xsd:integer ;
+    ex:email "dave.evans.707@example.com" ;
+    ex:department "hr" .
+
+ex:emp00708 a ex:Employee ;
+    ex:name "Carol Jones" ;
+    ex:age "36"^^xsd:integer ;
+    ex:email "carol.jones.708@example.com" ;
+    ex:department ex:engineering .
+
+ex:emp00709 a ex:Employee ;
+    ex:name "Dave Brown" ;
+    ex:age "39"^^xsd:integer ;
+    ex:email "dave.brown.709@example.com" ;
+    ex:department ex:sales .
+
+ex:emp00710 a ex:Employee ;
+    ex:name "Frank Brown" ;
+    ex:age "53"^^xsd:integer ;
+    ex:email "frank.brown.710@example.com" ;
+    ex:department ex:marketing .
+
+ex:emp00711 a ex:Employee ;
+    ex:name "Tina Evans" ;
+    ex:age "63"^^xsd:integer ;
+    ex:email "tina.evans.711@example.com" ;
+    ex:department ex:engineering .
+
+ex:emp00712 a ex:Employee ;
+    ex:name "Frank Baker" ;
+    ex:age "28"^^xsd:integer ;
+    ex:email "frank-no-at-sign" ;
+    ex:department ex:engineering .
+
+ex:emp00713 a ex:Employee ;
+    ex:name "Grace Clark" ;
+    ex:age "44"^^xsd:integer ;
+    ex:email "grace.clark.713@example.com" ;
+    ex:department ex:support .
+
+ex:emp00714 a ex:Employee ;
+    ex:name "Ruth Hall" ;
+    ex:age "60"^^xsd:integer ;
+    ex:email "ruth.hall.714@example.com" ;
+    ex:department ex:finance .
+
+ex:emp00715 a ex:Employee ;
+    ex:name "Dave Jones" ;
+    ex:age "43"^^xsd:integer ;
+    ex:email "dave.jones.715@example.com" ;
+    ex:department ex:design .
+
+ex:emp00716 a ex:Employee ;
+    ex:age "21"^^xsd:integer ;
+    ex:email "pam.black.716@example.com" ;
+    ex:department ex:legal .
+
+ex:emp00717 a ex:Employee ;
+    ex:name "Carol Young" ;
+    ex:age "60"^^xsd:integer ;
+    ex:email "carol.young.717@example.com" ;
+    ex:department ex:design .
+
+ex:emp00718 a ex:Employee ;
+    ex:name "Dave Smith" ;
+    ex:age "31"^^xsd:integer ;
+    ex:email "dave.smith.718@example.com" ;
+    ex:department ex:sales .
+
+ex:emp00719 a ex:Employee ;
+    ex:name "Carol Evans" ;
+    ex:age "25"^^xsd:integer ;
+    ex:email "carol.evans.719@example.com" ;
+    ex:department ex:finance .
+
+ex:emp00720 a ex:Employee ;
+    ex:name "Pam Evans" ;
+    ex:age "16"^^xsd:integer ;
+    ex:email "pam.evans.720@example.com" ;
+    ex:department ex:finance .
+
+ex:emp00721 a ex:Employee ;
+    ex:name "Frank Wright" ;
+    ex:age "42"^^xsd:integer ;
+    ex:email "frank.wright.721@example.com" ;
+    ex:department "legal" .
+
+ex:emp00722 a ex:Employee ;
+    ex:name "Bob Hall" ;
+    ex:age "46"^^xsd:integer ;
+    ex:email "bob.hall.722@example.com" ;
+    ex:department ex:research .
+
+ex:emp00723 a ex:Employee ;
+    ex:name "Ivan Jones" ;
+    ex:age "15"^^xsd:integer ;
+    ex:email "ivan.jones.723@example.com" ;
+    ex:department ex:marketing .
+
+ex:emp00724 a ex:Employee ;
+    ex:name "Ruth Baker" ;
+    ex:age "55"^^xsd:integer ;
+    ex:email "ruth.baker.724@example.com" ;
+    ex:department ex:hr .
+
+ex:emp00725 a ex:Employee ;
+    ex:name "Mike Moore" ;
+    ex:age "44"^^xsd:integer ;
+    ex:email "mike.moore.725@example.com" ;
+    ex:department ex:support .
+
+ex:emp00726 a ex:Employee ;
+    ex:name "Pam Lewis" ;
+    ex:age "10"^^xsd:integer ;
+    ex:email "pam.lewis.726@example.com" ;
+    ex:department ex:finance .
+
+ex:emp00727 a ex:Employee ;
+    ex:name "Quinn Moore" ;
+    ex:age "54"^^xsd:integer ;
+    ex:email "quinn-no-at-sign" ;
+    ex:department ex:design .
+
+ex:emp00728 a ex:Employee ;
+    ex:name "Oscar Green" ;
+    ex:age "28"^^xsd:integer ;
+    ex:email "oscar.green.728@example.com" ;
+    ex:department ex:hr .
+
+ex:emp00729 a ex:Employee ;
+    ex:name "Eve Jones" ;
+    ex:age "45"^^xsd:integer ;
+    ex:email "eve.jones.729@example.com" ;
+    ex:department ex:marketing .
+
+ex:emp00730 a ex:Employee ;
+    ex:name "Nina Clark" ;
+    ex:age "58"^^xsd:integer ;
+    ex:email "nina.clark.730@example.com" ;
+    ex:department ex:sales .
+
+ex:emp00731 a ex:Employee ;
+    ex:name "Ivan King" ;
+    ex:age "16"^^xsd:integer ;
+    ex:email "ivan.king.731@example.com" ;
+    ex:department ex:marketing .
+
+ex:emp00732 a ex:Employee ;
+    ex:name "Ruth King" ;
+    ex:age "35"^^xsd:integer ;
+    ex:email "ruth.king.732@example.com" ;
+    ex:department ex:support .
+
+ex:emp00733 a ex:Employee ;
+    ex:name "Alice Moore" ;
+    ex:age "44"^^xsd:integer ;
+    ex:email "alice.moore.733@example.com" ;
+    ex:department ex:marketing .
+
+ex:emp00734 a ex:Employee ;
+    ex:name "Eve White" ;
+    ex:age "24"^^xsd:integer ;
+    ex:email "eve.white.734@example.com" ;
+    ex:department ex:design .
+
+ex:emp00735 a ex:Employee ;
+    ex:name "Judy Taylor" ;
+    ex:age "40"^^xsd:integer ;
+    ex:email "judy.taylor.735@example.com" ;
+    ex:department ex:ops .
+
+ex:emp00736 a ex:Employee ;
+    ex:name "Pam Evans" ;
+    ex:age "20"^^xsd:integer ;
+    ex:email "pam.evans.736@example.com" ;
+    ex:department ex:sales .
+
+ex:emp00737 a ex:Employee ;
+    ex:name "Eve Adams" ;
+    ex:age "20"^^xsd:integer ;
+    ex:email "eve.adams.737@example.com" ;
+    ex:department ex:ops .
+
+ex:emp00738 a ex:Employee ;
+    ex:name "Karl Lewis" ;
+    ex:age "21"^^xsd:integer ;
+    ex:email "karl.lewis.738@example.com" ;
+    ex:department ex:research .
+
+ex:emp00739 a ex:Employee ;
+    ex:name "Laura Smith" ;
+    ex:age "39"^^xsd:integer ;
+    ex:email "laura.smith.739@example.com" ;
+    ex:department ex:finance .
+
+ex:emp00740 a ex:Employee ;
+    ex:name "Pam White" ;
+    ex:age "32"^^xsd:integer ;
+    ex:email "pam.white.740@example.com" ;
+    ex:department ex:sales .
+
+ex:emp00741 a ex:Employee ;
+    ex:name "Oscar King" ;
+    ex:age "35"^^xsd:integer ;
+    ex:email "oscar.king.741@example.com" ;
+    ex:department ex:ops .
+
+ex:emp00742 a ex:Employee ;
+    ex:name "Carol Clark" ;
+    ex:age "46"^^xsd:integer ;
+    ex:email "carol.clark.742@example.com" ;
+    ex:department ex:hr .
+
+ex:emp00743 a ex:Employee ;
+    ex:name "Nina Evans" ;
+    ex:age "51"^^xsd:integer ;
+    ex:email "nina.evans.743@example.com" ;
+    ex:department ex:legal .
+
+ex:emp00744 a ex:Employee ;
+    ex:name "Quinn Green" ;
+    ex:age "22"^^xsd:integer ;
+    ex:email "quinn.green.744@example.com" ;
+    ex:department ex:finance .
+
+ex:emp00745 a ex:Employee ;
+    ex:age "51"^^xsd:integer ;
+    ex:email "mike.black.745@example.com" ;
+    ex:department ex:design .
+
+ex:emp00746 a ex:Employee ;
+    ex:age "21"^^xsd:integer ;
+    ex:email "grace.clark.746@example.com" ;
+    ex:department ex:hr .
+
+ex:emp00747 a ex:Employee ;
+    ex:name "Bob Wright" ;
+    ex:age "63"^^xsd:integer ;
+    ex:email "bob.wright.747@example.com" ;
+    ex:department ex:hr .
+
+ex:emp00748 a ex:Employee ;
+    ex:name "Oscar Moore" ;
+    ex:age "43"^^xsd:integer ;
+    ex:email "oscar.moore.748@example.com" ;
+    ex:department ex:marketing .
+
+ex:emp00749 a ex:Employee ;
+    ex:name "Heidi Wright" ;
+    ex:age "49"^^xsd:integer ;
+    ex:email "heidi.wright.749@example.com" ;
+    ex:department ex:design .
+
+ex:emp00750 a ex:Employee ;
+    ex:name "Pam Taylor" ;
+    ex:age "40"^^xsd:integer ;
+    ex:email "pam.taylor.750@example.com" ;
+    ex:department "legal" .
+
+ex:emp00751 a ex:Employee ;
+    ex:name "Ivan Brown" ;
+    ex:age "36"^^xsd:integer ;
+    ex:email "ivan.brown.751@example.com" ;
+    ex:department ex:engineering .
+
+ex:emp00752 a ex:Employee ;
+    ex:name "Frank Clark" ;
+    ex:age "32"^^xsd:integer ;
+    ex:email "frank.clark.752@example.com" ;
+    ex:department ex:hr .
+
+ex:emp00753 a ex:Employee ;
+    ex:name "Ivan Baker" ;
+    ex:age "50"^^xsd:integer ;
+    ex:email "ivan.baker.753@example.com" ;
+    ex:department ex:engineering .
+
+ex:emp00754 a ex:Employee ;
+    ex:name "Alice Evans" ;
+    ex:age "26"^^xsd:integer ;
+    ex:email "alice.evans.754@example.com" ;
+    ex:department ex:sales .
+
+ex:emp00755 a ex:Employee ;
+    ex:name "Alice Lewis" ;
+    ex:age "34"^^xsd:integer ;
+    ex:email "alice.lewis.755@example.com" ;
+    ex:department ex:design .
+
+ex:emp00756 a ex:Employee ;
+    ex:name "Judy Hall" ;
+    ex:age "45"^^xsd:integer ;
+    ex:email "judy.hall.756@example.com" ;
+    ex:department ex:ops .
+
+ex:emp00757 a ex:Employee ;
+    ex:name "Oscar Hall" ;
+    ex:age "31"^^xsd:integer ;
+    ex:email "oscar.hall.757@example.com" ;
+    ex:department ex:research .
+
+ex:emp00758 a ex:Employee ;
+    ex:age "55"^^xsd:integer ;
+    ex:email "quinn.adams.758@example.com" ;
+    ex:department ex:marketing .
+
+ex:emp00759 a ex:Employee ;
+    ex:name "Laura Taylor" ;
+    ex:age "59"^^xsd:integer ;
+    ex:email "laura.taylor.759@example.com" ;
+    ex:department ex:design .
+
+ex:emp00760 a ex:Employee ;
+    ex:name "Judy White" ;
+    ex:age "48"^^xsd:integer ;
+    ex:email "judy.white.760@example.com" ;
+    ex:department ex:marketing .
+
+ex:emp00761 a ex:Employee ;
+    ex:name "Ivan King" ;
+    ex:age "35"^^xsd:integer ;
+    ex:email "ivan.king.761@example.com" ;
+    ex:department ex:finance .
+
+ex:emp00762 a ex:Employee ;
+    ex:name "Judy Clark" ;
+    ex:age "27"^^xsd:integer ;
+    ex:email "judy.clark.762@example.com" ;
+    ex:department ex:support .
+
+ex:emp00763 a ex:Employee ;
+    ex:name "Bob Adams" ;
+    ex:age "60"^^xsd:integer ;
+    ex:email "bob.adams.763@example.com" ;
+    ex:department ex:legal .
+
+ex:emp00764 a ex:Employee ;
+    ex:name "Alice Evans" ;
+    ex:age "36"^^xsd:integer ;
+    ex:email "alice.evans.764@example.com" ;
+    ex:department ex:finance .
+
+ex:emp00765 a ex:Employee ;
+    ex:name "Mike Adams" ;
+    ex:age "65"^^xsd:integer ;
+    ex:email "mike.adams.765@example.com" ;
+    ex:department ex:engineering .
+
+ex:emp00766 a ex:Employee ;
+    ex:name "Steve Clark" ;
+    ex:age "39"^^xsd:integer ;
+    ex:email "steve.clark.766@example.com" ;
+    ex:department ex:hr .
+
+ex:emp00767 a ex:Employee ;
+    ex:name "Pam Wright" ;
+    ex:age "50"^^xsd:integer ;
+    ex:email "pam.wright.767@example.com" ;
+    ex:department ex:finance .
+
+ex:emp00768 a ex:Employee ;
+    ex:name "Ruth Green" ;
+    ex:age "36"^^xsd:integer ;
+    ex:email "ruth.green.768@example.com" ;
+    ex:department ex:marketing .
+
+ex:emp00769 a ex:Employee ;
+    ex:name "Ivan Taylor" ;
+    ex:age "29"^^xsd:integer ;
+    ex:email "ivan.taylor.769@example.com" ;
+    ex:department ex:legal .
+
+ex:emp00770 a ex:Employee ;
+    ex:name "Heidi Wright" ;
+    ex:age "32"^^xsd:integer ;
+    ex:email "heidi.wright.770@example.com" ;
+    ex:department ex:finance .
+
+ex:emp00771 a ex:Employee ;
+    ex:name "Karl Wright" ;
+    ex:age "34"^^xsd:integer ;
+    ex:email "karl.wright.771@example.com" ;
+    ex:department ex:design .
+
+ex:emp00772 a ex:Employee ;
+    ex:name "Dave Evans" ;
+    ex:age "21"^^xsd:integer ;
+    ex:email "dave.evans.772@example.com" ;
+    ex:department ex:design .
+
+ex:emp00773 a ex:Employee ;
+    ex:name "Tina Brown" ;
+    ex:age "48"^^xsd:integer ;
+    ex:email "tina.brown.773@example.com" ;
+    ex:department ex:hr .
+
+ex:emp00774 a ex:Employee ;
+    ex:name "Mike Moore" ;
+    ex:age "12"^^xsd:integer ;
+    ex:email "mike.moore.774@example.com" ;
+    ex:department ex:ops .
+
+ex:emp00775 a ex:Employee ;
+    ex:name "Eve Clark" ;
+    ex:age "39"^^xsd:integer ;
+    ex:email "eve.clark.775@example.com" ;
+    ex:department ex:ops .
+
+ex:emp00776 a ex:Employee ;
+    ex:name "Oscar Black" ;
+    ex:age "38"^^xsd:integer ;
+    ex:email "oscar.black.776@example.com" ;
+    ex:department ex:sales .
+
+ex:emp00777 a ex:Employee ;
+    ex:name "Pam King" ;
+    ex:age "58"^^xsd:integer ;
+    ex:email "pam.king.777@example.com" ;
+    ex:department ex:sales .
+
+ex:emp00778 a ex:Employee ;
+    ex:name "Bob Smith" ;
+    ex:age "46"^^xsd:integer ;
+    ex:email "bob.smith.778@example.com" ;
+    ex:department ex:finance .
+
+ex:emp00779 a ex:Employee ;
+    ex:name "Frank Green" ;
+    ex:age "49"^^xsd:integer ;
+    ex:email "frank-no-at-sign" ;
+    ex:department ex:marketing .
+
+ex:emp00780 a ex:Employee ;
+    ex:name "Nina Baker" ;
+    ex:age "43"^^xsd:integer ;
+    ex:email "nina.baker.780@example.com" ;
+    ex:department ex:ops .
+
+ex:emp00781 a ex:Employee ;
+    ex:name "Mike Smith" ;
+    ex:age "20"^^xsd:integer ;
+    ex:email "mike.smith.781@example.com" ;
+    ex:department "support" .
+
+ex:emp00782 a ex:Employee ;
+    ex:name "Laura Smith" ;
+    ex:age "38"^^xsd:integer ;
+    ex:email "laura.smith.782@example.com" ;
+    ex:department "support" .
+
+ex:emp00783 a ex:Employee ;
+    ex:name "Alice Lewis" ;
+    ex:age "32"^^xsd:integer ;
+    ex:email "alice.lewis.783@example.com" ;
+    ex:department ex:legal .
+
+ex:emp00784 a ex:Employee ;
+    ex:name "Dave Adams" ;
+    ex:age "50"^^xsd:integer ;
+    ex:email "dave.adams.784@example.com" ;
+    ex:department ex:design .
+
+ex:emp00785 a ex:Employee ;
+    ex:name "Carol Jones" ;
+    ex:age "37"^^xsd:integer ;
+    ex:email "carol.jones.785@example.com" ;
+    ex:department ex:finance .
+
+ex:emp00786 a ex:Employee ;
+    ex:name "Quinn Moore" ;
+    ex:age "39"^^xsd:integer ;
+    ex:email "quinn.moore.786@example.com" ;
+    ex:department ex:ops .
+
+ex:emp00787 a ex:Employee ;
+    ex:name "Eve King" ;
+    ex:age "49"^^xsd:integer ;
+    ex:email "eve.king.787@example.com" ;
+    ex:department ex:legal .
+
+ex:emp00788 a ex:Employee ;
+    ex:name "Frank Adams" ;
+    ex:age "19"^^xsd:integer ;
+    ex:email "frank.adams.788@example.com" ;
+    ex:department ex:hr .
+
+ex:emp00789 a ex:Employee ;
+    ex:name "Eve Clark" ;
+    ex:age "64"^^xsd:integer ;
+    ex:email "eve.clark.789@example.com" ;
+    ex:department ex:engineering .
+
+ex:emp00790 a ex:Employee ;
+    ex:name "Frank White" ;
+    ex:age "41"^^xsd:integer ;
+    ex:email "frank.white.790@example.com" ;
+    ex:department ex:engineering .
+
+ex:emp00791 a ex:Employee ;
+    ex:name "Ivan Taylor" ;
+    ex:age "57"^^xsd:integer ;
+    ex:email "ivan.taylor.791@example.com" ;
+    ex:department ex:engineering .
+
+ex:emp00792 a ex:Employee ;
+    ex:age "59"^^xsd:integer ;
+    ex:email "bob.white.792@example.com" ;
+    ex:department ex:engineering .
+
+ex:emp00793 a ex:Employee ;
+    ex:name "Dave Baker" ;
+    ex:age "46"^^xsd:integer ;
+    ex:email "dave-no-at-sign" ;
+    ex:department ex:ops .
+
+ex:emp00794 a ex:Employee ;
+    ex:name "Ivan Evans" ;
+    ex:age "62"^^xsd:integer ;
+    ex:email "ivan.evans.794@example.com" ;
+    ex:department ex:sales .
+
+ex:emp00795 a ex:Employee ;
+    ex:name "Alice Young" ;
+    ex:age "44"^^xsd:integer ;
+    ex:email "alice.young.795@example.com" ;
+    ex:department ex:marketing .
+
+ex:emp00796 a ex:Employee ;
+    ex:name "Ivan Black" ;
+    ex:age "44"^^xsd:integer ;
+    ex:email "ivan.black.796@example.com" ;
+    ex:department ex:marketing .
+
+ex:emp00797 a ex:Employee ;
+    ex:name "Tina White" ;
+    ex:age "36"^^xsd:integer ;
+    ex:email "tina.white.797@example.com" ;
+    ex:department ex:marketing .
+
+ex:emp00798 a ex:Employee ;
+    ex:name "Pam Clark" ;
+    ex:age "56"^^xsd:integer ;
+    ex:email "pam.clark.798@example.com" ;
+    ex:department ex:hr .
+
+ex:emp00799 a ex:Employee ;
+    ex:name "Quinn Clark" ;
+    ex:age "40"^^xsd:integer ;
+    ex:email "quinn.clark.799@example.com" ;
+    ex:department ex:ops .
+
+ex:emp00800 a ex:Employee ;
+    ex:name "Bob Taylor" ;
+    ex:age "49"^^xsd:integer ;
+    ex:email "bob.taylor.800@example.com" ;
+    ex:department ex:hr .
+
+ex:emp00801 a ex:Employee ;
+    ex:age "33"^^xsd:integer ;
+    ex:email "pam.king.801@example.com" ;
+    ex:department ex:engineering .
+
+ex:emp00802 a ex:Employee ;
+    ex:name "Carol White" ;
+    ex:age "54"^^xsd:integer ;
+    ex:email "carol-no-at-sign" ;
+    ex:department ex:research .
+
+ex:emp00803 a ex:Employee ;
+    ex:name "Carol Moore" ;
+    ex:age "22"^^xsd:integer ;
+    ex:email "carol.moore.803@example.com" ;
+    ex:department ex:marketing .
+
+ex:emp00804 a ex:Employee ;
+    ex:name "Heidi Davis" ;
+    ex:age "36"^^xsd:integer ;
+    ex:email "heidi.davis.804@example.com" ;
+    ex:department ex:finance .
+
+ex:emp00805 a ex:Employee ;
+    ex:name "Dave Green" ;
+    ex:age "20"^^xsd:integer ;
+    ex:email "dave.green.805@example.com" ;
+    ex:department ex:finance .
+
+ex:emp00806 a ex:Employee ;
+    ex:name "Karl Baker" ;
+    ex:age "10"^^xsd:integer ;
+    ex:email "karl.baker.806@example.com" ;
+    ex:department ex:marketing .
+
+ex:emp00807 a ex:Employee ;
+    ex:name "Alice Black" ;
+    ex:age "60"^^xsd:integer ;
+    ex:email "alice.black.807@example.com" ;
+    ex:department ex:sales .
+
+ex:emp00808 a ex:Employee ;
+    ex:name "Oscar Hall" ;
+    ex:age "64"^^xsd:integer ;
+    ex:email "oscar.hall.808@example.com" ;
+    ex:department ex:marketing .
+
+ex:emp00809 a ex:Employee ;
+    ex:name "Karl Green" ;
+    ex:age "25"^^xsd:integer ;
+    ex:email "karl.green.809@example.com" ;
+    ex:department ex:ops .
+
+ex:emp00810 a ex:Employee ;
+    ex:name "Oscar Hall" ;
+    ex:age "42"^^xsd:integer ;
+    ex:email "oscar.hall.810@example.com" ;
+    ex:department ex:research .
+
+ex:emp00811 a ex:Employee ;
+    ex:name "Frank White" ;
+    ex:age "26"^^xsd:integer ;
+    ex:email "frank.white.811@example.com" ;
+    ex:department ex:engineering .
+
+ex:emp00812 a ex:Employee ;
+    ex:name "Frank White" ;
+    ex:age "44"^^xsd:integer ;
+    ex:email "frank.white.812@example.com" ;
+    ex:department ex:design .
+
+ex:emp00813 a ex:Employee ;
+    ex:name "Steve Davis" ;
+    ex:age "29"^^xsd:integer ;
+    ex:email "steve.davis.813@example.com" ;
+    ex:department ex:design .
+
+ex:emp00814 a ex:Employee ;
+    ex:name "Laura Smith" ;
+    ex:age "61"^^xsd:integer ;
+    ex:email "laura.smith.814@example.com" ;
+    ex:department ex:sales .
+
+ex:emp00815 a ex:Employee ;
+    ex:age "44"^^xsd:integer ;
+    ex:email "pam.white.815@example.com" ;
+    ex:department ex:research .
+
+ex:emp00816 a ex:Employee ;
+    ex:name "Ivan King" ;
+    ex:age "18"^^xsd:integer ;
+    ex:email "ivan.king.816@example.com" ;
+    ex:department ex:support .
+
+ex:emp00817 a ex:Employee ;
+    ex:name "Steve Lewis" ;
+    ex:age "60"^^xsd:integer ;
+    ex:email "steve.lewis.817@example.com" ;
+    ex:department ex:legal .
+
+ex:emp00818 a ex:Employee ;
+    ex:name "Tina White" ;
+    ex:age "45"^^xsd:integer ;
+    ex:email "tina.white.818@example.com" ;
+    ex:department ex:hr .
+
+ex:emp00819 a ex:Employee ;
+    ex:name "Mike Black" ;
+    ex:age "12"^^xsd:integer ;
+    ex:email "mike.black.819@example.com" ;
+    ex:department ex:design .
+
+ex:emp00820 a ex:Employee ;
+    ex:name "Quinn Evans" ;
+    ex:age "17"^^xsd:integer ;
+    ex:email "quinn.evans.820@example.com" ;
+    ex:department ex:sales .
+
+ex:emp00821 a ex:Employee ;
+    ex:name "Karl Lewis" ;
+    ex:age "13"^^xsd:integer ;
+    ex:email "karl.lewis.821@example.com" ;
+    ex:department ex:finance .
+
+ex:emp00822 a ex:Employee ;
+    ex:name "Ruth Adams" ;
+    ex:age "17"^^xsd:integer ;
+    ex:email "ruth.adams.822@example.com" ;
+    ex:department ex:hr .
+
+ex:emp00823 a ex:Employee ;
+    ex:name "Steve Davis" ;
+    ex:age "23"^^xsd:integer ;
+    ex:email "steve.davis.823@example.com" ;
+    ex:department ex:research .
+
+ex:emp00824 a ex:Employee ;
+    ex:name "Dave Evans" ;
+    ex:age "65"^^xsd:integer ;
+    ex:email "dave-no-at-sign" ;
+    ex:department ex:engineering .
+
+ex:emp00825 a ex:Employee ;
+    ex:age "53"^^xsd:integer ;
+    ex:email "nina.jones.825@example.com" ;
+    ex:department ex:support .
+
+ex:emp00826 a ex:Employee ;
+    ex:name "Carol Young" ;
+    ex:age "50"^^xsd:integer ;
+    ex:email "carol.young.826@example.com" ;
+    ex:department ex:support .
+
+ex:emp00827 a ex:Employee ;
+    ex:name "Oscar King" ;
+    ex:age "41"^^xsd:integer ;
+    ex:email "oscar.king.827@example.com" ;
+    ex:department ex:engineering .
+
+ex:emp00828 a ex:Employee ;
+    ex:name "Oscar King" ;
+    ex:age "53"^^xsd:integer ;
+    ex:email "oscar.king.828@example.com" ;
+    ex:department ex:design .
+
+ex:emp00829 a ex:Employee ;
+    ex:name "Laura Davis" ;
+    ex:age "25"^^xsd:integer ;
+    ex:email "laura.davis.829@example.com" ;
+    ex:department ex:marketing .
+
+ex:emp00830 a ex:Employee ;
+    ex:name "Heidi Smith" ;
+    ex:age "39"^^xsd:integer ;
+    ex:email "heidi.smith.830@example.com" ;
+    ex:department ex:legal .
+
+ex:emp00831 a ex:Employee ;
+    ex:name "Judy Taylor" ;
+    ex:age "51"^^xsd:integer ;
+    ex:email "judy.taylor.831@example.com" ;
+    ex:department ex:legal .
+
+ex:emp00832 a ex:Employee ;
+    ex:name "Bob Green" ;
+    ex:age "49"^^xsd:integer ;
+    ex:email "bob.green.832@example.com" ;
+    ex:department ex:sales .
+
+ex:emp00833 a ex:Employee ;
+    ex:name "Nina White" ;
+    ex:age "34"^^xsd:integer ;
+    ex:email "nina.white.833@example.com" ;
+    ex:department "design" .
+
+ex:emp00834 a ex:Employee ;
+    ex:name "Dave Adams" ;
+    ex:age "31"^^xsd:integer ;
+    ex:email "dave.adams.834@example.com" ;
+    ex:department ex:research .
+
+ex:emp00835 a ex:Employee ;
+    ex:age "24"^^xsd:integer ;
+    ex:email "grace.king.835@example.com" ;
+    ex:department ex:ops .
+
+ex:emp00836 a ex:Employee ;
+    ex:name "Steve White" ;
+    ex:age "46"^^xsd:integer ;
+    ex:email "steve.white.836@example.com" ;
+    ex:department ex:research .
+
+ex:emp00837 a ex:Employee ;
+    ex:name "Quinn Black" ;
+    ex:age "49"^^xsd:integer ;
+    ex:email "quinn.black.837@example.com" ;
+    ex:department ex:engineering .
+
+ex:emp00838 a ex:Employee ;
+    ex:name "Bob Taylor" ;
+    ex:age "45"^^xsd:integer ;
+    ex:email "bob.taylor.838@example.com" ;
+    ex:department ex:design .
+
+ex:emp00839 a ex:Employee ;
+    ex:name "Quinn Green" ;
+    ex:age "62"^^xsd:integer ;
+    ex:email "quinn.green.839@example.com" ;
+    ex:department "design" .
+
+ex:emp00840 a ex:Employee ;
+    ex:name "Eve White" ;
+    ex:age "42"^^xsd:integer ;
+    ex:email "eve.white.840@example.com" ;
+    ex:department ex:design .
+
+ex:emp00841 a ex:Employee ;
+    ex:name "Karl Moore" ;
+    ex:age "42"^^xsd:integer ;
+    ex:email "karl.moore.841@example.com" ;
+    ex:department ex:ops .
+
+ex:emp00842 a ex:Employee ;
+    ex:name "Heidi Hall" ;
+    ex:age "43"^^xsd:integer ;
+    ex:email "heidi.hall.842@example.com" ;
+    ex:department ex:legal .
+
+ex:emp00843 a ex:Employee ;
+    ex:name "Oscar Black" ;
+    ex:age "26"^^xsd:integer ;
+    ex:email "oscar.black.843@example.com" ;
+    ex:department ex:ops .
+
+ex:emp00844 a ex:Employee ;
+    ex:name "Quinn Young" ;
+    ex:age "62"^^xsd:integer ;
+    ex:email "quinn.young.844@example.com" ;
+    ex:department ex:support .
+
+ex:emp00845 a ex:Employee ;
+    ex:name "Ruth Clark" ;
+    ex:age "30"^^xsd:integer ;
+    ex:email "ruth.clark.845@example.com" ;
+    ex:department ex:hr .
+
+ex:emp00846 a ex:Employee ;
+    ex:name "Judy Wright" ;
+    ex:age "61"^^xsd:integer ;
+    ex:email "judy.wright.846@example.com" ;
+    ex:department ex:sales .
+
+ex:emp00847 a ex:Employee ;
+    ex:name "Frank Moore" ;
+    ex:age "52"^^xsd:integer ;
+    ex:email "frank.moore.847@example.com" ;
+    ex:department ex:legal .
+
+ex:emp00848 a ex:Employee ;
+    ex:name "Laura Taylor" ;
+    ex:age "48"^^xsd:integer ;
+    ex:email "laura.taylor.848@example.com" ;
+    ex:department ex:design .
+
+ex:emp00849 a ex:Employee ;
+    ex:name "Nina Taylor" ;
+    ex:age "36"^^xsd:integer ;
+    ex:email "nina.taylor.849@example.com" ;
+    ex:department ex:ops .
+
+ex:emp00850 a ex:Employee ;
+    ex:name "Quinn White" ;
+    ex:age "19"^^xsd:integer ;
+    ex:email "quinn-no-at-sign" ;
+    ex:department ex:ops .
+
+ex:emp00851 a ex:Employee ;
+    ex:name "Bob Clark" ;
+    ex:age "35"^^xsd:integer ;
+    ex:email "bob.clark.851@example.com" ;
+    ex:department ex:sales .
+
+ex:emp00852 a ex:Employee ;
+    ex:name "Ivan Black" ;
+    ex:age "21"^^xsd:integer ;
+    ex:email "ivan.black.852@example.com" ;
+    ex:department ex:finance .
+
+ex:emp00853 a ex:Employee ;
+    ex:name "Ruth Jones" ;
+    ex:age "40"^^xsd:integer ;
+    ex:email "ruth-no-at-sign" ;
+    ex:department ex:research .
+
+ex:emp00854 a ex:Employee ;
+    ex:name "Ruth Lewis" ;
+    ex:age "65"^^xsd:integer ;
+    ex:email "ruth.lewis.854@example.com" ;
+    ex:department ex:support .
+
+ex:emp00855 a ex:Employee ;
+    ex:name "Quinn Young" ;
+    ex:age "62"^^xsd:integer ;
+    ex:email "quinn.young.855@example.com" ;
+    ex:department ex:engineering .
+
+ex:emp00856 a ex:Employee ;
+    ex:name "Mike Baker" ;
+    ex:age "61"^^xsd:integer ;
+    ex:email "mike.baker.856@example.com" ;
+    ex:department ex:legal .
+
+ex:emp00857 a ex:Employee ;
+    ex:name "Bob Smith" ;
+    ex:age "65"^^xsd:integer ;
+    ex:email "bob.smith.857@example.com" ;
+    ex:department ex:finance .
+
+ex:emp00858 a ex:Employee ;
+    ex:name "Oscar Lewis" ;
+    ex:age "58"^^xsd:integer ;
+    ex:email "oscar.lewis.858@example.com" ;
+    ex:department ex:legal .
+
+ex:emp00859 a ex:Employee ;
+    ex:name "Ruth Clark" ;
+    ex:age "64"^^xsd:integer ;
+    ex:email "ruth.clark.859@example.com" ;
+    ex:department ex:hr .
+
+ex:emp00860 a ex:Employee ;
+    ex:name "Frank Brown" ;
+    ex:age "29"^^xsd:integer ;
+    ex:email "frank.brown.860@example.com" ;
+    ex:department ex:sales .
+
+ex:emp00861 a ex:Employee ;
+    ex:name "Dave Adams" ;
+    ex:age "20"^^xsd:integer ;
+    ex:email "dave.adams.861@example.com" ;
+    ex:department ex:ops .
+
+ex:emp00862 a ex:Employee ;
+    ex:name "Ivan Black" ;
+    ex:age "28"^^xsd:integer ;
+    ex:email "ivan.black.862@example.com" ;
+    ex:department ex:design .
+
+ex:emp00863 a ex:Employee ;
+    ex:age "47"^^xsd:integer ;
+    ex:email "alice.king.863@example.com" ;
+    ex:department ex:sales .
+
+ex:emp00864 a ex:Employee ;
+    ex:name "Karl Jones" ;
+    ex:age "58"^^xsd:integer ;
+    ex:email "karl.jones.864@example.com" ;
+    ex:department ex:design .
+
+ex:emp00865 a ex:Employee ;
+    ex:name "Judy Evans" ;
+    ex:age "54"^^xsd:integer ;
+    ex:email "judy.evans.865@example.com" ;
+    ex:department ex:support .
+
+ex:emp00866 a ex:Employee ;
+    ex:name "Karl Moore" ;
+    ex:age "32"^^xsd:integer ;
+    ex:email "karl.moore.866@example.com" ;
+    ex:department ex:sales .
+
+ex:emp00867 a ex:Employee ;
+    ex:name "Quinn Green" ;
+    ex:age "44"^^xsd:integer ;
+    ex:email "quinn.green.867@example.com" ;
+    ex:department ex:support .
+
+ex:emp00868 a ex:Employee ;
+    ex:name "Carol Wright" ;
+    ex:age "32"^^xsd:integer ;
+    ex:email "carol.wright.868@example.com" ;
+    ex:department ex:hr .
+
+ex:emp00869 a ex:Employee ;
+    ex:name "Karl Wright" ;
+    ex:age "36"^^xsd:integer ;
+    ex:email "karl.wright.869@example.com" ;
+    ex:department ex:hr .
+
+ex:emp00870 a ex:Employee ;
+    ex:name "Tina Moore" ;
+    ex:age "48"^^xsd:integer ;
+    ex:email "tina.moore.870@example.com" ;
+    ex:department ex:support .
+
+ex:emp00871 a ex:Employee ;
+    ex:name "Alice White" ;
+    ex:age "60"^^xsd:integer ;
+    ex:email "alice.white.871@example.com" ;
+    ex:department ex:legal .
+
+ex:emp00872 a ex:Employee ;
+    ex:name "Tina Lewis" ;
+    ex:age "20"^^xsd:integer ;
+    ex:email "tina.lewis.872@example.com" ;
+    ex:department ex:legal .
+
+ex:emp00873 a ex:Employee ;
+    ex:name "Dave Adams" ;
+    ex:age "34"^^xsd:integer ;
+    ex:email "dave.adams.873@example.com" ;
+    ex:department ex:support .
+
+ex:emp00874 a ex:Employee ;
+    ex:name "Alice Moore" ;
+    ex:age "41"^^xsd:integer ;
+    ex:email "alice.moore.874@example.com" ;
+    ex:department ex:support .
+
+ex:emp00875 a ex:Employee ;
+    ex:name "Oscar Evans" ;
+    ex:age "20"^^xsd:integer ;
+    ex:email "oscar.evans.875@example.com" ;
+    ex:department ex:finance .
+
+ex:emp00876 a ex:Employee ;
+    ex:name "Grace King" ;
+    ex:age "50"^^xsd:integer ;
+    ex:email "grace.king.876@example.com" ;
+    ex:department ex:marketing .
+
+ex:emp00877 a ex:Employee ;
+    ex:name "Frank Taylor" ;
+    ex:age "52"^^xsd:integer ;
+    ex:email "frank.taylor.877@example.com" ;
+    ex:department ex:engineering .
+
+ex:emp00878 a ex:Employee ;
+    ex:name "Grace Clark" ;
+    ex:age "61"^^xsd:integer ;
+    ex:email "grace.clark.878@example.com" ;
+    ex:department ex:ops .
+
+ex:emp00879 a ex:Employee ;
+    ex:name "Grace Taylor" ;
+    ex:age "62"^^xsd:integer ;
+    ex:email "grace.taylor.879@example.com" ;
+    ex:department ex:ops .
+
+ex:emp00880 a ex:Employee ;
+    ex:name "Carol Black" ;
+    ex:age "19"^^xsd:integer ;
+    ex:email "carol.black.880@example.com" ;
+    ex:department ex:research .
+
+ex:emp00881 a ex:Employee ;
+    ex:name "Bob Brown" ;
+    ex:age "22"^^xsd:integer ;
+    ex:email "bob.brown.881@example.com" ;
+    ex:department "engineering" .
+
+ex:emp00882 a ex:Employee ;
+    ex:name "Ivan Taylor" ;
+    ex:age "22"^^xsd:integer ;
+    ex:email "ivan.taylor.882@example.com" ;
+    ex:department ex:design .
+
+ex:emp00883 a ex:Employee ;
+    ex:name "Ivan Baker" ;
+    ex:age "42"^^xsd:integer ;
+    ex:email "ivan.baker.883@example.com" ;
+    ex:department ex:research .
+
+ex:emp00884 a ex:Employee ;
+    ex:name "Nina King" ;
+    ex:age "19"^^xsd:integer ;
+    ex:email "nina.king.884@example.com" ;
+    ex:department ex:ops .
+
+ex:emp00885 a ex:Employee ;
+    ex:name "Ruth Smith" ;
+    ex:age "10"^^xsd:integer ;
+    ex:email "ruth.smith.885@example.com" ;
+    ex:department ex:design .
+
+ex:emp00886 a ex:Employee ;
+    ex:name "Carol Wright" ;
+    ex:age "50"^^xsd:integer ;
+    ex:email "carol.wright.886@example.com" ;
+    ex:department ex:marketing .
+
+ex:emp00887 a ex:Employee ;
+    ex:name "Judy Brown" ;
+    ex:age "36"^^xsd:integer ;
+    ex:email "judy.brown.887@example.com" ;
+    ex:department ex:research .
+
+ex:emp00888 a ex:Employee ;
+    ex:name "Alice Evans" ;
+    ex:age "28"^^xsd:integer ;
+    ex:email "alice.evans.888@example.com" ;
+    ex:department ex:support .
+
+ex:emp00889 a ex:Employee ;
+    ex:name "Mike Taylor" ;
+    ex:age "36"^^xsd:integer ;
+    ex:email "mike.taylor.889@example.com" ;
+    ex:department ex:sales .
+
+ex:emp00890 a ex:Employee ;
+    ex:name "Laura Smith" ;
+    ex:age "53"^^xsd:integer ;
+    ex:email "laura-no-at-sign" ;
+    ex:department ex:support .
+
+ex:emp00891 a ex:Employee ;
+    ex:name "Bob Smith" ;
+    ex:age "54"^^xsd:integer ;
+    ex:email "bob.smith.891@example.com" ;
+    ex:department ex:design .
+
+ex:emp00892 a ex:Employee ;
+    ex:name "Ruth Brown" ;
+    ex:age "37"^^xsd:integer ;
+    ex:email "ruth.brown.892@example.com" ;
+    ex:department ex:hr .
+
+ex:emp00893 a ex:Employee ;
+    ex:name "Laura Clark" ;
+    ex:age "44"^^xsd:integer ;
+    ex:email "laura-no-at-sign" ;
+    ex:department ex:support .
+
+ex:emp00894 a ex:Employee ;
+    ex:name "Frank Lewis" ;
+    ex:age "57"^^xsd:integer ;
+    ex:email "frank.lewis.894@example.com" ;
+    ex:department "finance" .
+
+ex:emp00895 a ex:Employee ;
+    ex:name "Frank Jones" ;
+    ex:age "53"^^xsd:integer ;
+    ex:email "frank.jones.895@example.com" ;
+    ex:department ex:research .
+
+ex:emp00896 a ex:Employee ;
+    ex:name "Carol Young" ;
+    ex:age "60"^^xsd:integer ;
+    ex:email "carol.young.896@example.com" ;
+    ex:department ex:marketing .
+
+ex:emp00897 a ex:Employee ;
+    ex:name "Grace Evans" ;
+    ex:age "39"^^xsd:integer ;
+    ex:email "grace-no-at-sign" ;
+    ex:department ex:legal .
+
+ex:emp00898 a ex:Employee ;
+    ex:name "Heidi White" ;
+    ex:age "13"^^xsd:integer ;
+    ex:email "heidi.white.898@example.com" ;
+    ex:department ex:design .
+
+ex:emp00899 a ex:Employee ;
+    ex:name "Karl Evans" ;
+    ex:age "46"^^xsd:integer ;
+    ex:email "karl.evans.899@example.com" ;
+    ex:department ex:legal .
+
+ex:emp00900 a ex:Employee ;
+    ex:name "Judy Black" ;
+    ex:age "54"^^xsd:integer ;
+    ex:email "judy.black.900@example.com" ;
+    ex:department ex:design .
+
+ex:emp00901 a ex:Employee ;
+    ex:name "Karl Baker" ;
+    ex:age "28"^^xsd:integer ;
+    ex:email "karl.baker.901@example.com" ;
+    ex:department ex:engineering .
+
+ex:emp00902 a ex:Employee ;
+    ex:name "Heidi Baker" ;
+    ex:age "35"^^xsd:integer ;
+    ex:email "heidi-no-at-sign" ;
+    ex:department ex:legal .
+
+ex:emp00903 a ex:Employee ;
+    ex:name "Karl Evans" ;
+    ex:age "47"^^xsd:integer ;
+    ex:email "karl.evans.903@example.com" ;
+    ex:department ex:research .
+
+ex:emp00904 a ex:Employee ;
+    ex:name "Judy Evans" ;
+    ex:age "53"^^xsd:integer ;
+    ex:email "judy.evans.904@example.com" ;
+    ex:department "marketing" .
+
+ex:emp00905 a ex:Employee ;
+    ex:name "Tina Brown" ;
+    ex:age "35"^^xsd:integer ;
+    ex:email "tina.brown.905@example.com" ;
+    ex:department ex:sales .
+
+ex:emp00906 a ex:Employee ;
+    ex:name "Grace Hall" ;
+    ex:age "64"^^xsd:integer ;
+    ex:email "grace.hall.906@example.com" ;
+    ex:department ex:marketing .
+
+ex:emp00907 a ex:Employee ;
+    ex:name "Alice Moore" ;
+    ex:age "58"^^xsd:integer ;
+    ex:email "alice.moore.907@example.com" ;
+    ex:department ex:engineering .
+
+ex:emp00908 a ex:Employee ;
+    ex:name "Steve Adams" ;
+    ex:age "55"^^xsd:integer ;
+    ex:email "steve.adams.908@example.com" ;
+    ex:department ex:hr .
+
+ex:emp00909 a ex:Employee ;
+    ex:name "Ruth Hall" ;
+    ex:age "52"^^xsd:integer ;
+    ex:email "ruth.hall.909@example.com" ;
+    ex:department ex:support .
+
+ex:emp00910 a ex:Employee ;
+    ex:name "Eve Wright" ;
+    ex:age "43"^^xsd:integer ;
+    ex:email "eve.wright.910@example.com" ;
+    ex:department ex:hr .
+
+ex:emp00911 a ex:Employee ;
+    ex:name "Steve Young" ;
+    ex:age "26"^^xsd:integer ;
+    ex:email "steve.young.911@example.com" ;
+    ex:department ex:research .
+
+ex:emp00912 a ex:Employee ;
+    ex:age "41"^^xsd:integer ;
+    ex:email "carol.adams.912@example.com" ;
+    ex:department ex:support .
+
+ex:emp00913 a ex:Employee ;
+    ex:name "Heidi Green" ;
+    ex:age "50"^^xsd:integer ;
+    ex:email "heidi.green.913@example.com" ;
+    ex:department ex:sales .
+
+ex:emp00914 a ex:Employee ;
+    ex:name "Frank Black" ;
+    ex:age "65"^^xsd:integer ;
+    ex:email "frank.black.914@example.com" ;
+    ex:department ex:research .
+
+ex:emp00915 a ex:Employee ;
+    ex:name "Bob Lewis" ;
+    ex:age "15"^^xsd:integer ;
+    ex:email "bob.lewis.915@example.com" ;
+    ex:department ex:hr .
+
+ex:emp00916 a ex:Employee ;
+    ex:name "Heidi Jones" ;
+    ex:age "60"^^xsd:integer ;
+    ex:email "heidi.jones.916@example.com" ;
+    ex:department ex:hr .
+
+ex:emp00917 a ex:Employee ;
+    ex:name "Laura Adams" ;
+    ex:age "48"^^xsd:integer ;
+    ex:email "laura.adams.917@example.com" ;
+    ex:department ex:research .
+
+ex:emp00918 a ex:Employee ;
+    ex:name "Bob King" ;
+    ex:age "24"^^xsd:integer ;
+    ex:email "bob.king.918@example.com" ;
+    ex:department ex:support .
+
+ex:emp00919 a ex:Employee ;
+    ex:name "Ivan Hall" ;
+    ex:age "55"^^xsd:integer ;
+    ex:email "ivan.hall.919@example.com" ;
+    ex:department ex:support .
+
+ex:emp00920 a ex:Employee ;
+    ex:name "Mike Adams" ;
+    ex:age "41"^^xsd:integer ;
+    ex:email "mike.adams.920@example.com" ;
+    ex:department ex:design .
+
+ex:emp00921 a ex:Employee ;
+    ex:name "Carol Moore" ;
+    ex:age "34"^^xsd:integer ;
+    ex:email "carol.moore.921@example.com" ;
+    ex:department ex:ops .
+
+ex:emp00922 a ex:Employee ;
+    ex:name "Heidi Moore" ;
+    ex:age "43"^^xsd:integer ;
+    ex:email "heidi.moore.922@example.com" ;
+    ex:department ex:legal .
+
+ex:emp00923 a ex:Employee ;
+    ex:age "48"^^xsd:integer ;
+    ex:email "laura.evans.923@example.com" ;
+    ex:department ex:design .
+
+ex:emp00924 a ex:Employee ;
+    ex:name "Eve Davis" ;
+    ex:age "14"^^xsd:integer ;
+    ex:email "eve.davis.924@example.com" ;
+    ex:department ex:hr .
+
+ex:emp00925 a ex:Employee ;
+    ex:name "Grace Black" ;
+    ex:age "29"^^xsd:integer ;
+    ex:email "grace.black.925@example.com" ;
+    ex:department ex:sales .
+
+ex:emp00926 a ex:Employee ;
+    ex:name "Dave Lewis" ;
+    ex:age "44"^^xsd:integer ;
+    ex:email "dave.lewis.926@example.com" ;
+    ex:department ex:legal .
+
+ex:emp00927 a ex:Employee ;
+    ex:name "Pam Evans" ;
+    ex:age "48"^^xsd:integer ;
+    ex:email "pam.evans.927@example.com" ;
+    ex:department ex:hr .
+
+ex:emp00928 a ex:Employee ;
+    ex:name "Nina Smith" ;
+    ex:age "33"^^xsd:integer ;
+    ex:email "nina-no-at-sign" ;
+    ex:department ex:engineering .
+
+ex:emp00929 a ex:Employee ;
+    ex:age "26"^^xsd:integer ;
+    ex:email "steve.green.929@example.com" ;
+    ex:department ex:support .
+
+ex:emp00930 a ex:Employee ;
+    ex:name "Steve Black" ;
+    ex:age "21"^^xsd:integer ;
+    ex:email "steve.black.930@example.com" ;
+    ex:department ex:sales .
+
+ex:emp00931 a ex:Employee ;
+    ex:name "Frank Moore" ;
+    ex:age "43"^^xsd:integer ;
+    ex:email "frank.moore.931@example.com" ;
+    ex:department ex:design .
+
+ex:emp00932 a ex:Employee ;
+    ex:name "Alice Young" ;
+    ex:age "23"^^xsd:integer ;
+    ex:email "alice.young.932@example.com" ;
+    ex:department ex:hr .
+
+ex:emp00933 a ex:Employee ;
+    ex:name "Pam Evans" ;
+    ex:age "28"^^xsd:integer ;
+    ex:email "pam.evans.933@example.com" ;
+    ex:department ex:hr .
+
+ex:emp00934 a ex:Employee ;
+    ex:name "Tina Black" ;
+    ex:age "55"^^xsd:integer ;
+    ex:email "tina.black.934@example.com" ;
+    ex:department ex:sales .
+
+ex:emp00935 a ex:Employee ;
+    ex:name "Quinn Hall" ;
+    ex:age "28"^^xsd:integer ;
+    ex:email "quinn.hall.935@example.com" ;
+    ex:department ex:legal .
+
+ex:emp00936 a ex:Employee ;
+    ex:name "Tina Brown" ;
+    ex:age "32"^^xsd:integer ;
+    ex:email "tina.brown.936@example.com" ;
+    ex:department ex:ops .
+
+ex:emp00937 a ex:Employee ;
+    ex:name "Dave Smith" ;
+    ex:age "30"^^xsd:integer ;
+    ex:email "dave.smith.937@example.com" ;
+    ex:department ex:support .
+
+ex:emp00938 a ex:Employee ;
+    ex:name "Quinn Baker" ;
+    ex:age "17"^^xsd:integer ;
+    ex:email "quinn.baker.938@example.com" ;
+    ex:department ex:design .
+
+ex:emp00939 a ex:Employee ;
+    ex:name "Tina Jones" ;
+    ex:age "52"^^xsd:integer ;
+    ex:email "tina.jones.939@example.com" ;
+    ex:department ex:support .
+
+ex:emp00940 a ex:Employee ;
+    ex:name "Carol Evans" ;
+    ex:age "60"^^xsd:integer ;
+    ex:email "carol.evans.940@example.com" ;
+    ex:department ex:sales .
+
+ex:emp00941 a ex:Employee ;
+    ex:name "Ruth Smith" ;
+    ex:age "61"^^xsd:integer ;
+    ex:email "ruth.smith.941@example.com" ;
+    ex:department ex:ops .
+
+ex:emp00942 a ex:Employee ;
+    ex:name "Laura Jones" ;
+    ex:age "62"^^xsd:integer ;
+    ex:email "laura.jones.942@example.com" ;
+    ex:department ex:support .
+
+ex:emp00943 a ex:Employee ;
+    ex:name "Pam Adams" ;
+    ex:age "40"^^xsd:integer ;
+    ex:email "pam.adams.943@example.com" ;
+    ex:department ex:design .
+
+ex:emp00944 a ex:Employee ;
+    ex:name "Steve White" ;
+    ex:age "45"^^xsd:integer ;
+    ex:email "steve.white.944@example.com" ;
+    ex:department ex:sales .
+
+ex:emp00945 a ex:Employee ;
+    ex:name "Heidi Brown" ;
+    ex:age "36"^^xsd:integer ;
+    ex:email "heidi.brown.945@example.com" ;
+    ex:department ex:design .
+
+ex:emp00946 a ex:Employee ;
+    ex:name "Nina Hall" ;
+    ex:age "30"^^xsd:integer ;
+    ex:email "nina.hall.946@example.com" ;
+    ex:department ex:engineering .
+
+ex:emp00947 a ex:Employee ;
+    ex:age "25"^^xsd:integer ;
+    ex:email "alice.moore.947@example.com" ;
+    ex:department ex:support .
+
+ex:emp00948 a ex:Employee ;
+    ex:name "Grace King" ;
+    ex:age "44"^^xsd:integer ;
+    ex:email "grace-no-at-sign" ;
+    ex:department ex:legal .
+
+ex:emp00949 a ex:Employee ;
+    ex:name "Nina Hall" ;
+    ex:age "34"^^xsd:integer ;
+    ex:email "nina.hall.949@example.com" ;
+    ex:department ex:support .
+
+ex:emp00950 a ex:Employee ;
+    ex:name "Laura Hall" ;
+    ex:age "61"^^xsd:integer ;
+    ex:email "laura.hall.950@example.com" ;
+    ex:department ex:ops .
+
+ex:emp00951 a ex:Employee ;
+    ex:name "Nina Taylor" ;
+    ex:age "53"^^xsd:integer ;
+    ex:email "nina.taylor.951@example.com" ;
+    ex:department "research" .
+
+ex:emp00952 a ex:Employee ;
+    ex:name "Ruth Taylor" ;
+    ex:age "48"^^xsd:integer ;
+    ex:email "ruth.taylor.952@example.com" ;
+    ex:department ex:finance .
+
+ex:emp00953 a ex:Employee ;
+    ex:name "Steve Wright" ;
+    ex:age "63"^^xsd:integer ;
+    ex:email "steve.wright.953@example.com" ;
+    ex:department ex:ops .
+
+ex:emp00954 a ex:Employee ;
+    ex:name "Dave Lewis" ;
+    ex:age "46"^^xsd:integer ;
+    ex:email "dave-no-at-sign" ;
+    ex:department ex:sales .
+
+ex:emp00955 a ex:Employee ;
+    ex:name "Quinn Adams" ;
+    ex:age "39"^^xsd:integer ;
+    ex:email "quinn.adams.955@example.com" ;
+    ex:department ex:support .
+
+ex:emp00956 a ex:Employee ;
+    ex:name "Bob Green" ;
+    ex:age "42"^^xsd:integer ;
+    ex:email "bob.green.956@example.com" ;
+    ex:department ex:engineering .
+
+ex:emp00957 a ex:Employee ;
+    ex:name "Eve Evans" ;
+    ex:age "14"^^xsd:integer ;
+    ex:email "eve.evans.957@example.com" ;
+    ex:department ex:ops .
+
+ex:emp00958 a ex:Employee ;
+    ex:age "23"^^xsd:integer ;
+    ex:email "heidi.wright.958@example.com" ;
+    ex:department ex:design .
+
+ex:emp00959 a ex:Employee ;
+    ex:name "Mike Adams" ;
+    ex:age "57"^^xsd:integer ;
+    ex:email "mike.adams.959@example.com" ;
+    ex:department ex:support .
+
+ex:emp00960 a ex:Employee ;
+    ex:name "Tina Jones" ;
+    ex:age "29"^^xsd:integer ;
+    ex:email "tina.jones.960@example.com" ;
+    ex:department ex:research .
+
+ex:emp00961 a ex:Employee ;
+    ex:age "36"^^xsd:integer ;
+    ex:email "grace.moore.961@example.com" ;
+    ex:department ex:hr .
+
+ex:emp00962 a ex:Employee ;
+    ex:name "Tina Moore" ;
+    ex:age "51"^^xsd:integer ;
+    ex:email "tina.moore.962@example.com" ;
+    ex:department ex:hr .
+
+ex:emp00963 a ex:Employee ;
+    ex:name "Bob Wright" ;
+    ex:age "33"^^xsd:integer ;
+    ex:email "bob.wright.963@example.com" ;
+    ex:department ex:engineering .
+
+ex:emp00964 a ex:Employee ;
+    ex:name "Carol Hall" ;
+    ex:age "43"^^xsd:integer ;
+    ex:email "carol.hall.964@example.com" ;
+    ex:department ex:legal .
+
+ex:emp00965 a ex:Employee ;
+    ex:name "Mike Clark" ;
+    ex:age "51"^^xsd:integer ;
+    ex:email "mike.clark.965@example.com" ;
+    ex:department ex:engineering .
+
+ex:emp00966 a ex:Employee ;
+    ex:name "Carol Brown" ;
+    ex:age "53"^^xsd:integer ;
+    ex:email "carol.brown.966@example.com" ;
+    ex:department ex:finance .
+
+ex:emp00967 a ex:Employee ;
+    ex:name "Ruth Wright" ;
+    ex:age "40"^^xsd:integer ;
+    ex:email "ruth.wright.967@example.com" ;
+    ex:department ex:finance .
+
+ex:emp00968 a ex:Employee ;
+    ex:age "43"^^xsd:integer ;
+    ex:email "grace.davis.968@example.com" ;
+    ex:department ex:design .
+
+ex:emp00969 a ex:Employee ;
+    ex:name "Frank Baker" ;
+    ex:age "50"^^xsd:integer ;
+    ex:email "frank.baker.969@example.com" ;
+    ex:department ex:marketing .
+
+ex:emp00970 a ex:Employee ;
+    ex:name "Quinn Young" ;
+    ex:age "39"^^xsd:integer ;
+    ex:email "quinn.young.970@example.com" ;
+    ex:department ex:marketing .
+
+ex:emp00971 a ex:Employee ;
+    ex:name "Ivan Taylor" ;
+    ex:age "54"^^xsd:integer ;
+    ex:email "ivan.taylor.971@example.com" ;
+    ex:department ex:finance .
+
+ex:emp00972 a ex:Employee ;
+    ex:name "Mike Evans" ;
+    ex:age "33"^^xsd:integer ;
+    ex:email "mike.evans.972@example.com" ;
+    ex:department ex:legal .
+
+ex:emp00973 a ex:Employee ;
+    ex:name "Oscar Davis" ;
+    ex:age "55"^^xsd:integer ;
+    ex:email "oscar.davis.973@example.com" ;
+    ex:department ex:engineering .
+
+ex:emp00974 a ex:Employee ;
+    ex:name "Ivan Brown" ;
+    ex:age "42"^^xsd:integer ;
+    ex:email "ivan.brown.974@example.com" ;
+    ex:department ex:hr .
+
+ex:emp00975 a ex:Employee ;
+    ex:name "Heidi King" ;
+    ex:age "44"^^xsd:integer ;
+    ex:email "heidi.king.975@example.com" ;
+    ex:department ex:legal .
+
+ex:emp00976 a ex:Employee ;
+    ex:name "Alice Hall" ;
+    ex:age "15"^^xsd:integer ;
+    ex:email "alice.hall.976@example.com" ;
+    ex:department ex:finance .
+
+ex:emp00977 a ex:Employee ;
+    ex:name "Carol Taylor" ;
+    ex:age "29"^^xsd:integer ;
+    ex:email "carol.taylor.977@example.com" ;
+    ex:department ex:research .
+
+ex:emp00978 a ex:Employee ;
+    ex:name "Grace Hall" ;
+    ex:age "29"^^xsd:integer ;
+    ex:email "grace.hall.978@example.com" ;
+    ex:department ex:hr .
+
+ex:emp00979 a ex:Employee ;
+    ex:name "Grace Lewis" ;
+    ex:age "65"^^xsd:integer ;
+    ex:email "grace.lewis.979@example.com" ;
+    ex:department ex:hr .
+
+ex:emp00980 a ex:Employee ;
+    ex:name "Grace Lewis" ;
+    ex:age "30"^^xsd:integer ;
+    ex:email "grace.lewis.980@example.com" ;
+    ex:department ex:hr .
+
+ex:emp00981 a ex:Employee ;
+    ex:name "Laura Black" ;
+    ex:age "24"^^xsd:integer ;
+    ex:email "laura.black.981@example.com" ;
+    ex:department ex:marketing .
+
+ex:emp00982 a ex:Employee ;
+    ex:name "Pam Smith" ;
+    ex:age "52"^^xsd:integer ;
+    ex:email "pam.smith.982@example.com" ;
+    ex:department ex:engineering .
+
+ex:emp00983 a ex:Employee ;
+    ex:name "Laura King" ;
+    ex:age "49"^^xsd:integer ;
+    ex:email "laura.king.983@example.com" ;
+    ex:department ex:design .
+
+ex:emp00984 a ex:Employee ;
+    ex:name "Pam Green" ;
+    ex:age "50"^^xsd:integer ;
+    ex:email "pam.green.984@example.com" ;
+    ex:department ex:finance .
+
+ex:emp00985 a ex:Employee ;
+    ex:name "Steve Black" ;
+    ex:age "21"^^xsd:integer ;
+    ex:email "steve.black.985@example.com" ;
+    ex:department ex:support .
+
+ex:emp00986 a ex:Employee ;
+    ex:name "Pam Taylor" ;
+    ex:age "20"^^xsd:integer ;
+    ex:email "pam.taylor.986@example.com" ;
+    ex:department ex:support .
+
+ex:emp00987 a ex:Employee ;
+    ex:name "Frank Davis" ;
+    ex:age "25"^^xsd:integer ;
+    ex:email "frank.davis.987@example.com" ;
+    ex:department ex:support .
+
+ex:emp00988 a ex:Employee ;
+    ex:name "Alice Smith" ;
+    ex:age "61"^^xsd:integer ;
+    ex:email "alice.smith.988@example.com" ;
+    ex:department ex:hr .
+
+ex:emp00989 a ex:Employee ;
+    ex:name "Dave King" ;
+    ex:age "41"^^xsd:integer ;
+    ex:email "dave.king.989@example.com" ;
+    ex:department ex:design .
+
+ex:emp00990 a ex:Employee ;
+    ex:name "Frank Taylor" ;
+    ex:age "34"^^xsd:integer ;
+    ex:email "frank.taylor.990@example.com" ;
+    ex:department ex:hr .
+
+ex:emp00991 a ex:Employee ;
+    ex:name "Tina King" ;
+    ex:age "41"^^xsd:integer ;
+    ex:email "tina.king.991@example.com" ;
+    ex:department ex:sales .
+
+ex:emp00992 a ex:Employee ;
+    ex:name "Grace Baker" ;
+    ex:age "62"^^xsd:integer ;
+    ex:email "grace.baker.992@example.com" ;
+    ex:department ex:legal .
+
+ex:emp00993 a ex:Employee ;
+    ex:name "Mike Hall" ;
+    ex:age "46"^^xsd:integer ;
+    ex:email "mike.hall.993@example.com" ;
+    ex:department ex:sales .
+
+ex:emp00994 a ex:Employee ;
+    ex:name "Steve Lewis" ;
+    ex:age "24"^^xsd:integer ;
+    ex:email "steve.lewis.994@example.com" ;
+    ex:department ex:finance .
+
+ex:emp00995 a ex:Employee ;
+    ex:name "Ruth Baker" ;
+    ex:age "42"^^xsd:integer ;
+    ex:email "ruth-no-at-sign" ;
+    ex:department ex:hr .
+
+ex:emp00996 a ex:Employee ;
+    ex:name "Eve Evans" ;
+    ex:age "18"^^xsd:integer ;
+    ex:email "eve.evans.996@example.com" ;
+    ex:department ex:sales .
+
+ex:emp00997 a ex:Employee ;
+    ex:name "Eve Moore" ;
+    ex:age "52"^^xsd:integer ;
+    ex:email "eve.moore.997@example.com" ;
+    ex:department ex:legal .
+
+ex:emp00998 a ex:Employee ;
+    ex:age "53"^^xsd:integer ;
+    ex:email "judy.hall.998@example.com" ;
+    ex:department ex:design .
+
+ex:emp00999 a ex:Employee ;
+    ex:name "Dave Green" ;
+    ex:age "21"^^xsd:integer ;
+    ex:email "dave.green.999@example.com" ;
+    ex:department ex:hr .
+

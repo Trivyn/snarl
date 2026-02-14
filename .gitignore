@@ -7,3 +7,5 @@ cli/tests/w3c/path/
 cli/tests/w3c/misc/
 cli/tests/w3c/complex/
 cli/tests/w3c/validation-reports/
+.venv/
+__pycache__
