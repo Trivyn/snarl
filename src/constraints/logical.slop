@@ -40,7 +40,8 @@
     (@alloc arena)
     (@example (arena (make-iri arena EX_FOCUS) true (none) (make-iri arena EX_SHAPE) severity-violation (none)) -> (some (ValidationResult _ _ _ _ _ _ _)))
     (@example (arena (make-iri arena EX_FOCUS) false (none) (make-iri arena EX_SHAPE) severity-violation (none)) -> (none))
-    ;; Postcondition: ($result == (none)) iff (not conforms-to-ref)
+    (@post {(== (== $result (none)) (not conforms-to-ref))})
+    (@property correctness (== (== $result (none)) (not conforms-to-ref)))
     (if conforms-to-ref
       (some (record-new ValidationResult
         (focus-node focus-node) (result-path path) (value (none))
@@ -62,7 +63,8 @@
     (@alloc arena)
     (@example (arena (make-iri arena EX_FOCUS) true (none) (make-iri arena EX_SHAPE) severity-violation (none)) -> (none))
     (@example (arena (make-iri arena EX_FOCUS) false (none) (make-iri arena EX_SHAPE) severity-violation (none)) -> (some (ValidationResult _ _ _ _ _ _ _)))
-    ;; Postcondition: ($result == (none)) iff all-pass
+    (@post {(== (== $result (none)) all-pass)})
+    (@property correctness (== (== $result (none)) all-pass))
     (if all-pass
       (none)
       (some (record-new ValidationResult
@@ -84,7 +86,8 @@
     (@alloc arena)
     (@example (arena (make-iri arena EX_FOCUS) true (none) (make-iri arena EX_SHAPE) severity-violation (none)) -> (none))
     (@example (arena (make-iri arena EX_FOCUS) false (none) (make-iri arena EX_SHAPE) severity-violation (none)) -> (some (ValidationResult _ _ _ _ _ _ _)))
-    ;; Postcondition: ($result == (none)) iff any-pass
+    (@post {(== (== $result (none)) any-pass)})
+    (@property correctness (== (== $result (none)) any-pass))
     (if any-pass
       (none)
       (some (record-new ValidationResult
@@ -107,7 +110,8 @@
     (@example (arena (make-iri arena EX_FOCUS) 1 (none) (make-iri arena EX_SHAPE) severity-violation (none)) -> (none))
     (@example (arena (make-iri arena EX_FOCUS) 0 (none) (make-iri arena EX_SHAPE) severity-violation (none)) -> (some (ValidationResult _ _ _ _ _ _ _)))
     (@example (arena (make-iri arena EX_FOCUS) 2 (none) (make-iri arena EX_SHAPE) severity-violation (none)) -> (some (ValidationResult _ _ _ _ _ _ _)))
-    ;; Postcondition: ($result == (none)) iff (== pass-count 1)
+    (@post {(== (== $result (none)) (== pass-count 1))})
+    (@property correctness (== (== $result (none)) (== pass-count 1)))
     (if (== pass-count 1)
       (none)
       (some (record-new ValidationResult

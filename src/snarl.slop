@@ -71,7 +71,7 @@
     (@pre {(indexed-graph-size data-graph) >= 0})
     (@pre {(indexed-graph-size shapes-graph) >= 0})
     (@post (match $result
-             ((validate-success report) true)
+             ((validate-success report) (>= (list-len (. report results)) 0))
              ((validate-error _) true)))
     (@example (arena (indexed-graph-create arena) (indexed-graph-create arena))
       ;; Returns (validate-success report) for empty graphs
@@ -116,6 +116,7 @@
     (@spec ((Arena ValidationReport) -> (List ValidationResult)))
     (@alloc arena)
     (@post {(list-len $result) >= 0})
+    (@post {(list-len $result) <= (list-len (. report results))})
     (@example (arena (make-validation-report arena))
       ;; Returns empty list for conforming report
       )
@@ -132,6 +133,7 @@
     (@spec ((Arena ValidationReport) -> (List ValidationResult)))
     (@alloc arena)
     (@post {(list-len $result) >= 0})
+    (@post {(list-len $result) <= (list-len (. report results))})
     (@example (arena (make-validation-report arena))
       ;; Returns empty list for conforming report
       )

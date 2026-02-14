@@ -78,12 +78,12 @@ main_CliArgs main_parse_args(slop_arena* arena, int64_t argc, uint8_t** argv) {
                     if (((i + 1) < argc)) {
                         {
                             __auto_type val_str = main_argv_to_string(argv, (i + 1));
-                            __auto_type _mv_251 = strlib_parse_int(val_str);
-                            if (_mv_251.is_ok) {
-                                __auto_type n = _mv_251.data.ok;
+                            __auto_type _mv_252 = strlib_parse_int(val_str);
+                            if (_mv_252.is_ok) {
+                                __auto_type n = _mv_252.data.ok;
                                 max_errors = n;
-                            } else if (!_mv_251.is_ok) {
-                                __auto_type _ = _mv_251.data.err;
+                            } else if (!_mv_252.is_ok) {
+                                __auto_type _ = _mv_252.data.err;
                                 printf("%s\n", "Error: --max-errors requires a number");
                             }
                         }
@@ -135,16 +135,16 @@ void main_print_usage(void) {
 }
 
 slop_option_index_IndexedGraph main_load_graph(slop_arena* arena, slop_string path, uint8_t quiet) {
-    __auto_type _mv_252 = ttl_parse_ttl_file(arena, path);
-    if (!_mv_252.is_ok) {
-        __auto_type e = _mv_252.data.err;
+    __auto_type _mv_253 = ttl_parse_ttl_file(arena, path);
+    if (!_mv_253.is_ok) {
+        __auto_type e = _mv_253.data.err;
         printf("%s", "Error: failed to parse ");
         printf("%.*s\n", (int)(path).len, (path).data);
-        __auto_type _mv_253 = e;
-        switch (_mv_253.tag) {
+        __auto_type _mv_254 = e;
+        switch (_mv_254.tag) {
             case ttl_TtlFileError_parse_error:
             {
-                __auto_type pe = _mv_253.data.parse_error;
+                __auto_type pe = _mv_254.data.parse_error;
                 printf("%s", "  at line ");
                 printf("%.*s", (int)(int_to_string(arena, pe.position.line)).len, (int_to_string(arena, pe.position.line)).data);
                 printf("%s", ", column ");
@@ -155,14 +155,14 @@ slop_option_index_IndexedGraph main_load_graph(slop_arena* arena, slop_string pa
             }
             case ttl_TtlFileError_file_error:
             {
-                __auto_type _ = _mv_253.data.file_error;
+                __auto_type _ = _mv_254.data.file_error;
                 printf("%s\n", "  (file not found or unreadable)");
                 break;
             }
         }
         return (slop_option_index_IndexedGraph){.has_value = false};
-    } else if (_mv_252.is_ok) {
-        __auto_type g = _mv_252.data.ok;
+    } else if (_mv_253.is_ok) {
+        __auto_type g = _mv_253.data.ok;
         {
             __auto_type ig = rdf_indexed_graph_create(arena);
             {
@@ -200,16 +200,16 @@ int main(int argc, char** _c_argv) {
                 printf("snarl %s\n", SNARL_VERSION);
                 return 0;
             } else {
-                __auto_type _mv_254 = args.data_file;
-                if (!_mv_254.has_value) {
+                __auto_type _mv_255 = args.data_file;
+                if (!_mv_255.has_value) {
                     main_print_usage();
                     if (args.show_help) {
                         return 0;
                     } else {
                         return 1;
                     }
-                } else if (_mv_254.has_value) {
-                    __auto_type data_path = _mv_254.value;
+                } else if (_mv_255.has_value) {
+                    __auto_type data_path = _mv_255.value;
                     if (args.show_help) {
                         main_print_usage();
                         return 0;
@@ -217,29 +217,29 @@ int main(int argc, char** _c_argv) {
                         {
                             __auto_type quiet = args.quiet;
                             __auto_type parse_start = slop_now_ms();
-                            __auto_type _mv_255 = main_load_graph(arena, data_path, quiet);
-                            if (!_mv_255.has_value) {
+                            __auto_type _mv_256 = main_load_graph(arena, data_path, quiet);
+                            if (!_mv_256.has_value) {
                                 return 2;
-                            } else if (_mv_255.has_value) {
-                                __auto_type data_graph = _mv_255.value;
+                            } else if (_mv_256.has_value) {
+                                __auto_type data_graph = _mv_256.value;
                                 {
                                     __auto_type shapes_path = ({ __auto_type _mv = args.shapes_file; _mv.has_value ? ({ __auto_type sp = _mv.value; sp; }) : (data_path); });
                                     {
                                         __auto_type shapes_result = ((string_eq(shapes_path, data_path)) ? (slop_option_index_IndexedGraph){.has_value = 1, .value = data_graph} : main_load_graph(arena, shapes_path, quiet));
-                                        __auto_type _mv_256 = shapes_result;
-                                        if (!_mv_256.has_value) {
+                                        __auto_type _mv_257 = shapes_result;
+                                        if (!_mv_257.has_value) {
                                             return 2;
-                                        } else if (_mv_256.has_value) {
-                                            __auto_type shapes_graph = _mv_256.value;
+                                        } else if (_mv_257.has_value) {
+                                            __auto_type shapes_graph = _mv_257.value;
                                             {
                                                 __auto_type parse_elapsed = (slop_now_ms() - parse_start);
                                                 __auto_type validate_start = slop_now_ms();
                                                 __auto_type config = ((types_ValidatorConfig){.verbose = !(quiet), .max_errors = args.max_errors, .include_warnings = !(args.no_warnings), .include_infos = !(args.no_infos)});
-                                                __auto_type _mv_257 = snarl_validate_with_config(arena, data_graph, shapes_graph, config);
-                                                switch (_mv_257.tag) {
+                                                __auto_type _mv_258 = snarl_validate_with_config(arena, data_graph, shapes_graph, config);
+                                                switch (_mv_258.tag) {
                                                     case types_ValidatorResult_validate_success:
                                                     {
-                                                        __auto_type report = _mv_257.data.validate_success;
+                                                        __auto_type report = _mv_258.data.validate_success;
                                                         {
                                                             __auto_type validate_elapsed = (slop_now_ms() - validate_start);
                                                             __auto_type violations = snarl_get_violations(arena, report);
@@ -258,14 +258,14 @@ int main(int argc, char** _c_argv) {
                                                                 main_print_elapsed(arena, validate_elapsed);
                                                                 printf("%s\n", "");
                                                             }
-                                                            __auto_type _mv_258 = args.emit_file;
-                                                            if (_mv_258.has_value) {
-                                                                __auto_type emit_path = _mv_258.value;
+                                                            __auto_type _mv_259 = args.emit_file;
+                                                            if (_mv_259.has_value) {
+                                                                __auto_type emit_path = _mv_259.value;
                                                                 if (!(quiet)) {
                                                                     printf("%s", "Report written to ");
                                                                     printf("%.*s\n", (int)(emit_path).len, (emit_path).data);
                                                                 }
-                                                            } else if (!_mv_258.has_value) {
+                                                            } else if (!_mv_259.has_value) {
                                                             }
                                                             if (report.conforms) {
                                                                 return 0;
@@ -276,7 +276,7 @@ int main(int argc, char** _c_argv) {
                                                     }
                                                     case types_ValidatorResult_validate_error:
                                                     {
-                                                        __auto_type msg = _mv_257.data.validate_error;
+                                                        __auto_type msg = _mv_258.data.validate_error;
                                                         printf("%s", "Error: ");
                                                         printf("%.*s\n", (int)(msg).len, (msg).data);
                                                         return 2;

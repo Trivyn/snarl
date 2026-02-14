@@ -38,7 +38,8 @@
     (@alloc arena)
     (@example (arena (make-iri arena EX_FOCUS) (make-iri arena EX_VALUE) true (none) (make-iri arena EX_SHAPE) severity-violation (none)) -> (none))
     (@example (arena (make-iri arena EX_FOCUS) (make-iri arena EX_VALUE) false (none) (make-iri arena EX_SHAPE) severity-violation (none)) -> (some (ValidationResult _ _ _ _ _ _ _)))
-    ;; Postcondition: ($result == (none)) iff value-conforms
+    (@post {(== (== $result (none)) value-conforms)})
+    (@property correctness (== (== $result (none)) value-conforms))
     (if value-conforms
       (none)
       (some (record-new ValidationResult
@@ -61,6 +62,8 @@
     (@alloc arena)
     (@pre {conforming-count >= 0})
     (@pre {q-min >= 0})
+    (@post {(list-len $result) >= 0})
+    (@post {(list-len $result) <= 2})
     (@example
       ;; conforming-count=3 >= q-min=2, <= q-max=5 → no violations
       (arena (make-iri arena EX_FOCUS) 3 2 (some 5) (none) (make-iri arena EX_SHAPE) severity-violation (none))

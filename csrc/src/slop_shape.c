@@ -9,16 +9,20 @@ slop_option_types_ValidationResult snarl_check_node(slop_arena* arena, rdf_Term 
 slop_list_types_ValidationResult snarl_check_qualified_value_shape(slop_arena* arena, rdf_Term focus_node, int64_t conforming_count, int64_t q_min, slop_option_int q_max, slop_option_types_ShaclPath path, rdf_Term shape_id, types_Severity severity, slop_option_string message);
 
 slop_option_types_ValidationResult snarl_check_node(slop_arena* arena, rdf_Term focus_node, rdf_Term value_node, uint8_t value_conforms, slop_option_types_ShaclPath path, rdf_Term shape_id, types_Severity severity, slop_option_string message) {
+    slop_option_types_ValidationResult _retval = {0};
     if (value_conforms) {
         return (slop_option_types_ValidationResult){.has_value = false};
     } else {
         return (slop_option_types_ValidationResult){.has_value = 1, .value = ((types_ValidationResult){.focus_node = focus_node, .result_path = path, .value = (slop_option_rdf_Term){.has_value = 1, .value = value_node}, .source_shape = shape_id, .source_constraint_component = vocab_SHACL_NODE, .severity = severity, .message = message})};
     }
+    SLOP_POST((((_retval == ((slop_option_types_ValidationResult){.has_value = false})) == value_conforms)), "(== (== $result (none)) value-conforms)");
+    return _retval;
 }
 
 slop_list_types_ValidationResult snarl_check_qualified_value_shape(slop_arena* arena, rdf_Term focus_node, int64_t conforming_count, int64_t q_min, slop_option_int q_max, slop_option_types_ShaclPath path, rdf_Term shape_id, types_Severity severity, slop_option_string message) {
     SLOP_PRE(((conforming_count >= 0)), "(>= conforming-count 0)");
     SLOP_PRE(((q_min >= 0)), "(>= q-min 0)");
+    slop_list_types_ValidationResult _retval = {0};
     {
         __auto_type results = ((slop_list_types_ValidationResult){ .data = (types_ValidationResult*)slop_arena_alloc(arena, 16 * sizeof(types_ValidationResult)), .len = 0, .cap = 16 });
         if ((conforming_count < q_min)) {
@@ -32,7 +36,10 @@ slop_list_types_ValidationResult snarl_check_qualified_value_shape(slop_arena* a
             }
         } else if (!_mv_97.has_value) {
         }
-        return results;
+        _retval = results;
     }
+    SLOP_POST(((((int64_t)((_retval).len)) >= 0)), "(>= (list-len $result) 0)");
+    SLOP_POST(((((int64_t)((_retval).len)) <= 2)), "(<= (list-len $result) 2)");
+    return _retval;
 }
 

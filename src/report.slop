@@ -260,6 +260,15 @@
                       (set! g (indexed-graph-add arena g
                                 (make-triple arena result-node path-pred pred-term))))
                     (_ (do)))))  ;; Complex paths: Phase 4
+              ((none) (do)))
+
+            ;; Optional: message
+            (match (. r message)
+              ((some msg)
+                (let ((msg-pred (make-iri arena "http://www.w3.org/ns/shacl#resultMessage")))
+                  (set! g (indexed-graph-add arena g
+                            (make-triple arena result-node msg-pred
+                              (make-literal arena msg (none) (none)))))))
               ((none) (do))))
 
           (set! result-id (+ result-id 1))))
