@@ -14,16 +14,7 @@ if [ ! -x "$SNARL" ]; then
   exit 2
 fi
 
-# Load xfail list into associative array
-declare -A XFAILS
-if [ -f "$XFAIL_FILE" ]; then
-  while IFS= read -r line; do
-    line="${line%%#*}"        # strip comments
-    line="${line// /}"        # strip whitespace
-    [ -z "$line" ] && continue
-    XFAILS["$line"]=1
-  done < "$XFAIL_FILE"
-fi
+# xfail lookup uses grep on the file directly (no associative arrays, for macOS compat)
 
 CATEGORIES=(property node targets path misc complex validation-reports)
 
@@ -57,24 +48,24 @@ for category in "${CATEGORIES[@]}"; do
     expected_raw=$(grep -o 'sh:conforms "[^"]*"' "$file" | head -1 || true)
     if [ -z "$expected_raw" ]; then
       # Try alternate format: sh:conforms true/false (without quotes)
-      expected_raw=$(grep -oP 'sh:conforms\s+(true|false)' "$file" | head -1 || true)
+      expected_raw=$(grep -oE 'sh:conforms[[:space:]]+(true|false)' "$file" | head -1 || true)
       if [ -z "$expected_raw" ]; then
         printf "  %-50s SKIP (no sh:conforms found)\n" "$testid"
         skip=$((skip + 1))
         continue
       fi
-      expected_val=$(echo "$expected_raw" | grep -oP '(true|false)')
+      expected_val=$(echo "$expected_raw" | grep -oE '(true|false)')
     else
       expected_val=$(echo "$expected_raw" | grep -o '"[^"]*"' | tr -d '"')
     fi
 
     # Detect multi-file test (separate data/shapes files)
-    data_ref=$(grep -oP 'sht:dataGraph\s+<([^>]+\.ttl)>' "$file" | grep -oP '<[^>]+>' | tr -d '<>' || true)
+    data_ref=$(sed -n 's/.*sht:dataGraph[[:space:]]*<\([^>]*\.ttl\)>.*/\1/p' "$file" | head -1 || true)
 
     if [ -n "$data_ref" ] && [ "$data_ref" != "" ]; then
       # Multi-file test
       data_file="$catdir/$data_ref"
-      shapes_ref=$(grep -oP 'sht:shapesGraph\s+<([^>]+\.ttl)>' "$file" | grep -oP '<[^>]+>' | tr -d '<>' || true)
+      shapes_ref=$(sed -n 's/.*sht:shapesGraph[[:space:]]*<\([^>]*\.ttl\)>.*/\1/p' "$file" | head -1 || true)
       if [ -n "$shapes_ref" ]; then
         shapes_file="$catdir/$shapes_ref"
       else
@@ -105,7 +96,7 @@ for category in "${CATEGORIES[@]}"; do
     esac
 
     is_xfail=0
-    [ "${XFAILS[$testid]+_}" ] && is_xfail=1
+    grep -qxF "$testid" "$XFAIL_FILE" 2>/dev/null && is_xfail=1
 
     if [ "$actual_val" = "$expected_val" ]; then
       if [ "$is_xfail" -eq 1 ]; then
