@@ -2,7 +2,7 @@
 name = "snarl"
 version = "0.1.0"
 edition = "2021"
-description = "Rust bindings for the Snarl SHACL Core validator"
+description = "Rust bindings for the Snarl SHACL validator"
 license = "Apache-2.0"
 repository = "https://github.com/Trivyn/snarl"
 keywords = ["shacl", "rdf", "validation", "semantic-web"]

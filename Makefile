@@ -58,7 +58,7 @@ w3c-test: cli
 
 bench: cli
 	@cd cli/tests && uv run benchmark_compare.py --generate 2>/dev/null; \
-	python benchmark_compare.py
+	uv run python benchmark_compare.py
 
 clean:
 	rm -rf $(BIN) dist
