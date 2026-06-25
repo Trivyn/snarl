@@ -9,6 +9,7 @@ uint8_t test_cli_assert_conforms_separate(slop_arena* arena, slop_string data_pa
 uint8_t test_cli_assert_violations_separate(slop_arena* arena, slop_string data_path, slop_string shapes_path, int64_t expected_count);
 uint8_t test_cli_test_empty_graph(slop_arena* arena);
 uint8_t test_cli_test_valid_person(slop_arena* arena);
+uint8_t test_cli_test_rdf12_annotation_block(slop_arena* arena);
 uint8_t test_cli_test_cardinality_violation(slop_arena* arena);
 uint8_t test_cli_test_datatype_violation(slop_arena* arena);
 uint8_t test_cli_test_class_violation(slop_arena* arena);
@@ -24,9 +25,9 @@ uint8_t test_cli_test_multi_shape(slop_arena* arena);
 int main(int argc, char** _c_argv);
 
 slop_option_index_IndexedGraph test_cli_load_test_graph(slop_arena* arena, slop_string path) {
-    __auto_type _mv_252 = ttl_parse_ttl_file(arena, path);
-    if (_mv_252.is_ok) {
-        __auto_type g = _mv_252.data.ok;
+    __auto_type _mv_223 = ttl_parse_ttl_file(arena, path);
+    if (_mv_223.is_ok) {
+        __auto_type g = _mv_223.data.ok;
         {
             __auto_type ig = rdf_indexed_graph_create(arena);
             {
@@ -38,16 +39,16 @@ slop_option_index_IndexedGraph test_cli_load_test_graph(slop_arena* arena, slop_
             }
             return (slop_option_index_IndexedGraph){.has_value = 1, .value = ig};
         }
-    } else if (!_mv_252.is_ok) {
-        __auto_type _ = _mv_252.data.err;
+    } else if (!_mv_223.is_ok) {
+        __auto_type _ = _mv_223.data.err;
         return (slop_option_index_IndexedGraph){.has_value = false};
     }
 }
 
 uint8_t test_cli_assert_conforms(slop_arena* arena, slop_string path) {
-    __auto_type _mv_253 = test_cli_load_test_graph(arena, path);
-    if (_mv_253.has_value) {
-        __auto_type g = _mv_253.value;
+    __auto_type _mv_224 = test_cli_load_test_graph(arena, path);
+    if (_mv_224.has_value) {
+        __auto_type g = _mv_224.value;
         {
             __auto_type result = snarl_conforms(arena, g, g);
             if (result) {
@@ -62,7 +63,7 @@ uint8_t test_cli_assert_conforms(slop_arena* arena, slop_string path) {
                 return 0;
             }
         }
-    } else if (!_mv_253.has_value) {
+    } else if (!_mv_224.has_value) {
         printf("%s", "  FAIL: could not load ");
         printf("%.*s\n", (int)(path).len, (path).data);
         return 0;
@@ -70,14 +71,14 @@ uint8_t test_cli_assert_conforms(slop_arena* arena, slop_string path) {
 }
 
 uint8_t test_cli_assert_violations(slop_arena* arena, slop_string path, int64_t expected_count) {
-    __auto_type _mv_254 = test_cli_load_test_graph(arena, path);
-    if (_mv_254.has_value) {
-        __auto_type g = _mv_254.value;
-        __auto_type _mv_255 = snarl_validate(arena, g, g);
-        switch (_mv_255.tag) {
+    __auto_type _mv_225 = test_cli_load_test_graph(arena, path);
+    if (_mv_225.has_value) {
+        __auto_type g = _mv_225.value;
+        __auto_type _mv_226 = snarl_validate(arena, g, g);
+        switch (_mv_226.tag) {
             case types_ValidatorResult_validate_success:
             {
-                __auto_type report = _mv_255.data.validate_success;
+                __auto_type report = _mv_226.data.validate_success;
                 {
                     __auto_type violations = snarl_get_violations(arena, report);
                     __auto_type actual_count = ((int64_t)((violations).len));
@@ -101,13 +102,13 @@ uint8_t test_cli_assert_violations(slop_arena* arena, slop_string path, int64_t 
             }
             case types_ValidatorResult_validate_error:
             {
-                __auto_type msg = _mv_255.data.validate_error;
+                __auto_type msg = _mv_226.data.validate_error;
                 printf("%s", "  FAIL: validation error: ");
                 printf("%.*s\n", (int)(msg).len, (msg).data);
                 return 0;
             }
         }
-    } else if (!_mv_254.has_value) {
+    } else if (!_mv_225.has_value) {
         printf("%s", "  FAIL: could not load ");
         printf("%.*s\n", (int)(path).len, (path).data);
         return 0;
@@ -115,9 +116,9 @@ uint8_t test_cli_assert_violations(slop_arena* arena, slop_string path, int64_t 
 }
 
 uint8_t test_cli_assert_has_violations(slop_arena* arena, slop_string path) {
-    __auto_type _mv_256 = test_cli_load_test_graph(arena, path);
-    if (_mv_256.has_value) {
-        __auto_type g = _mv_256.value;
+    __auto_type _mv_227 = test_cli_load_test_graph(arena, path);
+    if (_mv_227.has_value) {
+        __auto_type g = _mv_227.value;
         {
             __auto_type result = snarl_conforms(arena, g, g);
             if (!(result)) {
@@ -132,7 +133,7 @@ uint8_t test_cli_assert_has_violations(slop_arena* arena, slop_string path) {
                 return 0;
             }
         }
-    } else if (!_mv_256.has_value) {
+    } else if (!_mv_227.has_value) {
         printf("%s", "  FAIL: could not load ");
         printf("%.*s\n", (int)(path).len, (path).data);
         return 0;
@@ -140,12 +141,12 @@ uint8_t test_cli_assert_has_violations(slop_arena* arena, slop_string path) {
 }
 
 uint8_t test_cli_assert_conforms_separate(slop_arena* arena, slop_string data_path, slop_string shapes_path) {
-    __auto_type _mv_257 = test_cli_load_test_graph(arena, data_path);
-    if (_mv_257.has_value) {
-        __auto_type dg = _mv_257.value;
-        __auto_type _mv_258 = test_cli_load_test_graph(arena, shapes_path);
-        if (_mv_258.has_value) {
-            __auto_type sg = _mv_258.value;
+    __auto_type _mv_228 = test_cli_load_test_graph(arena, data_path);
+    if (_mv_228.has_value) {
+        __auto_type dg = _mv_228.value;
+        __auto_type _mv_229 = test_cli_load_test_graph(arena, shapes_path);
+        if (_mv_229.has_value) {
+            __auto_type sg = _mv_229.value;
             {
                 __auto_type result = snarl_conforms(arena, dg, sg);
                 if (result) {
@@ -160,12 +161,12 @@ uint8_t test_cli_assert_conforms_separate(slop_arena* arena, slop_string data_pa
                     return 0;
                 }
             }
-        } else if (!_mv_258.has_value) {
+        } else if (!_mv_229.has_value) {
             printf("%s", "  FAIL: could not load shapes ");
             printf("%.*s\n", (int)(shapes_path).len, (shapes_path).data);
             return 0;
         }
-    } else if (!_mv_257.has_value) {
+    } else if (!_mv_228.has_value) {
         printf("%s", "  FAIL: could not load data ");
         printf("%.*s\n", (int)(data_path).len, (data_path).data);
         return 0;
@@ -173,17 +174,17 @@ uint8_t test_cli_assert_conforms_separate(slop_arena* arena, slop_string data_pa
 }
 
 uint8_t test_cli_assert_violations_separate(slop_arena* arena, slop_string data_path, slop_string shapes_path, int64_t expected_count) {
-    __auto_type _mv_259 = test_cli_load_test_graph(arena, data_path);
-    if (_mv_259.has_value) {
-        __auto_type dg = _mv_259.value;
-        __auto_type _mv_260 = test_cli_load_test_graph(arena, shapes_path);
-        if (_mv_260.has_value) {
-            __auto_type sg = _mv_260.value;
-            __auto_type _mv_261 = snarl_validate(arena, dg, sg);
-            switch (_mv_261.tag) {
+    __auto_type _mv_230 = test_cli_load_test_graph(arena, data_path);
+    if (_mv_230.has_value) {
+        __auto_type dg = _mv_230.value;
+        __auto_type _mv_231 = test_cli_load_test_graph(arena, shapes_path);
+        if (_mv_231.has_value) {
+            __auto_type sg = _mv_231.value;
+            __auto_type _mv_232 = snarl_validate(arena, dg, sg);
+            switch (_mv_232.tag) {
                 case types_ValidatorResult_validate_success:
                 {
-                    __auto_type report = _mv_261.data.validate_success;
+                    __auto_type report = _mv_232.data.validate_success;
                     {
                         __auto_type violations = snarl_get_violations(arena, report);
                         __auto_type actual_count = ((int64_t)((violations).len));
@@ -207,18 +208,18 @@ uint8_t test_cli_assert_violations_separate(slop_arena* arena, slop_string data_
                 }
                 case types_ValidatorResult_validate_error:
                 {
-                    __auto_type msg = _mv_261.data.validate_error;
+                    __auto_type msg = _mv_232.data.validate_error;
                     printf("%s", "  FAIL: validation error: ");
                     printf("%.*s\n", (int)(msg).len, (msg).data);
                     return 0;
                 }
             }
-        } else if (!_mv_260.has_value) {
+        } else if (!_mv_231.has_value) {
             printf("%s", "  FAIL: could not load shapes ");
             printf("%.*s\n", (int)(shapes_path).len, (shapes_path).data);
             return 0;
         }
-    } else if (!_mv_259.has_value) {
+    } else if (!_mv_230.has_value) {
         printf("%s", "  FAIL: could not load data ");
         printf("%.*s\n", (int)(data_path).len, (data_path).data);
         return 0;
@@ -231,6 +232,27 @@ uint8_t test_cli_test_empty_graph(slop_arena* arena) {
 
 uint8_t test_cli_test_valid_person(slop_arena* arena) {
     return test_cli_assert_conforms(arena, SLOP_STR("fixtures/valid-person.ttl"));
+}
+
+uint8_t test_cli_test_rdf12_annotation_block(slop_arena* arena) {
+    __auto_type _mv_233 = test_cli_load_test_graph(arena, SLOP_STR("fixtures/rdf12-annotation-valid.ttl"));
+    if (_mv_233.has_value) {
+        __auto_type g = _mv_233.value;
+        {
+            __auto_type size = rdf_indexed_graph_size(g);
+            if (((size == 17) && snarl_conforms(arena, g, g))) {
+                printf("%s\n", "  PASS: RDF 1.2 annotation block parses and conforms");
+                return 1;
+            } else {
+                printf("%s", "  FAIL: RDF 1.2 annotation expected 17 triples and conformance, got ");
+                printf("%.*s\n", (int)(int_to_string(arena, size)).len, (int_to_string(arena, size)).data);
+                return 0;
+            }
+        }
+    } else if (!_mv_233.has_value) {
+        printf("%s\n", "  FAIL: could not load RDF 1.2 annotation fixture");
+        return 0;
+    }
 }
 
 uint8_t test_cli_test_cardinality_violation(slop_arena* arena) {
@@ -258,14 +280,14 @@ uint8_t test_cli_test_multiple_violations(slop_arena* arena) {
 }
 
 uint8_t test_cli_test_report_string(slop_arena* arena) {
-    __auto_type _mv_262 = test_cli_load_test_graph(arena, SLOP_STR("fixtures/cardinality-violation.ttl"));
-    if (_mv_262.has_value) {
-        __auto_type g = _mv_262.value;
-        __auto_type _mv_263 = snarl_validate(arena, g, g);
-        switch (_mv_263.tag) {
+    __auto_type _mv_234 = test_cli_load_test_graph(arena, SLOP_STR("fixtures/cardinality-violation.ttl"));
+    if (_mv_234.has_value) {
+        __auto_type g = _mv_234.value;
+        __auto_type _mv_235 = snarl_validate(arena, g, g);
+        switch (_mv_235.tag) {
             case types_ValidatorResult_validate_success:
             {
-                __auto_type report = _mv_263.data.validate_success;
+                __auto_type report = _mv_235.data.validate_success;
                 {
                     __auto_type text = snarl_report_to_string(arena, report);
                     if ((string_len(text) > 0)) {
@@ -279,12 +301,12 @@ uint8_t test_cli_test_report_string(slop_arena* arena) {
             }
             case types_ValidatorResult_validate_error:
             {
-                __auto_type _ = _mv_263.data.validate_error;
+                __auto_type _ = _mv_235.data.validate_error;
                 printf("%s\n", "  FAIL: validation error");
                 return 0;
             }
         }
-    } else if (!_mv_262.has_value) {
+    } else if (!_mv_234.has_value) {
         printf("%s\n", "  FAIL: could not load fixture");
         return 0;
     }
@@ -333,6 +355,11 @@ int main(int argc, char** _c_argv) {
                 failed = (failed + 1);
             }
             if (test_cli_test_valid_person(arena)) {
+                passed = (passed + 1);
+            } else {
+                failed = (failed + 1);
+            }
+            if (test_cli_test_rdf12_annotation_block(arena)) {
                 passed = (passed + 1);
             } else {
                 failed = (failed + 1);

@@ -1,5 +1,5 @@
 [package]
-name = "snarl"
+name = "snarl-shacl"
 version = "0.1.0"
 edition = "2021"
 description = "Rust bindings for the Snarl SHACL validator"
@@ -18,6 +18,9 @@ include = [
     "README.md",
     "LICENSE",
 ]
+
+[lib]
+name = "snarl"
 
 [build-dependencies]
 cc = "1"

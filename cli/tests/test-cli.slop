@@ -137,6 +137,20 @@
     (@spec ((Arena) -> Bool))
     (assert-conforms arena "fixtures/valid-person.ttl"))
 
+  (fn test-rdf12-annotation-block ((arena Arena))
+    (@intent "Test RDF 1.2 {| |} annotation blocks parse and validate")
+    (@spec ((Arena) -> Bool))
+    (@alloc arena)
+    (match (load-test-graph arena "fixtures/rdf12-annotation-valid.ttl")
+      ((some g)
+        (let ((size (indexed-graph-size g)))
+          (if (and (== size 17) (conforms arena g g))
+            (do (println "  PASS: RDF 1.2 annotation block parses and conforms") true)
+            (do (print "  FAIL: RDF 1.2 annotation expected 17 triples and conformance, got ")
+                (println (int-to-string arena size)) false))))
+      ((none)
+        (do (println "  FAIL: could not load RDF 1.2 annotation fixture") false))))
+
   (fn test-cardinality-violation ((arena Arena))
     (@intent "Test that missing required property is detected")
     (@spec ((Arena) -> Bool))
@@ -229,6 +243,7 @@
         ;; Run each test
         (if (test-empty-graph arena) (set! passed (+ passed 1)) (set! failed (+ failed 1)))
         (if (test-valid-person arena) (set! passed (+ passed 1)) (set! failed (+ failed 1)))
+        (if (test-rdf12-annotation-block arena) (set! passed (+ passed 1)) (set! failed (+ failed 1)))
         (if (test-cardinality-violation arena) (set! passed (+ passed 1)) (set! failed (+ failed 1)))
         (if (test-datatype-violation arena) (set! passed (+ passed 1)) (set! failed (+ failed 1)))
         (if (test-class-violation arena) (set! passed (+ passed 1)) (set! failed (+ failed 1)))

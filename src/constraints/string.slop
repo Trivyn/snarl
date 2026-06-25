@@ -43,14 +43,16 @@
     (@post (match t
       ((term-literal lit) (== $result (. lit value)))
       ((term-iri iri) (== $result (. iri value)))
-      ((term-blank _) (== $result ""))))
+      ((term-blank _) (== $result ""))
+      ((term-triple _) (== $result ""))))
     (@example ((term-literal (Literal "hello" (none) (none)))) -> "hello")
     (@example ((term-iri (IRI "http://example.org/x"))) -> "http://example.org/x")
     (@example ((term-blank (BlankNode 1))) -> "")
     (match t
       ((term-literal lit) (. lit value))
       ((term-iri iri) (. iri value))
-      ((term-blank _) "")))
+      ((term-blank _) "")
+      ((term-triple _) "")))
 
   (fn term-lang ((in t Term))
     (@intent "Extract language tag from a literal term, or empty string if not a literal or no lang tag")

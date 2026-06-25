@@ -13,8 +13,8 @@ slop_option_types_ValidationResult snarl_check_min_inclusive(slop_arena* arena, 
     slop_option_types_ValidationResult _retval = {0};
     {
         __auto_type cmp = xsd_compare(arena, value_node, limit);
-        __auto_type _mv_109 = cmp;
-        switch (_mv_109) {
+        __auto_type _mv_110 = cmp;
+        switch (_mv_110) {
             case xsd_XsdCompareResult_xsd_compare_equal: {
                 return (slop_option_types_ValidationResult){.has_value = false};
                 break;
@@ -41,8 +41,8 @@ slop_option_types_ValidationResult snarl_check_max_inclusive(slop_arena* arena, 
     slop_option_types_ValidationResult _retval = {0};
     {
         __auto_type cmp = xsd_compare(arena, value_node, limit);
-        __auto_type _mv_110 = cmp;
-        switch (_mv_110) {
+        __auto_type _mv_111 = cmp;
+        switch (_mv_111) {
             case xsd_XsdCompareResult_xsd_compare_equal: {
                 return (slop_option_types_ValidationResult){.has_value = false};
                 break;
@@ -69,8 +69,8 @@ slop_option_types_ValidationResult snarl_check_min_exclusive(slop_arena* arena, 
     slop_option_types_ValidationResult _retval = {0};
     {
         __auto_type cmp = xsd_compare(arena, value_node, limit);
-        __auto_type _mv_111 = cmp;
-        switch (_mv_111) {
+        __auto_type _mv_112 = cmp;
+        switch (_mv_112) {
             case xsd_XsdCompareResult_xsd_compare_greater: {
                 return (slop_option_types_ValidationResult){.has_value = false};
                 break;
@@ -97,8 +97,8 @@ slop_option_types_ValidationResult snarl_check_max_exclusive(slop_arena* arena, 
     slop_option_types_ValidationResult _retval = {0};
     {
         __auto_type cmp = xsd_compare(arena, value_node, limit);
-        __auto_type _mv_112 = cmp;
-        switch (_mv_112) {
+        __auto_type _mv_113 = cmp;
+        switch (_mv_113) {
             case xsd_XsdCompareResult_xsd_compare_less: {
                 return (slop_option_types_ValidationResult){.has_value = false};
                 break;

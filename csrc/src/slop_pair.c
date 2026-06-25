@@ -133,8 +133,8 @@ slop_list_types_ValidationResult snarl_check_less_than(slop_arena* arena, index_
                         __auto_type o = _coll.data[_i];
                         {
                             __auto_type cmp = xsd_compare(arena, v, o);
-                            __auto_type _mv_98 = cmp;
-                            switch (_mv_98) {
+                            __auto_type _mv_99 = cmp;
+                            switch (_mv_99) {
                                 case xsd_XsdCompareResult_xsd_compare_less: {
                                     break;
                                 }
@@ -170,8 +170,8 @@ slop_list_types_ValidationResult snarl_check_less_than_or_equals(slop_arena* are
                         __auto_type o = _coll.data[_i];
                         {
                             __auto_type cmp = xsd_compare(arena, v, o);
-                            __auto_type _mv_99 = cmp;
-                            switch (_mv_99) {
+                            __auto_type _mv_100 = cmp;
+                            switch (_mv_100) {
                                 case xsd_XsdCompareResult_xsd_compare_greater: {
                                     ({ __auto_type _lst_p = &(results); __auto_type _item = (((types_ValidationResult){.focus_node = focus_node, .result_path = path, .value = (slop_option_rdf_Term){.has_value = 1, .value = v}, .source_shape = shape_id, .source_constraint_component = vocab_SHACL_LESS_THAN_OR_EQUALS, .severity = severity, .message = message})); if (_lst_p->len >= _lst_p->cap) { size_t _new_cap = _lst_p->cap == 0 ? 16 : _lst_p->cap * 2; __typeof__(_lst_p->data) _new_data = (__typeof__(_lst_p->data))slop_arena_alloc(arena, _new_cap * sizeof(*_lst_p->data)); if (_lst_p->len > 0) memcpy(_new_data, _lst_p->data, _lst_p->len * sizeof(*_lst_p->data)); _lst_p->data = _new_data; _lst_p->cap = _new_cap; } _lst_p->data[_lst_p->len++] = _item; (void)0; });
                                     break;

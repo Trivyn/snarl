@@ -51,52 +51,18 @@ typedef struct rdf_Literal rdf_Literal;
 typedef enum {
     rdf_TermKind_iri,
     rdf_TermKind_blank,
-    rdf_TermKind_literal
+    rdf_TermKind_literal,
+    rdf_TermKind_triple
 } rdf_TermKind;
 
 typedef enum {
     rdf_Term_term_iri,
     rdf_Term_term_blank,
-    rdf_Term_term_literal
+    rdf_Term_term_literal,
+    rdf_Term_term_triple
 } rdf_Term_tag;
 
-struct rdf_Term {
-    rdf_Term_tag tag;
-    union {
-        rdf_IRI term_iri;
-        rdf_BlankNode term_blank;
-        rdf_Literal term_literal;
-    } data;
-};
-typedef struct rdf_Term rdf_Term;
-
-struct rdf_Triple {
-    rdf_Term subject;
-    rdf_Term predicate;
-    rdf_Term object;
-};
-typedef struct rdf_Triple rdf_Triple;
-
-typedef struct { size_t len; size_t cap; rdf_Term* data; } slop_list_rdf_Term;
-
-typedef struct { size_t len; size_t cap; rdf_Triple* data; } slop_list_rdf_Triple;
-
-struct index_IndexedGraph {
-    slop_list_rdf_Triple triples;
-    index_TripleIndex index;
-    int64_t size;
-};
-typedef struct index_IndexedGraph index_IndexedGraph;
-
-struct rdf_Graph {
-    slop_list_rdf_Triple triples;
-    rdf_GraphSize size;
-};
-typedef struct rdf_Graph rdf_Graph;
-
 typedef struct { size_t len; size_t cap; types_Constraint* data; } slop_list_types_Constraint;
-
-typedef struct { bool has_value; rdf_Term value; } slop_option_rdf_Term;
 
 typedef enum {
     types_NodeKind_node_kind_blank_node,
@@ -179,6 +145,41 @@ struct xsd_XsdValue {
 };
 typedef struct xsd_XsdValue xsd_XsdValue;
 
+struct index_IndexedGraph {
+    slop_list_rdf_Triple triples;
+    index_TripleIndex index;
+    int64_t size;
+};
+typedef struct index_IndexedGraph index_IndexedGraph;
+
+struct rdf_Graph {
+    slop_list_rdf_Triple triples;
+    rdf_GraphSize size;
+};
+typedef struct rdf_Graph rdf_Graph;
+
+struct rdf_Term {
+    rdf_Term_tag tag;
+    union {
+        rdf_IRI term_iri;
+        rdf_BlankNode term_blank;
+        rdf_Literal term_literal;
+        rdf_Triple* term_triple;
+    } data;
+};
+typedef struct rdf_Term rdf_Term;
+
+struct rdf_Triple {
+    rdf_Term subject;
+    rdf_Term predicate;
+    rdf_Term object;
+};
+typedef struct rdf_Triple rdf_Triple;
+
+typedef struct { size_t len; size_t cap; rdf_Term* data; } slop_list_rdf_Term;
+
+typedef struct { size_t len; size_t cap; rdf_Triple* data; } slop_list_rdf_Triple;
+
 typedef struct { size_t len; size_t cap; types_NodeShape* data; } slop_list_types_NodeShape;
 
 typedef struct { size_t len; size_t cap; types_PropertyShape* data; } slop_list_types_PropertyShape;
@@ -186,6 +187,8 @@ typedef struct { size_t len; size_t cap; types_PropertyShape* data; } slop_list_
 typedef struct { size_t len; size_t cap; types_ShaclPath* data; } slop_list_types_ShaclPath;
 
 typedef struct { size_t len; size_t cap; types_ValidationResult* data; } slop_list_types_ValidationResult;
+
+typedef struct { bool has_value; rdf_Term value; } slop_option_rdf_Term;
 
 typedef struct { bool has_value; types_ShaclPath value; } slop_option_types_ShaclPath;
 
@@ -291,6 +294,7 @@ rdf_Graph rdf_make_graph(slop_arena* arena);
 rdf_Term rdf_make_iri(slop_arena* arena, slop_string value);
 rdf_Term rdf_make_literal(slop_arena* arena, slop_string value, slop_option_string datatype, slop_option_string lang);
 rdf_Triple rdf_make_triple(slop_arena* arena, rdf_Term subject, rdf_Term predicate, rdf_Term object);
+rdf_Term rdf_make_triple_term(slop_arena* arena, rdf_Triple t);
 uint8_t rdf_option_string_eq(slop_option_string a, slop_option_string b);
 uint8_t rdf_term_eq(rdf_Term a, rdf_Term b);
 void rdf_term_free(rdf_Term* t);
