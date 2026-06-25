@@ -1,47 +1,14 @@
-;; ============================================================
-;; Snarl: Shapes Graph Extraction
-;;
-;; Reads an IndexedGraph of SHACL triples and extracts structured
-;; NodeShapes and PropertyShapes with parsed constraints and paths.
-;; ============================================================
-
 (module parse
-  (@doc "Parse SHACL shapes from RDF triples into structured shapes graph")
-
-  (import rdf (Term Triple term-eq term-kind make-iri make-literal
-               triple-subject triple-predicate triple-object
-               Literal IRI TermKind))
-  (import index (IndexedGraph indexed-graph-match indexed-graph-objects
-                 indexed-graph-subjects indexed-graph-size indexed-graph-contains
-                 indexed-graph-for-each indexed-graph-create))
+  (import rdf
+    (Term Triple term-eq term-kind make-iri make-literal triple-subject triple-predicate triple-object Literal IRI TermKind))
+  (import index
+    (IndexedGraph indexed-graph-match indexed-graph-objects indexed-graph-subjects indexed-graph-size indexed-graph-contains indexed-graph-for-each indexed-graph-create))
   (import list (rdf-list-elements-indexed))
-  (import vocab (RDF_TYPE SHACL_NODE_SHAPE SHACL_PROPERTY_SHAPE
-                 SHACL_TARGET_NODE SHACL_TARGET_CLASS
-                 SHACL_TARGET_SUBJECTS_OF SHACL_TARGET_OBJECTS_OF
-                 SHACL_PATH SHACL_INVERSE_PATH SHACL_ALTERNATIVE_PATH
-                 SHACL_ZERO_OR_MORE_PATH SHACL_ONE_OR_MORE_PATH
-                 SHACL_ZERO_OR_ONE_PATH
-                 SHACL_CLASS SHACL_DATATYPE SHACL_NODE_KIND
-                 SHACL_MIN_COUNT SHACL_MAX_COUNT
-                 SHACL_MIN_INCLUSIVE SHACL_MAX_INCLUSIVE
-                 SHACL_MIN_EXCLUSIVE SHACL_MAX_EXCLUSIVE
-                 SHACL_MIN_LENGTH SHACL_MAX_LENGTH SHACL_PATTERN SHACL_FLAGS
-                 SHACL_LANGUAGE_IN SHACL_UNIQUE_LANG
-                 SHACL_EQUALS SHACL_DISJOINT SHACL_LESS_THAN SHACL_LESS_THAN_OR_EQUALS
-                 SHACL_NOT SHACL_AND SHACL_OR SHACL_XONE
-                 SHACL_NODE SHACL_PROPERTY
-                 SHACL_QUALIFIED_VALUE_SHAPE SHACL_QUALIFIED_MIN_COUNT SHACL_QUALIFIED_MAX_COUNT
-                 SHACL_QUALIFIED_VALUE_SHAPES_DISJOINT
-                 SHACL_CLOSED SHACL_IGNORED_PROPERTIES SHACL_HAS_VALUE SHACL_IN
-                 SHACL_IRI SHACL_BLANK_NODE SHACL_LITERAL
-                 SHACL_BLANK_NODE_OR_IRI SHACL_BLANK_NODE_OR_LITERAL SHACL_IRI_OR_LITERAL
-                 SHACL_SEVERITY SHACL_VIOLATION SHACL_WARNING SHACL_INFO
-                 SHACL_SHAPE
-                 RDF_FIRST RDF_REST RDF_NIL
-                 XSD_INTEGER XSD_BOOLEAN))
+  (import vocab
+    (RDF_TYPE SHACL_NODE_SHAPE SHACL_PROPERTY_SHAPE SHACL_TARGET_NODE SHACL_TARGET_CLASS SHACL_TARGET_SUBJECTS_OF SHACL_TARGET_OBJECTS_OF SHACL_PATH SHACL_INVERSE_PATH SHACL_ALTERNATIVE_PATH SHACL_ZERO_OR_MORE_PATH SHACL_ONE_OR_MORE_PATH SHACL_ZERO_OR_ONE_PATH SHACL_CLASS SHACL_DATATYPE SHACL_NODE_KIND SHACL_MIN_COUNT SHACL_MAX_COUNT SHACL_MIN_INCLUSIVE SHACL_MAX_INCLUSIVE SHACL_MIN_EXCLUSIVE SHACL_MAX_EXCLUSIVE SHACL_MIN_LENGTH SHACL_MAX_LENGTH SHACL_PATTERN SHACL_FLAGS SHACL_LANGUAGE_IN SHACL_UNIQUE_LANG SHACL_EQUALS SHACL_DISJOINT SHACL_LESS_THAN SHACL_LESS_THAN_OR_EQUALS SHACL_NOT SHACL_AND SHACL_OR SHACL_XONE SHACL_NODE SHACL_PROPERTY SHACL_QUALIFIED_VALUE_SHAPE SHACL_QUALIFIED_MIN_COUNT SHACL_QUALIFIED_MAX_COUNT SHACL_QUALIFIED_VALUE_SHAPES_DISJOINT SHACL_CLOSED SHACL_IGNORED_PROPERTIES SHACL_HAS_VALUE SHACL_IN SHACL_IRI SHACL_BLANK_NODE SHACL_LITERAL SHACL_BLANK_NODE_OR_IRI SHACL_BLANK_NODE_OR_LITERAL SHACL_IRI_OR_LITERAL SHACL_SEVERITY SHACL_VIOLATION SHACL_WARNING SHACL_INFO SHACL_SHAPE RDF_FIRST RDF_REST RDF_NIL XSD_INTEGER XSD_BOOLEAN))
   (import strlib (parse-int))
-  (import types (ShaclPath NodeKind Severity Constraint PropertyShape NodeShape ShapesGraph))
-
+  (import types
+    (ShaclPath NodeKind Severity Constraint PropertyShape NodeShape ShapesGraph))
   (export
     parse-shapes-graph
     parse-node-shape
@@ -51,36 +18,38 @@
     parse-node-kind
     parse-severity)
 
-  ;; ============================================================
-  ;; Inline Shape Registration
-  ;; ============================================================
+  (@doc "Parse SHACL shapes from RDF triples into structured shapes graph")
 
   (fn shape-has-path ((arena Arena) (g IndexedGraph) (ref Term))
-    (@intent "True if the referenced shape declares an sh:path, i.e. it is a property shape (SHACL 2.1.2)")
+    (@intent
+      "True if the referenced shape declares an sh:path, i.e. it is a property shape (SHACL 2.1.2)")
     (@spec ((Arena IndexedGraph Term) -> Bool))
     (@alloc arena)
-    (@example (arena (indexed-graph-create arena) (make-iri arena "http://example.org/s")) -> false)
-    (> (list-len (indexed-graph-objects arena g ref (make-iri arena SHACL_PATH))) 0))
+    (@example
+      (arena
+        (indexed-graph-create arena)
+        (make-iri arena "http://example.org/s"))
+      ->
+      false)
+    (>
+      (list-len (indexed-graph-objects arena g ref (make-iri arena SHACL_PATH)))
+      0))
 
-  (fn register-inline-shapes ((arena Arena) (g IndexedGraph)
-                               (node-shapes (List NodeShape))
-                               (prop-shapes (List PropertyShape))
-                               (shape-map (Map Term NodeShape))
-                               (property-shape-map (Map Term PropertyShape)))
-    (@intent "Register inline blank node shapes referenced by constraints into shape maps")
-    (@spec ((Arena IndexedGraph (List NodeShape) (List PropertyShape)
-             (Map Term NodeShape) (Map Term PropertyShape)) -> Unit))
+  (fn register-inline-shapes ((arena Arena) (g IndexedGraph) (node-shapes (List NodeShape)) (prop-shapes (List PropertyShape)) (shape-map (Map Term NodeShape)) (property-shape-map (Map Term PropertyShape)))
+    (@intent
+      "Register inline blank node shapes referenced by constraints into shape maps")
+    (@spec
+      ((Arena IndexedGraph (List NodeShape) (List PropertyShape) (Map Term NodeShape) (Map Term PropertyShape)) -> Unit))
     (@alloc arena)
-    (@example (arena (indexed-graph-create arena) (list-new arena NodeShape) (list-new arena PropertyShape) (map-new arena Term NodeShape) (map-new arena Term PropertyShape))
-      ;; Registers inline blank node shapes into shape maps
-      )
-    ;; Queue-based approach: collect shape refs, process until exhausted.
-    ;; All list pushes are inlined (not via helper) because SLOP lists are
-    ;; passed by value — a helper function would push to local copies.
+    (@example
+      (arena
+        (indexed-graph-create arena)
+        (list-new arena NodeShape)
+        (list-new arena PropertyShape)
+        (map-new arena Term NodeShape)
+        (map-new arena Term PropertyShape)))
     (let ((mut ns-queue (list-new arena Term))
           (mut ps-queue (list-new arena Term)))
-
-      ;; Collect initial refs from all existing node shapes
       (for-each (ns node-shapes)
         (for-each (c (. ns constraints))
           (match c
@@ -103,8 +72,6 @@
               ((con-qualified-value-shape ref _ _ _) (list-push ns-queue ref))
               ((con-property ref) (list-push ps-queue ref))
               (_ (do))))))
-
-      ;; Collect initial refs from standalone property shapes
       (for-each (ps prop-shapes)
         (for-each (c (. ps constraints))
           (match c
@@ -116,66 +83,59 @@
             ((con-qualified-value-shape ref _ _ _) (list-push ns-queue ref))
             ((con-property ref) (list-push ps-queue ref))
             (_ (do)))))
-
-      ;; Process queues iteratively until exhausted
       (let ((mut ns-i 0)
             (mut ps-i 0)
             (mut changed true))
         (while changed
           (set! changed false)
-
-          ;; Process node shape refs
           (while (< ns-i (list-len ns-queue))
             (match (list-get ns-queue ns-i)
               ((some ref)
                 (match (map-get shape-map ref)
                   ((none)
-                   (if (shape-has-path arena g ref)
-                    ;; Has sh:path => property shape referenced from a logical (sh:or/
-                    ;; sh:and/sh:xone/sh:not) or sh:node constraint. Register it as a
-                    ;; property shape so the engine evaluates it against the path's value
-                    ;; nodes (with vacuous satisfaction when there are none), not as a
-                    ;; node shape against the focus node directly.
-                    (match (map-get property-shape-map ref)
-                      ((none)
+                    (if (shape-has-path arena g ref)
+                      (match (map-get property-shape-map ref)
+                        ((none) (set! changed true) (list-push ps-queue ref))
+                        ((some _) (do)))
+                      (do
                         (set! changed true)
-                        (list-push ps-queue ref))
-                      ((some _) (do)))
-                    (do
-                    (set! changed true)
-                    (let ((ns (parse-node-shape arena g ref)))
-                      (map-put shape-map ref ns)
-                      ;; Enqueue refs from new shape's constraints (inlined)
-                      (for-each (c (. ns constraints))
-                        (match c
-                          ((con-not r) (list-push ns-queue r))
-                          ((con-and rs) (for-each (r rs) (list-push ns-queue r)))
-                          ((con-or rs) (for-each (r rs) (list-push ns-queue r)))
-                          ((con-xone rs) (for-each (r rs) (list-push ns-queue r)))
-                          ((con-node r) (list-push ns-queue r))
-                          ((con-qualified-value-shape r _ _ _) (list-push ns-queue r))
-                          ((con-property r) (list-push ps-queue r))
-                          (_ (do))))
-                      ;; Register and scan property shapes from new node shape
-                      (for-each (ps (. ns property-shapes))
-                        (match (map-get property-shape-map (. ps id))
-                          ((none) (map-put property-shape-map (. ps id) ps))
-                          ((some _) (do)))
-                        (for-each (c (. ps constraints))
-                          (match c
-                            ((con-not r) (list-push ns-queue r))
-                            ((con-and rs) (for-each (r rs) (list-push ns-queue r)))
-                            ((con-or rs) (for-each (r rs) (list-push ns-queue r)))
-                            ((con-xone rs) (for-each (r rs) (list-push ns-queue r)))
-                            ((con-node r) (list-push ns-queue r))
-                            ((con-qualified-value-shape r _ _ _) (list-push ns-queue r))
-                            ((con-property r) (list-push ps-queue r))
-                            (_ (do)))))))))
+                        (let ((ns (parse-node-shape arena g ref)))
+                          (map-put shape-map ref ns)
+                          (for-each (c (. ns constraints))
+                            (match c
+                              ((con-not r) (list-push ns-queue r))
+                              ((con-and rs)
+                                (for-each (r rs) (list-push ns-queue r)))
+                              ((con-or rs)
+                                (for-each (r rs) (list-push ns-queue r)))
+                              ((con-xone rs)
+                                (for-each (r rs) (list-push ns-queue r)))
+                              ((con-node r) (list-push ns-queue r))
+                              ((con-qualified-value-shape r _ _ _)
+                                (list-push ns-queue r))
+                              ((con-property r) (list-push ps-queue r))
+                              (_ (do))))
+                          (for-each (ps (. ns property-shapes))
+                            (match (map-get property-shape-map (. ps id))
+                              ((none) (map-put property-shape-map (. ps id) ps))
+                              ((some _) (do)))
+                            (for-each (c (. ps constraints))
+                              (match c
+                                ((con-not r) (list-push ns-queue r))
+                                ((con-and rs)
+                                  (for-each (r rs) (list-push ns-queue r)))
+                                ((con-or rs)
+                                  (for-each (r rs) (list-push ns-queue r)))
+                                ((con-xone rs)
+                                  (for-each (r rs) (list-push ns-queue r)))
+                                ((con-node r) (list-push ns-queue r))
+                                ((con-qualified-value-shape r _ _ _)
+                                  (list-push ns-queue r))
+                                ((con-property r) (list-push ps-queue r))
+                                (_ (do)))))))))
                   ((some _) (do))))
               ((none) (do)))
             (set! ns-i (+ ns-i 1)))
-
-          ;; Process property shape refs
           (while (< ps-i (list-len ps-queue))
             (match (list-get ps-queue ps-i)
               ((some ref)
@@ -184,98 +144,65 @@
                     (set! changed true)
                     (let ((ps (parse-property-shape arena g ref)))
                       (map-put property-shape-map ref ps)
-                      ;; Enqueue refs from new property shape's constraints (inlined)
                       (for-each (c (. ps constraints))
                         (match c
                           ((con-not r) (list-push ns-queue r))
-                          ((con-and rs) (for-each (r rs) (list-push ns-queue r)))
+                          ((con-and rs)
+                            (for-each (r rs) (list-push ns-queue r)))
                           ((con-or rs) (for-each (r rs) (list-push ns-queue r)))
-                          ((con-xone rs) (for-each (r rs) (list-push ns-queue r)))
+                          ((con-xone rs)
+                            (for-each (r rs) (list-push ns-queue r)))
                           ((con-node r) (list-push ns-queue r))
-                          ((con-qualified-value-shape r _ _ _) (list-push ns-queue r))
+                          ((con-qualified-value-shape r _ _ _)
+                            (list-push ns-queue r))
                           ((con-property r) (list-push ps-queue r))
                           (_ (do))))))
                   ((some _) (do))))
               ((none) (do)))
             (set! ps-i (+ ps-i 1)))))))
 
-  ;; ============================================================
-  ;; Main Entry Point
-  ;; ============================================================
-
   (fn parse-shapes-graph ((arena Arena) (shapes-graph IndexedGraph))
-    (@intent "Extract all SHACL shapes from an RDF shapes graph into a structured ShapesGraph")
+    (@intent
+      "Extract all SHACL shapes from an RDF shapes graph into a structured ShapesGraph")
     (@spec ((Arena IndexedGraph) -> ShapesGraph))
     (@alloc arena)
-    (@pre {(indexed-graph-size shapes-graph) >= 0})
-    (@post {(list-len (. $result node-shapes)) >= 0})
-    (@example (arena (indexed-graph-create arena))
-      ;; Returns ShapesGraph with parsed node and property shapes
-      )
+    (@pre (>= (indexed-graph-size shapes-graph) 0))
+    (@post (>= (list-len (. $result node-shapes)) 0))
+    (@example (arena (indexed-graph-create arena)))
     (let ((type-pred (make-iri arena RDF_TYPE))
           (ns-type (make-iri arena SHACL_NODE_SHAPE))
           (ps-type (make-iri arena SHACL_PROPERTY_SHAPE))
           (no-term (Option Term) (none))
-
-          ;; Find all NodeShape declarations
           (ns-subjects (indexed-graph-subjects arena shapes-graph type-pred ns-type))
-          ;; Find all PropertyShape declarations (standalone, not via sh:property)
           (ps-subjects (indexed-graph-subjects arena shapes-graph type-pred ps-type))
-
           (mut node-shapes (list-new arena NodeShape))
           (mut prop-shapes (list-new arena PropertyShape))
           (shape-map (map-new arena Term NodeShape))
           (property-shape-map (map-new arena Term PropertyShape)))
-
-      ;; Parse each NodeShape
       (for-each (ns-id ns-subjects)
         (let ((ns (parse-node-shape arena shapes-graph ns-id)))
           (list-push node-shapes ns)
           (map-put shape-map ns-id ns)
-          ;; Register its property shapes in property-shape-map
           (for-each (ps (. ns property-shapes))
             (map-put property-shape-map (. ps id) ps))))
-
-      ;; Parse standalone PropertyShapes. If a property shape has target
-      ;; declarations, wrap it in a synthetic NodeShape so the engine evaluates it.
       (for-each (ps-id ps-subjects)
         (let ((ps (parse-property-shape arena shapes-graph ps-id))
-              ;; Check for target declarations on the standalone property shape
-              (t-nodes (indexed-graph-objects arena shapes-graph ps-id
-                         (make-iri arena SHACL_TARGET_NODE)))
-              (t-classes (indexed-graph-objects arena shapes-graph ps-id
-                           (make-iri arena SHACL_TARGET_CLASS)))
-              (t-subj (indexed-graph-objects arena shapes-graph ps-id
-                        (make-iri arena SHACL_TARGET_SUBJECTS_OF)))
-              (t-obj (indexed-graph-objects arena shapes-graph ps-id
-                       (make-iri arena SHACL_TARGET_OBJECTS_OF))))
-          ;; Register in property-shape-map
+              (t-nodes (indexed-graph-objects arena shapes-graph ps-id (make-iri arena SHACL_TARGET_NODE)))
+              (t-classes (indexed-graph-objects arena shapes-graph ps-id (make-iri arena SHACL_TARGET_CLASS)))
+              (t-subj (indexed-graph-objects arena shapes-graph ps-id (make-iri arena SHACL_TARGET_SUBJECTS_OF)))
+              (t-obj (indexed-graph-objects arena shapes-graph ps-id (make-iri arena SHACL_TARGET_OBJECTS_OF))))
           (map-put property-shape-map ps-id ps)
-          (if (or (> (list-len t-nodes) 0)
-                  (or (> (list-len t-classes) 0)
-                      (or (> (list-len t-subj) 0)
-                          (> (list-len t-obj) 0))))
-            ;; Has targets: wrap in a synthetic NodeShape
+          (if (or
+              (> (list-len t-nodes) 0)
+              (or
+                (> (list-len t-classes) 0)
+                (or (> (list-len t-subj) 0) (> (list-len t-obj) 0))))
             (let ((mut ps-list (list-new arena PropertyShape)))
               (list-push ps-list ps)
-              (let ((ns (record-new NodeShape
-                          (id ps-id)
-                          (target-nodes t-nodes)
-                          (target-classes t-classes)
-                          (target-subjects-of t-subj)
-                          (target-objects-of t-obj)
-                          (property-shapes ps-list)
-                          (constraints (list-new arena Constraint))
-                          (severity 'severity-violation)
-                          (message (none))
-                          (deactivated (. ps deactivated)))))
+              (let ((ns (record-new NodeShape (id ps-id) (target-nodes t-nodes) (target-classes t-classes) (target-subjects-of t-subj) (target-objects-of t-obj) (property-shapes ps-list) (constraints (list-new arena Constraint)) (severity 'severity-violation) (message (none)) (deactivated (. ps deactivated)))))
                 (list-push node-shapes ns)
                 (map-put shape-map ps-id ns)))
-            ;; No targets: keep as standalone property shape
             (list-push prop-shapes ps))))
-
-      ;; Discover implicit shapes: nodes with target declarations but no
-      ;; rdf:type sh:NodeShape or sh:PropertyShape
       (let ((target-pred-tn (make-iri arena SHACL_TARGET_NODE))
             (target-pred-tc (make-iri arena SHACL_TARGET_CLASS))
             (target-pred-ts (make-iri arena SHACL_TARGET_SUBJECTS_OF))
@@ -293,10 +220,8 @@
                 (match (map-get shape-map subj)
                   ((some _) (do))
                   ((none)
-                    ;; Check if it's a PropertyShape (has sh:path)
                     (let ((path-vals (indexed-graph-objects arena shapes-graph subj path-pred)))
                       (if (> (list-len path-vals) 0)
-                        ;; Has sh:path — PropertyShape, wrap in synthetic NodeShape
                         (let ((ps (parse-property-shape arena shapes-graph subj))
                               (t-nodes (indexed-graph-objects arena shapes-graph subj target-pred-tn))
                               (t-classes (indexed-graph-objects arena shapes-graph subj target-pred-tc))
@@ -305,80 +230,52 @@
                           (map-put property-shape-map subj ps)
                           (let ((mut ps-list (list-new arena PropertyShape)))
                             (list-push ps-list ps)
-                            (let ((ns (record-new NodeShape
-                                        (id subj)
-                                        (target-nodes t-nodes)
-                                        (target-classes t-classes)
-                                        (target-subjects-of t-subj)
-                                        (target-objects-of t-obj)
-                                        (property-shapes ps-list)
-                                        (constraints (list-new arena Constraint))
-                                        (severity 'severity-violation)
-                                        (message (none))
-                                        (deactivated (. ps deactivated)))))
+                            (let ((ns (record-new NodeShape (id subj) (target-nodes t-nodes) (target-classes t-classes) (target-subjects-of t-subj) (target-objects-of t-obj) (property-shapes ps-list) (constraints (list-new arena Constraint)) (severity 'severity-violation) (message (none)) (deactivated (. ps deactivated)))))
                               (list-push node-shapes ns)
                               (map-put shape-map subj ns))))
-                        ;; No sh:path — parse as NodeShape
                         (let ((ns (parse-node-shape arena shapes-graph subj)))
                           (list-push node-shapes ns)
                           (map-put shape-map subj ns)
                           (for-each (ps (. ns property-shapes))
                             (map-put property-shape-map (. ps id) ps))))))))))))
-
-      ;; Register inline blank node shapes referenced by constraints
-      (register-inline-shapes arena shapes-graph node-shapes prop-shapes
-                              shape-map property-shape-map)
-
-      (record-new ShapesGraph
+      (register-inline-shapes
+        arena
+        shapes-graph
+        node-shapes
+        prop-shapes
+        shape-map
+        property-shape-map)
+      (record-new
+        ShapesGraph
         (node-shapes node-shapes)
         (property-shapes prop-shapes)
         (shape-map shape-map)
         (property-shape-map property-shape-map)))
-    :c-name "snarl_parse_shapes_graph")
-
-  ;; ============================================================
-  ;; Node Shape Parsing
-  ;; ============================================================
+    :c-name
+    "snarl_parse_shapes_graph")
 
   (fn parse-node-shape ((arena Arena) (g IndexedGraph) (shape-id Term))
     (@intent "Parse a single NodeShape from the shapes graph by its identifier")
     (@spec ((Arena IndexedGraph Term) -> NodeShape))
     (@alloc arena)
-    (@example (arena (indexed-graph-create arena) (make-iri arena "http://example.org/Shape"))
-      ;; Returns NodeShape with targets, property shapes, and constraints
-      )
-    (let (;; Target declarations
-          (target-nodes (indexed-graph-objects arena g shape-id
-                          (make-iri arena SHACL_TARGET_NODE)))
-          (target-classes (indexed-graph-objects arena g shape-id
-                            (make-iri arena SHACL_TARGET_CLASS)))
-          (target-subjects-of (indexed-graph-objects arena g shape-id
-                                (make-iri arena SHACL_TARGET_SUBJECTS_OF)))
-          (target-objects-of (indexed-graph-objects arena g shape-id
-                               (make-iri arena SHACL_TARGET_OBJECTS_OF)))
-
-          ;; Property shapes
-          (prop-refs (indexed-graph-objects arena g shape-id
-                       (make-iri arena SHACL_PROPERTY)))
+    (@example
+      (arena
+        (indexed-graph-create arena)
+        (make-iri arena "http://example.org/Shape")))
+    (let ((target-nodes (indexed-graph-objects arena g shape-id (make-iri arena SHACL_TARGET_NODE)))
+          (target-classes (indexed-graph-objects arena g shape-id (make-iri arena SHACL_TARGET_CLASS)))
+          (target-subjects-of (indexed-graph-objects arena g shape-id (make-iri arena SHACL_TARGET_SUBJECTS_OF)))
+          (target-objects-of (indexed-graph-objects arena g shape-id (make-iri arena SHACL_TARGET_OBJECTS_OF)))
+          (prop-refs (indexed-graph-objects arena g shape-id (make-iri arena SHACL_PROPERTY)))
           (mut prop-shapes (list-new arena PropertyShape))
-
-          ;; Node-level constraints
           (constraints (parse-constraints arena g shape-id))
-
-          ;; Severity
           (severity (parse-shape-severity arena g shape-id))
-
-          ;; Message
           (message (parse-shape-message arena g shape-id))
-
-          ;; Deactivated
           (deactivated (parse-shape-deactivated arena g shape-id)))
-
-      ;; Parse each referenced property shape
       (for-each (ps-ref prop-refs)
         (list-push prop-shapes (parse-property-shape arena g ps-ref)))
-
-      (record-new NodeShape
+      (record-new
+        NodeShape
         (id shape-id)
         (target-nodes target-nodes)
         (target-classes target-classes)
@@ -389,93 +286,59 @@
         (severity severity)
         (message message)
         (deactivated deactivated)))
-    :c-name "snarl_parse_node_shape")
-
-  ;; ============================================================
-  ;; Property Shape Parsing
-  ;; ============================================================
+    :c-name
+    "snarl_parse_node_shape")
 
   (fn parse-property-shape ((arena Arena) (g IndexedGraph) (shape-id Term))
-    (@intent "Parse a single PropertyShape from the shapes graph by its identifier")
+    (@intent
+      "Parse a single PropertyShape from the shapes graph by its identifier")
     (@spec ((Arena IndexedGraph Term) -> PropertyShape))
     (@alloc arena)
-    (@example (arena (indexed-graph-create arena) (make-iri arena "http://example.org/ps"))
-      ;; Returns PropertyShape with path and constraints
-      )
-    (let (;; Path — required for property shapes
-          (path-objects (indexed-graph-objects arena g shape-id (make-iri arena SHACL_PATH)))
-          (path (if (> (list-len path-objects) 0)
-                  (match (list-get path-objects 0)
-                    ((some path-term) (parse-path arena g path-term))
-                    ((none) (union-new ShaclPath path-predicate shape-id)))
-                  ;; No path found — use shape id as fallback
-                  (union-new ShaclPath path-predicate shape-id)))
-
-          ;; Constraints
+    (@example
+      (arena
+        (indexed-graph-create arena)
+        (make-iri arena "http://example.org/ps")))
+    (let ((path-objects (indexed-graph-objects arena g shape-id (make-iri arena SHACL_PATH)))
+          (path (if (> (list-len path-objects) 0) (match (list-get path-objects 0) ((some path-term) (parse-path arena g path-term)) ((none) (union-new ShaclPath path-predicate shape-id))) (union-new ShaclPath path-predicate shape-id)))
           (constraints (parse-constraints arena g shape-id))
-
-          ;; Severity
           (severity (parse-shape-severity arena g shape-id))
-
-          ;; Message
           (message (parse-shape-message arena g shape-id))
-
-          ;; Deactivated
           (deactivated (parse-shape-deactivated arena g shape-id)))
-
-      (record-new PropertyShape
+      (record-new
+        PropertyShape
         (id shape-id)
         (path path)
         (constraints constraints)
         (severity severity)
         (message message)
         (deactivated deactivated)))
-    :c-name "snarl_parse_property_shape")
-
-  ;; ============================================================
-  ;; Path Parsing
-  ;; ============================================================
+    :c-name
+    "snarl_parse_property_shape")
 
   (fn parse-path ((arena Arena) (g IndexedGraph) (path-node Term))
-    (@intent "Parse a SHACL path expression from an RDF node in the shapes graph")
+    (@intent
+      "Parse a SHACL path expression from an RDF node in the shapes graph")
     (@spec ((Arena IndexedGraph Term) -> ShaclPath))
     (@alloc arena)
-    (@example (arena (indexed-graph-create arena) (make-iri arena "http://example.org/name"))
-      ;; Simple predicate IRI returns path-predicate
-      )
-    ;; Check if path-node is a complex path (blank node with sh:inversePath etc.)
-    ;; or a simple predicate IRI
+    (@example
+      (arena
+        (indexed-graph-create arena)
+        (make-iri arena "http://example.org/name")))
     (let ((no-term (Option Term) (none))
-          ;; Check for RDF list structure (sequence path) — must be first,
-          ;; as a blank node may have both rdf:first/rdf:rest AND sh:inversePath
           (first-pred (make-iri arena RDF_FIRST))
           (first-objs (indexed-graph-objects arena g path-node first-pred))
-          ;; Check for sh:inversePath
-          (inverse-objs (indexed-graph-objects arena g path-node
-                          (make-iri arena SHACL_INVERSE_PATH)))
-          ;; Check for sh:alternativePath
-          (alt-objs (indexed-graph-objects arena g path-node
-                      (make-iri arena SHACL_ALTERNATIVE_PATH)))
-          ;; Check for sh:zeroOrMorePath
-          (zom-objs (indexed-graph-objects arena g path-node
-                      (make-iri arena SHACL_ZERO_OR_MORE_PATH)))
-          ;; Check for sh:oneOrMorePath
-          (oom-objs (indexed-graph-objects arena g path-node
-                      (make-iri arena SHACL_ONE_OR_MORE_PATH)))
-          ;; Check for sh:zeroOrOnePath
-          (zoo-objs (indexed-graph-objects arena g path-node
-                      (make-iri arena SHACL_ZERO_OR_ONE_PATH))))
-
+          (inverse-objs (indexed-graph-objects arena g path-node (make-iri arena SHACL_INVERSE_PATH)))
+          (alt-objs (indexed-graph-objects arena g path-node (make-iri arena SHACL_ALTERNATIVE_PATH)))
+          (zom-objs (indexed-graph-objects arena g path-node (make-iri arena SHACL_ZERO_OR_MORE_PATH)))
+          (oom-objs (indexed-graph-objects arena g path-node (make-iri arena SHACL_ONE_OR_MORE_PATH)))
+          (zoo-objs (indexed-graph-objects arena g path-node (make-iri arena SHACL_ZERO_OR_ONE_PATH))))
       (cond
-        ;; RDF list (sequence path) — takes priority over SHACL path properties
         ((> (list-len first-objs) 0)
           (let ((elements (rdf-list-elements-indexed arena g path-node))
                 (mut paths (list-new arena ShaclPath)))
             (for-each (elem elements)
               (list-push paths (parse-path arena g elem)))
             (union-new ShaclPath path-sequence paths)))
-
-        ;; Inverse path: [ sh:inversePath <pred> ]
         ((> (list-len inverse-objs) 0)
           (match (list-get inverse-objs 0)
             ((some inner)
@@ -484,8 +347,6 @@
                 (set! (deref ptr) p)
                 (union-new ShaclPath path-inverse ptr)))
             ((none) (union-new ShaclPath path-predicate path-node))))
-
-        ;; Alternative path: [ sh:alternativePath ( p1 p2 ... ) ]
         ((> (list-len alt-objs) 0)
           (match (list-get alt-objs 0)
             ((some list-head)
@@ -495,8 +356,6 @@
                   (list-push paths (parse-path arena g elem)))
                 (union-new ShaclPath path-alternative paths)))
             ((none) (union-new ShaclPath path-predicate path-node))))
-
-        ;; Zero-or-more path: [ sh:zeroOrMorePath <pred> ]
         ((> (list-len zom-objs) 0)
           (match (list-get zom-objs 0)
             ((some inner)
@@ -505,8 +364,6 @@
                 (set! (deref ptr) p)
                 (union-new ShaclPath path-zero-or-more ptr)))
             ((none) (union-new ShaclPath path-predicate path-node))))
-
-        ;; One-or-more path: [ sh:oneOrMorePath <pred> ]
         ((> (list-len oom-objs) 0)
           (match (list-get oom-objs 0)
             ((some inner)
@@ -515,8 +372,6 @@
                 (set! (deref ptr) p)
                 (union-new ShaclPath path-one-or-more ptr)))
             ((none) (union-new ShaclPath path-predicate path-node))))
-
-        ;; Zero-or-one path: [ sh:zeroOrOnePath <pred> ]
         ((> (list-len zoo-objs) 0)
           (match (list-get zoo-objs 0)
             ((some inner)
@@ -525,268 +380,197 @@
                 (set! (deref ptr) p)
                 (union-new ShaclPath path-zero-or-one ptr)))
             ((none) (union-new ShaclPath path-predicate path-node))))
-
-        ;; Simple predicate path (fallback)
         (true (union-new ShaclPath path-predicate path-node))))
-    :c-name "snarl_parse_path")
-
-  ;; ============================================================
-  ;; Constraint Parsing
-  ;; ============================================================
+    :c-name
+    "snarl_parse_path")
 
   (fn parse-constraints ((arena Arena) (g IndexedGraph) (shape-id Term))
     (@intent "Parse all SHACL constraints declared on a shape node")
     (@spec ((Arena IndexedGraph Term) -> (List Constraint)))
     (@alloc arena)
-    (@post {(list-len $result) >= 0})
-    (@example (arena (indexed-graph-create arena) (make-iri arena "http://example.org/Shape"))
-      ;; Returns list of parsed Constraint values from shape's triples
-      )
+    (@post (>= (list-len $result) 0))
+    (@example
+      (arena
+        (indexed-graph-create arena)
+        (make-iri arena "http://example.org/Shape")))
     (let ((mut constraints (list-new arena Constraint)))
-
-      ;; --- Value type constraints ---
-
-      ;; sh:class
       (let ((class-vals (indexed-graph-objects arena g shape-id (make-iri arena SHACL_CLASS))))
         (for-each (v class-vals)
           (list-push constraints (union-new Constraint con-class v))))
-
-      ;; sh:datatype
       (let ((dt-vals (indexed-graph-objects arena g shape-id (make-iri arena SHACL_DATATYPE))))
         (for-each (v dt-vals)
           (list-push constraints (union-new Constraint con-datatype v))))
-
-      ;; sh:nodeKind
       (let ((nk-vals (indexed-graph-objects arena g shape-id (make-iri arena SHACL_NODE_KIND))))
         (for-each (v nk-vals)
           (match (parse-node-kind v)
-            ((some nk) (list-push constraints (union-new Constraint con-node-kind nk)))
+            ((some nk)
+              (list-push constraints (union-new Constraint con-node-kind nk)))
             ((none) (do)))))
-
-      ;; --- Cardinality constraints ---
-
-      ;; sh:minCount
       (let ((mc-vals (indexed-graph-objects arena g shape-id (make-iri arena SHACL_MIN_COUNT))))
         (for-each (v mc-vals)
           (match (term-to-int v)
-            ((some n) (list-push constraints (union-new Constraint con-min-count n)))
+            ((some n)
+              (list-push constraints (union-new Constraint con-min-count n)))
             ((none) (do)))))
-
-      ;; sh:maxCount
       (let ((mc-vals (indexed-graph-objects arena g shape-id (make-iri arena SHACL_MAX_COUNT))))
         (for-each (v mc-vals)
           (match (term-to-int v)
-            ((some n) (list-push constraints (union-new Constraint con-max-count n)))
+            ((some n)
+              (list-push constraints (union-new Constraint con-max-count n)))
             ((none) (do)))))
-
-      ;; --- Value range constraints ---
-
-      ;; sh:minInclusive
       (let ((vals (indexed-graph-objects arena g shape-id (make-iri arena SHACL_MIN_INCLUSIVE))))
         (for-each (v vals)
           (list-push constraints (union-new Constraint con-min-inclusive v))))
-
-      ;; sh:maxInclusive
       (let ((vals (indexed-graph-objects arena g shape-id (make-iri arena SHACL_MAX_INCLUSIVE))))
         (for-each (v vals)
           (list-push constraints (union-new Constraint con-max-inclusive v))))
-
-      ;; sh:minExclusive
       (let ((vals (indexed-graph-objects arena g shape-id (make-iri arena SHACL_MIN_EXCLUSIVE))))
         (for-each (v vals)
           (list-push constraints (union-new Constraint con-min-exclusive v))))
-
-      ;; sh:maxExclusive
       (let ((vals (indexed-graph-objects arena g shape-id (make-iri arena SHACL_MAX_EXCLUSIVE))))
         (for-each (v vals)
           (list-push constraints (union-new Constraint con-max-exclusive v))))
-
-      ;; --- String constraints ---
-
-      ;; sh:minLength
       (let ((vals (indexed-graph-objects arena g shape-id (make-iri arena SHACL_MIN_LENGTH))))
         (for-each (v vals)
           (match (term-to-int v)
-            ((some n) (list-push constraints (union-new Constraint con-min-length n)))
+            ((some n)
+              (list-push constraints (union-new Constraint con-min-length n)))
             ((none) (do)))))
-
-      ;; sh:maxLength
       (let ((vals (indexed-graph-objects arena g shape-id (make-iri arena SHACL_MAX_LENGTH))))
         (for-each (v vals)
           (match (term-to-int v)
-            ((some n) (list-push constraints (union-new Constraint con-max-length n)))
+            ((some n)
+              (list-push constraints (union-new Constraint con-max-length n)))
             ((none) (do)))))
-
-      ;; sh:pattern
       (let ((vals (indexed-graph-objects arena g shape-id (make-iri arena SHACL_PATTERN))))
         (for-each (v vals)
           (match (term-to-string v)
-            ((some s) (list-push constraints (union-new Constraint con-pattern s)))
+            ((some s)
+              (list-push constraints (union-new Constraint con-pattern s)))
             ((none) (do)))))
-
-      ;; sh:languageIn
-      (let ((vals (indexed-graph-objects arena g shape-id
-                    (make-iri arena SHACL_LANGUAGE_IN))))
+      (let ((vals (indexed-graph-objects arena g shape-id (make-iri arena SHACL_LANGUAGE_IN))))
         (for-each (v vals)
           (let ((langs (parse-string-list arena g v)))
             (list-push constraints (union-new Constraint con-language-in langs)))))
-
-      ;; sh:uniqueLang — per SHACL spec, only activated when value is exactly "true"
-      ;; (not "1"^^xsd:boolean which is a distinct lexical form)
-      (let ((vals (indexed-graph-objects arena g shape-id
-                    (make-iri arena SHACL_UNIQUE_LANG))))
+      (let ((vals (indexed-graph-objects arena g shape-id (make-iri arena SHACL_UNIQUE_LANG))))
         (for-each (v vals)
           (match (term-to-string v)
             ((some s)
               (when (string-eq s "true")
-                (list-push constraints (union-new Constraint con-unique-lang true))))
+                (list-push
+                  constraints
+                  (union-new Constraint con-unique-lang true))))
             ((none) (do)))))
-
-      ;; --- Property pair constraints ---
-
-      ;; sh:equals
       (let ((vals (indexed-graph-objects arena g shape-id (make-iri arena SHACL_EQUALS))))
         (for-each (v vals)
-          (list-push constraints (union-new Constraint con-equals
-            (union-new ShaclPath path-predicate v)))))
-
-      ;; sh:disjoint
+          (list-push
+            constraints
+            (union-new
+              Constraint
+              con-equals
+              (union-new ShaclPath path-predicate v)))))
       (let ((vals (indexed-graph-objects arena g shape-id (make-iri arena SHACL_DISJOINT))))
         (for-each (v vals)
-          (list-push constraints (union-new Constraint con-disjoint
-            (union-new ShaclPath path-predicate v)))))
-
-      ;; sh:lessThan
+          (list-push
+            constraints
+            (union-new
+              Constraint
+              con-disjoint
+              (union-new ShaclPath path-predicate v)))))
       (let ((vals (indexed-graph-objects arena g shape-id (make-iri arena SHACL_LESS_THAN))))
         (for-each (v vals)
-          (list-push constraints (union-new Constraint con-less-than
-            (union-new ShaclPath path-predicate v)))))
-
-      ;; sh:lessThanOrEquals
+          (list-push
+            constraints
+            (union-new
+              Constraint
+              con-less-than
+              (union-new ShaclPath path-predicate v)))))
       (let ((vals (indexed-graph-objects arena g shape-id (make-iri arena SHACL_LESS_THAN_OR_EQUALS))))
         (for-each (v vals)
-          (list-push constraints (union-new Constraint con-less-than-or-equals
-            (union-new ShaclPath path-predicate v)))))
-
-      ;; --- Logical constraints ---
-
-      ;; sh:not
+          (list-push
+            constraints
+            (union-new
+              Constraint
+              con-less-than-or-equals
+              (union-new ShaclPath path-predicate v)))))
       (let ((vals (indexed-graph-objects arena g shape-id (make-iri arena SHACL_NOT))))
         (for-each (v vals)
           (list-push constraints (union-new Constraint con-not v))))
-
-      ;; sh:and
       (let ((vals (indexed-graph-objects arena g shape-id (make-iri arena SHACL_AND))))
         (for-each (v vals)
           (let ((shapes (rdf-list-elements-indexed arena g v)))
             (list-push constraints (union-new Constraint con-and shapes)))))
-
-      ;; sh:or
       (let ((vals (indexed-graph-objects arena g shape-id (make-iri arena SHACL_OR))))
         (for-each (v vals)
           (let ((shapes (rdf-list-elements-indexed arena g v)))
             (list-push constraints (union-new Constraint con-or shapes)))))
-
-      ;; sh:xone
       (let ((vals (indexed-graph-objects arena g shape-id (make-iri arena SHACL_XONE))))
         (for-each (v vals)
           (let ((shapes (rdf-list-elements-indexed arena g v)))
             (list-push constraints (union-new Constraint con-xone shapes)))))
-
-      ;; --- Shape-based constraints ---
-
-      ;; sh:node
       (let ((vals (indexed-graph-objects arena g shape-id (make-iri arena SHACL_NODE))))
         (for-each (v vals)
           (list-push constraints (union-new Constraint con-node v))))
-
-      ;; sh:property (nested property shape reference)
       (let ((prop-vals (indexed-graph-objects arena g shape-id (make-iri arena SHACL_PROPERTY))))
         (for-each (v prop-vals)
           (list-push constraints (union-new Constraint con-property v))))
-
-      ;; sh:qualifiedValueShape
-      (let ((qvs-vals (indexed-graph-objects arena g shape-id
-                        (make-iri arena SHACL_QUALIFIED_VALUE_SHAPE))))
+      (let ((qvs-vals (indexed-graph-objects arena g shape-id (make-iri arena SHACL_QUALIFIED_VALUE_SHAPE))))
         (for-each (v qvs-vals)
-          (let ((qmin-vals (indexed-graph-objects arena g shape-id
-                             (make-iri arena SHACL_QUALIFIED_MIN_COUNT)))
-                (qmax-vals (indexed-graph-objects arena g shape-id
-                             (make-iri arena SHACL_QUALIFIED_MAX_COUNT)))
-                (qmin (if (> (list-len qmin-vals) 0)
-                        (match (list-get qmin-vals 0)
-                          ((some t) (match (term-to-int t) ((some n) n) ((none) 0)))
-                          ((none) 0))
-                        0))
-                (qmax (if (> (list-len qmax-vals) 0)
-                        (match (list-get qmax-vals 0)
-                          ((some t) (match (term-to-int t) ((some n) (some n)) ((none) (none))))
-                          ((none) (none)))
-                        (none)))
-                (disjoint-vals (indexed-graph-objects arena g shape-id
-                                 (make-iri arena SHACL_QUALIFIED_VALUE_SHAPES_DISJOINT)))
-                (disjoint (if (> (list-len disjoint-vals) 0)
-                            (match (list-get disjoint-vals 0)
-                              ((some t) (match (term-to-bool t) ((some b) b) ((none) false)))
-                              ((none) false))
-                            false)))
-            (list-push constraints (union-new Constraint con-qualified-value-shape v qmin qmax disjoint)))))
-
-      ;; --- Other constraints ---
-
-      ;; sh:hasValue
+          (let ((qmin-vals (indexed-graph-objects arena g shape-id (make-iri arena SHACL_QUALIFIED_MIN_COUNT)))
+                (qmax-vals (indexed-graph-objects arena g shape-id (make-iri arena SHACL_QUALIFIED_MAX_COUNT)))
+                (qmin (if (> (list-len qmin-vals) 0) (match (list-get qmin-vals 0) ((some t) (match (term-to-int t) ((some n) n) ((none) 0))) ((none) 0)) 0))
+                (qmax (if (> (list-len qmax-vals) 0) (match (list-get qmax-vals 0) ((some t) (match (term-to-int t) ((some n) (some n)) ((none) (none)))) ((none) (none))) (none)))
+                (disjoint-vals (indexed-graph-objects arena g shape-id (make-iri arena SHACL_QUALIFIED_VALUE_SHAPES_DISJOINT)))
+                (disjoint (if (> (list-len disjoint-vals) 0) (match (list-get disjoint-vals 0) ((some t) (match (term-to-bool t) ((some b) b) ((none) false))) ((none) false)) false)))
+            (list-push
+              constraints
+              (union-new
+                Constraint
+                con-qualified-value-shape
+                v
+                qmin
+                qmax
+                disjoint)))))
       (let ((vals (indexed-graph-objects arena g shape-id (make-iri arena SHACL_HAS_VALUE))))
         (for-each (v vals)
           (list-push constraints (union-new Constraint con-has-value v))))
-
-      ;; sh:in
       (let ((vals (indexed-graph-objects arena g shape-id (make-iri arena SHACL_IN))))
         (for-each (v vals)
           (let ((elements (rdf-list-elements-indexed arena g v)))
             (list-push constraints (union-new Constraint con-in elements)))))
-
-      ;; sh:closed
       (let ((closed-vals (indexed-graph-objects arena g shape-id (make-iri arena SHACL_CLOSED))))
         (for-each (v closed-vals)
           (match (term-to-bool v)
             ((some b)
               (when b
-                ;; Parse sh:ignoredProperties
-                (let ((ignored-vals (indexed-graph-objects arena g shape-id
-                                      (make-iri arena SHACL_IGNORED_PROPERTIES)))
+                (let ((ignored-vals (indexed-graph-objects arena g shape-id (make-iri arena SHACL_IGNORED_PROPERTIES)))
                       (mut ignored-paths (list-new arena ShaclPath)))
                   (for-each (iv ignored-vals)
                     (let ((elements (rdf-list-elements-indexed arena g iv)))
                       (for-each (elem elements)
-                        (list-push ignored-paths
+                        (list-push
+                          ignored-paths
                           (union-new ShaclPath path-predicate elem)))))
-                  (list-push constraints (union-new Constraint con-closed true ignored-paths)))))
+                  (list-push
+                    constraints
+                    (union-new Constraint con-closed true ignored-paths)))))
             ((none) (do)))))
-
       constraints)
-    :c-name "snarl_parse_constraints")
-
-  ;; ============================================================
-  ;; Helper: Parse NodeKind from IRI
-  ;; ============================================================
+    :c-name
+    "snarl_parse_constraints")
 
   (fn parse-node-kind ((term Term))
     (@intent "Parse an sh:nodeKind value from its IRI term")
     (@spec ((Term) -> (Option NodeKind)))
     (@pure)
-    (@example ((term-iri (IRI "http://www.w3.org/ns/shacl#IRI")))
-      ;; Returns (some node-kind-iri)
-      )
-    (@example ((term-literal (Literal "foo" (none) (none))))
-      ;; Returns (none) for non-IRI terms
-      )
+    (@example ((term-iri (IRI "http://www.w3.org/ns/shacl#IRI"))))
+    (@example ((term-literal (Literal "foo" (none) (none)))))
     (match term
       ((term-iri iri)
         (cond
           ((string-eq (. iri value) SHACL_BLANK_NODE)
             (some 'node-kind-blank-node))
-          ((string-eq (. iri value) SHACL_IRI)
-            (some 'node-kind-iri))
+          ((string-eq (. iri value) SHACL_IRI) (some 'node-kind-iri))
           ((string-eq (. iri value) SHACL_LITERAL)
             (some 'node-kind-literal))
           ((string-eq (. iri value) SHACL_BLANK_NODE_OR_IRI)
@@ -797,22 +581,15 @@
             (some 'node-kind-iri-or-literal))
           (else (none))))
       (_ (none)))
-    :c-name "snarl_parse_node_kind")
-
-  ;; ============================================================
-  ;; Helper: Parse Severity
-  ;; ============================================================
+    :c-name
+    "snarl_parse_node_kind")
 
   (fn parse-severity ((term Term))
     (@intent "Parse sh:severity value from IRI term")
     (@spec ((Term) -> Severity))
     (@pure)
-    (@example ((term-iri (IRI "http://www.w3.org/ns/shacl#Warning")))
-      ;; Returns severity-warning
-      )
-    (@example ((term-iri (IRI "http://www.w3.org/ns/shacl#Violation")))
-      ;; Returns severity-violation
-      )
+    (@example ((term-iri (IRI "http://www.w3.org/ns/shacl#Warning"))))
+    (@example ((term-iri (IRI "http://www.w3.org/ns/shacl#Violation"))))
     (match term
       ((term-iri iri)
         (cond
@@ -820,74 +597,62 @@
           ((string-eq (. iri value) SHACL_INFO) 'severity-info)
           (else 'severity-violation)))
       (_ 'severity-violation))
-    :c-name "snarl_parse_severity")
-
-  ;; ============================================================
-  ;; Helper: Parse shape severity declaration
-  ;; ============================================================
+    :c-name
+    "snarl_parse_severity")
 
   (fn parse-shape-severity ((arena Arena) (g IndexedGraph) (shape-id Term))
     (@intent "Get the severity declared on a shape, defaulting to violation")
     (@spec ((Arena IndexedGraph Term) -> Severity))
     (@alloc arena)
-    (@example (arena (indexed-graph-create arena) (make-iri arena "http://example.org/Shape"))
-      ;; Returns severity from shape declaration, defaults to violation
-      )
-    (let ((sev-vals (indexed-graph-objects arena g shape-id
-                      (make-iri arena "http://www.w3.org/ns/shacl#severity"))))
+    (@example
+      (arena
+        (indexed-graph-create arena)
+        (make-iri arena "http://example.org/Shape")))
+    (let ((sev-vals (indexed-graph-objects arena g shape-id (make-iri arena "http://www.w3.org/ns/shacl#severity"))))
       (if (> (list-len sev-vals) 0)
         (match (list-get sev-vals 0)
           ((some v) (parse-severity v))
           ((none) 'severity-violation))
         'severity-violation)))
 
-  ;; ============================================================
-  ;; Helper: Parse shape message
-  ;; ============================================================
-
   (fn parse-shape-message ((arena Arena) (g IndexedGraph) (shape-id Term))
     (@intent "Get the sh:message declared on a shape, if any")
     (@spec ((Arena IndexedGraph Term) -> (Option String)))
     (@alloc arena)
-    (@example (arena (indexed-graph-create arena) (make-iri arena "http://example.org/Shape"))
-      ;; Returns (none) when no message declared
-      )
-    (let ((msg-vals (indexed-graph-objects arena g shape-id
-                      (make-iri arena "http://www.w3.org/ns/shacl#message"))))
+    (@example
+      (arena
+        (indexed-graph-create arena)
+        (make-iri arena "http://example.org/Shape")))
+    (let ((msg-vals (indexed-graph-objects arena g shape-id (make-iri arena "http://www.w3.org/ns/shacl#message"))))
       (if (> (list-len msg-vals) 0)
         (match (list-get msg-vals 0)
           ((some v) (term-to-string v))
           ((none) (none)))
         (none))))
 
-  ;; ============================================================
-  ;; Helper: Parse sh:deactivated
-  ;; ============================================================
-
   (fn parse-shape-deactivated ((arena Arena) (g IndexedGraph) (shape-id Term))
     (@intent "Check if a shape has sh:deactivated true")
     (@spec ((Arena IndexedGraph Term) -> Bool))
     (@alloc arena)
-    (@example (arena (indexed-graph-create arena) (make-iri arena "http://example.org/Shape"))
-      ;; Returns false when no deactivated declaration
-      )
-    (let ((vals (indexed-graph-objects arena g shape-id
-                  (make-iri arena "http://www.w3.org/ns/shacl#deactivated"))))
+    (@example
+      (arena
+        (indexed-graph-create arena)
+        (make-iri arena "http://example.org/Shape")))
+    (let ((vals (indexed-graph-objects arena g shape-id (make-iri arena "http://www.w3.org/ns/shacl#deactivated"))))
       (if (> (list-len vals) 0)
         (match (list-get vals 0)
           ((some v) (match (term-to-bool v) ((some b) b) ((none) false)))
           ((none) false))
         false)))
 
-  ;; ============================================================
-  ;; Term Conversion Helpers
-  ;; ============================================================
-
   (fn term-to-int ((t Term))
     (@intent "Extract integer value from a literal term")
     (@spec ((Term) -> (Option (Int 0 ..))))
     (@pure)
-    (@example ((term-literal (Literal "42" (some "http://www.w3.org/2001/XMLSchema#integer") (none)))) -> (some 42))
+    (@example
+      ((term-literal (Literal "42" (some "http://www.w3.org/2001/XMLSchema#integer") (none))))
+      ->
+      (some 42))
     (@example ((term-literal (Literal "hello" (none) (none)))) -> (none))
     (@example ((term-iri (IRI "http://example.org/x"))) -> (none))
     (match t
@@ -901,7 +666,10 @@
     (@intent "Extract string value from a literal term")
     (@spec ((Term) -> (Option String)))
     (@pure)
-    (@example ((term-literal (Literal "hello" (none) (none)))) -> (some "hello"))
+    (@example
+      ((term-literal (Literal "hello" (none) (none))))
+      ->
+      (some "hello"))
     (@example ((term-iri (IRI "http://example.org/x"))) -> (none))
     (match t
       ((term-literal lit) (some (. lit value)))
@@ -911,8 +679,14 @@
     (@intent "Extract boolean value from a literal term")
     (@spec ((Term) -> (Option Bool)))
     (@pure)
-    (@example ((term-literal (Literal "true" (some "http://www.w3.org/2001/XMLSchema#boolean") (none)))) -> (some true))
-    (@example ((term-literal (Literal "false" (some "http://www.w3.org/2001/XMLSchema#boolean") (none)))) -> (some false))
+    (@example
+      ((term-literal (Literal "true" (some "http://www.w3.org/2001/XMLSchema#boolean") (none))))
+      ->
+      (some true))
+    (@example
+      ((term-literal (Literal "false" (some "http://www.w3.org/2001/XMLSchema#boolean") (none))))
+      ->
+      (some false))
     (@example ((term-iri (IRI "http://example.org/x"))) -> (none))
     (match t
       ((term-literal lit)
@@ -928,9 +702,10 @@
     (@intent "Parse an RDF list of literal strings")
     (@spec ((Arena IndexedGraph Term) -> (List String)))
     (@alloc arena)
-    (@example (arena (indexed-graph-create arena) (make-iri arena "http://example.org/list"))
-      ;; Returns list of strings from RDF list
-      )
+    (@example
+      (arena
+        (indexed-graph-create arena)
+        (make-iri arena "http://example.org/list")))
     (let ((elements (rdf-list-elements-indexed arena g list-head))
           (mut result (list-new arena String)))
       (for-each (elem elements)

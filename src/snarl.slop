@@ -1,27 +1,13 @@
-;; ============================================================
-;; Snarl: SHACL Core Validator
-;;
-;; A W3C SHACL Core constraint validator. Validates an RDF data
-;; graph against a SHACL shapes graph, producing a validation
-;; report. SHACL Core only — no SHACL-SPARQL.
-;; ============================================================
-
 (module snarl
-  (@doc "SHACL Core validator with stable C FFI")
-
   (import rdf (Term Triple))
   (import index (IndexedGraph indexed-graph-size indexed-graph-create))
-  (import types (ShaclPath NodeKind Severity Constraint PropertyShape NodeShape
-                 ShapesGraph ValidationResult ValidationReport ValidatorConfig
-                 ValidatorResult
-                 default-validator-config make-validation-report report-conforms))
+  (import types
+    (ShaclPath NodeKind Severity Constraint PropertyShape NodeShape ShapesGraph ValidationResult ValidationReport ValidatorConfig ValidatorResult default-validator-config make-validation-report report-conforms))
   (import parse (parse-shapes-graph))
   (import engine (engine-validate))
-  (import report (report-to-string report-to-graph severity-to-string
-                  term-to-display-string path-to-display-string))
-
+  (import report
+    (report-to-string report-to-graph severity-to-string term-to-display-string path-to-display-string))
   (export
-    ;; Types (re-exported)
     ShaclPath
     NodeKind
     Severity
@@ -33,7 +19,6 @@
     ValidationReport
     ValidatorConfig
     ValidatorResult
-    ;; Public API functions
     validate
     validate-with-config
     conforms
@@ -44,83 +29,79 @@
     report-to-graph
     report-to-string)
 
-  ;; ============================================================
-  ;; Configuration
-  ;; ============================================================
+  (@doc "SHACL Core validator with stable C FFI")
 
   (fn default-config ()
     (@intent "Create default validator configuration")
     (@spec (() -> ValidatorConfig))
     (@pure)
-    (@post {(. $result verbose) == false})
-    (@post {(. $result max-errors) == 0})
-    (@post {(. $result include-warnings) == true})
-    (@post {(. $result include-infos) == true})
+    (@post (== (. $result verbose) false))
+    (@post (== (. $result max-errors) 0))
+    (@post (== (. $result include-warnings) true))
+    (@post (== (. $result include-infos) true))
     (@example () -> (ValidatorConfig false 0 true true))
-    :c-name "snarl_default_config"
+    :c-name
+    "snarl_default_config"
     (default-validator-config))
 
-  ;; ============================================================
-  ;; Public API
-  ;; ============================================================
-
   (fn validate ((arena Arena) (data-graph IndexedGraph) (shapes-graph IndexedGraph))
-    (@intent "Validate a data graph against a shapes graph using default config")
+    (@intent
+      "Validate a data graph against a shapes graph using default config")
     (@spec ((Arena IndexedGraph IndexedGraph) -> ValidatorResult))
     (@alloc arena)
-    (@pre {(indexed-graph-size data-graph) >= 0})
-    (@pre {(indexed-graph-size shapes-graph) >= 0})
-    (@post (match $result
-             ((validate-success report) (>= (list-len (. report results)) 0))
-             ((validate-error _) true)))
-    (@example (arena (indexed-graph-create arena) (indexed-graph-create arena))
-      ;; Returns (validate-success report) for empty graphs
-      )
-    :c-name "snarl_validate"
+    (@pre (>= (indexed-graph-size data-graph) 0))
+    (@pre (>= (indexed-graph-size shapes-graph) 0))
+    (@post
+      (match $result
+        ((validate-success report) (>= (list-len (. report results)) 0))
+        ((validate-error _) true)))
+    (@example (arena (indexed-graph-create arena) (indexed-graph-create arena)))
+    :c-name
+    "snarl_validate"
     (validate-with-config arena data-graph shapes-graph (default-config)))
 
-  (fn validate-with-config ((arena Arena) (data-graph IndexedGraph)
-                            (shapes-graph IndexedGraph) (config ValidatorConfig))
+  (fn validate-with-config ((arena Arena) (data-graph IndexedGraph) (shapes-graph IndexedGraph) (config ValidatorConfig))
     (@intent "Validate a data graph against a shapes graph with custom config")
-    (@spec ((Arena IndexedGraph IndexedGraph ValidatorConfig) -> ValidatorResult))
+    (@spec
+      ((Arena IndexedGraph IndexedGraph ValidatorConfig) -> ValidatorResult))
     (@alloc arena)
-    (@pre {(indexed-graph-size data-graph) >= 0})
-    (@pre {(indexed-graph-size shapes-graph) >= 0})
-    (@example (arena (indexed-graph-create arena) (indexed-graph-create arena) (default-config))
-      ;; Returns (validate-success report) for empty graphs with default config
-      )
-    :c-name "snarl_validate_with_config"
-    ;; Parse the shapes graph into structured form
+    (@pre (>= (indexed-graph-size data-graph) 0))
+    (@pre (>= (indexed-graph-size shapes-graph) 0))
+    (@example
+      (arena
+        (indexed-graph-create arena)
+        (indexed-graph-create arena)
+        (default-config)))
+    :c-name
+    "snarl_validate_with_config"
     (let ((shapes (parse-shapes-graph arena shapes-graph)))
-      ;; Run the validation engine
       (engine-validate arena data-graph shapes config)))
 
   (fn conforms ((arena Arena) (data-graph IndexedGraph) (shapes-graph IndexedGraph))
     (@intent "Quick boolean check: does the data graph conform to the shapes?")
     (@spec ((Arena IndexedGraph IndexedGraph) -> Bool))
     (@alloc arena)
-    (@pre {(indexed-graph-size data-graph) >= 0})
-    (@pre {(indexed-graph-size shapes-graph) >= 0})
-    (@example (arena (indexed-graph-create arena) (indexed-graph-create arena)) -> true)
-    :c-name "snarl_conforms"
+    (@pre (>= (indexed-graph-size data-graph) 0))
+    (@pre (>= (indexed-graph-size shapes-graph) 0))
+    (@example
+      (arena (indexed-graph-create arena) (indexed-graph-create arena))
+      ->
+      true)
+    :c-name
+    "snarl_conforms"
     (match (validate arena data-graph shapes-graph)
       ((validate-success report) (report-conforms report))
       ((validate-error _) false)))
-
-  ;; ============================================================
-  ;; Report Query Helpers
-  ;; ============================================================
 
   (fn get-violations ((arena Arena) (report ValidationReport))
     (@intent "Get all violation-severity results from a validation report")
     (@spec ((Arena ValidationReport) -> (List ValidationResult)))
     (@alloc arena)
-    (@post {(list-len $result) >= 0})
-    (@post {(list-len $result) <= (list-len (. report results))})
-    (@example (arena (make-validation-report arena))
-      ;; Returns empty list for conforming report
-      )
-    :c-name "snarl_get_violations"
+    (@post (>= (list-len $result) 0))
+    (@post (<= (list-len $result) (list-len (. report results))))
+    (@example (arena (make-validation-report arena)))
+    :c-name
+    "snarl_get_violations"
     (let ((mut result (list-new arena ValidationResult)))
       (for-each (r (. report results))
         (match (. r severity)
@@ -132,12 +113,11 @@
     (@intent "Get all warning-severity results from a validation report")
     (@spec ((Arena ValidationReport) -> (List ValidationResult)))
     (@alloc arena)
-    (@post {(list-len $result) >= 0})
-    (@post {(list-len $result) <= (list-len (. report results))})
-    (@example (arena (make-validation-report arena))
-      ;; Returns empty list for conforming report
-      )
-    :c-name "snarl_get_warnings"
+    (@post (>= (list-len $result) 0))
+    (@post (<= (list-len $result) (list-len (. report results))))
+    (@example (arena (make-validation-report arena)))
+    :c-name
+    "snarl_get_warnings"
     (let ((mut result (list-new arena ValidationResult)))
       (for-each (r (. report results))
         (match (. r severity)
@@ -149,10 +129,9 @@
     (@intent "Get total number of validation results in the report")
     (@spec ((ValidationReport) -> (Int 0 ..)))
     (@pure)
-    (@post {$result >= 0})
-    (@post {$result == (list-len (. report results))})
-    (@example ((make-validation-report arena))
-      ;; Returns 0 for conforming report
-      )
-    :c-name "snarl_get_result_count"
+    (@post (>= $result 0))
+    (@post (== $result (list-len (. report results))))
+    (@example ((make-validation-report arena)))
+    :c-name
+    "snarl_get_result_count"
     (list-len (. report results))))
