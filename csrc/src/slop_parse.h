@@ -149,6 +149,7 @@ static inline bool slop_eq_rdf_Term(const void* a, const void* b) {
 }
 #endif
 
+uint8_t parse_shape_has_path(slop_arena* arena, index_IndexedGraph g, rdf_Term ref);
 void parse_register_inline_shapes(slop_arena* arena, index_IndexedGraph g, slop_list_types_NodeShape node_shapes, slop_list_types_PropertyShape prop_shapes, slop_map* shape_map, slop_map* property_shape_map);
 types_ShapesGraph snarl_parse_shapes_graph(slop_arena* arena, index_IndexedGraph shapes_graph);
 types_NodeShape snarl_parse_node_shape(slop_arena* arena, index_IndexedGraph g, rdf_Term shape_id);

@@ -9,15 +9,16 @@
 (module value-type
   (@doc "SHACL value type constraints: sh:class, sh:datatype, sh:nodeKind")
 
-  (import rdf (Term Triple term-eq term-kind make-iri make-literal make-triple
+  (import rdf (Term term-eq term-kind make-iri make-literal make-triple
                triple-subject triple-predicate triple-object IRI Literal TermKind))
   (import index (IndexedGraph indexed-graph-match indexed-graph-subjects
-                 indexed-graph-contains indexed-graph-size
+                 indexed-graph-size
                  indexed-graph-create indexed-graph-add))
   (import vocab (RDF_TYPE
                  SHACL_CLASS SHACL_DATATYPE SHACL_NODE_KIND
                  XSD_STRING XSD_INTEGER))
   (import types (NodeKind Severity Constraint ValidationResult ShaclPath))
+  (import target (is-shacl-instance-of-class))
 
   ;; Test URI constants
   (const EX_FOCUS String "http://example.org/focus")
@@ -62,22 +63,18 @@
     (@pre {(indexed-graph-size data-graph) >= 0})
     (@example (arena (fixture-g-focus-is-person arena) (make-iri arena EX_FOCUS) (make-iri arena EX_FOCUS) (make-iri arena EX_PERSON) (none) (make-iri arena EX_SHAPE) severity-violation (none)) -> (none))
     (@example (arena (fixture-g-empty arena) (make-iri arena EX_FOCUS) (make-iri arena EX_FOCUS) (make-iri arena EX_PERSON) (none) (make-iri arena EX_SHAPE) severity-violation (none)) -> (some (ValidationResult _ _ _ _ _ _ _)))
-    ;; Check if value-node has rdf:type required-class
-    (let ((type-pred (make-iri arena RDF_TYPE))
-          (type-triple (record-new Triple
-                         (subject value-node)
-                         (predicate type-pred)
-                         (object required-class))))
-      (if (indexed-graph-contains data-graph type-triple)
-        (none)  ;; Passes
-        (some (record-new ValidationResult
-                (focus-node focus-node)
-                (result-path path)
-                (value (some value-node))
-                (source-shape shape-id)
-                (source-constraint-component SHACL_CLASS)
-                (severity severity)
-                (message message)))))
+    ;; Value node must be a SHACL instance of required-class: it has rdf:type C'
+    ;; where C' is required-class or a transitive rdfs:subClassOf of it (SHACL 4.1).
+    (if (is-shacl-instance-of-class arena data-graph value-node required-class)
+      (none)  ;; Passes
+      (some (record-new ValidationResult
+              (focus-node focus-node)
+              (result-path path)
+              (value (some value-node))
+              (source-shape shape-id)
+              (source-constraint-component SHACL_CLASS)
+              (severity severity)
+              (message message))))
     :c-name "snarl_check_class")
 
   ;; ============================================================

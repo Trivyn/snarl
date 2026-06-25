@@ -55,6 +55,13 @@
   ;; Inline Shape Registration
   ;; ============================================================
 
+  (fn shape-has-path ((arena Arena) (g IndexedGraph) (ref Term))
+    (@intent "True if the referenced shape declares an sh:path, i.e. it is a property shape (SHACL 2.1.2)")
+    (@spec ((Arena IndexedGraph Term) -> Bool))
+    (@alloc arena)
+    (@example (arena (indexed-graph-create arena) (make-iri arena "http://example.org/s")) -> false)
+    (> (list-len (indexed-graph-objects arena g ref (make-iri arena SHACL_PATH))) 0))
+
   (fn register-inline-shapes ((arena Arena) (g IndexedGraph)
                                (node-shapes (List NodeShape))
                                (prop-shapes (List PropertyShape))
@@ -123,6 +130,18 @@
               ((some ref)
                 (match (map-get shape-map ref)
                   ((none)
+                   (if (shape-has-path arena g ref)
+                    ;; Has sh:path => property shape referenced from a logical (sh:or/
+                    ;; sh:and/sh:xone/sh:not) or sh:node constraint. Register it as a
+                    ;; property shape so the engine evaluates it against the path's value
+                    ;; nodes (with vacuous satisfaction when there are none), not as a
+                    ;; node shape against the focus node directly.
+                    (match (map-get property-shape-map ref)
+                      ((none)
+                        (set! changed true)
+                        (list-push ps-queue ref))
+                      ((some _) (do)))
+                    (do
                     (set! changed true)
                     (let ((ns (parse-node-shape arena g ref)))
                       (map-put shape-map ref ns)
@@ -151,7 +170,7 @@
                             ((con-node r) (list-push ns-queue r))
                             ((con-qualified-value-shape r _ _ _) (list-push ns-queue r))
                             ((con-property r) (list-push ps-queue r))
-                            (_ (do)))))))
+                            (_ (do)))))))))
                   ((some _) (do))))
               ((none) (do)))
             (set! ns-i (+ ns-i 1)))

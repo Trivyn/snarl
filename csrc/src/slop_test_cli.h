@@ -36,6 +36,9 @@ uint8_t test_cli_test_product_catalog(slop_arena* arena);
 uint8_t test_cli_test_address_book(slop_arena* arena);
 uint8_t test_cli_test_valid_library(slop_arena* arena);
 uint8_t test_cli_test_multi_shape(slop_arena* arena);
+uint8_t test_cli_test_subclass_class_conforms(slop_arena* arena);
+uint8_t test_cli_test_subclass_class(slop_arena* arena);
+uint8_t test_cli_test_vacuous_or(slop_arena* arena);
 int main(int argc, char** _c_argv);
 
 #ifndef SLOP_OPTION_INDEX_INDEXEDGRAPH_DEFINED

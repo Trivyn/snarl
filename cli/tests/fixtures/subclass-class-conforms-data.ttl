@@ -1,0 +1,5 @@
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix ex: <http://example.org/> .
+ex:Sub rdfs:subClassOf ex:Base .
+ex:x   a ex:Sub .
+ex:h   a ex:Holder ; ex:ref ex:x .

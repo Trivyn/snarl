@@ -8,6 +8,7 @@
 #include "slop_index.h"
 #include "slop_vocab.h"
 #include "slop_types.h"
+#include "slop_target.h"
 
 #ifndef SLOP_OPTION_TYPES_SHACLPATH_DEFINED
 #define SLOP_OPTION_TYPES_SHACLPATH_DEFINED

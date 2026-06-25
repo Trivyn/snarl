@@ -133,6 +133,7 @@ static inline bool slop_eq_rdf_Term(const void* a, const void* b) {
 #endif
 
 uint8_t snarl_evaluate_shape_against_node(slop_arena* arena, index_IndexedGraph data_graph, types_ShapesGraph shapes_graph, rdf_Term node, types_NodeShape shape, slop_map* visited);
+uint8_t snarl_property_shape_conforms(slop_arena* arena, index_IndexedGraph data_graph, types_ShapesGraph shapes_graph, rdf_Term node, types_PropertyShape ps);
 types_ValidatorResult snarl_engine_validate(slop_arena* arena, index_IndexedGraph data_graph, types_ShapesGraph shapes_graph, types_ValidatorConfig config);
 slop_list_types_ValidationResult snarl_evaluate_node_shape(slop_arena* arena, index_IndexedGraph data_graph, types_ShapesGraph shapes_graph, types_NodeShape shape, rdf_Term focus_node, slop_map* visited, types_ValidatorConfig config);
 slop_list_types_ValidationResult snarl_evaluate_property_shape(slop_arena* arena, index_IndexedGraph data_graph, types_ShapesGraph shapes_graph, types_PropertyShape shape, rdf_Term focus_node, slop_map* visited, types_ValidatorConfig config, slop_list_rdf_Term sibling_qvs_refs);
@@ -141,6 +142,7 @@ slop_list_types_ValidationResult snarl_evaluate_constraint_for_property(slop_are
 
 /* Function name aliases for C interop */
 #define engine_evaluate_shape_against_node snarl_evaluate_shape_against_node
+#define engine_property_shape_conforms snarl_property_shape_conforms
 #define engine_engine_validate snarl_engine_validate
 #define engine_evaluate_node_shape snarl_evaluate_node_shape
 #define engine_evaluate_property_shape snarl_evaluate_property_shape
@@ -162,14 +164,14 @@ SLOP_OPTION_DEFINE(types_ValidationResult, slop_option_types_ValidationResult)
 SLOP_OPTION_DEFINE(types_ShaclPath, slop_option_types_ShaclPath)
 #endif
 
-#ifndef SLOP_OPTION_TYPES_NODESHAPE_DEFINED
-#define SLOP_OPTION_TYPES_NODESHAPE_DEFINED
-SLOP_OPTION_DEFINE(types_NodeShape, slop_option_types_NodeShape)
-#endif
-
 #ifndef SLOP_OPTION_TYPES_PROPERTYSHAPE_DEFINED
 #define SLOP_OPTION_TYPES_PROPERTYSHAPE_DEFINED
 SLOP_OPTION_DEFINE(types_PropertyShape, slop_option_types_PropertyShape)
+#endif
+
+#ifndef SLOP_OPTION_TYPES_NODESHAPE_DEFINED
+#define SLOP_OPTION_TYPES_NODESHAPE_DEFINED
+SLOP_OPTION_DEFINE(types_NodeShape, slop_option_types_NodeShape)
 #endif
 
 

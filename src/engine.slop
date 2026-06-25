@@ -63,6 +63,21 @@
       (== (list-len results) 0))
     :c-name "snarl_evaluate_shape_against_node")
 
+  (fn property-shape-conforms ((arena Arena) (data-graph IndexedGraph)
+                                (shapes-graph ShapesGraph) (node Term) (ps PropertyShape))
+    (@intent "Evaluate whether a node conforms to a property shape used as a member of a logical/sh:node constraint: every value node along the shape's path must satisfy the shape. Vacuously true when the path yields no value nodes (SHACL 4.6.x: a shape with no results conforms).")
+    (@spec ((Arena IndexedGraph ShapesGraph Term PropertyShape) -> Bool))
+    (@alloc arena)
+    (@example
+      ;; Returns true when the property shape produces no results for node
+      )
+    (let ((rec-visited (set-new arena Term))
+          (empty-siblings (list-new arena Term))
+          (results (evaluate-property-shape arena data-graph shapes-graph
+                     ps node rec-visited (default-validator-config) empty-siblings)))
+      (== (list-len results) 0))
+    :c-name "snarl_property_shape_conforms")
+
   ;; ============================================================
   ;; Main Validation Entry Point
   ;; ============================================================
@@ -383,14 +398,18 @@
         ;; Each recursive evaluation gets a fresh visited set to avoid
         ;; polluting the parent's cycle detection state.
         ((con-not shape-ref)
-          (let ((rec-visited (set-new arena Term))
-                (conforms (do
-                  (set-put rec-visited shape-ref)
-                  (match (map-get (. shapes-graph shape-map) shape-ref)
-                    ((some ref-shape)
-                      (evaluate-shape-against-node arena data-graph shapes-graph
-                        value-node ref-shape rec-visited))
-                    ((none) false)))))
+          (let ((conforms
+                  (match (map-get (. shapes-graph property-shape-map) shape-ref)
+                    ((some ref-ps)
+                      (property-shape-conforms arena data-graph shapes-graph value-node ref-ps))
+                    ((none)
+                      (let ((rec-visited (set-new arena Term)))
+                        (set-put rec-visited shape-ref)
+                        (match (map-get (. shapes-graph shape-map) shape-ref)
+                          ((some ref-shape)
+                            (evaluate-shape-against-node arena data-graph shapes-graph
+                              value-node ref-shape rec-visited))
+                          ((none) false)))))))
             (match (check-not arena focus-node conforms path shape-id severity message)
               ((some r) (list-push results r))
               ((none) (do)))))
@@ -398,14 +417,19 @@
         ((con-and shape-refs)
           (let ((mut all-pass true))
             (for-each (ref shape-refs)
-              (let ((rec-visited (set-new arena Term)))
-                (set-put rec-visited ref)
-                (match (map-get (. shapes-graph shape-map) ref)
-                  ((some ref-shape)
-                    (when (not (evaluate-shape-against-node arena data-graph shapes-graph
-                                 value-node ref-shape rec-visited))
-                      (set! all-pass false)))
-                  ((none) (do)))))
+              (match (map-get (. shapes-graph property-shape-map) ref)
+                ((some ref-ps)
+                  (when (not (property-shape-conforms arena data-graph shapes-graph value-node ref-ps))
+                    (set! all-pass false)))
+                ((none)
+                  (let ((rec-visited (set-new arena Term)))
+                    (set-put rec-visited ref)
+                    (match (map-get (. shapes-graph shape-map) ref)
+                      ((some ref-shape)
+                        (when (not (evaluate-shape-against-node arena data-graph shapes-graph
+                                     value-node ref-shape rec-visited))
+                          (set! all-pass false)))
+                      ((none) (do)))))))
             (match (check-and arena focus-node all-pass path shape-id severity message)
               ((some r) (list-push results r))
               ((none) (do)))))
@@ -413,14 +437,19 @@
         ((con-or shape-refs)
           (let ((mut any-pass false))
             (for-each (ref shape-refs)
-              (let ((rec-visited (set-new arena Term)))
-                (set-put rec-visited ref)
-                (match (map-get (. shapes-graph shape-map) ref)
-                  ((some ref-shape)
-                    (when (evaluate-shape-against-node arena data-graph shapes-graph
-                             value-node ref-shape rec-visited)
-                      (set! any-pass true)))
-                  ((none) (do)))))
+              (match (map-get (. shapes-graph property-shape-map) ref)
+                ((some ref-ps)
+                  (when (property-shape-conforms arena data-graph shapes-graph value-node ref-ps)
+                    (set! any-pass true)))
+                ((none)
+                  (let ((rec-visited (set-new arena Term)))
+                    (set-put rec-visited ref)
+                    (match (map-get (. shapes-graph shape-map) ref)
+                      ((some ref-shape)
+                        (when (evaluate-shape-against-node arena data-graph shapes-graph
+                                 value-node ref-shape rec-visited)
+                          (set! any-pass true)))
+                      ((none) (do)))))))
             (match (check-or arena focus-node any-pass path shape-id severity message)
               ((some r) (list-push results r))
               ((none) (do)))))
@@ -428,28 +457,37 @@
         ((con-xone shape-refs)
           (let ((mut pass-count 0))
             (for-each (ref shape-refs)
-              (let ((rec-visited (set-new arena Term)))
-                (set-put rec-visited ref)
-                (match (map-get (. shapes-graph shape-map) ref)
-                  ((some ref-shape)
-                    (when (evaluate-shape-against-node arena data-graph shapes-graph
-                             value-node ref-shape rec-visited)
-                      (set! pass-count (+ pass-count 1))))
-                  ((none) (do)))))
+              (match (map-get (. shapes-graph property-shape-map) ref)
+                ((some ref-ps)
+                  (when (property-shape-conforms arena data-graph shapes-graph value-node ref-ps)
+                    (set! pass-count (+ pass-count 1))))
+                ((none)
+                  (let ((rec-visited (set-new arena Term)))
+                    (set-put rec-visited ref)
+                    (match (map-get (. shapes-graph shape-map) ref)
+                      ((some ref-shape)
+                        (when (evaluate-shape-against-node arena data-graph shapes-graph
+                                 value-node ref-shape rec-visited)
+                          (set! pass-count (+ pass-count 1))))
+                      ((none) (do)))))))
             (match (check-xone arena focus-node pass-count path shape-id severity message)
               ((some r) (list-push results r))
               ((none) (do)))))
 
         ;; --- Shape-based constraints ---
         ((con-node shape-ref)
-          (let ((rec-visited (set-new arena Term))
-                (value-conforms (do
-                  (set-put rec-visited shape-ref)
-                  (match (map-get (. shapes-graph shape-map) shape-ref)
-                    ((some ref-shape)
-                      (evaluate-shape-against-node arena data-graph shapes-graph
-                        value-node ref-shape rec-visited))
-                    ((none) true)))))
+          (let ((value-conforms
+                  (match (map-get (. shapes-graph property-shape-map) shape-ref)
+                    ((some ref-ps)
+                      (property-shape-conforms arena data-graph shapes-graph value-node ref-ps))
+                    ((none)
+                      (let ((rec-visited (set-new arena Term)))
+                        (set-put rec-visited shape-ref)
+                        (match (map-get (. shapes-graph shape-map) shape-ref)
+                          ((some ref-shape)
+                            (evaluate-shape-against-node arena data-graph shapes-graph
+                              value-node ref-shape rec-visited))
+                          ((none) true)))))))
             (match (check-node arena focus-node value-node value-conforms
                      path shape-id severity message)
               ((some r) (list-push results r))

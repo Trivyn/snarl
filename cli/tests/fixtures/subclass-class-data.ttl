@@ -1,0 +1,14 @@
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix ex: <http://example.org/> .
+
+# Sub2 ⊑ Sub ⊑ Base  (transitive rdfs:subClassOf chain)
+ex:Sub  rdfs:subClassOf ex:Base .
+ex:Sub2 rdfs:subClassOf ex:Sub .
+
+ex:x    a ex:Sub .         # direct subclass instance      -> OK for sh:class ex:Base
+ex:deep a ex:Sub2 .        # transitive subclass instance  -> OK
+ex:bad  a ex:Unrelated .   # unrelated class               -> VIOLATION
+
+ex:h1 a ex:Holder ; ex:ref ex:x .
+ex:h2 a ex:Holder ; ex:ref ex:deep .
+ex:h3 a ex:Holder ; ex:ref ex:bad .

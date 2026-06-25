@@ -1,0 +1,5 @@
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix ex: <http://example.org/> .
+ex:HolderShape a sh:NodeShape ;
+    sh:targetClass ex:Holder ;
+    sh:property [ sh:path ex:ref ; sh:class ex:Base ] .
