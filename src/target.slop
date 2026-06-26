@@ -1,58 +1,89 @@
-;; ============================================================
-;; Snarl: SHACL Target Resolution
-;;
-;; Resolves target declarations to produce focus nodes.
-;; Phase 1: sh:targetNode, sh:targetClass
-;; Phase 2: sh:targetSubjectsOf, sh:targetObjectsOf, implicit class targets
-;; ============================================================
-
 (module target
-  (@doc "SHACL target resolution: determines focus nodes for each shape")
-
-  (import rdf (Term Triple term-eq term-kind make-iri make-triple
-               triple-subject triple-predicate triple-object))
-  (import index (IndexedGraph indexed-graph-match indexed-graph-subjects
-                 indexed-graph-objects indexed-graph-size indexed-graph-for-each
-                 indexed-graph-create indexed-graph-add))
+  (import rdf
+    (Term Triple term-eq term-kind make-iri make-triple triple-subject triple-predicate triple-object))
+  (import index
+    (IndexedGraph indexed-graph-match indexed-graph-subjects indexed-graph-objects indexed-graph-size indexed-graph-for-each indexed-graph-create indexed-graph-add indexed-graph-contains))
   (import vocab (RDF_TYPE RDFS_SUBCLASS_OF))
   (import types (NodeShape PropertyShape ShaclPath Severity Constraint))
+  (export
+    resolve-targets
+    resolve-target-node
+    resolve-target-class
+    resolve-target-subjects-of
+    resolve-target-objects-of
+    resolve-implicit-class-targets
+    is-shacl-instance-of-class)
 
-  ;; Test URI constants
+  (@doc "SHACL target resolution: determines focus nodes for each shape")
+
   (const EX_ALICE String "http://example.org/alice")
-  (const EX_BOB String "http://example.org/bob")
-  (const EX_PERSON String "http://example.org/Person")
-  (const EX_SHAPE String "http://example.org/Shape1")
-  (const EX_NAME String "http://example.org/name")
-  (const EX_KNOWS String "http://example.org/knows")
 
-  ;; ============================================================
-  ;; Test Fixtures
-  ;; ============================================================
+  (const EX_BOB String "http://example.org/bob")
+
+  (const EX_PERSON String "http://example.org/Person")
+
+  (const EX_SHAPE String "http://example.org/Shape1")
+
+  (const EX_NAME String "http://example.org/name")
+
+  (const EX_KNOWS String "http://example.org/knows")
 
   (fn fixture-g-typed ((arena Arena))
     (@intent "Graph with (alice rdf:type Person), (bob rdf:type Person)")
     (@spec ((Arena) -> IndexedGraph))
     (let ((mut g (indexed-graph-create arena)))
-      (set! g (indexed-graph-add arena g
-        (make-triple arena (make-iri arena EX_ALICE) (make-iri arena RDF_TYPE) (make-iri arena EX_PERSON))))
-      (set! g (indexed-graph-add arena g
-        (make-triple arena (make-iri arena EX_BOB) (make-iri arena RDF_TYPE) (make-iri arena EX_PERSON))))
+      (set!
+        g
+        (indexed-graph-add
+          arena
+          g
+          (make-triple
+            arena
+            (make-iri arena EX_ALICE)
+            (make-iri arena RDF_TYPE)
+            (make-iri arena EX_PERSON))))
+      (set!
+        g
+        (indexed-graph-add
+          arena
+          g
+          (make-triple
+            arena
+            (make-iri arena EX_BOB)
+            (make-iri arena RDF_TYPE)
+            (make-iri arena EX_PERSON))))
       g))
 
   (fn fixture-g-alice-name ((arena Arena))
     (@intent "Graph with (alice name 'Alice')")
     (@spec ((Arena) -> IndexedGraph))
     (let ((mut g (indexed-graph-create arena)))
-      (set! g (indexed-graph-add arena g
-        (make-triple arena (make-iri arena EX_ALICE) (make-iri arena EX_NAME) (make-iri arena "http://example.org/AliceName"))))
+      (set!
+        g
+        (indexed-graph-add
+          arena
+          g
+          (make-triple
+            arena
+            (make-iri arena EX_ALICE)
+            (make-iri arena EX_NAME)
+            (make-iri arena "http://example.org/AliceName"))))
       g))
 
   (fn fixture-g-alice-knows-bob ((arena Arena))
     (@intent "Graph with (alice knows bob)")
     (@spec ((Arena) -> IndexedGraph))
     (let ((mut g (indexed-graph-create arena)))
-      (set! g (indexed-graph-add arena g
-        (make-triple arena (make-iri arena EX_ALICE) (make-iri arena EX_KNOWS) (make-iri arena EX_BOB))))
+      (set!
+        g
+        (indexed-graph-add
+          arena
+          g
+          (make-triple
+            arena
+            (make-iri arena EX_ALICE)
+            (make-iri arena EX_KNOWS)
+            (make-iri arena EX_BOB))))
       g))
 
   (fn fixture-target-nodes-alice ((arena Arena))
@@ -65,12 +96,14 @@
   (fn fixture-ns-target-class ((arena Arena))
     (@intent "NodeShape with target-classes=[Person]")
     (@spec ((Arena) -> NodeShape))
-    (record-new NodeShape
+    (record-new
+      NodeShape
       (id (make-iri arena EX_SHAPE))
       (target-nodes (list-new arena Term))
-      (target-classes (let ((mut tc (list-new arena Term)))
-                        (list-push tc (make-iri arena EX_PERSON))
-                        tc))
+      (target-classes
+        (let ((mut tc (list-new arena Term)))
+          (list-push tc (make-iri arena EX_PERSON))
+          tc))
       (target-subjects-of (list-new arena Term))
       (target-objects-of (list-new arena Term))
       (property-shapes (list-new arena PropertyShape))
@@ -79,94 +112,65 @@
       (message (none))
       (deactivated false)))
 
-  (export
-    resolve-targets
-    resolve-target-node
-    resolve-target-class
-    resolve-target-subjects-of
-    resolve-target-objects-of
-    resolve-implicit-class-targets)
-
-  ;; ============================================================
-  ;; Main Target Resolution
-  ;; ============================================================
-
   (fn resolve-targets ((arena Arena) (data-graph IndexedGraph) (shape NodeShape))
-    (@intent "Resolve all target declarations for a shape, returning unique focus nodes")
+    (@intent
+      "Resolve all target declarations for a shape, returning unique focus nodes")
     (@spec ((Arena IndexedGraph NodeShape) -> (List Term)))
     (@alloc arena)
-    (@pre {(indexed-graph-size data-graph) >= 0})
-    (@post {(list-len $result) >= 0})
-    (@example (arena (fixture-g-typed arena) (fixture-ns-target-class arena))
-      ;; Returns alice and bob (instances of Person)
-      )
+    (@pre (>= (indexed-graph-size data-graph) 0))
+    (@post (>= (list-len $result) 0))
+    (@example (arena (fixture-g-typed arena) (fixture-ns-target-class arena)))
     (let ((mut result (list-new arena Term))
           (seen (set-new arena Term)))
-
-      ;; sh:targetNode — explicit focus nodes
       (for-each (node (. shape target-nodes))
         (when (not (set-has seen node))
           (set-put seen node)
           (list-push result node)))
-
-      ;; sh:targetClass — all instances of the class
       (for-each (cls (. shape target-classes))
         (let ((instances (resolve-target-class arena data-graph cls)))
           (for-each (inst instances)
             (when (not (set-has seen inst))
               (set-put seen inst)
               (list-push result inst)))))
-
-      ;; sh:targetSubjectsOf — all subjects with the given predicate
       (for-each (pred (. shape target-subjects-of))
         (let ((subjects (resolve-target-subjects-of arena data-graph pred)))
           (for-each (subj subjects)
             (when (not (set-has seen subj))
               (set-put seen subj)
               (list-push result subj)))))
-
-      ;; sh:targetObjectsOf — all objects with the given predicate
       (for-each (pred (. shape target-objects-of))
         (let ((objects (resolve-target-objects-of arena data-graph pred)))
           (for-each (obj objects)
             (when (not (set-has seen obj))
               (set-put seen obj)
               (list-push result obj)))))
-
-      ;; Implicit class target: if shape IRI is also an rdfs:Class or used as rdf:type
       (let ((implicit (resolve-implicit-class-targets arena data-graph (. shape id))))
         (for-each (inst implicit)
           (when (not (set-has seen inst))
             (set-put seen inst)
             (list-push result inst))))
-
       result)
-    :c-name "snarl_resolve_targets")
-
-  ;; ============================================================
-  ;; Individual Target Resolvers
-  ;; ============================================================
+    :c-name
+    "snarl_resolve_targets")
 
   (fn resolve-target-node ((arena Arena) (nodes (List Term)))
     (@intent "Return target nodes directly (they are the focus nodes)")
     (@spec ((Arena (List Term)) -> (List Term)))
     (@alloc arena)
     (@pure)
-    (@post {(list-len $result) == (list-len nodes)})
-    (@example (arena (fixture-target-nodes-alice arena))
-      ;; Returns the target nodes directly
-      )
+    (@post (== (list-len $result) (list-len nodes)))
+    (@example (arena (fixture-target-nodes-alice arena)))
     nodes
-    :c-name "snarl_resolve_target_node")
+    :c-name
+    "snarl_resolve_target_node")
 
   (fn find-subclasses ((arena Arena) (data-graph IndexedGraph) (class-term Term))
-    (@intent "Find class-term plus all transitive subclasses via rdfs:subClassOf in the data graph")
+    (@intent
+      "Find class-term plus all transitive subclasses via rdfs:subClassOf in the data graph")
     (@spec ((Arena IndexedGraph Term) -> (List Term)))
     (@alloc arena)
-    (@post {(list-len $result) >= 1})
-    (@example (arena (fixture-g-typed arena) (make-iri arena EX_PERSON))
-      ;; Returns Person (and any subclasses)
-      )
+    (@post (>= (list-len $result) 1))
+    (@example (arena (fixture-g-typed arena) (make-iri arena EX_PERSON)))
     (let ((subclass-pred (make-iri arena RDFS_SUBCLASS_OF))
           (mut result (list-new arena Term))
           (visited (set-new arena Term))
@@ -178,7 +182,6 @@
         (match (list-get queue qi)
           ((some current)
             (list-push result current)
-            ;; Find ?X rdfs:subClassOf current
             (let ((subs (indexed-graph-subjects arena data-graph subclass-pred current)))
               (for-each (sub subs)
                 (when (not (set-has visited sub))
@@ -188,15 +191,46 @@
         (set! qi (+ qi 1)))
       result))
 
+  (fn is-shacl-instance-of-class ((arena Arena) (data-graph IndexedGraph) (node Term) (class-term Term))
+    (@intent
+      "True if node is a SHACL instance of class-term: it has rdf:type C' where C' is class-term or a transitive rdfs:subClassOf of class-term (SHACL spec 2.1.3.1). Same relation used to resolve sh:targetClass.")
+    (@spec ((Arena IndexedGraph Term Term) -> Bool))
+    (@alloc arena)
+    (@pre (>= (indexed-graph-size data-graph) 0))
+    (@example
+      (arena
+        (fixture-g-typed arena)
+        (make-iri arena EX_ALICE)
+        (make-iri arena EX_PERSON))
+      ->
+      true)
+    (@example
+      (arena
+        (fixture-g-typed arena)
+        (make-iri arena EX_ALICE)
+        (make-iri arena EX_BOB))
+      ->
+      false)
+    (let ((type-pred (make-iri arena RDF_TYPE))
+          (all-classes (find-subclasses arena data-graph class-term))
+          (mut result false))
+      (for-each (cls all-classes)
+        (when (not result)
+          (let ((type-triple (record-new Triple (subject node) (predicate type-pred) (object cls))))
+            (when (indexed-graph-contains data-graph type-triple)
+              (set! result true)))))
+      result)
+    :c-name
+    "snarl_is_shacl_instance_of_class")
+
   (fn resolve-target-class ((arena Arena) (data-graph IndexedGraph) (class-term Term))
-    (@intent "Find all instances of a class and its subclasses via rdf:type in the data graph")
+    (@intent
+      "Find all instances of a class and its subclasses via rdf:type in the data graph")
     (@spec ((Arena IndexedGraph Term) -> (List Term)))
     (@alloc arena)
-    (@pre {(indexed-graph-size data-graph) >= 0})
-    (@post {(list-len $result) >= 0})
-    (@example (arena (fixture-g-typed arena) (make-iri arena EX_PERSON))
-      ;; Returns alice and bob (instances of Person)
-      )
+    (@pre (>= (indexed-graph-size data-graph) 0))
+    (@post (>= (list-len $result) 0))
+    (@example (arena (fixture-g-typed arena) (make-iri arena EX_PERSON)))
     (let ((type-pred (make-iri arena RDF_TYPE))
           (all-classes (find-subclasses arena data-graph class-term))
           (mut result (list-new arena Term))
@@ -208,17 +242,16 @@
               (set-put seen inst)
               (list-push result inst)))))
       result)
-    :c-name "snarl_resolve_target_class")
+    :c-name
+    "snarl_resolve_target_class")
 
   (fn resolve-target-subjects-of ((arena Arena) (data-graph IndexedGraph) (predicate Term))
     (@intent "Find all subjects that have a given predicate in the data graph")
     (@spec ((Arena IndexedGraph Term) -> (List Term)))
     (@alloc arena)
-    (@pre {(indexed-graph-size data-graph) >= 0})
-    (@post {(list-len $result) >= 0})
-    (@example (arena (fixture-g-alice-name arena) (make-iri arena EX_NAME))
-      ;; Returns alice (subject of ex:name triples)
-      )
+    (@pre (>= (indexed-graph-size data-graph) 0))
+    (@post (>= (list-len $result) 0))
+    (@example (arena (fixture-g-alice-name arena) (make-iri arena EX_NAME)))
     (let ((no-term (Option Term) (none))
           (matches (indexed-graph-match arena data-graph no-term (some predicate) no-term))
           (mut result (list-new arena Term))
@@ -229,17 +262,17 @@
             (set-put seen subj)
             (list-push result subj))))
       result)
-    :c-name "snarl_resolve_target_subjects_of")
+    :c-name
+    "snarl_resolve_target_subjects_of")
 
   (fn resolve-target-objects-of ((arena Arena) (data-graph IndexedGraph) (predicate Term))
     (@intent "Find all objects that have a given predicate in the data graph")
     (@spec ((Arena IndexedGraph Term) -> (List Term)))
     (@alloc arena)
-    (@pre {(indexed-graph-size data-graph) >= 0})
-    (@post {(list-len $result) >= 0})
-    (@example (arena (fixture-g-alice-knows-bob arena) (make-iri arena EX_KNOWS))
-      ;; Returns bob (object of ex:knows triples)
-      )
+    (@pre (>= (indexed-graph-size data-graph) 0))
+    (@post (>= (list-len $result) 0))
+    (@example
+      (arena (fixture-g-alice-knows-bob arena) (make-iri arena EX_KNOWS)))
     (let ((no-term (Option Term) (none))
           (matches (indexed-graph-match arena data-graph no-term (some predicate) no-term))
           (mut result (list-new arena Term))
@@ -250,17 +283,17 @@
             (set-put seen obj)
             (list-push result obj))))
       result)
-    :c-name "snarl_resolve_target_objects_of")
+    :c-name
+    "snarl_resolve_target_objects_of")
 
   (fn resolve-implicit-class-targets ((arena Arena) (data-graph IndexedGraph) (shape-id Term))
-    (@intent "If the shape IRI is used as an rdf:type class in the data graph, return those instances (including subclass instances)")
+    (@intent
+      "If the shape IRI is used as an rdf:type class in the data graph, return those instances (including subclass instances)")
     (@spec ((Arena IndexedGraph Term) -> (List Term)))
     (@alloc arena)
-    (@pre {(indexed-graph-size data-graph) >= 0})
-    (@post {(list-len $result) >= 0})
-    (@example (arena (fixture-g-typed arena) (make-iri arena EX_PERSON))
-      ;; Returns instances of the shape IRI used as a class
-      )
-    ;; Delegates to resolve-target-class which handles rdfs:subClassOf transitivity
+    (@pre (>= (indexed-graph-size data-graph) 0))
+    (@post (>= (list-len $result) 0))
+    (@example (arena (fixture-g-typed arena) (make-iri arena EX_PERSON)))
     (resolve-target-class arena data-graph shape-id)
-    :c-name "snarl_resolve_implicit_class_targets"))
+    :c-name
+    "snarl_resolve_implicit_class_targets"))

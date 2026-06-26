@@ -1,37 +1,12 @@
-;; ============================================================
-;; Snarl: Report Construction + Serialization
-;;
-;; Builds ValidationReport from results.
-;; Phase 1: human-readable text serialization.
-;; Phase 4: RDF (Turtle) serialization.
-;; ============================================================
-
 (module report
-  (@doc "Validation report construction and serialization")
-
-  (import rdf (Term Triple term-eq term-kind make-iri make-blank make-literal make-triple
-               triple-subject triple-predicate triple-object IRI BlankNode Literal))
+  (import rdf
+    (Term Triple term-eq term-kind make-iri make-blank make-literal make-triple triple-subject triple-predicate triple-object IRI BlankNode Literal))
   (import index (IndexedGraph indexed-graph-create indexed-graph-add))
-  (import vocab (RDF_TYPE XSD_BOOLEAN XSD_INTEGER
-                 SHACL_VALIDATION_REPORT SHACL_CONFORMS SHACL_RESULT
-                 SHACL_VALIDATION_RESULT SHACL_FOCUS_NODE SHACL_RESULT_PATH
-                 SHACL_RESULT_SEVERITY SHACL_SOURCE_CONSTRAINT_COMPONENT
-                 SHACL_SOURCE_SHAPE SHACL_VIOLATION SHACL_WARNING SHACL_INFO))
+  (import vocab
+    (RDF_TYPE XSD_BOOLEAN XSD_INTEGER SHACL_VALIDATION_REPORT SHACL_CONFORMS SHACL_RESULT SHACL_VALIDATION_RESULT SHACL_FOCUS_NODE SHACL_RESULT_PATH SHACL_RESULT_SEVERITY SHACL_SOURCE_CONSTRAINT_COMPONENT SHACL_SOURCE_SHAPE SHACL_VIOLATION SHACL_WARNING SHACL_INFO))
   (import strlib (string-build))
-  (import types (ShaclPath Severity ValidationResult ValidationReport make-validation-report))
-
-  ;; ============================================================
-  ;; Test Fixtures
-  ;; ============================================================
-
-  (fn fixture-path-list-ab ((arena Arena))
-    (@intent "Create path list: [path-predicate ex:a, path-predicate ex:b]")
-    (@spec ((Arena) -> (List ShaclPath)))
-    (let ((mut paths (list-new arena ShaclPath)))
-      (list-push paths (union-new ShaclPath path-predicate (make-iri arena "http://example.org/a")))
-      (list-push paths (union-new ShaclPath path-predicate (make-iri arena "http://example.org/b")))
-      paths))
-
+  (import types
+    (ShaclPath Severity ValidationResult ValidationReport make-validation-report))
   (export
     report-to-string
     report-to-graph
@@ -40,175 +15,140 @@
     term-to-display-string
     path-to-display-string)
 
-  ;; ============================================================
-  ;; Human-Readable Report Printing (to stdout)
-  ;; ============================================================
+  (@doc "Validation report construction and serialization")
+
+  (fn fixture-path-list-ab ((arena Arena))
+    (@intent "Create path list: [path-predicate ex:a, path-predicate ex:b]")
+    (@spec ((Arena) -> (List ShaclPath)))
+    (let ((mut paths (list-new arena ShaclPath)))
+      (list-push
+        paths
+        (union-new
+          ShaclPath
+          path-predicate
+          (make-iri arena "http://example.org/a")))
+      (list-push
+        paths
+        (union-new
+          ShaclPath
+          path-predicate
+          (make-iri arena "http://example.org/b")))
+      paths))
 
   (fn print-report ((arena Arena) (report ValidationReport))
     (@intent "Print a validation report to stdout in human-readable form")
     (@spec ((Arena ValidationReport) -> Unit))
     (@alloc arena)
-    (@example (arena (make-validation-report arena))
-      ;; Prints conforming report to stdout
-      )
+    (@example (arena (make-validation-report arena)))
     (let ((results (. report results))
           (result-count (list-len results)))
-
-      ;; Header
       (if (. report conforms)
         (println "Validation Report: CONFORMS")
         (do
           (print "Validation Report: ")
           (print (int-to-string arena result-count))
           (println " result(s)")))
-
       (println "---")
-
-      ;; Each result
       (for-each (r results)
         (println "")
-
-        ;; Severity
         (print "  Severity: ")
         (println (severity-to-string (. r severity)))
-
-        ;; Focus node
         (print "  Focus node: ")
         (println (term-to-display-string arena (. r focus-node)))
-
-        ;; Path (if present)
         (match (. r result-path)
           ((some p)
             (print "  Path: ")
             (println (path-to-display-string arena p)))
           ((none) (do)))
-
-        ;; Value (if present)
         (match (. r value)
           ((some v)
             (print "  Value: ")
             (println (term-to-display-string arena v)))
           ((none) (do)))
-
-        ;; Source shape
         (print "  Source shape: ")
         (println (term-to-display-string arena (. r source-shape)))
-
-        ;; Constraint component
         (print "  Component: ")
         (println (. r source-constraint-component))
-
-        ;; Message (if present)
         (match (. r message)
-          ((some msg)
-            (print "  Message: ")
-            (println msg))
+          ((some msg) (print "  Message: ") (println msg))
           ((none) (do)))))
-    :c-name "snarl_print_report")
-
-  ;; ============================================================
-  ;; String Serialization (using string-concat)
-  ;; ============================================================
+    :c-name
+    "snarl_print_report")
 
   (fn report-to-string ((arena Arena) (report ValidationReport))
     (@intent "Serialize a validation report to a human-readable string")
     (@spec ((Arena ValidationReport) -> String))
     (@alloc arena)
-    (@example (arena (make-validation-report arena))
-      ;; Returns "Validation Report: CONFORMS\n---\n" for conforming report
-      )
+    (@example (arena (make-validation-report arena)))
     (let ((results (. report results))
           (result-count (list-len results))
           (mut parts (list-new arena String)))
-
-      ;; Header
       (if (. report conforms)
         (list-push parts "Validation Report: CONFORMS\n")
         (do
           (list-push parts "Validation Report: ")
           (list-push parts (int-to-string arena result-count))
           (list-push parts " result(s)\n")))
-
       (list-push parts "---\n")
-
-      ;; Each result
       (for-each (r results)
         (list-push parts "\n")
-
-        ;; Severity
         (list-push parts "  Severity: ")
         (list-push parts (severity-to-string (. r severity)))
         (list-push parts "\n")
-
-        ;; Focus node
         (list-push parts "  Focus node: ")
         (list-push parts (term-to-display-string arena (. r focus-node)))
         (list-push parts "\n")
-
-        ;; Path
         (match (. r result-path)
           ((some p)
             (list-push parts "  Path: ")
             (list-push parts (path-to-display-string arena p))
             (list-push parts "\n"))
           ((none) (do)))
-
-        ;; Value
         (match (. r value)
           ((some v)
             (list-push parts "  Value: ")
             (list-push parts (term-to-display-string arena v))
             (list-push parts "\n"))
           ((none) (do)))
-
-        ;; Source shape
         (list-push parts "  Source shape: ")
         (list-push parts (term-to-display-string arena (. r source-shape)))
         (list-push parts "\n")
-
-        ;; Component
         (list-push parts "  Component: ")
         (list-push parts (. r source-constraint-component))
         (list-push parts "\n")
-
-        ;; Message
         (match (. r message)
           ((some msg)
             (list-push parts "  Message: ")
             (list-push parts msg)
             (list-push parts "\n"))
           ((none) (do))))
-
       (string-build arena parts))
-    :c-name "snarl_report_to_string")
-
-  ;; ============================================================
-  ;; RDF Serialization
-  ;; ============================================================
+    :c-name
+    "snarl_report_to_string")
 
   (fn report-to-graph ((arena Arena) (report ValidationReport))
     (@intent "Serialize a validation report to an RDF graph (IndexedGraph)")
     (@spec ((Arena ValidationReport) -> IndexedGraph))
     (@alloc arena)
-    (@example (arena (make-validation-report arena))
-      ;; Returns an IndexedGraph with report triples
-      )
+    (@example (arena (make-validation-report arena)))
     (let ((mut g (indexed-graph-create arena))
           (report-node (make-blank arena 0))
           (type-pred (make-iri arena RDF_TYPE))
           (report-type (make-iri arena SHACL_VALIDATION_REPORT))
           (conforms-pred (make-iri arena SHACL_CONFORMS))
-          (conforms-val (make-literal arena
-                          (if (. report conforms) "true" "false")
-                          (some XSD_BOOLEAN) (none))))
-      ;; _:report a sh:ValidationReport
-      (set! g (indexed-graph-add arena g
-                (make-triple arena report-node type-pred report-type)))
-      ;; _:report sh:conforms "true"/"false"
-      (set! g (indexed-graph-add arena g
-                (make-triple arena report-node conforms-pred conforms-val)))
-
-      ;; Add each result
+          (conforms-val (make-literal arena (if (. report conforms) "true" "false") (some XSD_BOOLEAN) (none))))
+      (set!
+        g
+        (indexed-graph-add
+          arena
+          g
+          (make-triple arena report-node type-pred report-type)))
+      (set!
+        g
+        (indexed-graph-add
+          arena
+          g
+          (make-triple arena report-node conforms-pred conforms-val)))
       (let ((mut result-id 1))
         (for-each (r (. report results))
           (let ((result-node (make-blank arena result-id))
@@ -216,95 +156,122 @@
                 (result-type (make-iri arena SHACL_VALIDATION_RESULT))
                 (focus-pred (make-iri arena SHACL_FOCUS_NODE))
                 (sev-pred (make-iri arena SHACL_RESULT_SEVERITY))
-                (sev-val (make-iri arena (match (. r severity)
-                           (severity-violation SHACL_VIOLATION)
-                           (severity-warning SHACL_WARNING)
-                           (severity-info SHACL_INFO))))
+                (sev-val (make-iri arena (match (. r severity) (severity-violation SHACL_VIOLATION) (severity-warning SHACL_WARNING) (severity-info SHACL_INFO))))
                 (src-shape-pred (make-iri arena SHACL_SOURCE_SHAPE))
                 (src-comp-pred (make-iri arena SHACL_SOURCE_CONSTRAINT_COMPONENT)))
-
-            ;; _:report sh:result _:resultN
-            (set! g (indexed-graph-add arena g
-                      (make-triple arena report-node result-pred result-node)))
-            ;; _:resultN a sh:ValidationResult
-            (set! g (indexed-graph-add arena g
-                      (make-triple arena result-node type-pred result-type)))
-            ;; _:resultN sh:focusNode <focus>
-            (set! g (indexed-graph-add arena g
-                      (make-triple arena result-node focus-pred (. r focus-node))))
-            ;; _:resultN sh:resultSeverity sh:Violation/Warning/Info
-            (set! g (indexed-graph-add arena g
-                      (make-triple arena result-node sev-pred sev-val)))
-            ;; _:resultN sh:sourceShape <shape>
-            (set! g (indexed-graph-add arena g
-                      (make-triple arena result-node src-shape-pred (. r source-shape))))
-            ;; _:resultN sh:sourceConstraintComponent <component>
-            (set! g (indexed-graph-add arena g
-                      (make-triple arena result-node src-comp-pred
-                        (make-iri arena (. r source-constraint-component)))))
-
-            ;; Optional: value
+            (set!
+              g
+              (indexed-graph-add
+                arena
+                g
+                (make-triple arena report-node result-pred result-node)))
+            (set!
+              g
+              (indexed-graph-add
+                arena
+                g
+                (make-triple arena result-node type-pred result-type)))
+            (set!
+              g
+              (indexed-graph-add
+                arena
+                g
+                (make-triple arena result-node focus-pred (. r focus-node))))
+            (set!
+              g
+              (indexed-graph-add
+                arena
+                g
+                (make-triple arena result-node sev-pred sev-val)))
+            (set!
+              g
+              (indexed-graph-add
+                arena
+                g
+                (make-triple
+                  arena
+                  result-node
+                  src-shape-pred
+                  (. r source-shape))))
+            (set!
+              g
+              (indexed-graph-add
+                arena
+                g
+                (make-triple
+                  arena
+                  result-node
+                  src-comp-pred
+                  (make-iri arena (. r source-constraint-component)))))
             (match (. r value)
               ((some v)
                 (let ((val-pred (make-iri arena "http://www.w3.org/ns/shacl#value")))
-                  (set! g (indexed-graph-add arena g
-                            (make-triple arena result-node val-pred v)))))
+                  (set!
+                    g
+                    (indexed-graph-add
+                      arena
+                      g
+                      (make-triple arena result-node val-pred v)))))
               ((none) (do)))
-
-            ;; Optional: result path
             (match (. r result-path)
               ((some p)
                 (let ((path-pred (make-iri arena SHACL_RESULT_PATH)))
                   (match p
                     ((path-predicate pred-term)
-                      (set! g (indexed-graph-add arena g
-                                (make-triple arena result-node path-pred pred-term))))
-                    (_ (do)))))  ;; Complex paths: Phase 4
+                      (set!
+                        g
+                        (indexed-graph-add
+                          arena
+                          g
+                          (make-triple arena result-node path-pred pred-term))))
+                    (_ (do)))))
               ((none) (do)))
-
-            ;; Optional: message
             (match (. r message)
               ((some msg)
                 (let ((msg-pred (make-iri arena "http://www.w3.org/ns/shacl#resultMessage")))
-                  (set! g (indexed-graph-add arena g
-                            (make-triple arena result-node msg-pred
-                              (make-literal arena msg (none) (none)))))))
+                  (set!
+                    g
+                    (indexed-graph-add
+                      arena
+                      g
+                      (make-triple
+                        arena
+                        result-node
+                        msg-pred
+                        (make-literal arena msg (none) (none)))))))
               ((none) (do))))
-
           (set! result-id (+ result-id 1))))
       g)
-    :c-name "snarl_report_to_graph")
-
-  ;; ============================================================
-  ;; Display Helpers
-  ;; ============================================================
+    :c-name
+    "snarl_report_to_graph")
 
   (fn severity-to-string ((sev Severity))
     (@intent "Convert severity enum to display string")
     (@spec ((Severity) -> String))
     (@pure)
-    (@example (severity-violation)
-      ;; Returns "Violation"
-      )
-    (@example (severity-warning)
-      ;; Returns "Warning"
-      )
-    (@example (severity-info)
-      ;; Returns "Info"
-      )
+    (@example (severity-violation))
+    (@example (severity-warning))
+    (@example (severity-info))
     (match sev
       (severity-violation "Violation")
       (severity-warning "Warning")
       (severity-info "Info"))
-    :c-name "snarl_severity_to_string")
+    :c-name
+    "snarl_severity_to_string")
 
   (fn term-to-display-string ((arena Arena) (t Term))
     (@intent "Convert an RDF term to a human-readable display string")
     (@spec ((Arena Term) -> String))
     (@alloc arena)
-    (@example (arena (make-iri arena "http://example.org/x")) -> "http://example.org/x")
+    (@example
+      (arena (make-iri arena "http://example.org/x"))
+      ->
+      "http://example.org/x")
     (@example (arena (make-blank arena 1)) -> "_:1")
-    (@example (arena (make-literal arena "hi" (none) (some "en"))) -> "\"hi\"@en")
+    (@example
+      (arena (make-literal arena "hi" (none) (some "en")))
+      ->
+      "\"hi\"@en")
     (match t
       ((term-iri iri) (. iri value))
       ((term-blank blank)
@@ -315,14 +282,10 @@
           (list-push parts (. lit value))
           (list-push parts "\"")
           (match (. lit datatype)
-            ((some dt)
-              (list-push parts "^^")
-              (list-push parts dt))
+            ((some dt) (list-push parts "^^") (list-push parts dt))
             ((none) (do)))
           (match (. lit lang)
-            ((some lang)
-              (list-push parts "@")
-              (list-push parts lang))
+            ((some lang) (list-push parts "@") (list-push parts lang))
             ((none) (do)))
           (string-build arena parts)))
       ((term-triple tt)
@@ -336,21 +299,18 @@
           (list-push parts (term-to-display-string arena (triple-object tr)))
           (list-push parts " )>>")
           (string-build arena parts))))
-    :c-name "snarl_term_to_display_string")
+    :c-name
+    "snarl_term_to_display_string")
 
   (fn sequence-to-display-string ((arena Arena) (steps (List ShaclPath)))
     (@intent "Join sequence path steps with /")
     (@spec ((Arena (List ShaclPath)) -> String))
     (@alloc arena)
-    (@example (arena (fixture-path-list-ab arena))
-      ;; Returns "http://example.org/a / http://example.org/b"
-      )
+    (@example (arena (fixture-path-list-ab arena)))
     (let ((mut s ""))
       (let ((mut first true))
         (for-each (step steps)
-          (if first
-            (set! first false)
-            (set! s (string-concat arena s " / ")))
+          (if first (set! first false) (set! s (string-concat arena s " / ")))
           (set! s (string-concat arena s (path-to-display-string arena step)))))
       s))
 
@@ -358,15 +318,11 @@
     (@intent "Join alternative path alts with |")
     (@spec ((Arena (List ShaclPath)) -> String))
     (@alloc arena)
-    (@example (arena (fixture-path-list-ab arena))
-      ;; Returns "http://example.org/a | http://example.org/b"
-      )
+    (@example (arena (fixture-path-list-ab arena)))
     (let ((mut s ""))
       (let ((mut first true))
         (for-each (alt alts)
-          (if first
-            (set! first false)
-            (set! s (string-concat arena s " | ")))
+          (if first (set! first false) (set! s (string-concat arena s " | ")))
           (set! s (string-concat arena s (path-to-display-string arena alt)))))
       s))
 
@@ -374,20 +330,25 @@
     (@intent "Convert a SHACL path to a human-readable display string")
     (@spec ((Arena ShaclPath) -> String))
     (@alloc arena)
-    (@example (arena (union-new ShaclPath path-predicate (make-iri arena "http://example.org/name"))) -> "http://example.org/name")
+    (@example
+      (arena
+        (union-new
+          ShaclPath
+          path-predicate
+          (make-iri arena "http://example.org/name")))
+      ->
+      "http://example.org/name")
     (match p
-      ((path-predicate pred)
-        (term-to-display-string arena pred))
+      ((path-predicate pred) (term-to-display-string arena pred))
       ((path-inverse inner)
         (string-concat arena "^" (path-to-display-string arena (deref inner))))
-      ((path-sequence steps)
-        (sequence-to-display-string arena steps))
-      ((path-alternative alts)
-        (alternative-to-display-string arena alts))
+      ((path-sequence steps) (sequence-to-display-string arena steps))
+      ((path-alternative alts) (alternative-to-display-string arena alts))
       ((path-zero-or-more inner)
         (string-concat arena (path-to-display-string arena (deref inner)) "*"))
       ((path-one-or-more inner)
         (string-concat arena (path-to-display-string arena (deref inner)) "+"))
       ((path-zero-or-one inner)
         (string-concat arena (path-to-display-string arena (deref inner)) "?")))
-    :c-name "snarl_path_to_display_string"))
+    :c-name
+    "snarl_path_to_display_string"))

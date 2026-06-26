@@ -115,6 +115,7 @@ types_NodeShape target_fixture_ns_target_class(slop_arena* arena);
 slop_list_rdf_Term snarl_resolve_targets(slop_arena* arena, index_IndexedGraph data_graph, types_NodeShape shape);
 slop_list_rdf_Term snarl_resolve_target_node(slop_arena* arena, slop_list_rdf_Term nodes);
 slop_list_rdf_Term target_find_subclasses(slop_arena* arena, index_IndexedGraph data_graph, rdf_Term class_term);
+uint8_t snarl_is_shacl_instance_of_class(slop_arena* arena, index_IndexedGraph data_graph, rdf_Term node, rdf_Term class_term);
 slop_list_rdf_Term snarl_resolve_target_class(slop_arena* arena, index_IndexedGraph data_graph, rdf_Term class_term);
 slop_list_rdf_Term snarl_resolve_target_subjects_of(slop_arena* arena, index_IndexedGraph data_graph, rdf_Term predicate);
 slop_list_rdf_Term snarl_resolve_target_objects_of(slop_arena* arena, index_IndexedGraph data_graph, rdf_Term predicate);
@@ -123,6 +124,7 @@ slop_list_rdf_Term snarl_resolve_implicit_class_targets(slop_arena* arena, index
 /* Function name aliases for C interop */
 #define target_resolve_targets snarl_resolve_targets
 #define target_resolve_target_node snarl_resolve_target_node
+#define target_is_shacl_instance_of_class snarl_is_shacl_instance_of_class
 #define target_resolve_target_class snarl_resolve_target_class
 #define target_resolve_target_subjects_of snarl_resolve_target_subjects_of
 #define target_resolve_target_objects_of snarl_resolve_target_objects_of

@@ -225,6 +225,25 @@
     (assert-violations-separate arena "fixtures/multi-shape-data.ttl" "fixtures/multi-shape-shapes.ttl" 3))
 
   ;; ============================================================
+  ;; Regression Tests
+  ;; ============================================================
+
+  (fn test-subclass-class-conforms ((arena Arena))
+    (@intent "Regression (sh:class subClassOf*): a value typed as a subclass of the required class is a SHACL instance of it and conforms (SHACL 4.1)")
+    (@spec ((Arena) -> Bool))
+    (assert-conforms-separate arena "fixtures/subclass-class-conforms-data.ttl" "fixtures/subclass-class-conforms-shapes.ttl"))
+
+  (fn test-subclass-class ((arena Arena))
+    (@intent "Regression (sh:class subClassOf*): direct and transitive subclass instances satisfy sh:class; an unrelated-class value still violates (exactly 1)")
+    (@spec ((Arena) -> Bool))
+    (assert-violations-separate arena "fixtures/subclass-class-data.ttl" "fixtures/subclass-class-shapes.ttl" 1))
+
+  (fn test-vacuous-or ((arena Arena))
+    (@intent "Regression (sh:or vacuous satisfaction): a property-shape member with no value nodes is vacuously satisfied; only the node that fails every branch violates (exactly 1)")
+    (@spec ((Arena) -> Bool))
+    (assert-violations-separate arena "fixtures/vacuous-or-data.ttl" "fixtures/vacuous-or-shapes.ttl" 1))
+
+  ;; ============================================================
   ;; Main Test Runner
   ;; ============================================================
 
@@ -258,6 +277,11 @@
         (if (test-address-book arena) (set! passed (+ passed 1)) (set! failed (+ failed 1)))
         (if (test-valid-library arena) (set! passed (+ passed 1)) (set! failed (+ failed 1)))
         (if (test-multi-shape arena) (set! passed (+ passed 1)) (set! failed (+ failed 1)))
+
+        ;; Regression tests
+        (if (test-subclass-class-conforms arena) (set! passed (+ passed 1)) (set! failed (+ failed 1)))
+        (if (test-subclass-class arena) (set! passed (+ passed 1)) (set! failed (+ failed 1)))
+        (if (test-vacuous-or arena) (set! passed (+ passed 1)) (set! failed (+ failed 1)))
 
         ;; Summary
         (println "")

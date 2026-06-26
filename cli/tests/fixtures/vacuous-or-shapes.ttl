@@ -1,0 +1,8 @@
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix ex: <http://example.org/> .
+ex:ThingShape a sh:NodeShape ;
+    sh:targetClass ex:Thing ;
+    sh:or (
+        [ sh:path ex:a ; sh:class ex:A ]
+        [ sh:path ex:b ; sh:class ex:B ]
+    ) .

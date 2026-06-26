@@ -342,6 +342,7 @@ uint8_t snarl_evaluate_shape_against_node(slop_arena* arena, index_IndexedGraph 
 int64_t snarl_get_result_count(types_ValidationReport report);
 slop_list_types_ValidationResult snarl_get_violations(slop_arena* arena, types_ValidationReport report);
 slop_list_types_ValidationResult snarl_get_warnings(slop_arena* arena, types_ValidationReport report);
+uint8_t snarl_is_shacl_instance_of_class(slop_arena* arena, index_IndexedGraph data_graph, rdf_Term node, rdf_Term class_term);
 slop_list_types_Constraint snarl_parse_constraints(slop_arena* arena, index_IndexedGraph g, rdf_Term shape_id);
 slop_option_types_NodeKind snarl_parse_node_kind(rdf_Term term);
 types_NodeShape snarl_parse_node_shape(slop_arena* arena, index_IndexedGraph g, rdf_Term shape_id);
@@ -351,6 +352,7 @@ types_Severity snarl_parse_severity(rdf_Term term);
 types_ShapesGraph snarl_parse_shapes_graph(slop_arena* arena, index_IndexedGraph shapes_graph);
 slop_string snarl_path_to_display_string(slop_arena* arena, types_ShaclPath p);
 void snarl_print_report(slop_arena* arena, types_ValidationReport report);
+uint8_t snarl_property_shape_conforms(slop_arena* arena, index_IndexedGraph data_graph, types_ShapesGraph shapes_graph, rdf_Term node, types_PropertyShape ps);
 index_IndexedGraph snarl_report_to_graph(slop_arena* arena, types_ValidationReport report);
 slop_string snarl_report_to_string(slop_arena* arena, types_ValidationReport report);
 slop_list_rdf_Term snarl_resolve_implicit_class_targets(slop_arena* arena, index_IndexedGraph data_graph, rdf_Term shape_id);
@@ -383,6 +385,7 @@ uint8_t xsd_values_equal(xsd_XsdValue a, xsd_XsdValue b);
 #define engine_evaluate_node_shape snarl_evaluate_node_shape
 #define engine_evaluate_property_shape snarl_evaluate_property_shape
 #define engine_evaluate_shape_against_node snarl_evaluate_shape_against_node
+#define engine_property_shape_conforms snarl_property_shape_conforms
 #define index_indexed_graph_add rdf_indexed_graph_add
 #define index_indexed_graph_contains rdf_indexed_graph_contains
 #define index_indexed_graph_create rdf_indexed_graph_create
@@ -428,6 +431,7 @@ uint8_t xsd_values_equal(xsd_XsdValue a, xsd_XsdValue b);
 #define string_check_min_length snarl_check_min_length
 #define string_check_pattern snarl_check_pattern
 #define string_check_unique_lang snarl_check_unique_lang
+#define target_is_shacl_instance_of_class snarl_is_shacl_instance_of_class
 #define target_resolve_implicit_class_targets snarl_resolve_implicit_class_targets
 #define target_resolve_target_class snarl_resolve_target_class
 #define target_resolve_target_node snarl_resolve_target_node

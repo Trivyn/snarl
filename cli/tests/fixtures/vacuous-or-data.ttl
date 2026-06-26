@@ -1,0 +1,8 @@
+@prefix ex: <http://example.org/> .
+
+ex:t1 a ex:Thing .                                  # no ex:a / ex:b -> vacuously conforms
+ex:t2 a ex:Thing ; ex:a ex:okA .   ex:okA a ex:A .  # satisfies branch 1 (ex:a is ex:A)
+ex:t4 a ex:Thing ; ex:b ex:okB .   ex:okB a ex:B .  # satisfies branch 2 (ex:b is ex:B)
+ex:t3 a ex:Thing ; ex:a ex:badA ; ex:b ex:badB .    # both present and wrong -> VIOLATION
+ex:badA a ex:Other .
+ex:badB a ex:Other .

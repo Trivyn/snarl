@@ -9,15 +9,16 @@
 (module value-type
   (@doc "SHACL value type constraints: sh:class, sh:datatype, sh:nodeKind")
 
-  (import rdf (Term Triple term-eq term-kind make-iri make-literal make-triple
+  (import rdf (Term term-eq term-kind make-iri make-literal make-triple
                triple-subject triple-predicate triple-object IRI Literal TermKind))
   (import index (IndexedGraph indexed-graph-match indexed-graph-subjects
-                 indexed-graph-contains indexed-graph-size
+                 indexed-graph-size
                  indexed-graph-create indexed-graph-add))
   (import vocab (RDF_TYPE
                  SHACL_CLASS SHACL_DATATYPE SHACL_NODE_KIND
                  XSD_STRING XSD_INTEGER))
   (import types (NodeKind Severity Constraint ValidationResult ShaclPath))
+  (import target (is-shacl-instance-of-class))
 
   ;; Test URI constants
   (const EX_FOCUS String "http://example.org/focus")
@@ -55,34 +56,50 @@
                    (value-node Term) (required-class Term)
                    (path (Option ShaclPath)) (shape-id Term) (severity Severity)
                    (message (Option String)))
-    (@intent "Check sh:class constraint: value node must have rdf:type of the required class")
+    (@intent "Check sh:class: value node must be a SHACL instance of the required class — rdf:type the class itself or any transitive rdfs:subClassOf of it (SHACL 4.1)")
     (@spec ((Arena IndexedGraph Term Term Term (Option ShaclPath) Term Severity (Option String))
             -> (Option ValidationResult)))
     (@alloc arena)
     (@pre {(indexed-graph-size data-graph) >= 0})
+    ;; Conforms (no result) iff the value node is a SHACL instance of the required
+    ;; class — i.e. rdf:type C' for C' = required-class or a transitive subclass.
+    ;; Pins the semantics to that relation so the check cannot silently regress to a
+    ;; direct-rdf:type test.
+    (@post {(== (== $result (none)) (is-shacl-instance-of-class arena data-graph value-node required-class))})
+    (@property sound-wrt-shacl-instance (== (== $result (none)) (is-shacl-instance-of-class arena data-graph value-node required-class)))
     (@example (arena (fixture-g-focus-is-person arena) (make-iri arena EX_FOCUS) (make-iri arena EX_FOCUS) (make-iri arena EX_PERSON) (none) (make-iri arena EX_SHAPE) severity-violation (none)) -> (none))
     (@example (arena (fixture-g-empty arena) (make-iri arena EX_FOCUS) (make-iri arena EX_FOCUS) (make-iri arena EX_PERSON) (none) (make-iri arena EX_SHAPE) severity-violation (none)) -> (some (ValidationResult _ _ _ _ _ _ _)))
-    ;; Check if value-node has rdf:type required-class
-    (let ((type-pred (make-iri arena RDF_TYPE))
-          (type-triple (record-new Triple
-                         (subject value-node)
-                         (predicate type-pred)
-                         (object required-class))))
-      (if (indexed-graph-contains data-graph type-triple)
-        (none)  ;; Passes
-        (some (record-new ValidationResult
-                (focus-node focus-node)
-                (result-path path)
-                (value (some value-node))
-                (source-shape shape-id)
-                (source-constraint-component SHACL_CLASS)
-                (severity severity)
-                (message message)))))
+    ;; Value node must be a SHACL instance of required-class: it has rdf:type C'
+    ;; where C' is required-class or a transitive rdfs:subClassOf of it (SHACL 4.1).
+    (if (is-shacl-instance-of-class arena data-graph value-node required-class)
+      (none)  ;; Passes
+      (some (record-new ValidationResult
+              (focus-node focus-node)
+              (result-path path)
+              (value (some value-node))
+              (source-shape shape-id)
+              (source-constraint-component SHACL_CLASS)
+              (severity severity)
+              (message message))))
     :c-name "snarl_check_class")
 
   ;; ============================================================
   ;; sh:datatype — Value must be a literal with matching datatype
   ;; ============================================================
+
+  (fn datatype-matches ((value-node Term) (required-datatype Term))
+    (@intent "True if value-node is a literal whose datatype IRI equals required-datatype; a literal with no explicit datatype counts as xsd:string (SHACL 4.2)")
+    (@spec ((Term Term) -> Bool))
+    (@pure)
+    (match value-node
+      ((term-literal lit)
+        (let ((required-dt-str (match required-datatype
+                                 ((term-iri iri) (. iri value))
+                                 (_ ""))))
+          (match (. lit datatype)
+            ((some dt) (string-eq dt required-dt-str))
+            ((none) (string-eq required-dt-str XSD_STRING)))))
+      (_ false)))
 
   (fn check-datatype ((arena Arena) (focus-node Term) (value-node Term)
                       (required-datatype Term) (path (Option ShaclPath))
@@ -91,37 +108,33 @@
     (@spec ((Arena Term Term Term (Option ShaclPath) Term Severity (Option String))
             -> (Option ValidationResult)))
     (@alloc arena)
+    ;; Conforms (no result) iff the value node is a literal whose datatype matches.
+    (@post {(== (== $result (none)) (datatype-matches value-node required-datatype))})
+    (@property correctness (== (== $result (none)) (datatype-matches value-node required-datatype)))
     (@example (arena (make-iri arena EX_FOCUS) (make-literal arena "42" (some "http://www.w3.org/2001/XMLSchema#integer") (none)) (make-iri arena "http://www.w3.org/2001/XMLSchema#integer") (none) (make-iri arena EX_SHAPE) severity-violation (none)) -> (none))
     (@example (arena (make-iri arena EX_FOCUS) (make-literal arena "hello" (none) (none)) (make-iri arena "http://www.w3.org/2001/XMLSchema#integer") (none) (make-iri arena EX_SHAPE) severity-violation (none)) -> (some (ValidationResult _ _ _ _ _ _ _)))
     (@example (arena (make-iri arena EX_FOCUS) (make-iri arena EX_VALUE) (make-iri arena "http://www.w3.org/2001/XMLSchema#integer") (none) (make-iri arena EX_SHAPE) severity-violation (none)) -> (some (ValidationResult _ _ _ _ _ _ _)))
-    ;; Value must be a literal
-    (match value-node
-      ((term-literal lit)
-        ;; Extract required datatype IRI string
-        (let ((required-dt-str (match required-datatype
-                                 ((term-iri iri) (. iri value))
-                                 (_ ""))))
-          ;; Check literal's datatype
-          (match (. lit datatype)
-            ((some dt)
-              (if (string-eq dt required-dt-str)
-                (none)  ;; Passes
-                (some (make-vr arena focus-node path value-node shape-id
-                        SHACL_DATATYPE severity message))))
-            ((none)
-              ;; Literal without explicit datatype is xsd:string
-              (if (string-eq required-dt-str XSD_STRING)
-                (none)
-                (some (make-vr arena focus-node path value-node shape-id
-                        SHACL_DATATYPE severity message)))))))
-      ;; Non-literal always fails datatype check
-      (_ (some (make-vr arena focus-node path value-node shape-id
-                 SHACL_DATATYPE severity message))))
+    (if (datatype-matches value-node required-datatype)
+      (none)
+      (some (make-vr arena focus-node path value-node shape-id
+              SHACL_DATATYPE severity message)))
     :c-name "snarl_check_datatype")
 
   ;; ============================================================
   ;; sh:nodeKind — Value must be of the correct RDF term kind
   ;; ============================================================
+
+  (fn node-kind-matches ((required NodeKind) (kind TermKind))
+    (@intent "True if an RDF term of the given kind satisfies the required sh:nodeKind (SHACL 4.3)")
+    (@spec ((NodeKind TermKind) -> Bool))
+    (@pure)
+    (match required
+      (node-kind-blank-node (match kind (blank true) (_ false)))
+      (node-kind-iri (match kind (iri true) (_ false)))
+      (node-kind-literal (match kind (literal true) (_ false)))
+      (node-kind-blank-node-or-iri (match kind (blank true) (iri true) (_ false)))
+      (node-kind-blank-node-or-literal (match kind (blank true) (literal true) (_ false)))
+      (node-kind-iri-or-literal (match kind (iri true) (literal true) (_ false)))))
 
   (fn check-node-kind ((arena Arena) (focus-node Term) (value-node Term)
                        (required-kind NodeKind) (path (Option ShaclPath))
@@ -130,24 +143,16 @@
     (@spec ((Arena Term Term NodeKind (Option ShaclPath) Term Severity (Option String))
             -> (Option ValidationResult)))
     (@alloc arena)
+    ;; Conforms (no result) iff the value node's term kind satisfies the requirement.
+    (@post {(== (== $result (none)) (node-kind-matches required-kind (term-kind value-node)))})
+    (@property correctness (== (== $result (none)) (node-kind-matches required-kind (term-kind value-node))))
     (@example (arena (make-iri arena EX_FOCUS) (make-iri arena EX_VALUE) node-kind-iri (none) (make-iri arena EX_SHAPE) severity-violation (none)) -> (none))
     (@example (arena (make-iri arena EX_FOCUS) (make-literal arena "hi" (none) (none)) node-kind-iri (none) (make-iri arena EX_SHAPE) severity-violation (none)) -> (some (ValidationResult _ _ _ _ _ _ _)))
     (@example (arena (make-iri arena EX_FOCUS) (make-iri arena EX_VALUE) node-kind-iri-or-literal (none) (make-iri arena EX_SHAPE) severity-violation (none)) -> (none))
-    (let ((kind (term-kind value-node))
-          (passes (match required-kind
-                    (node-kind-blank-node (match kind (blank true) (_ false)))
-                    (node-kind-iri (match kind (iri true) (_ false)))
-                    (node-kind-literal (match kind (literal true) (_ false)))
-                    (node-kind-blank-node-or-iri
-                      (match kind (blank true) (iri true) (_ false)))
-                    (node-kind-blank-node-or-literal
-                      (match kind (blank true) (literal true) (_ false)))
-                    (node-kind-iri-or-literal
-                      (match kind (iri true) (literal true) (_ false))))))
-      (if passes
-        (none)
-        (some (make-vr arena focus-node path value-node shape-id
-                SHACL_NODE_KIND severity message))))
+    (if (node-kind-matches required-kind (term-kind value-node))
+      (none)
+      (some (make-vr arena focus-node path value-node shape-id
+              SHACL_NODE_KIND severity message)))
     :c-name "snarl_check_node_kind")
 
   ;; ============================================================
