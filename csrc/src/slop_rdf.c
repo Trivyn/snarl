@@ -321,7 +321,7 @@ rdf_Graph rdf_graph_match(slop_arena* arena, rdf_Graph g, slop_option_rdf_Term s
                         __auto_type p_match = ({ __auto_type _mv = predicate; _mv.has_value ? ({ __auto_type p = _mv.value; rdf_term_eq(p, triple.predicate); }) : (1); });
                         {
                             __auto_type o_match = ({ __auto_type _mv = object; _mv.has_value ? ({ __auto_type o = _mv.value; rdf_term_eq(o, triple.object); }) : (1); });
-                            if ((s_match && (p_match && o_match))) {
+                            if (s_match && (p_match && o_match)) {
                                 result = rdf_graph_add(arena, result, triple);
                             }
                         }

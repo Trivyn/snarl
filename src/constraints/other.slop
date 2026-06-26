@@ -74,6 +74,22 @@
     check-closed)
 
   ;; ============================================================
+  ;; Membership predicate — extracted so the result <-> predicate
+  ;; equivalence is a single uninterpreted call the verifier can prove
+  ;; (an `exists` quantifier over a loop is silently skipped by slop verify).
+  ;; ============================================================
+
+  (fn list-contains-term ((terms (List Term)) (target Term))
+    (@intent "True if some term in the list is term-equal to target")
+    (@spec (((List Term) Term) -> Bool))
+    (@pure)
+    (let ((mut found false))
+      (for-each (t terms)
+        (when (term-eq t target)
+          (set! found true)))
+      found))
+
+  ;; ============================================================
   ;; sh:hasValue — At least one value node must equal the given value
   ;; ============================================================
 
@@ -85,25 +101,21 @@
             -> (Option ValidationResult)))
     (@alloc arena)
     (@pre {(list-len value-nodes) >= 0})
-    ;; VERIFIER: fails — term-eq lacks @post (== $result (== a b)), can't bridge to Z3 equality
-    (@post (== (== $result (none)) (exists (v value-nodes) (term-eq v required-value))))
-    (@property correctness (== (== $result (none)) (exists (v value-nodes) (term-eq v required-value))))
+    ;; Conforms (no result) iff some value node equals the required value.
+    (@post {(== (== $result (none)) (list-contains-term value-nodes required-value))})
+    (@property correctness (== (== $result (none)) (list-contains-term value-nodes required-value)))
     (@example (arena (make-iri arena EX_FOCUS) (fixture-term-list-ab arena) (make-iri arena EX_A) (none) (make-iri arena EX_SHAPE) severity-violation (none)) -> (none))
     (@example (arena (make-iri arena EX_FOCUS) (fixture-term-list-ab arena) (make-iri arena EX_C) (none) (make-iri arena EX_SHAPE) severity-violation (none)) -> (some (ValidationResult _ _ _ _ _ _ _)))
-    (let ((mut found false))
-      (for-each (v value-nodes)
-        (when (term-eq v required-value)
-          (set! found true)))
-      (if found
-        (none)
-        (some (record-new ValidationResult
-                (focus-node focus-node)
-                (result-path path)
-                (value (none))
-                (source-shape shape-id)
-                (source-constraint-component SHACL_HAS_VALUE)
-                (severity severity)
-                (message message)))))
+    (if (list-contains-term value-nodes required-value)
+      (none)
+      (some (record-new ValidationResult
+              (focus-node focus-node)
+              (result-path path)
+              (value (none))
+              (source-shape shape-id)
+              (source-constraint-component SHACL_HAS_VALUE)
+              (severity severity)
+              (message message))))
     :c-name "snarl_check_has_value")
 
   ;; ============================================================
@@ -118,25 +130,21 @@
             -> (Option ValidationResult)))
     (@alloc arena)
     (@pre {(list-len allowed-values) > 0})
-    ;; VERIFIER: fails — term-eq lacks @post (== $result (== a b)), can't bridge to Z3 equality
-    (@post (== (== $result (none)) (exists (v allowed-values) (term-eq v value-node))))
-    (@property correctness (== (== $result (none)) (exists (v allowed-values) (term-eq v value-node))))
+    ;; Conforms (no result) iff the value node is one of the allowed values.
+    (@post {(== (== $result (none)) (list-contains-term allowed-values value-node))})
+    (@property correctness (== (== $result (none)) (list-contains-term allowed-values value-node)))
     (@example (arena (make-iri arena EX_FOCUS) (make-iri arena EX_A) (fixture-allowed-terms-abc arena) (none) (make-iri arena EX_SHAPE) severity-violation (none)) -> (none))
     (@example (arena (make-iri arena EX_FOCUS) (make-iri arena EX_FOCUS) (fixture-allowed-terms-abc arena) (none) (make-iri arena EX_SHAPE) severity-violation (none)) -> (some (ValidationResult _ _ _ _ _ _ _)))
-    (let ((mut found false))
-      (for-each (av allowed-values)
-        (when (term-eq av value-node)
-          (set! found true)))
-      (if found
-        (none)
-        (some (record-new ValidationResult
-                (focus-node focus-node)
-                (result-path path)
-                (value (some value-node))
-                (source-shape shape-id)
-                (source-constraint-component SHACL_IN)
-                (severity severity)
-                (message message)))))
+    (if (list-contains-term allowed-values value-node)
+      (none)
+      (some (record-new ValidationResult
+              (focus-node focus-node)
+              (result-path path)
+              (value (some value-node))
+              (source-shape shape-id)
+              (source-constraint-component SHACL_IN)
+              (severity severity)
+              (message message))))
     :c-name "snarl_check_in")
 
   ;; ============================================================

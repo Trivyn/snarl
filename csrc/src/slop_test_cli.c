@@ -85,7 +85,7 @@ uint8_t test_cli_assert_violations(slop_arena* arena, slop_string path, int64_t 
                 {
                     __auto_type violations = snarl_get_violations(arena, report);
                     __auto_type actual_count = ((int64_t)((violations).len));
-                    if ((actual_count == expected_count)) {
+                    if (actual_count == expected_count) {
                         printf("%s", "  PASS: ");
                         printf("%.*s", (int)(path).len, (path).data);
                         printf("%s", " has ");
@@ -191,7 +191,7 @@ uint8_t test_cli_assert_violations_separate(slop_arena* arena, slop_string data_
                     {
                         __auto_type violations = snarl_get_violations(arena, report);
                         __auto_type actual_count = ((int64_t)((violations).len));
-                        if ((actual_count == expected_count)) {
+                        if (actual_count == expected_count) {
                             printf("%s", "  PASS: ");
                             printf("%.*s", (int)(data_path).len, (data_path).data);
                             printf("%s", " has ");
@@ -243,7 +243,7 @@ uint8_t test_cli_test_rdf12_annotation_block(slop_arena* arena) {
         __auto_type g = _mv_244.value;
         {
             __auto_type size = rdf_indexed_graph_size(g);
-            if (((size == 17) && snarl_conforms(arena, g, g))) {
+            if ((size == 17) && snarl_conforms(arena, g, g)) {
                 printf("%s\n", "  PASS: RDF 1.2 annotation block parses and conforms");
                 return 1;
             } else {
@@ -293,7 +293,7 @@ uint8_t test_cli_test_report_string(slop_arena* arena) {
                 __auto_type report = _mv_246.data.validate_success;
                 {
                     __auto_type text = snarl_report_to_string(arena, report);
-                    if ((string_len(text) > 0)) {
+                    if (string_len(text) > 0) {
                         printf("%s\n", "  PASS: report-to-string produces output");
                         return 1;
                     } else {
@@ -460,7 +460,7 @@ int main(int argc, char** _c_argv) {
             printf("%s", " passed, ");
             printf("%.*s", (int)(int_to_string(arena, failed)).len, (int_to_string(arena, failed)).data);
             printf("%s\n", " failed");
-            if ((failed == 0)) {
+            if (failed == 0) {
                 return 0;
             } else {
                 return 1;

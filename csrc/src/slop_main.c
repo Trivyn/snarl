@@ -13,10 +13,10 @@ void main_print_elapsed(slop_arena* arena, int64_t elapsed) {
     printf("%s", ".");
     {
         __auto_type ms = (elapsed % 1000);
-        if ((ms < 100)) {
+        if (ms < 100) {
             printf("%s", "0");
         }
-        if ((ms < 10)) {
+        if (ms < 10) {
             printf("%s", "0");
         }
         printf("%.*s", (int)(int_to_string(arena, ms)).len, (int_to_string(arena, ms)).data);
@@ -44,20 +44,20 @@ main_CliArgs main_parse_args(slop_arena* arena, int64_t argc, uint8_t** argv) {
         uint8_t version = 0;
         int64_t i = 1;
         int64_t positional_count = 0;
-        while ((i < argc)) {
+        while (i < argc) {
             {
                 __auto_type arg = main_argv_to_string(argv, i);
-                if ((string_eq(arg, SLOP_STR("--help")) || string_eq(arg, SLOP_STR("-h")))) {
+                if (string_eq(arg, SLOP_STR("--help")) || string_eq(arg, SLOP_STR("-h"))) {
                     help = 1;
                     i = (i + 1);
-                } else if ((string_eq(arg, SLOP_STR("--version")) || string_eq(arg, SLOP_STR("-V")))) {
+                } else if (string_eq(arg, SLOP_STR("--version")) || string_eq(arg, SLOP_STR("-V"))) {
                     version = 1;
                     i = (i + 1);
-                } else if ((string_eq(arg, SLOP_STR("--quiet")) || string_eq(arg, SLOP_STR("-q")))) {
+                } else if (string_eq(arg, SLOP_STR("--quiet")) || string_eq(arg, SLOP_STR("-q"))) {
                     quiet = 1;
                     i = (i + 1);
-                } else if ((string_eq(arg, SLOP_STR("--shapes")) || string_eq(arg, SLOP_STR("-s")))) {
-                    if (((i + 1) < argc)) {
+                } else if (string_eq(arg, SLOP_STR("--shapes")) || string_eq(arg, SLOP_STR("-s"))) {
+                    if ((i + 1) < argc) {
                         shapes = (slop_option_string){.has_value = 1, .value = main_argv_to_string(argv, (i + 1))};
                         i = (i + 2);
                     } else {
@@ -65,8 +65,8 @@ main_CliArgs main_parse_args(slop_arena* arena, int64_t argc, uint8_t** argv) {
                         help = 1;
                         i = (i + 1);
                     }
-                } else if ((string_eq(arg, SLOP_STR("--emit")) || string_eq(arg, SLOP_STR("-o")))) {
-                    if (((i + 1) < argc)) {
+                } else if (string_eq(arg, SLOP_STR("--emit")) || string_eq(arg, SLOP_STR("-o"))) {
+                    if ((i + 1) < argc) {
                         emit = (slop_option_string){.has_value = 1, .value = main_argv_to_string(argv, (i + 1))};
                         i = (i + 2);
                     } else {
@@ -74,8 +74,8 @@ main_CliArgs main_parse_args(slop_arena* arena, int64_t argc, uint8_t** argv) {
                         help = 1;
                         i = (i + 1);
                     }
-                } else if ((string_eq(arg, SLOP_STR("--max-errors")) || string_eq(arg, SLOP_STR("-m")))) {
-                    if (((i + 1) < argc)) {
+                } else if (string_eq(arg, SLOP_STR("--max-errors")) || string_eq(arg, SLOP_STR("-m"))) {
+                    if ((i + 1) < argc) {
                         {
                             __auto_type val_str = main_argv_to_string(argv, (i + 1));
                             __auto_type _mv_234 = strlib_parse_int(val_str);
@@ -100,7 +100,7 @@ main_CliArgs main_parse_args(slop_arena* arena, int64_t argc, uint8_t** argv) {
                     no_infos = 1;
                     i = (i + 1);
                 } else if (1) {
-                    if ((positional_count == 0)) {
+                    if (positional_count == 0) {
                         data = (slop_option_string){.has_value = 1, .value = arg};
                     } else {
                         shapes = (slop_option_string){.has_value = 1, .value = arg};

@@ -25,6 +25,47 @@
     check-max-exclusive)
 
   ;; ============================================================
+  ;; Pure ordering predicates — extracted so the result <-> predicate
+  ;; equivalence is expressible as a verifiable @post/@property. An
+  ;; incomparable pair (e.g. wrong datatype) satisfies no bound, matching
+  ;; the original per-case behaviour.
+  ;; ============================================================
+
+  (fn min-inclusive-satisfied ((arena Arena) (value-node Term) (limit Term))
+    (@intent "True if value-node >= limit under XSD ordering (sh:minInclusive, SHACL 4.5.1)")
+    (@spec ((Arena Term Term) -> Bool))
+    (@alloc arena)
+    (match (xsd-compare arena value-node limit)
+      (xsd-compare-equal true)
+      (xsd-compare-greater true)
+      (_ false)))
+
+  (fn max-inclusive-satisfied ((arena Arena) (value-node Term) (limit Term))
+    (@intent "True if value-node <= limit under XSD ordering (sh:maxInclusive, SHACL 4.5.2)")
+    (@spec ((Arena Term Term) -> Bool))
+    (@alloc arena)
+    (match (xsd-compare arena value-node limit)
+      (xsd-compare-equal true)
+      (xsd-compare-less true)
+      (_ false)))
+
+  (fn min-exclusive-satisfied ((arena Arena) (value-node Term) (limit Term))
+    (@intent "True if value-node > limit under XSD ordering (sh:minExclusive, SHACL 4.5.3)")
+    (@spec ((Arena Term Term) -> Bool))
+    (@alloc arena)
+    (match (xsd-compare arena value-node limit)
+      (xsd-compare-greater true)
+      (_ false)))
+
+  (fn max-exclusive-satisfied ((arena Arena) (value-node Term) (limit Term))
+    (@intent "True if value-node < limit under XSD ordering (sh:maxExclusive, SHACL 4.5.4)")
+    (@spec ((Arena Term Term) -> Bool))
+    (@alloc arena)
+    (match (xsd-compare arena value-node limit)
+      (xsd-compare-less true)
+      (_ false)))
+
+  ;; ============================================================
   ;; sh:minInclusive — Value must be >= limit
   ;; ============================================================
 
@@ -35,31 +76,20 @@
     (@spec ((Arena Term Term Term (Option ShaclPath) Term Severity (Option String))
             -> (Option ValidationResult)))
     (@alloc arena)
-    ;; VERIFIER: "Could not translate" — xsd-compare has no @post, verifier can't model it
-    (@post (or (!= $result (none)) (!= (xsd-compare arena value-node limit) xsd-compare-less)))
-    (@property correctness (or (!= $result (none)) (!= (xsd-compare arena value-node limit) xsd-compare-less)))
+    (@post {(== (== $result (none)) (min-inclusive-satisfied arena value-node limit))})
+    (@property correctness (== (== $result (none)) (min-inclusive-satisfied arena value-node limit)))
     (@example (arena (make-iri arena EX_FOCUS) (make-literal arena "5" (some "http://www.w3.org/2001/XMLSchema#integer") (none)) (make-literal arena "3" (some "http://www.w3.org/2001/XMLSchema#integer") (none)) (none) (make-iri arena EX_SHAPE) severity-violation (none)) -> (none))
     (@example (arena (make-iri arena EX_FOCUS) (make-literal arena "2" (some "http://www.w3.org/2001/XMLSchema#integer") (none)) (make-literal arena "3" (some "http://www.w3.org/2001/XMLSchema#integer") (none)) (none) (make-iri arena EX_SHAPE) severity-violation (none)) -> (some (ValidationResult _ _ _ _ _ _ _)))
-    (let ((cmp (xsd-compare arena value-node limit)))
-      (match cmp
-        (xsd-compare-equal (none))
-        (xsd-compare-greater (none))
-        (xsd-compare-less (some (record-new ValidationResult
-                   (focus-node focus-node)
-                   (result-path path)
-                   (value (some value-node))
-                   (source-shape shape-id)
-                   (source-constraint-component SHACL_MIN_INCLUSIVE)
-                   (severity severity)
-                   (message message))))
-        (xsd-compare-incomparable (some (record-new ValidationResult
-                   (focus-node focus-node)
-                   (result-path path)
-                   (value (some value-node))
-                   (source-shape shape-id)
-                   (source-constraint-component SHACL_MIN_INCLUSIVE)
-                   (severity severity)
-                   (message message))))))
+    (if (min-inclusive-satisfied arena value-node limit)
+      (none)
+      (some (record-new ValidationResult
+              (focus-node focus-node)
+              (result-path path)
+              (value (some value-node))
+              (source-shape shape-id)
+              (source-constraint-component SHACL_MIN_INCLUSIVE)
+              (severity severity)
+              (message message))))
     :c-name "snarl_check_min_inclusive")
 
   ;; ============================================================
@@ -73,31 +103,20 @@
     (@spec ((Arena Term Term Term (Option ShaclPath) Term Severity (Option String))
             -> (Option ValidationResult)))
     (@alloc arena)
-    ;; VERIFIER: "Could not translate" — xsd-compare has no @post, verifier can't model it
-    (@post (or (!= $result (none)) (!= (xsd-compare arena value-node limit) xsd-compare-greater)))
-    (@property correctness (or (!= $result (none)) (!= (xsd-compare arena value-node limit) xsd-compare-greater)))
+    (@post {(== (== $result (none)) (max-inclusive-satisfied arena value-node limit))})
+    (@property correctness (== (== $result (none)) (max-inclusive-satisfied arena value-node limit)))
     (@example (arena (make-iri arena EX_FOCUS) (make-literal arena "3" (some "http://www.w3.org/2001/XMLSchema#integer") (none)) (make-literal arena "5" (some "http://www.w3.org/2001/XMLSchema#integer") (none)) (none) (make-iri arena EX_SHAPE) severity-violation (none)) -> (none))
     (@example (arena (make-iri arena EX_FOCUS) (make-literal arena "7" (some "http://www.w3.org/2001/XMLSchema#integer") (none)) (make-literal arena "5" (some "http://www.w3.org/2001/XMLSchema#integer") (none)) (none) (make-iri arena EX_SHAPE) severity-violation (none)) -> (some (ValidationResult _ _ _ _ _ _ _)))
-    (let ((cmp (xsd-compare arena value-node limit)))
-      (match cmp
-        (xsd-compare-equal (none))
-        (xsd-compare-less (none))
-        (xsd-compare-greater (some (record-new ValidationResult
-                   (focus-node focus-node)
-                   (result-path path)
-                   (value (some value-node))
-                   (source-shape shape-id)
-                   (source-constraint-component SHACL_MAX_INCLUSIVE)
-                   (severity severity)
-                   (message message))))
-        (xsd-compare-incomparable (some (record-new ValidationResult
-                   (focus-node focus-node)
-                   (result-path path)
-                   (value (some value-node))
-                   (source-shape shape-id)
-                   (source-constraint-component SHACL_MAX_INCLUSIVE)
-                   (severity severity)
-                   (message message))))))
+    (if (max-inclusive-satisfied arena value-node limit)
+      (none)
+      (some (record-new ValidationResult
+              (focus-node focus-node)
+              (result-path path)
+              (value (some value-node))
+              (source-shape shape-id)
+              (source-constraint-component SHACL_MAX_INCLUSIVE)
+              (severity severity)
+              (message message))))
     :c-name "snarl_check_max_inclusive")
 
   ;; ============================================================
@@ -111,38 +130,20 @@
     (@spec ((Arena Term Term Term (Option ShaclPath) Term Severity (Option String))
             -> (Option ValidationResult)))
     (@alloc arena)
-    ;; VERIFIER: "Could not translate" — xsd-compare has no @post, verifier can't model it
-    (@post (or (!= $result (none)) (== (xsd-compare arena value-node limit) xsd-compare-greater)))
-    (@property correctness (or (!= $result (none)) (== (xsd-compare arena value-node limit) xsd-compare-greater)))
+    (@post {(== (== $result (none)) (min-exclusive-satisfied arena value-node limit))})
+    (@property correctness (== (== $result (none)) (min-exclusive-satisfied arena value-node limit)))
     (@example (arena (make-iri arena EX_FOCUS) (make-literal arena "5" (some "http://www.w3.org/2001/XMLSchema#integer") (none)) (make-literal arena "3" (some "http://www.w3.org/2001/XMLSchema#integer") (none)) (none) (make-iri arena EX_SHAPE) severity-violation (none)) -> (none))
     (@example (arena (make-iri arena EX_FOCUS) (make-literal arena "3" (some "http://www.w3.org/2001/XMLSchema#integer") (none)) (make-literal arena "3" (some "http://www.w3.org/2001/XMLSchema#integer") (none)) (none) (make-iri arena EX_SHAPE) severity-violation (none)) -> (some (ValidationResult _ _ _ _ _ _ _)))
-    (let ((cmp (xsd-compare arena value-node limit)))
-      (match cmp
-        (xsd-compare-greater (none))
-        (xsd-compare-less (some (record-new ValidationResult
-                   (focus-node focus-node)
-                   (result-path path)
-                   (value (some value-node))
-                   (source-shape shape-id)
-                   (source-constraint-component SHACL_MIN_EXCLUSIVE)
-                   (severity severity)
-                   (message message))))
-        (xsd-compare-equal (some (record-new ValidationResult
-                   (focus-node focus-node)
-                   (result-path path)
-                   (value (some value-node))
-                   (source-shape shape-id)
-                   (source-constraint-component SHACL_MIN_EXCLUSIVE)
-                   (severity severity)
-                   (message message))))
-        (xsd-compare-incomparable (some (record-new ValidationResult
-                   (focus-node focus-node)
-                   (result-path path)
-                   (value (some value-node))
-                   (source-shape shape-id)
-                   (source-constraint-component SHACL_MIN_EXCLUSIVE)
-                   (severity severity)
-                   (message message))))))
+    (if (min-exclusive-satisfied arena value-node limit)
+      (none)
+      (some (record-new ValidationResult
+              (focus-node focus-node)
+              (result-path path)
+              (value (some value-node))
+              (source-shape shape-id)
+              (source-constraint-component SHACL_MIN_EXCLUSIVE)
+              (severity severity)
+              (message message))))
     :c-name "snarl_check_min_exclusive")
 
   ;; ============================================================
@@ -156,36 +157,18 @@
     (@spec ((Arena Term Term Term (Option ShaclPath) Term Severity (Option String))
             -> (Option ValidationResult)))
     (@alloc arena)
-    ;; VERIFIER: "Could not translate" — xsd-compare has no @post, verifier can't model it
-    (@post (or (!= $result (none)) (== (xsd-compare arena value-node limit) xsd-compare-less)))
-    (@property correctness (or (!= $result (none)) (== (xsd-compare arena value-node limit) xsd-compare-less)))
+    (@post {(== (== $result (none)) (max-exclusive-satisfied arena value-node limit))})
+    (@property correctness (== (== $result (none)) (max-exclusive-satisfied arena value-node limit)))
     (@example (arena (make-iri arena EX_FOCUS) (make-literal arena "3" (some "http://www.w3.org/2001/XMLSchema#integer") (none)) (make-literal arena "5" (some "http://www.w3.org/2001/XMLSchema#integer") (none)) (none) (make-iri arena EX_SHAPE) severity-violation (none)) -> (none))
     (@example (arena (make-iri arena EX_FOCUS) (make-literal arena "5" (some "http://www.w3.org/2001/XMLSchema#integer") (none)) (make-literal arena "5" (some "http://www.w3.org/2001/XMLSchema#integer") (none)) (none) (make-iri arena EX_SHAPE) severity-violation (none)) -> (some (ValidationResult _ _ _ _ _ _ _)))
-    (let ((cmp (xsd-compare arena value-node limit)))
-      (match cmp
-        (xsd-compare-less (none))
-        (xsd-compare-greater (some (record-new ValidationResult
-                   (focus-node focus-node)
-                   (result-path path)
-                   (value (some value-node))
-                   (source-shape shape-id)
-                   (source-constraint-component SHACL_MAX_EXCLUSIVE)
-                   (severity severity)
-                   (message message))))
-        (xsd-compare-equal (some (record-new ValidationResult
-                   (focus-node focus-node)
-                   (result-path path)
-                   (value (some value-node))
-                   (source-shape shape-id)
-                   (source-constraint-component SHACL_MAX_EXCLUSIVE)
-                   (severity severity)
-                   (message message))))
-        (xsd-compare-incomparable (some (record-new ValidationResult
-                   (focus-node focus-node)
-                   (result-path path)
-                   (value (some value-node))
-                   (source-shape shape-id)
-                   (source-constraint-component SHACL_MAX_EXCLUSIVE)
-                   (severity severity)
-                   (message message))))))
+    (if (max-exclusive-satisfied arena value-node limit)
+      (none)
+      (some (record-new ValidationResult
+              (focus-node focus-node)
+              (result-path path)
+              (value (some value-node))
+              (source-shape shape-id)
+              (source-constraint-component SHACL_MAX_EXCLUSIVE)
+              (severity severity)
+              (message message))))
     :c-name "snarl_check_max_exclusive"))

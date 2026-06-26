@@ -9,6 +9,8 @@ ttl_TtlParseContext ttl_make_ttl_context(slop_arena* arena, slop_string input);
 ttl_GenBlankResult ttl_context_gen_blank_id(slop_arena* arena, ttl_TtlParseContext ctx);
 ttl_TtlParseContext ttl_ctx_with_state(ttl_TtlParseContext ctx, common_ParseState state);
 slop_string ttl_iri_string(rdf_Term t);
+slop_list_rdf_Triple ttl_list_push_triples(slop_arena* arena, slop_list_rdf_Triple dst, slop_list_rdf_Triple src);
+rdf_Graph ttl_graph_add_all(slop_arena* arena, rdf_Graph g, slop_list_rdf_Triple src);
 slop_result_ttl_TermResult_common_ParseError ttl_parse_iri_ref(slop_arena* arena, ttl_TtlParseContext ctx);
 common_ParseWhileResult ttl_parse_pn_local(slop_arena* arena, common_ParseState state);
 slop_result_ttl_TermResult_common_ParseError ttl_parse_prefixed_name(slop_arena* arena, ttl_TtlParseContext ctx);
@@ -121,6 +123,34 @@ slop_string ttl_iri_string(rdf_Term t) {
     }
 }
 
+slop_list_rdf_Triple ttl_list_push_triples(slop_arena* arena, slop_list_rdf_Triple dst, slop_list_rdf_Triple src) {
+    {
+        __auto_type acc = dst;
+        {
+            __auto_type _coll = src;
+            for (size_t _i = 0; _i < _coll.len; _i++) {
+                __auto_type t = _coll.data[_i];
+                ({ __auto_type _lst_p = &(acc); __auto_type _item = (t); if (_lst_p->len >= _lst_p->cap) { size_t _new_cap = _lst_p->cap == 0 ? 16 : _lst_p->cap * 2; __typeof__(_lst_p->data) _new_data = (__typeof__(_lst_p->data))slop_arena_alloc(arena, _new_cap * sizeof(*_lst_p->data)); if (_lst_p->len > 0) memcpy(_new_data, _lst_p->data, _lst_p->len * sizeof(*_lst_p->data)); _lst_p->data = _new_data; _lst_p->cap = _new_cap; } _lst_p->data[_lst_p->len++] = _item; (void)0; });
+            }
+        }
+        return acc;
+    }
+}
+
+rdf_Graph ttl_graph_add_all(slop_arena* arena, rdf_Graph g, slop_list_rdf_Triple src) {
+    {
+        __auto_type acc = g;
+        {
+            __auto_type _coll = src;
+            for (size_t _i = 0; _i < _coll.len; _i++) {
+                __auto_type t = _coll.data[_i];
+                acc = rdf_graph_add_unchecked(arena, acc, t);
+            }
+        }
+        return acc;
+    }
+}
+
 slop_result_ttl_TermResult_common_ParseError ttl_parse_iri_ref(slop_arena* arena, ttl_TtlParseContext ctx) {
     SLOP_PRE(((common_state_peek(ctx.state) == 60)), "(== (state-peek ctx.state) 60)");
     {
@@ -139,7 +169,7 @@ common_ParseWhileResult ttl_parse_pn_local(slop_arena* arena, common_ParseState 
         while (!(done)) {
             {
                 __auto_type c = common_state_peek(result.state);
-                if ((c == 46)) {
+                if (c == 46) {
                     {
                         __auto_type c2 = common_state_peek_n(result.state, 1);
                         if (ttl_is_pn_chars(c2)) {
@@ -186,10 +216,10 @@ slop_result_ttl_TermResult_common_ParseError ttl_parse_prefixed_name(slop_arena*
 slop_result_ttl_TermTriplesResult_common_ParseError ttl_parse_blank_node_extended(slop_arena* arena, ttl_TtlParseContext ctx) {
     {
         __auto_type c = common_state_peek(ctx.state);
-        if ((c == 91)) {
+        if (c == 91) {
             {
                 __auto_type s2 = common_skip_whitespace(arena, common_state_advance(arena, ctx.state));
-                if ((common_state_peek(s2) == 93)) {
+                if (common_state_peek(s2) == 93) {
                     {
                         __auto_type gen = ttl_context_gen_blank_id(arena, ctx);
                         return ((slop_result_ttl_TermTriplesResult_common_ParseError){ .is_ok = true, .data.ok = ((ttl_TermTriplesResult){.term = rdf_make_blank(arena, gen.id), .extra_triples = ((slop_list_rdf_Triple){ .data = (rdf_Triple*)slop_arena_alloc(arena, 16 * sizeof(rdf_Triple)), .len = 0, .cap = 16 }), .ctx = ttl_ctx_with_state(gen.ctx, common_state_advance(arena, s2))}) });
@@ -225,8 +255,9 @@ slop_result_ttl_TermTriplesResult_common_ParseError ttl_parse_blank_node_extende
                         } else if (!_mv_223.has_value) {
                             {
                                 __auto_type gen = ttl_context_gen_blank_id(arena, ctx);
-                                ({ __auto_type _lst_p = &(ctx.blank_labels); __auto_type _item = (((ttl_BlankLabelBinding){.label = label_str, .id = gen.id})); if (_lst_p->len >= _lst_p->cap) { size_t _new_cap = _lst_p->cap == 0 ? 16 : _lst_p->cap * 2; __typeof__(_lst_p->data) _new_data = (__typeof__(_lst_p->data))slop_arena_alloc(arena, _new_cap * sizeof(*_lst_p->data)); if (_lst_p->len > 0) memcpy(_new_data, _lst_p->data, _lst_p->len * sizeof(*_lst_p->data)); _lst_p->data = _new_data; _lst_p->cap = _new_cap; } _lst_p->data[_lst_p->len++] = _item; (void)0; });
-                                return ((slop_result_ttl_TermTriplesResult_common_ParseError){ .is_ok = true, .data.ok = ((ttl_TermTriplesResult){.term = rdf_make_blank(arena, gen.id), .extra_triples = ((slop_list_rdf_Triple){ .data = (rdf_Triple*)slop_arena_alloc(arena, 16 * sizeof(rdf_Triple)), .len = 0, .cap = 16 }), .ctx = ttl_ctx_with_state(gen.ctx, label_result.state)}) });
+                                __auto_type labels = ctx.blank_labels;
+                                ({ __auto_type _lst_p = &(labels); __auto_type _item = (((ttl_BlankLabelBinding){.label = label_str, .id = gen.id})); if (_lst_p->len >= _lst_p->cap) { size_t _new_cap = _lst_p->cap == 0 ? 16 : _lst_p->cap * 2; __typeof__(_lst_p->data) _new_data = (__typeof__(_lst_p->data))slop_arena_alloc(arena, _new_cap * sizeof(*_lst_p->data)); if (_lst_p->len > 0) memcpy(_new_data, _lst_p->data, _lst_p->len * sizeof(*_lst_p->data)); _lst_p->data = _new_data; _lst_p->cap = _new_cap; } _lst_p->data[_lst_p->len++] = _item; (void)0; });
+                                return ((slop_result_ttl_TermTriplesResult_common_ParseError){ .is_ok = true, .data.ok = ((ttl_TermTriplesResult){.term = rdf_make_blank(arena, gen.id), .extra_triples = ((slop_list_rdf_Triple){ .data = (rdf_Triple*)slop_arena_alloc(arena, 16 * sizeof(rdf_Triple)), .len = 0, .cap = 16 }), .ctx = ((ttl_TtlParseContext){.prefixes = ctx.prefixes, .base_iri = ctx.base_iri, .blank_labels = labels, .blank_counter = gen.ctx.blank_counter, .state = label_result.state})}) });
                             }
                         }
                     }
@@ -248,15 +279,15 @@ slop_result_ttl_StringResult_common_ParseError ttl_parse_string_literal(slop_are
         __auto_type q = common_state_peek(ctx.state);
         __auto_type s = common_state_advance(arena, ctx.state);
         __auto_type result = SLOP_STR("");
-        if (((common_state_peek(s) == q) && (common_state_peek_n(s, 1) == q))) {
+        if ((common_state_peek(s) == q) && (common_state_peek_n(s, 1) == q)) {
             s = common_state_advance(arena, s);
             s = common_state_advance(arena, s);
             {
                 uint8_t done = 0;
-                while ((!(done) && !(common_state_at_end(s)))) {
+                while (!(done) && !(common_state_at_end(s))) {
                     {
                         __auto_type c = common_state_peek(s);
-                        if ((c == 92)) {
+                        if (c == 92) {
                             {
                                 __auto_type esc = ttl_parse_escape_sequence(arena, ((ttl_TtlParseContext){.prefixes = ctx.prefixes, .base_iri = ctx.base_iri, .blank_labels = ctx.blank_labels, .blank_counter = ctx.blank_counter, .state = s}));
                                 __auto_type _mv_224 = esc;
@@ -270,7 +301,7 @@ slop_result_ttl_StringResult_common_ParseError ttl_parse_string_literal(slop_are
                                     /* empty list */;
                                 }
                             }
-                        } else if (((c == q) && ((common_state_peek_n(s, 1) == q) && (common_state_peek_n(s, 2) == q)))) {
+                        } else if ((c == q) && ((common_state_peek_n(s, 1) == q) && (common_state_peek_n(s, 2) == q))) {
                             s = common_state_advance(arena, s);
                             s = common_state_advance(arena, s);
                             s = common_state_advance(arena, s);
@@ -290,10 +321,10 @@ slop_result_ttl_StringResult_common_ParseError ttl_parse_string_literal(slop_are
         } else {
             {
                 uint8_t done = 0;
-                while ((!(done) && !(common_state_at_end(s)))) {
+                while (!(done) && !(common_state_at_end(s))) {
                     {
                         __auto_type c = common_state_peek(s);
-                        if ((c == 92)) {
+                        if (c == 92) {
                             {
                                 __auto_type esc = ttl_parse_escape_sequence(arena, ((ttl_TtlParseContext){.prefixes = ctx.prefixes, .base_iri = ctx.base_iri, .blank_labels = ctx.blank_labels, .blank_counter = ctx.blank_counter, .state = s}));
                                 __auto_type _mv_225 = esc;
@@ -307,7 +338,7 @@ slop_result_ttl_StringResult_common_ParseError ttl_parse_string_literal(slop_are
                                     /* empty list */;
                                 }
                             }
-                        } else if ((c == q)) {
+                        } else if (c == q) {
                             s = common_state_advance(arena, s);
                             done = 1;
                         } else {
@@ -336,17 +367,17 @@ slop_result_ttl_EscapeResult_common_ParseError ttl_parse_escape_sequence(slop_ar
                 __auto_type s2 = common_state_advance(arena, s1);
                 {
                     __auto_type new_ctx = ((ttl_TtlParseContext){.prefixes = ctx.prefixes, .base_iri = ctx.base_iri, .blank_labels = ctx.blank_labels, .blank_counter = ctx.blank_counter, .state = s2});
-                    if ((c == 110)) {
+                    if (c == 110) {
                         return ((slop_result_ttl_EscapeResult_common_ParseError){ .is_ok = true, .data.ok = ((ttl_EscapeResult){.slop_char = 10, .ctx = new_ctx}) });
-                    } else if ((c == 116)) {
+                    } else if (c == 116) {
                         return ((slop_result_ttl_EscapeResult_common_ParseError){ .is_ok = true, .data.ok = ((ttl_EscapeResult){.slop_char = 9, .ctx = new_ctx}) });
-                    } else if ((c == 114)) {
+                    } else if (c == 114) {
                         return ((slop_result_ttl_EscapeResult_common_ParseError){ .is_ok = true, .data.ok = ((ttl_EscapeResult){.slop_char = 13, .ctx = new_ctx}) });
-                    } else if ((c == 92)) {
+                    } else if (c == 92) {
                         return ((slop_result_ttl_EscapeResult_common_ParseError){ .is_ok = true, .data.ok = ((ttl_EscapeResult){.slop_char = 92, .ctx = new_ctx}) });
-                    } else if ((c == 34)) {
+                    } else if (c == 34) {
                         return ((slop_result_ttl_EscapeResult_common_ParseError){ .is_ok = true, .data.ok = ((ttl_EscapeResult){.slop_char = 34, .ctx = new_ctx}) });
-                    } else if ((c == 39)) {
+                    } else if (c == 39) {
                         return ((slop_result_ttl_EscapeResult_common_ParseError){ .is_ok = true, .data.ok = ((ttl_EscapeResult){.slop_char = 39, .ctx = new_ctx}) });
                     } else {
                         return ((slop_result_ttl_EscapeResult_common_ParseError){ .is_ok = false, .data.err = common_make_parse_error(arena, common_ParseErrorKind_invalid_escape, SLOP_STR("Invalid escape sequence"), ((common_Position){.line = s1.line, .column = s1.column, .offset = s1.offset})) });
@@ -363,12 +394,12 @@ slop_result_ttl_TermResult_common_ParseError ttl_parse_literal(slop_arena* arena
         {
             __auto_type s = sr.ctx.state;
             __auto_type val = sr.value;
-            if (((common_state_peek(s) == 94) && (common_state_peek_n(s, 1) == 94))) {
+            if ((common_state_peek(s) == 94) && (common_state_peek_n(s, 1) == 94)) {
                 {
                     __auto_type s2 = common_state_advance(arena, common_state_advance(arena, s));
                     {
                         __auto_type dt_ctx = ttl_ctx_with_state(sr.ctx, s2);
-                        if ((common_state_peek(s2) == 60)) {
+                        if (common_state_peek(s2) == 60) {
                             {
                                 __auto_type ir = ({ __auto_type _tmp = ttl_parse_iri_ref(arena, dt_ctx); if (!_tmp.is_ok) return ((slop_result_ttl_TermResult_common_ParseError){ .is_ok = false, .data.err = _tmp.data.err }); _tmp.data.ok; });
                                 __auto_type _mv_226 = ir.term;
@@ -401,7 +432,7 @@ slop_result_ttl_TermResult_common_ParseError ttl_parse_literal(slop_arena* arena
                         }
                     }
                 }
-            } else if ((common_state_peek(s) == 64)) {
+            } else if (common_state_peek(s) == 64) {
                 {
                     __auto_type s2 = common_state_advance(arena, s);
                     {
@@ -422,14 +453,14 @@ slop_result_ttl_TermResult_common_ParseError ttl_parse_numeric_literal(slop_aren
         __auto_type s = ctx.state;
         uint8_t has_dot = 0;
         uint8_t has_e = 0;
-        if (((common_state_peek(s) == 43) || (common_state_peek(s) == 45))) {
+        if ((common_state_peek(s) == 43) || (common_state_peek(s) == 45)) {
             s = common_state_advance(arena, s);
         }
         {
             __auto_type digits = common_parse_while(arena, s, (slop_closure_t){(void*)_wrap_strlib_is_digit, NULL});
             s = digits.state;
         }
-        if ((common_state_peek(s) == 46)) {
+        if (common_state_peek(s) == 46) {
             has_dot = 1;
             s = common_state_advance(arena, s);
             {
@@ -437,10 +468,10 @@ slop_result_ttl_TermResult_common_ParseError ttl_parse_numeric_literal(slop_aren
                 s = frac.state;
             }
         }
-        if (((common_state_peek(s) == 101) || (common_state_peek(s) == 69))) {
+        if ((common_state_peek(s) == 101) || (common_state_peek(s) == 69)) {
             has_e = 1;
             s = common_state_advance(arena, s);
-            if (((common_state_peek(s) == 43) || (common_state_peek(s) == 45))) {
+            if ((common_state_peek(s) == 43) || (common_state_peek(s) == 45)) {
                 s = common_state_advance(arena, s);
             }
             {
@@ -459,7 +490,7 @@ slop_result_ttl_TermResult_common_ParseError ttl_parse_numeric_literal(slop_aren
 slop_result_ttl_TermResult_common_ParseError ttl_parse_boolean_literal(slop_arena* arena, ttl_TtlParseContext ctx) {
     {
         __auto_type c = common_state_peek(ctx.state);
-        if ((c == 116)) {
+        if (c == 116) {
             {
                 __auto_type s = common_state_advance(arena, common_state_advance(arena, common_state_advance(arena, common_state_advance(arena, ctx.state))));
                 return ((slop_result_ttl_TermResult_common_ParseError){ .is_ok = true, .data.ok = ((ttl_TermResult){.term = rdf_make_literal(arena, SLOP_STR("true"), (slop_option_string){.has_value = 1, .value = SLOP_STR("http://www.w3.org/2001/XMLSchema#boolean")}, ((slop_option_string){.has_value = false})), .ctx = ((ttl_TtlParseContext){.prefixes = ctx.prefixes, .base_iri = ctx.base_iri, .blank_labels = ctx.blank_labels, .blank_counter = ctx.blank_counter, .state = s})}) });
@@ -476,43 +507,43 @@ slop_result_ttl_TermResult_common_ParseError ttl_parse_boolean_literal(slop_aren
 slop_result_ttl_TermResult_common_ParseError ttl_parse_term(slop_arena* arena, ttl_TtlParseContext ctx) {
     {
         __auto_type c = common_state_peek(ctx.state);
-        if ((c == 60)) {
+        if (c == 60) {
             return ttl_parse_iri_ref(arena, ctx);
-        } else if ((c == 95)) {
+        } else if (c == 95) {
             return ttl_parse_blank_node(arena, ctx);
-        } else if (((c == 34) || (c == 39))) {
+        } else if ((c == 34) || (c == 39)) {
             return ttl_parse_literal(arena, ctx);
-        } else if ((((c >= 48) && (c <= 57)) || ((c == 43) || (c == 45)))) {
+        } else if (((c >= 48) && (c <= 57)) || ((c == 43) || (c == 45))) {
             return ttl_parse_numeric_literal(arena, ctx);
-        } else if ((c == 116)) {
+        } else if (c == 116) {
             {
                 __auto_type c2 = common_state_peek_n(ctx.state, 1);
                 __auto_type c3 = common_state_peek_n(ctx.state, 2);
                 __auto_type c4 = common_state_peek_n(ctx.state, 3);
                 __auto_type c5 = common_state_peek_n(ctx.state, 4);
-                if (((c2 == 114) && ((c3 == 117) && ((c4 == 101) && !((strlib_is_alnum(c5) || ((c5 == 58) || ((c5 == 95) || (c5 == 45))))))))) {
+                if ((c2 == 114) && ((c3 == 117) && ((c4 == 101) && !((strlib_is_alnum(c5) || ((c5 == 58) || ((c5 == 95) || (c5 == 45)))))))) {
                     return ttl_parse_boolean_literal(arena, ctx);
                 } else {
                     return ttl_parse_prefixed_name(arena, ctx);
                 }
             }
-        } else if ((c == 102)) {
+        } else if (c == 102) {
             {
                 __auto_type c2 = common_state_peek_n(ctx.state, 1);
                 __auto_type c3 = common_state_peek_n(ctx.state, 2);
                 __auto_type c4 = common_state_peek_n(ctx.state, 3);
                 __auto_type c5 = common_state_peek_n(ctx.state, 4);
                 __auto_type c6 = common_state_peek_n(ctx.state, 5);
-                if (((c2 == 97) && ((c3 == 108) && ((c4 == 115) && ((c5 == 101) && !((strlib_is_alnum(c6) || ((c6 == 58) || ((c6 == 95) || (c6 == 45)))))))))) {
+                if ((c2 == 97) && ((c3 == 108) && ((c4 == 115) && ((c5 == 101) && !((strlib_is_alnum(c6) || ((c6 == 58) || ((c6 == 95) || (c6 == 45))))))))) {
                     return ttl_parse_boolean_literal(arena, ctx);
                 } else {
                     return ttl_parse_prefixed_name(arena, ctx);
                 }
             }
-        } else if ((c == 97)) {
+        } else if (c == 97) {
             {
                 __auto_type c2 = common_state_peek_n(ctx.state, 1);
-                if (((c2 == 32) || ((c2 == 9) || ((c2 == 10) || (c2 == 13))))) {
+                if ((c2 == 32) || ((c2 == 9) || ((c2 == 10) || (c2 == 13)))) {
                     return ((slop_result_ttl_TermResult_common_ParseError){ .is_ok = true, .data.ok = ((ttl_TermResult){.term = rdf_make_iri(arena, SLOP_STR("http://www.w3.org/1999/02/22-rdf-syntax-ns#type")), .ctx = ((ttl_TtlParseContext){.prefixes = ctx.prefixes, .base_iri = ctx.base_iri, .blank_labels = ctx.blank_labels, .blank_counter = ctx.blank_counter, .state = common_state_advance(arena, ctx.state)})}) });
                 } else {
                     return ttl_parse_prefixed_name(arena, ctx);
@@ -533,16 +564,10 @@ slop_result_ttl_TermTriplesResult_common_ParseError ttl_parse_collection(slop_ar
         __auto_type rdf_nil = rdf_make_iri(arena, SLOP_STR("http://www.w3.org/1999/02/22-rdf-syntax-ns#nil"));
         slop_option_rdf_Term prev_node = (slop_option_rdf_Term){.has_value = false};
         slop_option_rdf_Term first_node = (slop_option_rdf_Term){.has_value = false};
-        while ((!(common_state_at_end(cur_ctx.state)) && (common_state_peek(cur_ctx.state) != 41))) {
+        while (!(common_state_at_end(cur_ctx.state)) && (common_state_peek(cur_ctx.state) != 41)) {
             {
                 __auto_type er = ({ __auto_type _tmp = ttl_parse_term_extended(arena, cur_ctx); if (!_tmp.is_ok) return ((slop_result_ttl_TermTriplesResult_common_ParseError){ .is_ok = false, .data.err = _tmp.data.err }); _tmp.data.ok; });
-                {
-                    __auto_type _coll = er.extra_triples;
-                    for (size_t _i = 0; _i < _coll.len; _i++) {
-                        __auto_type t = _coll.data[_i];
-                        ({ __auto_type _lst_p = &(triples); __auto_type _item = (t); if (_lst_p->len >= _lst_p->cap) { size_t _new_cap = _lst_p->cap == 0 ? 16 : _lst_p->cap * 2; __typeof__(_lst_p->data) _new_data = (__typeof__(_lst_p->data))slop_arena_alloc(arena, _new_cap * sizeof(*_lst_p->data)); if (_lst_p->len > 0) memcpy(_new_data, _lst_p->data, _lst_p->len * sizeof(*_lst_p->data)); _lst_p->data = _new_data; _lst_p->cap = _new_cap; } _lst_p->data[_lst_p->len++] = _item; (void)0; });
-                    }
-                }
+                triples = ttl_list_push_triples(arena, triples, er.extra_triples);
                 {
                     __auto_type gen = ttl_context_gen_blank_id(arena, er.ctx);
                     {
@@ -601,20 +626,8 @@ slop_result_ttl_TermTriplesResult_common_ParseError ttl_parse_triple_term(slop_a
         __auto_type objr = ({ __auto_type _tmp = ttl_parse_term_extended(arena, ttl_ctx_with_state(pr.ctx, common_skip_whitespace(arena, pr.ctx.state))); if (!_tmp.is_ok) return ((slop_result_ttl_TermTriplesResult_common_ParseError){ .is_ok = false, .data.err = _tmp.data.err }); _tmp.data.ok; });
         __auto_type s_end = ({ __auto_type _tmp = ttl_expect_triple_term_close(arena, common_skip_whitespace(arena, objr.ctx.state)); if (!_tmp.is_ok) return ((slop_result_ttl_TermTriplesResult_common_ParseError){ .is_ok = false, .data.err = _tmp.data.err }); _tmp.data.ok; });
         __auto_type extras = ((slop_list_rdf_Triple){ .data = (rdf_Triple*)slop_arena_alloc(arena, 16 * sizeof(rdf_Triple)), .len = 0, .cap = 16 });
-        {
-            __auto_type _coll = sr.extra_triples;
-            for (size_t _i = 0; _i < _coll.len; _i++) {
-                __auto_type t = _coll.data[_i];
-                ({ __auto_type _lst_p = &(extras); __auto_type _item = (t); if (_lst_p->len >= _lst_p->cap) { size_t _new_cap = _lst_p->cap == 0 ? 16 : _lst_p->cap * 2; __typeof__(_lst_p->data) _new_data = (__typeof__(_lst_p->data))slop_arena_alloc(arena, _new_cap * sizeof(*_lst_p->data)); if (_lst_p->len > 0) memcpy(_new_data, _lst_p->data, _lst_p->len * sizeof(*_lst_p->data)); _lst_p->data = _new_data; _lst_p->cap = _new_cap; } _lst_p->data[_lst_p->len++] = _item; (void)0; });
-            }
-        }
-        {
-            __auto_type _coll = objr.extra_triples;
-            for (size_t _i = 0; _i < _coll.len; _i++) {
-                __auto_type t = _coll.data[_i];
-                ({ __auto_type _lst_p = &(extras); __auto_type _item = (t); if (_lst_p->len >= _lst_p->cap) { size_t _new_cap = _lst_p->cap == 0 ? 16 : _lst_p->cap * 2; __typeof__(_lst_p->data) _new_data = (__typeof__(_lst_p->data))slop_arena_alloc(arena, _new_cap * sizeof(*_lst_p->data)); if (_lst_p->len > 0) memcpy(_new_data, _lst_p->data, _lst_p->len * sizeof(*_lst_p->data)); _lst_p->data = _new_data; _lst_p->cap = _new_cap; } _lst_p->data[_lst_p->len++] = _item; (void)0; });
-            }
-        }
+        extras = ttl_list_push_triples(arena, extras, sr.extra_triples);
+        extras = ttl_list_push_triples(arena, extras, objr.extra_triples);
         return ((slop_result_ttl_TermTriplesResult_common_ParseError){ .is_ok = true, .data.ok = ((ttl_TermTriplesResult){.term = rdf_make_triple_term(arena, rdf_make_triple(arena, sr.term, pr.term, objr.term)), .extra_triples = extras, .ctx = ttl_ctx_with_state(objr.ctx, s_end)}) });
     }
 }
@@ -622,11 +635,11 @@ slop_result_ttl_TermTriplesResult_common_ParseError ttl_parse_triple_term(slop_a
 slop_result_ttl_TermTriplesResult_common_ParseError ttl_parse_term_extended(slop_arena* arena, ttl_TtlParseContext ctx) {
     {
         __auto_type c = common_state_peek(ctx.state);
-        if ((c == 91)) {
+        if (c == 91) {
             return ttl_parse_blank_node_extended(arena, ctx);
-        } else if ((c == 40)) {
+        } else if (c == 40) {
             return ttl_parse_collection(arena, ctx);
-        } else if (((c == 60) && ((common_state_peek_n(ctx.state, 1) == 60) && (common_state_peek_n(ctx.state, 2) == 40)))) {
+        } else if ((c == 60) && ((common_state_peek_n(ctx.state, 1) == 60) && (common_state_peek_n(ctx.state, 2) == 40))) {
             return ttl_parse_triple_term(arena, ctx);
         } else {
             {
@@ -692,24 +705,18 @@ slop_result_ttl_TriplesResult_common_ParseError ttl_parse_predicate_object_list(
             {
                 __auto_type s1 = common_skip_whitespace(arena, cur_ctx.state);
                 __auto_type c1 = common_state_peek(s1);
-                if (((c1 == 46) || ((c1 == 93) || ((c1 == 0) || (c1 == 124))))) {
+                if ((c1 == 46) || ((c1 == 93) || ((c1 == 0) || (c1 == 124)))) {
                     cur_ctx = ttl_ctx_with_state(cur_ctx, s1);
                     done = 1;
                 } else {
                     {
                         __auto_type pr = ({ __auto_type _tmp = ttl_parse_term(arena, ttl_ctx_with_state(cur_ctx, s1)); if (!_tmp.is_ok) return ((slop_result_ttl_TriplesResult_common_ParseError){ .is_ok = false, .data.err = _tmp.data.err }); _tmp.data.ok; });
                         __auto_type olr = ({ __auto_type _tmp = ttl_parse_object_list(arena, pr.ctx, subject, pr.term); if (!_tmp.is_ok) return ((slop_result_ttl_TriplesResult_common_ParseError){ .is_ok = false, .data.err = _tmp.data.err }); _tmp.data.ok; });
-                        {
-                            __auto_type _coll = olr.triples;
-                            for (size_t _i = 0; _i < _coll.len; _i++) {
-                                __auto_type t = _coll.data[_i];
-                                ({ __auto_type _lst_p = &(triples); __auto_type _item = (t); if (_lst_p->len >= _lst_p->cap) { size_t _new_cap = _lst_p->cap == 0 ? 16 : _lst_p->cap * 2; __typeof__(_lst_p->data) _new_data = (__typeof__(_lst_p->data))slop_arena_alloc(arena, _new_cap * sizeof(*_lst_p->data)); if (_lst_p->len > 0) memcpy(_new_data, _lst_p->data, _lst_p->len * sizeof(*_lst_p->data)); _lst_p->data = _new_data; _lst_p->cap = _new_cap; } _lst_p->data[_lst_p->len++] = _item; (void)0; });
-                            }
-                        }
+                        triples = ttl_list_push_triples(arena, triples, olr.triples);
                         cur_ctx = olr.ctx;
                         {
                             __auto_type s3 = common_skip_whitespace(arena, olr.ctx.state);
-                            if ((common_state_peek(s3) == 59)) {
+                            if (common_state_peek(s3) == 59) {
                                 cur_ctx = ttl_ctx_with_state(cur_ctx, common_state_advance(arena, s3));
                             } else {
                                 done = 1;
@@ -735,13 +742,7 @@ slop_result_ttl_TriplesResult_common_ParseError ttl_parse_annotation(slop_arena*
         __auto_type s2 = ({ __auto_type _tmp = common_expect_char(arena, common_skip_whitespace(arena, polr.ctx.state), 124); if (!_tmp.is_ok) return ((slop_result_ttl_TriplesResult_common_ParseError){ .is_ok = false, .data.err = _tmp.data.err }); _tmp.data.ok; });
         __auto_type s3 = ({ __auto_type _tmp = common_expect_char(arena, s2, 125); if (!_tmp.is_ok) return ((slop_result_ttl_TriplesResult_common_ParseError){ .is_ok = false, .data.err = _tmp.data.err }); _tmp.data.ok; });
         ({ __auto_type _lst_p = &(triples); __auto_type _item = (rdf_make_triple(arena, reifier, reifies, rdf_make_triple_term(arena, base_triple))); if (_lst_p->len >= _lst_p->cap) { size_t _new_cap = _lst_p->cap == 0 ? 16 : _lst_p->cap * 2; __typeof__(_lst_p->data) _new_data = (__typeof__(_lst_p->data))slop_arena_alloc(arena, _new_cap * sizeof(*_lst_p->data)); if (_lst_p->len > 0) memcpy(_new_data, _lst_p->data, _lst_p->len * sizeof(*_lst_p->data)); _lst_p->data = _new_data; _lst_p->cap = _new_cap; } _lst_p->data[_lst_p->len++] = _item; (void)0; });
-        {
-            __auto_type _coll = polr.triples;
-            for (size_t _i = 0; _i < _coll.len; _i++) {
-                __auto_type t = _coll.data[_i];
-                ({ __auto_type _lst_p = &(triples); __auto_type _item = (t); if (_lst_p->len >= _lst_p->cap) { size_t _new_cap = _lst_p->cap == 0 ? 16 : _lst_p->cap * 2; __typeof__(_lst_p->data) _new_data = (__typeof__(_lst_p->data))slop_arena_alloc(arena, _new_cap * sizeof(*_lst_p->data)); if (_lst_p->len > 0) memcpy(_new_data, _lst_p->data, _lst_p->len * sizeof(*_lst_p->data)); _lst_p->data = _new_data; _lst_p->cap = _new_cap; } _lst_p->data[_lst_p->len++] = _item; (void)0; });
-            }
-        }
+        triples = ttl_list_push_triples(arena, triples, polr.triples);
         return ((slop_result_ttl_TriplesResult_common_ParseError){ .is_ok = true, .data.ok = ((ttl_TriplesResult){.triples = triples, .ctx = ttl_ctx_with_state(polr.ctx, s3)}) });
     }
 }
@@ -755,13 +756,7 @@ slop_result_ttl_TriplesResult_common_ParseError ttl_parse_object_list(slop_arena
             {
                 __auto_type s1 = common_skip_whitespace(arena, cur_ctx.state);
                 __auto_type objr = ({ __auto_type _tmp = ttl_parse_term_extended(arena, ttl_ctx_with_state(cur_ctx, s1)); if (!_tmp.is_ok) return ((slop_result_ttl_TriplesResult_common_ParseError){ .is_ok = false, .data.err = _tmp.data.err }); _tmp.data.ok; });
-                {
-                    __auto_type _coll = objr.extra_triples;
-                    for (size_t _i = 0; _i < _coll.len; _i++) {
-                        __auto_type t = _coll.data[_i];
-                        ({ __auto_type _lst_p = &(triples); __auto_type _item = (t); if (_lst_p->len >= _lst_p->cap) { size_t _new_cap = _lst_p->cap == 0 ? 16 : _lst_p->cap * 2; __typeof__(_lst_p->data) _new_data = (__typeof__(_lst_p->data))slop_arena_alloc(arena, _new_cap * sizeof(*_lst_p->data)); if (_lst_p->len > 0) memcpy(_new_data, _lst_p->data, _lst_p->len * sizeof(*_lst_p->data)); _lst_p->data = _new_data; _lst_p->cap = _new_cap; } _lst_p->data[_lst_p->len++] = _item; (void)0; });
-                    }
-                }
+                triples = ttl_list_push_triples(arena, triples, objr.extra_triples);
                 ({ __auto_type _lst_p = &(triples); __auto_type _item = (rdf_make_triple(arena, subject, predicate, objr.term)); if (_lst_p->len >= _lst_p->cap) { size_t _new_cap = _lst_p->cap == 0 ? 16 : _lst_p->cap * 2; __typeof__(_lst_p->data) _new_data = (__typeof__(_lst_p->data))slop_arena_alloc(arena, _new_cap * sizeof(*_lst_p->data)); if (_lst_p->len > 0) memcpy(_new_data, _lst_p->data, _lst_p->len * sizeof(*_lst_p->data)); _lst_p->data = _new_data; _lst_p->cap = _new_cap; } _lst_p->data[_lst_p->len++] = _item; (void)0; });
                 cur_ctx = objr.ctx;
                 {
@@ -769,16 +764,10 @@ slop_result_ttl_TriplesResult_common_ParseError ttl_parse_object_list(slop_arena
                     while (!(ann_done)) {
                         {
                             __auto_type sa = common_skip_whitespace(arena, cur_ctx.state);
-                            if (((common_state_peek(sa) == 123) && (common_state_peek_n(sa, 1) == 124))) {
+                            if ((common_state_peek(sa) == 123) && (common_state_peek_n(sa, 1) == 124)) {
                                 {
                                     __auto_type ar = ({ __auto_type _tmp = ttl_parse_annotation(arena, ttl_ctx_with_state(cur_ctx, sa), rdf_make_triple(arena, subject, predicate, objr.term)); if (!_tmp.is_ok) return ((slop_result_ttl_TriplesResult_common_ParseError){ .is_ok = false, .data.err = _tmp.data.err }); _tmp.data.ok; });
-                                    {
-                                        __auto_type _coll = ar.triples;
-                                        for (size_t _i = 0; _i < _coll.len; _i++) {
-                                            __auto_type t = _coll.data[_i];
-                                            ({ __auto_type _lst_p = &(triples); __auto_type _item = (t); if (_lst_p->len >= _lst_p->cap) { size_t _new_cap = _lst_p->cap == 0 ? 16 : _lst_p->cap * 2; __typeof__(_lst_p->data) _new_data = (__typeof__(_lst_p->data))slop_arena_alloc(arena, _new_cap * sizeof(*_lst_p->data)); if (_lst_p->len > 0) memcpy(_new_data, _lst_p->data, _lst_p->len * sizeof(*_lst_p->data)); _lst_p->data = _new_data; _lst_p->cap = _new_cap; } _lst_p->data[_lst_p->len++] = _item; (void)0; });
-                                        }
-                                    }
+                                    triples = ttl_list_push_triples(arena, triples, ar.triples);
                                     cur_ctx = ar.ctx;
                                 }
                             } else {
@@ -789,7 +778,7 @@ slop_result_ttl_TriplesResult_common_ParseError ttl_parse_object_list(slop_arena
                 }
                 {
                     __auto_type s2 = common_skip_whitespace(arena, cur_ctx.state);
-                    if ((common_state_peek(s2) == 44)) {
+                    if (common_state_peek(s2) == 44) {
                         cur_ctx = ttl_ctx_with_state(cur_ctx, common_state_advance(arena, s2));
                     } else {
                         done = 1;
@@ -812,30 +801,18 @@ slop_result_rdf_Graph_common_ParseError ttl_parse_ttl_string(slop_arena* arena, 
             while (!(common_state_at_end(ctx.state))) {
                 {
                     __auto_type c = common_state_peek(ctx.state);
-                    if ((c == 64)) {
+                    if (c == 64) {
                         ctx = ({ __auto_type _tmp = ttl_parse_directive(arena, ctx); if (!_tmp.is_ok) return ((slop_result_rdf_Graph_common_ParseError){ .is_ok = false, .data.err = _tmp.data.err }); _tmp.data.ok; });
-                    } else if (((c == 80) || (c == 66))) {
+                    } else if ((c == 80) || (c == 66)) {
                         ctx = ({ __auto_type _tmp = ttl_parse_sparql_prefix(arena, ctx); if (!_tmp.is_ok) return ((slop_result_rdf_Graph_common_ParseError){ .is_ok = false, .data.err = _tmp.data.err }); _tmp.data.ok; });
                     } else {
                         {
                             __auto_type sr = ({ __auto_type _tmp = ttl_parse_term_extended(arena, ctx); if (!_tmp.is_ok) return ((slop_result_rdf_Graph_common_ParseError){ .is_ok = false, .data.err = _tmp.data.err }); _tmp.data.ok; });
-                            {
-                                __auto_type _coll = sr.extra_triples;
-                                for (size_t _i = 0; _i < _coll.len; _i++) {
-                                    __auto_type t = _coll.data[_i];
-                                    g = rdf_graph_add_unchecked(arena, g, t);
-                                }
-                            }
+                            g = ttl_graph_add_all(arena, g, sr.extra_triples);
                             {
                                 __auto_type polr = ({ __auto_type _tmp = ttl_parse_predicate_object_list(arena, sr.ctx, sr.term); if (!_tmp.is_ok) return ((slop_result_rdf_Graph_common_ParseError){ .is_ok = false, .data.err = _tmp.data.err }); _tmp.data.ok; });
                                 __auto_type s5 = ({ __auto_type _tmp = common_expect_char(arena, common_skip_whitespace(arena, polr.ctx.state), 46); if (!_tmp.is_ok) return ((slop_result_rdf_Graph_common_ParseError){ .is_ok = false, .data.err = _tmp.data.err }); _tmp.data.ok; });
-                                {
-                                    __auto_type _coll = polr.triples;
-                                    for (size_t _i = 0; _i < _coll.len; _i++) {
-                                        __auto_type t = _coll.data[_i];
-                                        g = rdf_graph_add_unchecked(arena, g, t);
-                                    }
-                                }
+                                g = ttl_graph_add_all(arena, g, polr.triples);
                                 ctx = ttl_ctx_with_state(polr.ctx, s5);
                             }
                         }

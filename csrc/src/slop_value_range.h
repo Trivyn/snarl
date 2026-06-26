@@ -19,6 +19,10 @@ SLOP_OPTION_DEFINE(types_ShaclPath, slop_option_types_ShaclPath)
 SLOP_OPTION_DEFINE(types_ValidationResult, slop_option_types_ValidationResult)
 #endif
 
+uint8_t value_range_min_inclusive_satisfied(slop_arena* arena, rdf_Term value_node, rdf_Term limit);
+uint8_t value_range_max_inclusive_satisfied(slop_arena* arena, rdf_Term value_node, rdf_Term limit);
+uint8_t value_range_min_exclusive_satisfied(slop_arena* arena, rdf_Term value_node, rdf_Term limit);
+uint8_t value_range_max_exclusive_satisfied(slop_arena* arena, rdf_Term value_node, rdf_Term limit);
 slop_option_types_ValidationResult snarl_check_min_inclusive(slop_arena* arena, rdf_Term focus_node, rdf_Term value_node, rdf_Term limit, slop_option_types_ShaclPath path, rdf_Term shape_id, types_Severity severity, slop_option_string message);
 slop_option_types_ValidationResult snarl_check_max_inclusive(slop_arena* arena, rdf_Term focus_node, rdf_Term value_node, rdf_Term limit, slop_option_types_ShaclPath path, rdf_Term shape_id, types_Severity severity, slop_option_string message);
 slop_option_types_ValidationResult snarl_check_min_exclusive(slop_arena* arena, rdf_Term focus_node, rdf_Term value_node, rdf_Term limit, slop_option_types_ShaclPath path, rdf_Term shape_id, types_Severity severity, slop_option_string message);

@@ -481,10 +481,10 @@ slop_result_u8_xsd_XsdError xsd_literal_values_equal(slop_arena* arena, rdf_Lite
 }
 
 xsd_XsdCompareResult xsd_float_cmp(double a, double b) {
-    if ((a < b)) {
+    if (a < b) {
         return xsd_XsdCompareResult_xsd_compare_less;
     } else {
-        if ((a > b)) {
+        if (a > b) {
             return xsd_XsdCompareResult_xsd_compare_greater;
         } else {
             return xsd_XsdCompareResult_xsd_compare_equal;
@@ -648,7 +648,7 @@ xsd_XsdCompareResult xsd_values_compare(xsd_XsdValue a, xsd_XsdValue b) {
                 case xsd_XsdValue_xsd_boolean_val:
                 {
                     __auto_type b2 = _mv_88.data.xsd_boolean_val;
-                    if ((b1 == b2)) {
+                    if (b1 == b2) {
                         return xsd_XsdCompareResult_xsd_compare_equal;
                     } else {
                         if (b2) {

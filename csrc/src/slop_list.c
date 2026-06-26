@@ -19,7 +19,7 @@ slop_list_rdf_Term rdf_list_elements(slop_arena* arena, rdf_Graph g, rdf_Term he
         while (!(rdf_term_eq(current, nil_term))) {
             {
                 __auto_type first_matches = rdf_graph_match(arena, g, (slop_option_rdf_Term){.has_value = 1, .value = current}, (slop_option_rdf_Term){.has_value = 1, .value = first_pred}, no_obj);
-                if ((((int64_t)((first_matches.triples).len)) > 0)) {
+                if (((int64_t)((first_matches.triples).len)) > 0) {
                     __auto_type _mv_124 = ({ __auto_type _lst = first_matches.triples; size_t _idx = (size_t)0; slop_option_rdf_Triple _r = {0}; if (_idx < _lst.len) { _r.has_value = true; _r.value = _lst.data[_idx]; } else { _r.has_value = false; } _r; });
                     if (_mv_124.has_value) {
                         __auto_type first_triple = _mv_124.value;
@@ -30,7 +30,7 @@ slop_list_rdf_Term rdf_list_elements(slop_arena* arena, rdf_Graph g, rdf_Term he
             }
             {
                 __auto_type rest_matches = rdf_graph_match(arena, g, (slop_option_rdf_Term){.has_value = 1, .value = current}, (slop_option_rdf_Term){.has_value = 1, .value = rest_pred}, no_obj);
-                if ((((int64_t)((rest_matches.triples).len)) > 0)) {
+                if (((int64_t)((rest_matches.triples).len)) > 0) {
                     __auto_type _mv_125 = ({ __auto_type _lst = rest_matches.triples; size_t _idx = (size_t)0; slop_option_rdf_Triple _r = {0}; if (_idx < _lst.len) { _r.has_value = true; _r.value = _lst.data[_idx]; } else { _r.has_value = false; } _r; });
                     if (_mv_125.has_value) {
                         __auto_type rest_triple = _mv_125.value;
@@ -62,7 +62,7 @@ slop_list_rdf_Term rdf_list_elements_indexed(slop_arena* arena, index_IndexedGra
         while (!(rdf_term_eq(current, nil_term))) {
             {
                 __auto_type first_matches = rdf_indexed_graph_match(arena, g, (slop_option_rdf_Term){.has_value = 1, .value = current}, (slop_option_rdf_Term){.has_value = 1, .value = first_pred}, no_obj);
-                if ((((int64_t)((first_matches).len)) > 0)) {
+                if (((int64_t)((first_matches).len)) > 0) {
                     __auto_type _mv_126 = ({ __auto_type _lst = first_matches; size_t _idx = (size_t)0; slop_option_rdf_Triple _r = {0}; if (_idx < _lst.len) { _r.has_value = true; _r.value = _lst.data[_idx]; } else { _r.has_value = false; } _r; });
                     if (_mv_126.has_value) {
                         __auto_type first_triple = _mv_126.value;
@@ -73,7 +73,7 @@ slop_list_rdf_Term rdf_list_elements_indexed(slop_arena* arena, index_IndexedGra
             }
             {
                 __auto_type rest_matches = rdf_indexed_graph_match(arena, g, (slop_option_rdf_Term){.has_value = 1, .value = current}, (slop_option_rdf_Term){.has_value = 1, .value = rest_pred}, no_obj);
-                if ((((int64_t)((rest_matches).len)) > 0)) {
+                if (((int64_t)((rest_matches).len)) > 0) {
                     __auto_type _mv_127 = ({ __auto_type _lst = rest_matches; size_t _idx = (size_t)0; slop_option_rdf_Triple _r = {0}; if (_idx < _lst.len) { _r.has_value = true; _r.value = _lst.data[_idx]; } else { _r.has_value = false; } _r; });
                     if (_mv_127.has_value) {
                         __auto_type rest_triple = _mv_127.value;

@@ -157,7 +157,7 @@ slop_list_rdf_Triple rdf_indexed_graph_match(slop_arena* arena, index_IndexedGra
                         __auto_type _mv_22 = obj;
                         if (_mv_22.has_value) {
                             __auto_type o = _mv_22.value;
-                            if ((slop_map_get(term_set, &(o)) != NULL)) {
+                            if (slop_map_get(term_set, &(o)) != NULL) {
                                 ({ __auto_type _lst_p = &(result); __auto_type _item = (((rdf_Triple){.subject = s, .predicate = p, .object = o})); if (_lst_p->len >= _lst_p->cap) { size_t _new_cap = _lst_p->cap == 0 ? 16 : _lst_p->cap * 2; __typeof__(_lst_p->data) _new_data = (__typeof__(_lst_p->data))slop_arena_alloc(arena, _new_cap * sizeof(*_lst_p->data)); if (_lst_p->len > 0) memcpy(_new_data, _lst_p->data, _lst_p->len * sizeof(*_lst_p->data)); _lst_p->data = _new_data; _lst_p->cap = _new_cap; } _lst_p->data[_lst_p->len++] = _item; (void)0; });
                             }
                         } else if (!_mv_22.has_value) {
@@ -183,7 +183,7 @@ slop_list_rdf_Triple rdf_indexed_graph_match(slop_arena* arena, index_IndexedGra
                                 __auto_type _mv_23 = obj;
                                 if (_mv_23.has_value) {
                                     __auto_type o = _mv_23.value;
-                                    if ((slop_map_get(term_set, &(o)) != NULL)) {
+                                    if (slop_map_get(term_set, &(o)) != NULL) {
                                         ({ __auto_type _lst_p = &(result); __auto_type _item = (((rdf_Triple){.subject = s, .predicate = p, .object = o})); if (_lst_p->len >= _lst_p->cap) { size_t _new_cap = _lst_p->cap == 0 ? 16 : _lst_p->cap * 2; __typeof__(_lst_p->data) _new_data = (__typeof__(_lst_p->data))slop_arena_alloc(arena, _new_cap * sizeof(*_lst_p->data)); if (_lst_p->len > 0) memcpy(_new_data, _lst_p->data, _lst_p->len * sizeof(*_lst_p->data)); _lst_p->data = _new_data; _lst_p->cap = _new_cap; } _lst_p->data[_lst_p->len++] = _item; (void)0; });
                                     }
                                 } else if (!_mv_23.has_value) {
@@ -219,7 +219,7 @@ slop_list_rdf_Triple rdf_indexed_graph_match(slop_arena* arena, index_IndexedGra
                                 __auto_type _mv_26 = obj;
                                 if (_mv_26.has_value) {
                                     __auto_type o = _mv_26.value;
-                                    if ((slop_map_get(term_set, &(o)) != NULL)) {
+                                    if (slop_map_get(term_set, &(o)) != NULL) {
                                         ({ __auto_type _lst_p = &(result); __auto_type _item = (((rdf_Triple){.subject = s, .predicate = p, .object = o})); if (_lst_p->len >= _lst_p->cap) { size_t _new_cap = _lst_p->cap == 0 ? 16 : _lst_p->cap * 2; __typeof__(_lst_p->data) _new_data = (__typeof__(_lst_p->data))slop_arena_alloc(arena, _new_cap * sizeof(*_lst_p->data)); if (_lst_p->len > 0) memcpy(_new_data, _lst_p->data, _lst_p->len * sizeof(*_lst_p->data)); _lst_p->data = _new_data; _lst_p->cap = _new_cap; } _lst_p->data[_lst_p->len++] = _item; (void)0; });
                                     }
                                 } else if (!_mv_26.has_value) {
@@ -299,7 +299,7 @@ void rdf_indexed_graph_for_each(index_IndexedGraph g, slop_option_rdf_Term subj,
                     __auto_type _mv_33 = obj;
                     if (_mv_33.has_value) {
                         __auto_type o = _mv_33.value;
-                        if ((slop_map_get(term_set, &(o)) != NULL)) {
+                        if (slop_map_get(term_set, &(o)) != NULL) {
                             ((void(*)(void*, rdf_Triple))callback.fn)(callback.env, ((rdf_Triple){.subject = s, .predicate = p, .object = o}));
                         }
                     } else if (!_mv_33.has_value) {
@@ -325,7 +325,7 @@ void rdf_indexed_graph_for_each(index_IndexedGraph g, slop_option_rdf_Term subj,
                             __auto_type _mv_34 = obj;
                             if (_mv_34.has_value) {
                                 __auto_type o = _mv_34.value;
-                                if ((slop_map_get(term_set, &(o)) != NULL)) {
+                                if (slop_map_get(term_set, &(o)) != NULL) {
                                     ((void(*)(void*, rdf_Triple))callback.fn)(callback.env, ((rdf_Triple){.subject = s, .predicate = p, .object = o}));
                                 }
                             } else if (!_mv_34.has_value) {
@@ -361,7 +361,7 @@ void rdf_indexed_graph_for_each(index_IndexedGraph g, slop_option_rdf_Term subj,
                             __auto_type _mv_37 = obj;
                             if (_mv_37.has_value) {
                                 __auto_type o = _mv_37.value;
-                                if ((slop_map_get(term_set, &(o)) != NULL)) {
+                                if (slop_map_get(term_set, &(o)) != NULL) {
                                     ((void(*)(void*, rdf_Triple))callback.fn)(callback.env, ((rdf_Triple){.subject = s, .predicate = p, .object = o}));
                                 }
                             } else if (!_mv_37.has_value) {
@@ -441,7 +441,7 @@ slop_list_rdf_Term rdf_indexed_graph_subjects(slop_arena* arena, index_IndexedGr
                     if (_coll->entries[_i].occupied) {
                         rdf_Term s = *(rdf_Term*)_coll->entries[_i].key;
                         index_TermSet pred_set = *(index_TermSet*)_coll->entries[_i].value;
-                        if ((slop_map_get(pred_set, &(pred)) != NULL)) {
+                        if (slop_map_get(pred_set, &(pred)) != NULL) {
                             ({ __auto_type _lst_p = &(result); __auto_type _item = (s); if (_lst_p->len >= _lst_p->cap) { size_t _new_cap = _lst_p->cap == 0 ? 16 : _lst_p->cap * 2; __typeof__(_lst_p->data) _new_data = (__typeof__(_lst_p->data))slop_arena_alloc(arena, _new_cap * sizeof(*_lst_p->data)); if (_lst_p->len > 0) memcpy(_new_data, _lst_p->data, _lst_p->len * sizeof(*_lst_p->data)); _lst_p->data = _new_data; _lst_p->cap = _new_cap; } _lst_p->data[_lst_p->len++] = _item; (void)0; });
                         }
                     }

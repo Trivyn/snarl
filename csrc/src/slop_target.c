@@ -168,7 +168,7 @@ slop_list_rdf_Term target_find_subclasses(slop_arena* arena, index_IndexedGraph 
         int64_t qi = 0;
         ({ __auto_type _lst_p = &(queue); __auto_type _item = (class_term); if (_lst_p->len >= _lst_p->cap) { size_t _new_cap = _lst_p->cap == 0 ? 16 : _lst_p->cap * 2; __typeof__(_lst_p->data) _new_data = (__typeof__(_lst_p->data))slop_arena_alloc(arena, _new_cap * sizeof(*_lst_p->data)); if (_lst_p->len > 0) memcpy(_new_data, _lst_p->data, _lst_p->len * sizeof(*_lst_p->data)); _lst_p->data = _new_data; _lst_p->cap = _new_cap; } _lst_p->data[_lst_p->len++] = _item; (void)0; });
         ({ uint8_t _dummy = 1; slop_map_put(arena, visited, &(class_term), &_dummy); });
-        while ((qi < ((int64_t)((queue).len)))) {
+        while (qi < ((int64_t)((queue).len))) {
             __auto_type _mv_98 = ({ __auto_type _lst = queue; size_t _idx = (size_t)qi; slop_option_rdf_Term _r = {0}; if (_idx < _lst.len) { _r.has_value = true; _r.value = _lst.data[_idx]; } else { _r.has_value = false; } _r; });
             if (_mv_98.has_value) {
                 __auto_type current = _mv_98.value;

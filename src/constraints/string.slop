@@ -95,6 +95,30 @@
             (== result 0))))))
 
   ;; ============================================================
+  ;; Satisfaction predicates — extracted so each check's result <-> predicate
+  ;; equivalence is a single uninterpreted call the verifier can prove. (When
+  ;; the body inlined the test, slop verify could not bridge it to the @post.)
+  ;; ============================================================
+
+  (fn min-length-satisfied ((value-node Term) (min-len (Int 0 ..)))
+    (@intent "True if the value node's string length is >= min-len (sh:minLength)")
+    (@spec ((Term (Int 0 ..)) -> Bool))
+    (@pure)
+    (>= (string-len (term-string-value value-node)) min-len))
+
+  (fn max-length-satisfied ((value-node Term) (max-len (Int 0 ..)))
+    (@intent "True if the value node's string length is <= max-len (sh:maxLength)")
+    (@spec ((Term (Int 0 ..)) -> Bool))
+    (@pure)
+    (<= (string-len (term-string-value value-node)) max-len))
+
+  (fn pattern-satisfied ((arena Arena) (value-node Term) (pattern String))
+    (@intent "True if the value node's string representation matches the regex (sh:pattern)")
+    (@spec ((Arena Term String) -> Bool))
+    (@alloc arena)
+    (regex-match-ffi arena pattern (term-string-value value-node)))
+
+  ;; ============================================================
   ;; sh:minLength
   ;; ============================================================
 
@@ -106,25 +130,21 @@
             -> (Option ValidationResult)))
     (@alloc arena)
     (@pre {min-len >= 0})
-    ;; VERIFIER: fails — local fn @post not used as axiom for callers; record fields don't propagate through (some ...)
-    (@post (== (== $result (none)) (>= (string-len (term-string-value value-node)) min-len)))
-    (@property correctness (== (== $result (none)) (>= (string-len (term-string-value value-node)) min-len)))
+    ;; Conforms (no result) iff the value node's string length is >= min-len.
+    (@post {(== (== $result (none)) (min-length-satisfied value-node min-len))})
+    (@property correctness (== (== $result (none)) (min-length-satisfied value-node min-len)))
     (@example (arena (make-iri arena EX_FOCUS) (make-literal arena "hello" (none) (none)) 3 (none) (make-iri arena EX_SHAPE) severity-violation (none)) -> (none))
     (@example (arena (make-iri arena EX_FOCUS) (make-literal arena "hi" (none) (none)) 5 (none) (make-iri arena EX_SHAPE) severity-violation (none)) -> (some (ValidationResult _ _ _ _ _ _ _)))
-    (let ((s (match value-node
-               ((term-literal lit) (. lit value))
-               ((term-iri iri) (. iri value))
-               (_ ""))))
-      (if (>= (string-len s) min-len)
-        (none)
-        (some (record-new ValidationResult
-                (focus-node focus-node)
-                (result-path path)
-                (value (some value-node))
-                (source-shape shape-id)
-                (source-constraint-component SHACL_MIN_LENGTH)
-                (severity severity)
-                (message message)))))
+    (if (min-length-satisfied value-node min-len)
+      (none)
+      (some (record-new ValidationResult
+              (focus-node focus-node)
+              (result-path path)
+              (value (some value-node))
+              (source-shape shape-id)
+              (source-constraint-component SHACL_MIN_LENGTH)
+              (severity severity)
+              (message message))))
     :c-name "snarl_check_min_length")
 
   ;; ============================================================
@@ -139,25 +159,21 @@
             -> (Option ValidationResult)))
     (@alloc arena)
     (@pre {max-len >= 0})
-    ;; VERIFIER: fails — local fn @post not used as axiom for callers; record fields don't propagate through (some ...)
-    (@post (== (== $result (none)) (<= (string-len (term-string-value value-node)) max-len)))
-    (@property correctness (== (== $result (none)) (<= (string-len (term-string-value value-node)) max-len)))
+    ;; Conforms (no result) iff the value node's string length is <= max-len.
+    (@post {(== (== $result (none)) (max-length-satisfied value-node max-len))})
+    (@property correctness (== (== $result (none)) (max-length-satisfied value-node max-len)))
     (@example (arena (make-iri arena EX_FOCUS) (make-literal arena "hi" (none) (none)) 5 (none) (make-iri arena EX_SHAPE) severity-violation (none)) -> (none))
     (@example (arena (make-iri arena EX_FOCUS) (make-literal arena "hello world" (none) (none)) 5 (none) (make-iri arena EX_SHAPE) severity-violation (none)) -> (some (ValidationResult _ _ _ _ _ _ _)))
-    (let ((s (match value-node
-               ((term-literal lit) (. lit value))
-               ((term-iri iri) (. iri value))
-               (_ ""))))
-      (if (<= (string-len s) max-len)
-        (none)
-        (some (record-new ValidationResult
-                (focus-node focus-node)
-                (result-path path)
-                (value (some value-node))
-                (source-shape shape-id)
-                (source-constraint-component SHACL_MAX_LENGTH)
-                (severity severity)
-                (message message)))))
+    (if (max-length-satisfied value-node max-len)
+      (none)
+      (some (record-new ValidationResult
+              (focus-node focus-node)
+              (result-path path)
+              (value (some value-node))
+              (source-shape shape-id)
+              (source-constraint-component SHACL_MAX_LENGTH)
+              (severity severity)
+              (message message))))
     :c-name "snarl_check_max_length")
 
   ;; ============================================================
@@ -172,22 +188,21 @@
             -> (Option ValidationResult)))
     (@alloc arena)
     (@pre {(string-len pattern) > 0})
+    ;; Conforms (no result) iff the value node's string matches the pattern.
+    (@post {(== (== $result (none)) (pattern-satisfied arena value-node pattern))})
+    (@property correctness (== (== $result (none)) (pattern-satisfied arena value-node pattern)))
     (@example (arena (make-iri arena EX_FOCUS) (make-literal arena "abc123" (none) (none)) "^[a-z]+[0-9]+$" (none) (make-iri arena EX_SHAPE) severity-violation (none)) -> (none))
     (@example (arena (make-iri arena EX_FOCUS) (make-literal arena "ABC" (none) (none)) "^[a-z]+$" (none) (make-iri arena EX_SHAPE) severity-violation (none)) -> (some (ValidationResult _ _ _ _ _ _ _)))
-    (let ((s (match value-node
-               ((term-literal lit) (. lit value))
-               ((term-iri iri) (. iri value))
-               (_ ""))))
-      (if (regex-match-ffi arena pattern s)
-        (none)
-        (some (record-new ValidationResult
-                (focus-node focus-node)
-                (result-path path)
-                (value (some value-node))
-                (source-shape shape-id)
-                (source-constraint-component SHACL_PATTERN)
-                (severity severity)
-                (message message)))))
+    (if (pattern-satisfied arena value-node pattern)
+      (none)
+      (some (record-new ValidationResult
+              (focus-node focus-node)
+              (result-path path)
+              (value (some value-node))
+              (source-shape shape-id)
+              (source-constraint-component SHACL_PATTERN)
+              (severity severity)
+              (message message))))
     :c-name "snarl_check_pattern")
 
   ;; ============================================================

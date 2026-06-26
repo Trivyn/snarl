@@ -37,7 +37,7 @@ types_ValidatorResult snarl_engine_validate(slop_arena* arena, index_IndexedGrap
             for (size_t _i = 0; _i < _coll.len; _i++) {
                 __auto_type ns = _coll.data[_i];
                 if (!(ns.deactivated)) {
-                    if (((max_errors == 0) || (error_count < max_errors))) {
+                    if ((max_errors == 0) || (error_count < max_errors)) {
                         {
                             __auto_type focus_nodes = snarl_resolve_targets(arena, data_graph, ns);
                             __auto_type visited = slop_map_new_ptr(arena, 16, sizeof(rdf_Term), slop_hash_rdf_Term, slop_eq_rdf_Term);
@@ -45,7 +45,7 @@ types_ValidatorResult snarl_engine_validate(slop_arena* arena, index_IndexedGrap
                                 __auto_type _coll = focus_nodes;
                                 for (size_t _i = 0; _i < _coll.len; _i++) {
                                     __auto_type focus_node = _coll.data[_i];
-                                    if (((max_errors == 0) || (error_count < max_errors))) {
+                                    if ((max_errors == 0) || (error_count < max_errors)) {
                                         {
                                             __auto_type results = snarl_evaluate_node_shape(arena, data_graph, shapes_graph, ns, focus_node, visited, config);
                                             {
@@ -125,7 +125,7 @@ slop_list_types_ValidationResult snarl_evaluate_node_shape(slop_arena* arena, in
                         }
                         {
                             __auto_type i = 0;
-                            while ((i < ign_len)) {
+                            while (i < ign_len) {
                                 __auto_type _mv_145 = ({ __auto_type _lst = ignored_paths; size_t _idx = (size_t)i; slop_option_types_ShaclPath _r = {0}; if (_idx < _lst.len) { _r.has_value = true; _r.value = _lst.data[_idx]; } else { _r.has_value = false; } _r; });
                                 if (_mv_145.has_value) {
                                     __auto_type ip = _mv_145.value;
@@ -193,7 +193,7 @@ slop_list_types_ValidationResult snarl_evaluate_node_shape(slop_arena* arena, in
                             __auto_type ps_id = ps.id;
                             int64_t i = 0;
                             __auto_type n = ((int64_t)((all_disjoint_qvs).len));
-                            while ((i < n)) {
+                            while (i < n) {
                                 __auto_type _mv_147 = ({ __auto_type _lst = all_disjoint_ps_ids; size_t _idx = (size_t)i; slop_option_rdf_Term _r = {0}; if (_idx < _lst.len) { _r.has_value = true; _r.value = _lst.data[_idx]; } else { _r.has_value = false; } _r; });
                                 if (_mv_147.has_value) {
                                     __auto_type pid = _mv_147.value;
@@ -805,7 +805,7 @@ slop_list_types_ValidationResult snarl_evaluate_constraint_for_property(slop_are
                                 if (_mv_178.has_value) {
                                     __auto_type ref_shape = _mv_178.value;
                                     if (snarl_evaluate_shape_against_node(arena, data_graph, shapes_graph, vn, ref_shape, rec_visited)) {
-                                        if ((disjoint && (((int64_t)((sibling_qvs_refs).len)) > 0))) {
+                                        if (disjoint && (((int64_t)((sibling_qvs_refs).len)) > 0)) {
                                             {
                                                 __auto_type conforms_to_sibling = 0;
                                                 {
