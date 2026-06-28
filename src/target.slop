@@ -4,8 +4,13 @@
   (import index
     (IndexedGraph indexed-graph-match indexed-graph-subjects indexed-graph-objects indexed-graph-size indexed-graph-for-each indexed-graph-create indexed-graph-add indexed-graph-contains))
   (import vocab (RDF_TYPE RDFS_SUBCLASS_OF))
-  (import types (NodeShape PropertyShape ShaclPath Severity Constraint))
+  (import types (NodeShape PropertyShape ShaclPath Severity Constraint ShapesGraph))
   (export
+    ClassInstances
+    ClassIndex
+    build-class-index
+    class-index-has-class
+    class-index-has-instance
     resolve-targets
     resolve-target-node
     resolve-target-class
@@ -27,6 +32,13 @@
   (const EX_NAME String "http://example.org/name")
 
   (const EX_KNOWS String "http://example.org/knows")
+
+  (type ClassInstances (record
+    (class-term Term)
+    (instances (Set Term))))
+
+  (type ClassIndex (record
+    (entries (List ClassInstances))))
 
   (fn fixture-g-typed ((arena Arena))
     (@intent "Graph with (alice rdf:type Person), (bob rdf:type Person)")
@@ -163,6 +175,110 @@
     nodes
     :c-name
     "snarl_resolve_target_node")
+
+  (fn add-class-if-needed ((arena Arena) (classes (List Term)) (seen (Set Term)) (class-term Term))
+    (@intent "Append a class to a collection once")
+    (@spec ((Arena (List Term) (Set Term) Term) -> Unit))
+    (@alloc arena)
+    (when (not (set-has seen class-term))
+      (set-put seen class-term)
+      (list-push classes class-term)))
+
+  (fn collect-constraint-classes ((arena Arena) (classes (List Term)) (seen (Set Term)) (constraint Constraint))
+    (@intent "Collect classes referenced by sh:class constraints")
+    (@spec ((Arena (List Term) (Set Term) Constraint) -> Unit))
+    (@alloc arena)
+    (match constraint
+      ((con-class class-term)
+        (add-class-if-needed arena classes seen class-term))
+      (_ (do))))
+
+  (fn collect-property-shape-classes ((arena Arena) (classes (List Term)) (seen (Set Term)) (ps PropertyShape))
+    (@intent "Collect sh:class values from a property shape")
+    (@spec ((Arena (List Term) (Set Term) PropertyShape) -> Unit))
+    (@alloc arena)
+    (for-each (constraint (. ps constraints))
+      (collect-constraint-classes arena classes seen constraint)))
+
+  (fn collect-node-shape-classes ((arena Arena) (classes (List Term)) (seen (Set Term)) (ns NodeShape))
+    (@intent "Collect sh:class values from a node shape and its inline property shapes")
+    (@spec ((Arena (List Term) (Set Term) NodeShape) -> Unit))
+    (@alloc arena)
+    (for-each (constraint (. ns constraints))
+      (collect-constraint-classes arena classes seen constraint))
+    (for-each (ps (. ns property-shapes))
+      (collect-property-shape-classes arena classes seen ps)))
+
+  (fn collect-class-constraints ((arena Arena) (shapes-graph ShapesGraph))
+    (@intent "Collect all unique class terms used by sh:class constraints")
+    (@spec ((Arena ShapesGraph) -> (List Term)))
+    (@alloc arena)
+    (let ((mut classes (list-new arena Term))
+          (seen (set-new arena Term)))
+      (for-each (ns (. shapes-graph node-shapes))
+        (do
+          (for-each (constraint (. ns constraints))
+            (match constraint
+              ((con-class class-term)
+                (when (not (set-has seen class-term))
+                  (set-put seen class-term)
+                  (list-push classes class-term)))
+              (_ (do))))
+          (for-each (ps (. ns property-shapes))
+            (for-each (constraint (. ps constraints))
+              (match constraint
+                ((con-class class-term)
+                  (when (not (set-has seen class-term))
+                    (set-put seen class-term)
+                    (list-push classes class-term)))
+                (_ (do)))))))
+      (for-each (ps (. shapes-graph property-shapes))
+        (for-each (constraint (. ps constraints))
+          (match constraint
+            ((con-class class-term)
+              (when (not (set-has seen class-term))
+                (set-put seen class-term)
+                (list-push classes class-term)))
+            (_ (do)))))
+      classes))
+
+  (fn build-class-index ((arena Arena) (data-graph IndexedGraph) (shapes-graph ShapesGraph))
+    (@intent "Precompute instance sets for all classes used by sh:class constraints")
+    (@spec ((Arena IndexedGraph ShapesGraph) -> ClassIndex))
+    (@alloc arena)
+    (let ((classes (collect-class-constraints arena shapes-graph))
+          (mut entries (list-new arena ClassInstances)))
+      (for-each (class-term classes)
+        (let ((instance-list (resolve-target-class arena data-graph class-term))
+              (instances (set-new arena Term)))
+          (for-each (inst instance-list)
+            (set-put instances inst))
+          (list-push entries
+            (record-new ClassInstances
+              (class-term class-term)
+              (instances instances)))))
+      (record-new ClassIndex (entries entries))))
+
+  (fn class-index-has-class ((index ClassIndex) (class-term Term))
+    (@intent "True if the class index has a cached entry for class-term")
+    (@spec ((ClassIndex Term) -> Bool))
+    (@pure)
+    (let ((mut found false))
+      (for-each (entry (. index entries))
+        (when (and (not found) (term-eq (. entry class-term) class-term))
+          (set! found true)))
+      found))
+
+  (fn class-index-has-instance ((index ClassIndex) (node Term) (class-term Term))
+    (@intent "True if node is in the cached instance set for class-term")
+    (@spec ((ClassIndex Term Term) -> Bool))
+    (@pure)
+    (let ((mut found false))
+      (for-each (entry (. index entries))
+        (when (and (not found) (term-eq (. entry class-term) class-term))
+          (when (set-has (. entry instances) node)
+            (set! found true))))
+      found))
 
   (fn find-subclasses ((arena Arena) (data-graph IndexedGraph) (class-term Term))
     (@intent

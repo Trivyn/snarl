@@ -119,11 +119,11 @@ slop_list_types_ValidationResult snarl_check_closed(slop_arena* arena, index_Ind
                         __auto_type _coll = allowed_paths;
                         for (size_t _i = 0; _i < _coll.len; _i++) {
                             __auto_type ap = _coll.data[_i];
-                            __auto_type _mv_102 = ap;
-                            switch (_mv_102.tag) {
+                            __auto_type _mv_106 = ap;
+                            switch (_mv_106.tag) {
                                 case types_ShaclPath_path_predicate:
                                 {
-                                    __auto_type p = _mv_102.data.path_predicate;
+                                    __auto_type p = _mv_106.data.path_predicate;
                                     if (rdf_term_eq(p, pred)) {
                                         allowed = 1;
                                     }

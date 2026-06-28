@@ -112,17 +112,21 @@ bash cli/tests/w3c/run-w3c-tests.sh ./build/snarl
 
 ## Benchmarks
 
-A comparison benchmark script (`cli/tests/benchmark_compare.py`) runs the same validation workloads against [pySHACL](https://github.com/RDFLib/pySHACL) (Python reference implementation) and [Rudof](https://github.com/rudof-project/rudof) (Rust). Results on a typical machine:
+A comparison benchmark script (`cli/tests/benchmark_compare.py`) runs the same validation workloads against [pySHACL](https://github.com/RDFLib/pySHACL) (Python reference implementation) and [Rudof](https://github.com/rudof-project/rudof) (Rust). Results from one same-machine run with pySHACL 0.31.0 and Rudof 0.3.4:
 
 | Dataset | Triples | Snarl | pySHACL | Rudof | vs pySHACL | vs Rudof |
 |---------|--------:|------:|--------:|------:|-----------:|---------:|
-| employee-dir | 28 | 2ms | 97ms | 93ms | 59x | 57x |
-| multi-shape | 11 | 1ms | 97ms | 90ms | 94x | 88x |
-| employees-1k | 7,811 | 48ms | 397ms | 1.86s | 8x | 39x |
-| employees-10k | 78,050 | 525ms | 4.25s | — | 8x | — |
-| employees-100k | 779,833 | 5.73s | 45.84s | — | 8x | — |
+| employee-dir | 25 | 4ms | 93ms | 301ms | 23.5x | 76.2x |
+| library | 18 | 3ms | 92ms | 300ms | 34.7x | 113.4x |
+| product-catalog | 18 | 3ms | 93ms | 298ms | 31.9x | 102.7x |
+| address-book | 14 | 3ms | 92ms | 300ms | 30.5x | 99.6x |
+| multi-shape | 11 | 3ms | 92ms | 298ms | 31.4x | 101.3x |
+| employees-1k | 4,955 | 24ms | 287ms | 325ms | 11.8x | 13.4x |
+| employees-10k | 49,493 | 245ms | 2.08s | 580ms | 8.5x | 2.4x |
+| employees-100k | 494,962 | 2.74s | 21.58s | 4.05s | 7.9x | 1.5x |
+| meteorites | 1,010,109 | 3.22s | 21.95s | 4.92s | 6.8x | 1.5x |
 
-Snarl and pySHACL both scale linearly. Rudof was omitted from the 10k and 100k benchmarks due to excessive run times. Snarl produces correct result counts matching the pySHACL reference across all benchmarks.
+All validators produced matching result counts across these benchmarks. The Rudof comparison uses its minimal result format so the benchmark can parse validation counts directly instead of scraping table output. The meteorites row uses the data-only `test_data/large_meteorite_data.ttl` fixture so all three validators can parse the same graph.
 
 ```bash
 make bench

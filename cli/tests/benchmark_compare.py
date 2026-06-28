@@ -27,19 +27,19 @@ SNARL = "../../build/snarl"
 BENCHMARKS_DIR = "fixtures/benchmarks"
 
 FIXTURES = [
-    ("employee-dir", "fixtures/employee-dir-data.ttl", "fixtures/employee-dir-shapes.ttl"),
-    ("library", "fixtures/library-data.ttl", "fixtures/library-shapes.ttl"),
-    ("product-catalog", "fixtures/product-catalog-data.ttl", "fixtures/product-catalog-shapes.ttl"),
-    ("address-book", "fixtures/address-book-data.ttl", "fixtures/address-book-shapes.ttl"),
-    ("multi-shape", "fixtures/multi-shape-data.ttl", "fixtures/multi-shape-shapes.ttl"),
-    ("employees-1k", f"{BENCHMARKS_DIR}/employees-1k-data.ttl", f"{BENCHMARKS_DIR}/employees-1k-shapes.ttl"),
-    ("employees-10k", f"{BENCHMARKS_DIR}/employees-10k-data.ttl", f"{BENCHMARKS_DIR}/employees-10k-shapes.ttl"),
-    ("employees-100k", f"{BENCHMARKS_DIR}/employees-100k-data.ttl", f"{BENCHMARKS_DIR}/employees-100k-shapes.ttl"),
+    ("employee-dir", "fixtures/employee-dir-data.ttl", "fixtures/employee-dir-shapes.ttl", 25),
+    ("library", "fixtures/library-data.ttl", "fixtures/library-shapes.ttl", 18),
+    ("product-catalog", "fixtures/product-catalog-data.ttl", "fixtures/product-catalog-shapes.ttl", 18),
+    ("address-book", "fixtures/address-book-data.ttl", "fixtures/address-book-shapes.ttl", 14),
+    ("multi-shape", "fixtures/multi-shape-data.ttl", "fixtures/multi-shape-shapes.ttl", 11),
+    ("employees-1k", f"{BENCHMARKS_DIR}/employees-1k-data.ttl", f"{BENCHMARKS_DIR}/employees-1k-shapes.ttl", 4955),
+    ("employees-10k", f"{BENCHMARKS_DIR}/employees-10k-data.ttl", f"{BENCHMARKS_DIR}/employees-10k-shapes.ttl", 49493),
+    ("employees-100k", f"{BENCHMARKS_DIR}/employees-100k-data.ttl", f"{BENCHMARKS_DIR}/employees-100k-shapes.ttl", 494962),
+    ("meteorites", "../../test_data/large_meteorite_data.ttl", "../../test_data/meteorite_shapes.ttl", 1010109),
 ]
 
 RUNS = 5
 TIMEOUT = 60  # Per-run timeout in seconds
-RUDOF_SKIP_THRESHOLD = 10000  # Skip rudof for files above this many triples
 
 
 def run_with_timeout(cmd):
@@ -112,7 +112,7 @@ def run_pyshacl(data, shapes):
 
 def run_rudof(data, shapes):
     """Run rudof on data+shapes. Returns (conforms, result_count, median_time_s)."""
-    cmd = ["rudof", "shacl-validate", "-s", shapes, data]
+    cmd = ["rudof", "shacl-validate", "-r", "minimal", "-s", shapes, data]
     times = []
     conforms = None
     result_count = None
@@ -124,15 +124,13 @@ def run_rudof(data, shapes):
         times.append(elapsed)
 
         out = result.stdout + result.stderr
-        if "No Errors found" in out:
+        if "Conforms" in out:
             conforms = True
             result_count = 0
         else:
             conforms = False
-            # Count data rows in rudof's table output, excluding header
-            data_rows = [line for line in out.splitlines()
-                         if line.startswith("│") and "Severity" not in line]
-            result_count = len(data_rows) if data_rows else -1
+            m = re.search(r"Does not conform,\s*(\d+)\s+violations", out)
+            result_count = int(m.group(1)) if m else -1
 
     return conforms, result_count, median(times)
 
@@ -301,22 +299,20 @@ def compare_mode(fixtures, only=None):
     print(f"  SHACL Validator Comparison: {header}")
     print("=" * 72)
 
-    for name, data, shapes in fixtures:
+    for fixture in fixtures:
+        name, data, shapes = fixture[:3]
+        triple_count = fixture[3] if len(fixture) > 3 else None
         if not os.path.exists(data) or not os.path.exists(shapes):
             print(f"\n--- {name} --- SKIPPED (files not found)")
             continue
 
-        triples = count_triples(data)
+        triples = triple_count if triple_count is not None else count_triples(data)
         print(f"\n--- {name} ({triples} triples) ---")
 
         results = {}
 
         for vname, vfunc in validators.items():
             label = f"{vname} (ref)" if vname == ref_name else vname
-            if vname == "rudof" and triples > RUDOF_SKIP_THRESHOLD:
-                print(f"  Running {label}... SKIPPED (>{RUDOF_SKIP_THRESHOLD} triples)")
-                results[vname] = (None, None, None)
-                continue
             print(f"  Running {label}...", end="", flush=True)
             conforms, count, t = vfunc(data, shapes)
             if conforms is None:

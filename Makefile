@@ -91,7 +91,7 @@ crate-test: crate-vendor
 	cd rust && cargo test
 
 crate-publish: crate-vendor
-	cd rust && cargo publish --dry-run --allow-dirty
+	cd rust && cargo publish --allow-dirty
 
 dist:
 	rm -rf dist
