@@ -18,7 +18,7 @@
                  SHACL_CLASS SHACL_DATATYPE SHACL_NODE_KIND
                  XSD_STRING XSD_INTEGER))
   (import types (NodeKind Severity Constraint ValidationResult ShaclPath))
-  (import target (is-shacl-instance-of-class))
+  (import target (ClassIndex is-shacl-instance-of-class class-index-has-class class-index-has-instance))
 
   ;; Test URI constants
   (const EX_FOCUS String "http://example.org/focus")
@@ -45,6 +45,7 @@
 
   (export
     check-class
+    check-class-with-index
     check-datatype
     check-node-kind)
 
@@ -82,6 +83,38 @@
               (severity severity)
               (message message))))
     :c-name "snarl_check_class")
+
+  (fn make-class-violation ((focus-node Term) (value-node Term)
+                            (required-class Term) (path (Option ShaclPath))
+                            (shape-id Term) (severity Severity)
+                            (message (Option String)))
+    (@intent "Create a sh:class validation result")
+    (@spec ((Term Term Term (Option ShaclPath) Term Severity (Option String))
+            -> ValidationResult))
+    (@pure)
+    (record-new ValidationResult
+      (focus-node focus-node)
+      (result-path path)
+      (value (some value-node))
+      (source-shape shape-id)
+      (source-constraint-component SHACL_CLASS)
+      (severity severity)
+      (message message)))
+
+  (fn check-class-with-index ((arena Arena) (data-graph IndexedGraph)
+                              (class-index ClassIndex) (focus-node Term)
+                              (value-node Term) (required-class Term)
+                              (path (Option ShaclPath)) (shape-id Term)
+                              (severity Severity) (message (Option String)))
+    (@intent "Check sh:class using a validation-time class membership index when available")
+    (@spec ((Arena IndexedGraph ClassIndex Term Term Term (Option ShaclPath) Term Severity (Option String))
+            -> (Option ValidationResult)))
+    (@alloc arena)
+    (if (class-index-has-class class-index required-class)
+      (if (class-index-has-instance class-index value-node required-class)
+        (none)
+        (some (make-class-violation focus-node value-node required-class path shape-id severity message)))
+      (check-class arena data-graph focus-node value-node required-class path shape-id severity message)))
 
   ;; ============================================================
   ;; sh:datatype — Value must be a literal with matching datatype

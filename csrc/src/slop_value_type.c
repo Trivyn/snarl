@@ -9,6 +9,8 @@ static const slop_string value_type_EX_VALUE = SLOP_STR("http://example.org/valu
 index_IndexedGraph value_type_fixture_g_focus_is_person(slop_arena* arena);
 index_IndexedGraph value_type_fixture_g_empty(slop_arena* arena);
 slop_option_types_ValidationResult snarl_check_class(slop_arena* arena, index_IndexedGraph data_graph, rdf_Term focus_node, rdf_Term value_node, rdf_Term required_class, slop_option_types_ShaclPath path, rdf_Term shape_id, types_Severity severity, slop_option_string message);
+types_ValidationResult value_type_make_class_violation(rdf_Term focus_node, rdf_Term value_node, rdf_Term required_class, slop_option_types_ShaclPath path, rdf_Term shape_id, types_Severity severity, slop_option_string message);
+slop_option_types_ValidationResult value_type_check_class_with_index(slop_arena* arena, index_IndexedGraph data_graph, target_ClassIndex class_index, rdf_Term focus_node, rdf_Term value_node, rdf_Term required_class, slop_option_types_ShaclPath path, rdf_Term shape_id, types_Severity severity, slop_option_string message);
 uint8_t value_type_datatype_matches(rdf_Term value_node, rdf_Term required_datatype);
 slop_option_types_ValidationResult snarl_check_datatype(slop_arena* arena, rdf_Term focus_node, rdf_Term value_node, rdf_Term required_datatype, slop_option_types_ShaclPath path, rdf_Term shape_id, types_Severity severity, slop_option_string message);
 uint8_t value_type_node_kind_matches(types_NodeKind required, rdf_TermKind kind);
@@ -39,19 +41,35 @@ slop_option_types_ValidationResult snarl_check_class(slop_arena* arena, index_In
     return _retval;
 }
 
+types_ValidationResult value_type_make_class_violation(rdf_Term focus_node, rdf_Term value_node, rdf_Term required_class, slop_option_types_ShaclPath path, rdf_Term shape_id, types_Severity severity, slop_option_string message) {
+    return ((types_ValidationResult){.focus_node = focus_node, .result_path = path, .value = (slop_option_rdf_Term){.has_value = 1, .value = value_node}, .source_shape = shape_id, .source_constraint_component = vocab_SHACL_CLASS, .severity = severity, .message = message});
+}
+
+slop_option_types_ValidationResult value_type_check_class_with_index(slop_arena* arena, index_IndexedGraph data_graph, target_ClassIndex class_index, rdf_Term focus_node, rdf_Term value_node, rdf_Term required_class, slop_option_types_ShaclPath path, rdf_Term shape_id, types_Severity severity, slop_option_string message) {
+    if (target_class_index_has_class(class_index, required_class)) {
+        if (target_class_index_has_instance(class_index, value_node, required_class)) {
+            return (slop_option_types_ValidationResult){.has_value = false};
+        } else {
+            return (slop_option_types_ValidationResult){.has_value = 1, .value = value_type_make_class_violation(focus_node, value_node, required_class, path, shape_id, severity, message)};
+        }
+    } else {
+        return snarl_check_class(arena, data_graph, focus_node, value_node, required_class, path, shape_id, severity, message);
+    }
+}
+
 uint8_t value_type_datatype_matches(rdf_Term value_node, rdf_Term required_datatype) {
-    __auto_type _mv_115 = value_node;
-    switch (_mv_115.tag) {
+    __auto_type _mv_119 = value_node;
+    switch (_mv_119.tag) {
         case rdf_Term_term_literal:
         {
-            __auto_type lit = _mv_115.data.term_literal;
+            __auto_type lit = _mv_119.data.term_literal;
             {
                 __auto_type required_dt_str = ({ __auto_type _mv = required_datatype; slop_string _mr = {0}; switch (_mv.tag) { case rdf_Term_term_iri: { __auto_type iri = _mv.data.term_iri; _mr = iri.value; break; } default: { _mr = SLOP_STR(""); break; }  } _mr; });
-                __auto_type _mv_116 = lit.datatype;
-                if (_mv_116.has_value) {
-                    __auto_type dt = _mv_116.value;
+                __auto_type _mv_120 = lit.datatype;
+                if (_mv_120.has_value) {
+                    __auto_type dt = _mv_120.value;
                     return string_eq(dt, required_dt_str);
-                } else if (!_mv_116.has_value) {
+                } else if (!_mv_120.has_value) {
                     return string_eq(required_dt_str, vocab_XSD_STRING);
                 }
             }
@@ -74,11 +92,11 @@ slop_option_types_ValidationResult snarl_check_datatype(slop_arena* arena, rdf_T
 }
 
 uint8_t value_type_node_kind_matches(types_NodeKind required, rdf_TermKind kind) {
-    __auto_type _mv_117 = required;
-    switch (_mv_117) {
+    __auto_type _mv_121 = required;
+    switch (_mv_121) {
         case types_NodeKind_node_kind_blank_node: {
-            __auto_type _mv_118 = kind;
-            switch (_mv_118) {
+            __auto_type _mv_122 = kind;
+            switch (_mv_122) {
                 case rdf_TermKind_blank: {
                     return 1;
                     break;
@@ -91,8 +109,8 @@ uint8_t value_type_node_kind_matches(types_NodeKind required, rdf_TermKind kind)
             break;
         }
         case types_NodeKind_node_kind_iri: {
-            __auto_type _mv_119 = kind;
-            switch (_mv_119) {
+            __auto_type _mv_123 = kind;
+            switch (_mv_123) {
                 case rdf_TermKind_iri: {
                     return 1;
                     break;
@@ -105,8 +123,8 @@ uint8_t value_type_node_kind_matches(types_NodeKind required, rdf_TermKind kind)
             break;
         }
         case types_NodeKind_node_kind_literal: {
-            __auto_type _mv_120 = kind;
-            switch (_mv_120) {
+            __auto_type _mv_124 = kind;
+            switch (_mv_124) {
                 case rdf_TermKind_literal: {
                     return 1;
                     break;
@@ -119,8 +137,8 @@ uint8_t value_type_node_kind_matches(types_NodeKind required, rdf_TermKind kind)
             break;
         }
         case types_NodeKind_node_kind_blank_node_or_iri: {
-            __auto_type _mv_121 = kind;
-            switch (_mv_121) {
+            __auto_type _mv_125 = kind;
+            switch (_mv_125) {
                 case rdf_TermKind_blank: {
                     return 1;
                     break;
@@ -137,8 +155,8 @@ uint8_t value_type_node_kind_matches(types_NodeKind required, rdf_TermKind kind)
             break;
         }
         case types_NodeKind_node_kind_blank_node_or_literal: {
-            __auto_type _mv_122 = kind;
-            switch (_mv_122) {
+            __auto_type _mv_126 = kind;
+            switch (_mv_126) {
                 case rdf_TermKind_blank: {
                     return 1;
                     break;
@@ -155,8 +173,8 @@ uint8_t value_type_node_kind_matches(types_NodeKind required, rdf_TermKind kind)
             break;
         }
         case types_NodeKind_node_kind_iri_or_literal: {
-            __auto_type _mv_123 = kind;
-            switch (_mv_123) {
+            __auto_type _mv_127 = kind;
+            switch (_mv_127) {
                 case rdf_TermKind_iri: {
                     return 1;
                     break;

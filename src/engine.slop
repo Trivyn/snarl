@@ -5,9 +5,9 @@
     (SHACL_CLASS SHACL_DATATYPE SHACL_NODE_KIND SHACL_MIN_COUNT SHACL_MAX_COUNT SHACL_MIN_INCLUSIVE SHACL_MAX_INCLUSIVE SHACL_MIN_EXCLUSIVE SHACL_MAX_EXCLUSIVE SHACL_MIN_LENGTH SHACL_MAX_LENGTH SHACL_PATTERN SHACL_EQUALS SHACL_DISJOINT SHACL_LESS_THAN SHACL_LESS_THAN_OR_EQUALS SHACL_NOT SHACL_AND SHACL_OR SHACL_XONE SHACL_NODE SHACL_PROPERTY SHACL_QUALIFIED_VALUE_SHAPE SHACL_HAS_VALUE SHACL_IN SHACL_CLOSED))
   (import types
     (ShaclPath NodeKind Severity Constraint PropertyShape NodeShape ShapesGraph ValidationResult ValidationReport ValidatorConfig ValidatorResult make-validation-report report-add-result report-conforms default-validator-config))
-  (import target (resolve-targets))
+  (import target (ClassIndex build-class-index resolve-targets))
   (import path (resolve-path))
-  (import value-type (check-class check-datatype check-node-kind))
+  (import value-type (check-class check-class-with-index check-datatype check-node-kind))
   (import cardinality (check-min-count check-max-count))
   (import value-range
     (check-min-inclusive check-max-inclusive check-min-exclusive check-max-exclusive))
@@ -21,9 +21,15 @@
   (export
     engine-validate
     evaluate-node-shape
+    evaluate-node-shape-cached
     evaluate-property-shape
+    evaluate-property-shape-cached
     evaluate-constraint
-    evaluate-shape-against-node)
+    evaluate-constraint-cached
+    evaluate-constraint-for-property-cached
+    evaluate-shape-against-node
+    evaluate-shape-against-node-cached
+    property-shape-conforms-cached)
 
   (@doc "SHACL validation engine: single-pass constraint evaluation")
 
@@ -33,11 +39,21 @@
     (@spec ((Arena IndexedGraph ShapesGraph Term NodeShape (Set Term)) -> Bool))
     (@alloc arena)
     (@example)
-    (let ((config (default-validator-config))
-          (results (evaluate-node-shape arena data-graph shapes-graph shape node visited config)))
-      (== (list-len results) 0))
+    (let ((class-index (build-class-index arena data-graph shapes-graph)))
+      (evaluate-shape-against-node-cached arena data-graph shapes-graph class-index node shape visited))
     :c-name
     "snarl_evaluate_shape_against_node")
+
+  (fn evaluate-shape-against-node-cached ((arena Arena) (data-graph IndexedGraph) (shapes-graph ShapesGraph) (class-index ClassIndex) (node Term) (shape NodeShape) (visited (Set Term)))
+    (@intent
+      "Evaluate whether a node conforms to a given shape using cached class membership")
+    (@spec ((Arena IndexedGraph ShapesGraph ClassIndex Term NodeShape (Set Term)) -> Bool))
+    (@alloc arena)
+    (let ((config (default-validator-config))
+          (results (evaluate-node-shape-cached arena data-graph shapes-graph class-index shape node visited config)))
+      (== (list-len results) 0))
+    :c-name
+    "snarl_evaluate_shape_against_node_cached")
 
   (fn property-shape-conforms ((arena Arena) (data-graph IndexedGraph) (shapes-graph ShapesGraph) (node Term) (ps PropertyShape))
     (@intent
@@ -45,12 +61,22 @@
     (@spec ((Arena IndexedGraph ShapesGraph Term PropertyShape) -> Bool))
     (@alloc arena)
     (@example)
-    (let ((rec-visited (set-new arena Term))
-          (empty-siblings (list-new arena Term))
-          (results (evaluate-property-shape arena data-graph shapes-graph ps node rec-visited (default-validator-config) empty-siblings)))
-      (== (list-len results) 0))
+    (let ((class-index (build-class-index arena data-graph shapes-graph)))
+      (property-shape-conforms-cached arena data-graph shapes-graph class-index node ps))
     :c-name
     "snarl_property_shape_conforms")
+
+  (fn property-shape-conforms-cached ((arena Arena) (data-graph IndexedGraph) (shapes-graph ShapesGraph) (class-index ClassIndex) (node Term) (ps PropertyShape))
+    (@intent
+      "Evaluate whether a property shape conforms using cached class membership")
+    (@spec ((Arena IndexedGraph ShapesGraph ClassIndex Term PropertyShape) -> Bool))
+    (@alloc arena)
+    (let ((rec-visited (set-new arena Term))
+          (empty-siblings (list-new arena Term))
+          (results (evaluate-property-shape-cached arena data-graph shapes-graph class-index ps node rec-visited (default-validator-config) empty-siblings)))
+      (== (list-len results) 0))
+    :c-name
+    "snarl_property_shape_conforms_cached")
 
   (fn engine-validate ((arena Arena) (data-graph IndexedGraph) (shapes-graph ShapesGraph) (config ValidatorConfig))
     (@intent
@@ -60,7 +86,8 @@
     (@alloc arena)
     (@pre (>= (indexed-graph-size data-graph) 0))
     (@example)
-    (let ((mut report (make-validation-report arena))
+    (let ((class-index (build-class-index arena data-graph shapes-graph))
+          (mut report (make-validation-report arena))
           (mut error-count 0)
           (max-errors (. config max-errors)))
       (for-each (ns (. shapes-graph node-shapes))
@@ -70,7 +97,7 @@
                   (visited (set-new arena Term)))
               (for-each (focus-node focus-nodes)
                 (when (or (== max-errors 0) (< error-count max-errors))
-                  (let ((results (evaluate-node-shape arena data-graph shapes-graph ns focus-node visited config)))
+                  (let ((results (evaluate-node-shape-cached arena data-graph shapes-graph class-index ns focus-node visited config)))
                     (for-each (r results)
                       (let ((include (match (. r severity) (severity-violation true) (severity-warning (. config include-warnings)) (severity-info (. config include-infos)))))
                         (when include
@@ -91,13 +118,25 @@
         (List ValidationResult)))
     (@alloc arena)
     (@example)
+    (let ((class-index (build-class-index arena data-graph shapes-graph)))
+      (evaluate-node-shape-cached arena data-graph shapes-graph class-index shape focus-node visited config))
+    :c-name
+    "snarl_evaluate_node_shape")
+
+  (fn evaluate-node-shape-cached ((arena Arena) (data-graph IndexedGraph) (shapes-graph ShapesGraph) (class-index ClassIndex) (shape NodeShape) (focus-node Term) (visited (Set Term)) (config ValidatorConfig))
+    (@intent "Evaluate a node shape against a single focus node using cached class membership")
+    (@spec
+      ((Arena IndexedGraph ShapesGraph ClassIndex NodeShape Term (Set Term) ValidatorConfig)
+        ->
+        (List ValidationResult)))
+    (@alloc arena)
     (let ((mut results (list-new arena ValidationResult))
           (shape-severity (. shape severity))
           (shape-message (. shape message))
           (shape-id (. shape id))
           (no-path (Option ShaclPath) (none)))
       (for-each (constraint (. shape constraints))
-        (let ((constraint-results (evaluate-constraint arena data-graph shapes-graph focus-node focus-node constraint no-path shape-id shape-severity shape-message visited)))
+        (let ((constraint-results (evaluate-constraint-cached arena data-graph shapes-graph class-index focus-node focus-node constraint no-path shape-id shape-severity shape-message visited)))
           (for-each (r constraint-results) (list-push results r))))
       (for-each (constraint (. shape constraints))
         (match constraint
@@ -141,11 +180,11 @@
                         ((none) (do)))))
                   ((none) (do)))
                 (set! i (+ i 1)))
-              (let ((ps-results (evaluate-property-shape arena data-graph shapes-graph ps focus-node visited config sibling-refs)))
+              (let ((ps-results (evaluate-property-shape-cached arena data-graph shapes-graph class-index ps focus-node visited config sibling-refs)))
                 (for-each (r ps-results) (list-push results r)))))))
       results)
     :c-name
-    "snarl_evaluate_node_shape")
+    "snarl_evaluate_node_shape_cached")
 
   (fn evaluate-property-shape ((arena Arena) (data-graph IndexedGraph) (shapes-graph ShapesGraph) (shape PropertyShape) (focus-node Term) (visited (Set Term)) (config ValidatorConfig) (sibling-qvs-refs (List Term)))
     (@intent
@@ -156,6 +195,19 @@
         (List ValidationResult)))
     (@alloc arena)
     (@example)
+    (let ((class-index (build-class-index arena data-graph shapes-graph)))
+      (evaluate-property-shape-cached arena data-graph shapes-graph class-index shape focus-node visited config sibling-qvs-refs))
+    :c-name
+    "snarl_evaluate_property_shape")
+
+  (fn evaluate-property-shape-cached ((arena Arena) (data-graph IndexedGraph) (shapes-graph ShapesGraph) (class-index ClassIndex) (shape PropertyShape) (focus-node Term) (visited (Set Term)) (config ValidatorConfig) (sibling-qvs-refs (List Term)))
+    (@intent
+      "Evaluate a property shape against a focus node by resolving the path using cached class membership")
+    (@spec
+      ((Arena IndexedGraph ShapesGraph ClassIndex PropertyShape Term (Set Term) ValidatorConfig (List Term))
+        ->
+        (List ValidationResult)))
+    (@alloc arena)
     (let ((mut results (list-new arena ValidationResult))
           (shape-severity (. shape severity))
           (shape-message (. shape message))
@@ -165,11 +217,11 @@
           (value-nodes (resolve-path arena data-graph focus-node path))
           (value-count (list-len value-nodes)))
       (for-each (constraint (. shape constraints))
-        (let ((constraint-results (evaluate-constraint-for-property arena data-graph shapes-graph focus-node value-nodes value-count constraint path-opt shape-id shape-severity shape-message visited sibling-qvs-refs)))
+        (let ((constraint-results (evaluate-constraint-for-property-cached arena data-graph shapes-graph class-index focus-node value-nodes value-count constraint path-opt shape-id shape-severity shape-message visited sibling-qvs-refs)))
           (for-each (r constraint-results) (list-push results r))))
       results)
     :c-name
-    "snarl_evaluate_property_shape")
+    "snarl_evaluate_property_shape_cached")
 
   (fn evaluate-constraint ((arena Arena) (data-graph IndexedGraph) (shapes-graph ShapesGraph) (focus-node Term) (value-node Term) (constraint Constraint) (path (Option ShaclPath)) (shape-id Term) (severity Severity) (message (Option String)) (visited (Set Term)))
     (@intent "Evaluate a single constraint against a focus node and value node")
@@ -179,10 +231,22 @@
         (List ValidationResult)))
     (@alloc arena)
     (@example)
+    (let ((class-index (build-class-index arena data-graph shapes-graph)))
+      (evaluate-constraint-cached arena data-graph shapes-graph class-index focus-node value-node constraint path shape-id severity message visited))
+    :c-name
+    "snarl_evaluate_constraint")
+
+  (fn evaluate-constraint-cached ((arena Arena) (data-graph IndexedGraph) (shapes-graph ShapesGraph) (class-index ClassIndex) (focus-node Term) (value-node Term) (constraint Constraint) (path (Option ShaclPath)) (shape-id Term) (severity Severity) (message (Option String)) (visited (Set Term)))
+    (@intent "Evaluate a single constraint against a focus node and value node using cached class membership")
+    (@spec
+      ((Arena IndexedGraph ShapesGraph ClassIndex Term Term Constraint (Option ShaclPath) Term Severity (Option String) (Set Term))
+        ->
+        (List ValidationResult)))
+    (@alloc arena)
     (let ((mut results (list-new arena ValidationResult)))
       (match constraint
         ((con-class required-class)
-          (match (check-class arena data-graph focus-node value-node required-class path shape-id severity message)
+          (match (check-class-with-index arena data-graph class-index focus-node value-node required-class path shape-id severity message)
             ((some r) (list-push results r))
             ((none) (do))))
         ((con-datatype required-dt)
@@ -260,7 +324,7 @@
             ((none) (do))))
         ((con-closed _ _) (do))
         ((con-not shape-ref)
-          (let ((conforms (match (map-get (. shapes-graph property-shape-map) shape-ref) ((some ref-ps) (property-shape-conforms arena data-graph shapes-graph value-node ref-ps)) ((none) (let ((rec-visited (set-new arena Term))) (set-put rec-visited shape-ref) (match (map-get (. shapes-graph shape-map) shape-ref) ((some ref-shape) (evaluate-shape-against-node arena data-graph shapes-graph value-node ref-shape rec-visited)) ((none) false)))))))
+          (let ((conforms (match (map-get (. shapes-graph property-shape-map) shape-ref) ((some ref-ps) (property-shape-conforms-cached arena data-graph shapes-graph class-index value-node ref-ps)) ((none) (let ((rec-visited (set-new arena Term))) (set-put rec-visited shape-ref) (match (map-get (. shapes-graph shape-map) shape-ref) ((some ref-shape) (evaluate-shape-against-node-cached arena data-graph shapes-graph class-index value-node ref-shape rec-visited)) ((none) false)))))))
             (match (check-not arena focus-node conforms path shape-id severity message)
               ((some r) (list-push results r))
               ((none) (do)))))
@@ -269,14 +333,14 @@
             (for-each (ref shape-refs)
               (match (map-get (. shapes-graph property-shape-map) ref)
                 ((some ref-ps)
-                  (when (not (property-shape-conforms arena data-graph shapes-graph value-node ref-ps))
+                  (when (not (property-shape-conforms-cached arena data-graph shapes-graph class-index value-node ref-ps))
                     (set! all-pass false)))
                 ((none)
                   (let ((rec-visited (set-new arena Term)))
                     (set-put rec-visited ref)
                     (match (map-get (. shapes-graph shape-map) ref)
                       ((some ref-shape)
-                        (when (not (evaluate-shape-against-node arena data-graph shapes-graph value-node ref-shape rec-visited))
+                        (when (not (evaluate-shape-against-node-cached arena data-graph shapes-graph class-index value-node ref-shape rec-visited))
                           (set! all-pass false)))
                       ((none) (do)))))))
             (match (check-and arena focus-node all-pass path shape-id severity message)
@@ -287,14 +351,14 @@
             (for-each (ref shape-refs)
               (match (map-get (. shapes-graph property-shape-map) ref)
                 ((some ref-ps)
-                  (when (property-shape-conforms arena data-graph shapes-graph value-node ref-ps)
+                  (when (property-shape-conforms-cached arena data-graph shapes-graph class-index value-node ref-ps)
                     (set! any-pass true)))
                 ((none)
                   (let ((rec-visited (set-new arena Term)))
                     (set-put rec-visited ref)
                     (match (map-get (. shapes-graph shape-map) ref)
                       ((some ref-shape)
-                        (when (evaluate-shape-against-node arena data-graph shapes-graph value-node ref-shape rec-visited)
+                        (when (evaluate-shape-against-node-cached arena data-graph shapes-graph class-index value-node ref-shape rec-visited)
                           (set! any-pass true)))
                       ((none) (do)))))))
             (match (check-or arena focus-node any-pass path shape-id severity message)
@@ -305,21 +369,21 @@
             (for-each (ref shape-refs)
               (match (map-get (. shapes-graph property-shape-map) ref)
                 ((some ref-ps)
-                  (when (property-shape-conforms arena data-graph shapes-graph value-node ref-ps)
+                  (when (property-shape-conforms-cached arena data-graph shapes-graph class-index value-node ref-ps)
                     (set! pass-count (+ pass-count 1))))
                 ((none)
                   (let ((rec-visited (set-new arena Term)))
                     (set-put rec-visited ref)
                     (match (map-get (. shapes-graph shape-map) ref)
                       ((some ref-shape)
-                        (when (evaluate-shape-against-node arena data-graph shapes-graph value-node ref-shape rec-visited)
+                        (when (evaluate-shape-against-node-cached arena data-graph shapes-graph class-index value-node ref-shape rec-visited)
                           (set! pass-count (+ pass-count 1))))
                       ((none) (do)))))))
             (match (check-xone arena focus-node pass-count path shape-id severity message)
               ((some r) (list-push results r))
               ((none) (do)))))
         ((con-node shape-ref)
-          (let ((value-conforms (match (map-get (. shapes-graph property-shape-map) shape-ref) ((some ref-ps) (property-shape-conforms arena data-graph shapes-graph value-node ref-ps)) ((none) (let ((rec-visited (set-new arena Term))) (set-put rec-visited shape-ref) (match (map-get (. shapes-graph shape-map) shape-ref) ((some ref-shape) (evaluate-shape-against-node arena data-graph shapes-graph value-node ref-shape rec-visited)) ((none) true)))))))
+          (let ((value-conforms (match (map-get (. shapes-graph property-shape-map) shape-ref) ((some ref-ps) (property-shape-conforms-cached arena data-graph shapes-graph class-index value-node ref-ps)) ((none) (let ((rec-visited (set-new arena Term))) (set-put rec-visited shape-ref) (match (map-get (. shapes-graph shape-map) shape-ref) ((some ref-shape) (evaluate-shape-against-node-cached arena data-graph shapes-graph class-index value-node ref-shape rec-visited)) ((none) true)))))))
             (match (check-node arena focus-node value-node value-conforms path shape-id severity message)
               ((some r) (list-push results r))
               ((none) (do)))))
@@ -327,7 +391,7 @@
         ((con-qualified-value-shape _ _ _ _) (do)))
       results)
     :c-name
-    "snarl_evaluate_constraint")
+    "snarl_evaluate_constraint_cached")
 
   (fn evaluate-constraint-for-property ((arena Arena) (data-graph IndexedGraph) (shapes-graph ShapesGraph) (focus-node Term) (value-nodes (List Term)) (value-count Int) (constraint Constraint) (path (Option ShaclPath)) (shape-id Term) (severity Severity) (message (Option String)) (visited (Set Term)) (sibling-qvs-refs (List Term)))
     (@intent
@@ -338,6 +402,19 @@
         (List ValidationResult)))
     (@alloc arena)
     (@example)
+    (let ((class-index (build-class-index arena data-graph shapes-graph)))
+      (evaluate-constraint-for-property-cached arena data-graph shapes-graph class-index focus-node value-nodes value-count constraint path shape-id severity message visited sibling-qvs-refs))
+    :c-name
+    "snarl_evaluate_constraint_for_property")
+
+  (fn evaluate-constraint-for-property-cached ((arena Arena) (data-graph IndexedGraph) (shapes-graph ShapesGraph) (class-index ClassIndex) (focus-node Term) (value-nodes (List Term)) (value-count Int) (constraint Constraint) (path (Option ShaclPath)) (shape-id Term) (severity Severity) (message (Option String)) (visited (Set Term)) (sibling-qvs-refs (List Term)))
+    (@intent
+      "Evaluate a constraint in property shape context with access to all value nodes using cached class membership")
+    (@spec
+      ((Arena IndexedGraph ShapesGraph ClassIndex Term (List Term) Int Constraint (Option ShaclPath) Term Severity (Option String) (Set Term) (List Term))
+        ->
+        (List ValidationResult)))
+    (@alloc arena)
     (let ((mut results (list-new arena ValidationResult)))
       (match constraint
         ((con-min-count min-c)
@@ -376,7 +453,7 @@
                 (set-put rec-visited shape-ref)
                 (match (map-get (. shapes-graph shape-map) shape-ref)
                   ((some ref-shape)
-                    (when (evaluate-shape-against-node arena data-graph shapes-graph vn ref-shape rec-visited)
+                    (when (evaluate-shape-against-node-cached arena data-graph shapes-graph class-index vn ref-shape rec-visited)
                       (if (and disjoint (> (list-len sibling-qvs-refs) 0))
                         (let ((mut conforms-to-sibling false))
                           (for-each (sib-ref sibling-qvs-refs)
@@ -384,7 +461,7 @@
                               (set-put sib-visited sib-ref)
                               (match (map-get (. shapes-graph shape-map) sib-ref)
                                 ((some sib-shape)
-                                  (when (evaluate-shape-against-node arena data-graph shapes-graph vn sib-shape sib-visited)
+                                  (when (evaluate-shape-against-node-cached arena data-graph shapes-graph class-index vn sib-shape sib-visited)
                                     (set! conforms-to-sibling true)))
                                 ((none) (do)))))
                           (when (not conforms-to-sibling)
@@ -399,13 +476,14 @@
               (for-each (vn value-nodes)
                 (let ((rec-visited (set-new arena Term))
                       (empty-siblings (list-new arena Term))
-                      (ps-results (evaluate-property-shape arena data-graph shapes-graph ref-ps vn rec-visited (default-validator-config) empty-siblings)))
+                      (ps-results (evaluate-property-shape-cached arena data-graph shapes-graph class-index ref-ps vn rec-visited (default-validator-config) empty-siblings)))
                   (for-each (r ps-results) (list-push results r)))))
             ((none) (do))))
         (_
           (for-each (value-node value-nodes)
-            (let ((vr (evaluate-constraint arena data-graph shapes-graph focus-node value-node constraint path shape-id severity message visited)))
+            (let ((vr (evaluate-constraint-cached arena data-graph shapes-graph class-index focus-node value-node constraint path shape-id severity message visited)))
               (for-each (r vr) (list-push results r))))))
       results)
     :c-name
-    "snarl_evaluate_constraint_for_property"))
+    "snarl_evaluate_constraint_for_property_cached")
+)

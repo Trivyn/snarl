@@ -1,0 +1,80 @@
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix moose: <https://trivyn.io/ontologies/moose#> .
+@prefix shape: <https://example.org/meteorite_ontology/MeteoriteOntology/shapes#> .
+@prefix dcam: <http://purl.org/dc/dcam/> .
+@prefix domain: <https://example.org/meteorite_ontology/domain/> .
+@prefix geo: <http://www.opengis.net/ont/geosparql#> .
+
+<https://example.org/meteorite_ontology/MeteoriteOntology/shapes> a owl:Ontology ;
+    rdfs:label "SHACL Shapes" ;
+    owl:imports <https://example.org/meteorite_ontology/MeteoriteOntology> .
+
+# =============================================================================
+# Mechanically generated SHACL shapes
+# =============================================================================
+
+shape:MeteoriteClassShape a sh:NodeShape ;
+    sh:targetClass domain:MeteoriteClass ;
+    sh:property [
+        sh:path domain:hasMeteoriteClassName ;
+        sh:datatype xsd:string
+    ] ;
+    sh:property [
+        sh:path domain:isMeteoriteClassOf ;
+        sh:class domain:MeteoriteLanding
+    ] ;
+    sh:property [
+        sh:path rdfs:label ;
+        sh:datatype xsd:string ;
+        sh:minCount 1 ;
+        sh:maxCount 1
+    ] .
+
+shape:MeteoriteLandingShape a sh:NodeShape ;
+    sh:targetClass domain:MeteoriteLanding ;
+    sh:property [
+        sh:path domain:hasFall ;
+        sh:datatype xsd:string ;
+        sh:in ( "Fell" "Found" ) ;
+        sh:minCount 1
+    ] ;
+    sh:property [
+        sh:path domain:hasGeoLocation ;
+        sh:datatype geo:wktLiteral
+    ] ;
+    sh:property [
+        sh:path domain:hasMassG ;
+        sh:datatype xsd:double ;
+        sh:minInclusive "0.0E0"^^xsd:double
+    ] ;
+    sh:property [
+        sh:path domain:hasMeteoriteClass ;
+        sh:class domain:MeteoriteClass
+    ] ;
+    sh:property [
+        sh:path domain:hasName ;
+        sh:datatype xsd:string ;
+        sh:minCount 1
+    ] ;
+    sh:property [
+        sh:path domain:hasNameType ;
+        sh:datatype xsd:string ;
+        sh:in ( "Relict" "Valid" ) ;
+        sh:minCount 1
+    ] ;
+    sh:property [
+        sh:path domain:hasReclat ;
+        sh:datatype xsd:double
+    ] ;
+    sh:property [
+        sh:path domain:hasReclong ;
+        sh:datatype xsd:double
+    ] ;
+    sh:property [
+        sh:path domain:hasYear ;
+        sh:datatype xsd:gYear
+    ] .
+
