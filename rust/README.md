@@ -10,7 +10,7 @@ the C validator sources and compiles them during the Cargo build.
 
 ```toml
 [dependencies]
-snarl = "0.1.0"
+snarl = "0.3.0"
 ```
 
 ## Requirements
