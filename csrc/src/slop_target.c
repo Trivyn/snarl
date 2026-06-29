@@ -167,6 +167,8 @@ target_TargetCache target_target_cache_create(slop_arena* arena) {
 }
 
 target_TermList target_resolve_target_class_cached(slop_arena* arena, data_graph_SnarlDataGraph data_graph, target_TargetCache cache, rdf_Term class_term) {
+    SLOP_PRE(((snarl_data_graph_size(data_graph) >= 0)), "(>= (snarl-data-graph-size data-graph) 0)");
+    target_TermList _retval = {0};
     __auto_type _mv_122 = ({ void* _ptr = slop_map_get(cache.target_classes, &(class_term)); _ptr ? (slop_option_target_TermList){ .has_value = true, .value = *(target_TermList*)_ptr } : (slop_option_target_TermList){ .has_value = false }; });
     if (_mv_122.has_value) {
         __auto_type cached = _mv_122.value;
@@ -178,6 +180,8 @@ target_TermList target_resolve_target_class_cached(slop_arena* arena, data_graph
             return resolved;
         }
     }
+    SLOP_POST(((((int64_t)((_retval).len)) >= 0)), "(>= (list-len $result) 0)");
+    return _retval;
 }
 
 slop_list_rdf_Term target_resolve_targets_cached(slop_arena* arena, data_graph_SnarlDataGraph data_graph, target_TargetCache cache, types_NodeShape shape) {
@@ -418,6 +422,7 @@ slop_list_rdf_Term target_collect_class_constraints(slop_arena* arena, types_Sha
 }
 
 target_ClassIndex target_build_class_index(slop_arena* arena, data_graph_SnarlDataGraph data_graph, types_ShapesGraph shapes_graph) {
+    SLOP_PRE(((snarl_data_graph_size(data_graph) >= 0)), "(>= (snarl-data-graph-size data-graph) 0)");
     {
         __auto_type classes = target_collect_class_constraints(arena, shapes_graph);
         __auto_type entries = ((slop_list_target_ClassInstances){ .data = (target_ClassInstances*)slop_arena_alloc(arena, 16 * sizeof(target_ClassInstances)), .len = 0, .cap = 16 });

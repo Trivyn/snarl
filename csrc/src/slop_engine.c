@@ -20,6 +20,7 @@ slop_list_types_ValidationResult snarl_evaluate_constraint_for_property_cached(s
 slop_list_types_ValidationResult engine_evaluate_constraint_for_simple_predicate_cached(slop_arena* arena, data_graph_SnarlDataGraph data_graph, types_ShapesGraph shapes_graph, target_ClassIndex class_index, rdf_Term focus_node, rdf_Term pred, slop_option_index_TermSet value_set, int64_t value_count, types_Constraint constraint, slop_option_types_ShaclPath path, rdf_Term shape_id, types_Severity severity, slop_option_string message, slop_map* visited, slop_list_rdf_Term sibling_qvs_refs);
 
 int64_t engine_optional_term_set_size(slop_option_index_TermSet values) {
+    int64_t _retval = {0};
     __auto_type _mv_174 = values;
     if (_mv_174.has_value) {
         __auto_type terms = _mv_174.value;
@@ -27,9 +28,12 @@ int64_t engine_optional_term_set_size(slop_option_index_TermSet values) {
     } else if (!_mv_174.has_value) {
         return 0;
     }
+    SLOP_POST(((_retval >= 0)), "(>= $result 0)");
+    return _retval;
 }
 
 slop_list_rdf_Term engine_optional_term_set_to_list(slop_arena* arena, slop_option_index_TermSet values) {
+    slop_list_rdf_Term _retval = {0};
     __auto_type _mv_175 = values;
     if (_mv_175.has_value) {
         __auto_type terms = _mv_175.value;
@@ -37,6 +41,8 @@ slop_list_rdf_Term engine_optional_term_set_to_list(slop_arena* arena, slop_opti
     } else if (!_mv_175.has_value) {
         return ((slop_list_rdf_Term){ .data = (rdf_Term*)slop_arena_alloc(arena, 16 * sizeof(rdf_Term)), .len = 0, .cap = 16 });
     }
+    SLOP_POST(((((int64_t)((_retval).len)) >= 0)), "(>= (list-len $result) 0)");
+    return _retval;
 }
 
 uint8_t snarl_evaluate_shape_against_node(slop_arena* arena, data_graph_SnarlDataGraph data_graph, types_ShapesGraph shapes_graph, rdf_Term node, types_NodeShape shape, slop_map* visited) {
@@ -289,6 +295,7 @@ slop_list_types_ValidationResult snarl_evaluate_property_shape(slop_arena* arena
 }
 
 slop_list_types_ValidationResult snarl_evaluate_property_shape_cached(slop_arena* arena, data_graph_SnarlDataGraph data_graph, types_ShapesGraph shapes_graph, target_ClassIndex class_index, types_PropertyShape shape, rdf_Term focus_node, slop_map* visited, types_ValidatorConfig config, slop_list_rdf_Term sibling_qvs_refs) {
+    slop_list_types_ValidationResult _retval = {0};
     {
         __auto_type path = shape.path;
         __auto_type _mv_182 = path;
@@ -328,9 +335,12 @@ slop_list_types_ValidationResult snarl_evaluate_property_shape_cached(slop_arena
             }
         }
     }
+    SLOP_POST(((((int64_t)((_retval).len)) >= 0)), "(>= (list-len $result) 0)");
+    return _retval;
 }
 
 slop_list_types_ValidationResult engine_evaluate_simple_predicate_property_shape_cached(slop_arena* arena, data_graph_SnarlDataGraph data_graph, types_ShapesGraph shapes_graph, target_ClassIndex class_index, types_PropertyShape shape, rdf_Term focus_node, rdf_Term pred, slop_map* visited, types_ValidatorConfig config, slop_list_rdf_Term sibling_qvs_refs) {
+    slop_list_types_ValidationResult _retval = {0};
     {
         __auto_type results = ((slop_list_types_ValidationResult){ .data = (types_ValidationResult*)slop_arena_alloc(arena, 16 * sizeof(types_ValidationResult)), .len = 0, .cap = 16 });
         __auto_type shape_severity = shape.severity;
@@ -356,8 +366,10 @@ slop_list_types_ValidationResult engine_evaluate_simple_predicate_property_shape
                 }
             }
         }
-        return results;
+        _retval = results;
     }
+    SLOP_POST(((((int64_t)((_retval).len)) >= 0)), "(>= (list-len $result) 0)");
+    return _retval;
 }
 
 slop_list_types_ValidationResult snarl_evaluate_constraint(slop_arena* arena, data_graph_SnarlDataGraph data_graph, types_ShapesGraph shapes_graph, rdf_Term focus_node, rdf_Term value_node, types_Constraint constraint, slop_option_types_ShaclPath path, rdf_Term shape_id, types_Severity severity, slop_option_string message, slop_map* visited) {
@@ -368,6 +380,7 @@ slop_list_types_ValidationResult snarl_evaluate_constraint(slop_arena* arena, da
 }
 
 slop_list_types_ValidationResult snarl_evaluate_constraint_cached(slop_arena* arena, data_graph_SnarlDataGraph data_graph, types_ShapesGraph shapes_graph, target_ClassIndex class_index, rdf_Term focus_node, rdf_Term value_node, types_Constraint constraint, slop_option_types_ShaclPath path, rdf_Term shape_id, types_Severity severity, slop_option_string message, slop_map* visited) {
+    slop_list_types_ValidationResult _retval = {0};
     {
         __auto_type results = ((slop_list_types_ValidationResult){ .data = (types_ValidationResult*)slop_arena_alloc(arena, 16 * sizeof(types_ValidationResult)), .len = 0, .cap = 16 });
         __auto_type _mv_183 = constraint;
@@ -772,8 +785,10 @@ slop_list_types_ValidationResult snarl_evaluate_constraint_cached(slop_arena* ar
                 break;
             }
         }
-        return results;
+        _retval = results;
     }
+    SLOP_POST(((((int64_t)((_retval).len)) >= 0)), "(>= (list-len $result) 0)");
+    return _retval;
 }
 
 slop_list_types_ValidationResult snarl_evaluate_constraint_for_property(slop_arena* arena, data_graph_SnarlDataGraph data_graph, types_ShapesGraph shapes_graph, rdf_Term focus_node, slop_list_rdf_Term value_nodes, int64_t value_count, types_Constraint constraint, slop_option_types_ShaclPath path, rdf_Term shape_id, types_Severity severity, slop_option_string message, slop_map* visited, slop_list_rdf_Term sibling_qvs_refs) {
@@ -784,6 +799,8 @@ slop_list_types_ValidationResult snarl_evaluate_constraint_for_property(slop_are
 }
 
 slop_list_types_ValidationResult snarl_evaluate_constraint_for_property_cached(slop_arena* arena, data_graph_SnarlDataGraph data_graph, types_ShapesGraph shapes_graph, target_ClassIndex class_index, rdf_Term focus_node, slop_list_rdf_Term value_nodes, int64_t value_count, types_Constraint constraint, slop_option_types_ShaclPath path, rdf_Term shape_id, types_Severity severity, slop_option_string message, slop_map* visited, slop_list_rdf_Term sibling_qvs_refs) {
+    SLOP_PRE(((value_count >= 0)), "(>= value-count 0)");
+    slop_list_types_ValidationResult _retval = {0};
     {
         __auto_type results = ((slop_list_types_ValidationResult){ .data = (types_ValidationResult*)slop_arena_alloc(arena, 16 * sizeof(types_ValidationResult)), .len = 0, .cap = 16 });
         __auto_type _mv_208 = constraint;
@@ -1016,11 +1033,15 @@ slop_list_types_ValidationResult snarl_evaluate_constraint_for_property_cached(s
                 break;
             }
         }
-        return results;
+        _retval = results;
     }
+    SLOP_POST(((((int64_t)((_retval).len)) >= 0)), "(>= (list-len $result) 0)");
+    return _retval;
 }
 
 slop_list_types_ValidationResult engine_evaluate_constraint_for_simple_predicate_cached(slop_arena* arena, data_graph_SnarlDataGraph data_graph, types_ShapesGraph shapes_graph, target_ClassIndex class_index, rdf_Term focus_node, rdf_Term pred, slop_option_index_TermSet value_set, int64_t value_count, types_Constraint constraint, slop_option_types_ShaclPath path, rdf_Term shape_id, types_Severity severity, slop_option_string message, slop_map* visited, slop_list_rdf_Term sibling_qvs_refs) {
+    SLOP_PRE(((value_count >= 0)), "(>= value-count 0)");
+    slop_list_types_ValidationResult _retval = {0};
     {
         __auto_type results = ((slop_list_types_ValidationResult){ .data = (types_ValidationResult*)slop_arena_alloc(arena, 16 * sizeof(types_ValidationResult)), .len = 0, .cap = 16 });
         __auto_type _mv_215 = constraint;
@@ -1199,7 +1220,9 @@ slop_list_types_ValidationResult engine_evaluate_constraint_for_simple_predicate
                 break;
             }
         }
-        return results;
+        _retval = results;
     }
+    SLOP_POST(((((int64_t)((_retval).len)) >= 0)), "(>= (list-len $result) 0)");
+    return _retval;
 }
 

@@ -179,6 +179,8 @@
     (@intent "Create per-validation target resolution cache")
     (@spec ((Arena) -> TargetCache))
     (@alloc arena)
+    ;; TargetCache is intentionally validation-run scoped. It memoizes expensive
+    ;; targetClass expansion without changing target resolution semantics.
     (record-new TargetCache
       (target-classes (map-new arena Term TermList))))
 
@@ -186,6 +188,8 @@
     (@intent "Resolve targetClass with a per-validation cache")
     (@spec ((Arena SnarlDataGraph TargetCache Term) -> TermList))
     (@alloc arena)
+    (@pre (>= (snarl-data-graph-size data-graph) 0))
+    (@post (>= (list-len $result) 0))
     (match (map-get (. cache target-classes) class-term)
       ((some cached) cached)
       ((none)
@@ -200,6 +204,8 @@
     (@alloc arena)
     (@pre (>= (snarl-data-graph-size data-graph) 0))
     (@post (>= (list-len $result) 0))
+    ;; Mirrors resolve-targets, but routes targetClass and implicit class targets
+    ;; through the per-run cache because those expansions are often shared.
     (let ((mut result (list-new arena Term))
           (seen (set-new arena Term)))
       (for-each (node (. shape target-nodes))
@@ -312,6 +318,9 @@
     (@intent "Precompute instance sets for all classes used by sh:class constraints")
     (@spec ((Arena SnarlDataGraph ShapesGraph) -> ClassIndex))
     (@alloc arena)
+    (@pre (>= (snarl-data-graph-size data-graph) 0))
+    ;; Keep the historical entries list for layout/API compatibility while the
+    ;; map supplies O(1)-style membership lookup for validation.
     (let ((classes (collect-class-constraints arena shapes-graph))
           (mut entries (list-new arena ClassInstances))
           (entry-map (map-new arena Term TermSet)))

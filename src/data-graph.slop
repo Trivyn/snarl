@@ -2,7 +2,7 @@
   (@doc "Snarl-specific RDF data graph with only SHACL validation access paths")
 
   (import rdf (Term Triple term-eq make-triple triple-subject triple-predicate triple-object))
-  (import index (IndexedGraph TermSet TermSetMap indexed-graph-create indexed-graph-add))
+  (import index (IndexedGraph TermSet TermSetMap indexed-graph-create indexed-graph-add indexed-graph-size))
 
   (export
     SnarlDataIndex
@@ -38,6 +38,8 @@
     (@intent "Create an empty Snarl data graph")
     (@spec ((Arena) -> SnarlDataGraph))
     (@alloc arena)
+    (@post (== (. $result size) 0))
+    (@post (== (list-len (. $result triples)) 0))
     (record-new SnarlDataGraph
       (triples (list-new arena Triple))
       (index (record-new SnarlDataIndex
@@ -60,6 +62,8 @@
     (@intent "Insert value into outer[first][second]")
     (@spec ((Arena (Map Term TermSetMap) Term Term Term) -> Unit))
     (@alloc arena)
+    ;; Used for secondary indexes after the subject/predicate/object index has
+    ;; already decided whether the triple is new.
     (match (map-get outer first)
       ((some inner)
         (match (map-get inner second)
@@ -83,6 +87,7 @@
     (@intent "Check whether the graph contains an exact triple")
     (@spec ((SnarlDataGraph Triple) -> Bool))
     (@pure)
+    ;; Exact triple membership is represented by the canonical sp index.
     (let ((s (triple-subject t))
           (p (triple-predicate t))
           (o (triple-object t)))
@@ -98,6 +103,8 @@
     (@intent "Return the indexed object set for a subject/predicate pair")
     (@spec ((SnarlDataGraph Term Term) -> (Option TermSet)))
     (@pure)
+    ;; This exposes the hot validation path without copying the set into a list.
+    ;; Callers that need list semantics must explicitly materialize it.
     (match (map-get (. (. g index) sp) subj)
       ((some pred-map)
         (match (map-get pred-map pred)
@@ -109,6 +116,7 @@
     (@intent "Count terms in a term set")
     (@spec ((TermSet) -> (Int 0 ..)))
     (@pure)
+    (@post (>= $result 0))
     (let ((mut n 0))
       (for-each (_ terms)
         (set! n (+ n 1)))
@@ -118,6 +126,7 @@
     (@intent "Copy a term set into a list")
     (@spec ((Arena TermSet) -> (List Term)))
     (@alloc arena)
+    (@post (>= (list-len $result) 0))
     (let ((mut result (list-new arena Term)))
       (for-each (t terms)
         (list-push result t))
@@ -135,6 +144,9 @@
     (@intent "Insert into the subject/predicate index and report whether the triple was new")
     (@spec ((Arena (Map Term TermSetMap) Term Term Term) -> Bool))
     (@alloc arena)
+    ;; The return value is the duplicate gate for all other indexes. If this
+    ;; returns false, the triple was already present and no secondary index may
+    ;; be updated.
     (match (map-get outer subj)
       ((some pred-map)
         (match (map-get pred-map pred)
@@ -158,6 +170,9 @@
     (@intent "Add a triple to the Snarl data graph")
     (@spec ((Arena SnarlDataGraph Triple) -> SnarlDataGraph))
     (@alloc arena)
+    (@post (>= (. $result size) 0))
+    ;; Update the canonical sp index first so duplicate input pays only one
+    ;; subject/predicate/object lookup before the secondary indexes are skipped.
     (let ((s (triple-subject t))
           (p (triple-predicate t))
           (o (triple-object t)))
@@ -178,6 +193,7 @@
     (@intent "Return the number of triples in the Snarl data graph")
     (@spec ((SnarlDataGraph) -> (Int 0 ..)))
     (@pure)
+    (@post (>= $result 0))
     (. g size)
     :c-name "snarl_data_graph_size")
 
@@ -185,6 +201,7 @@
     (@intent "Return objects for a subject/predicate pair")
     (@spec ((Arena SnarlDataGraph Term Term) -> (List Term)))
     (@alloc arena)
+    (@post (>= (list-len $result) 0))
     (match (snarl-data-graph-object-set g subj pred)
       ((some objs) (snarl-data-graph-term-set-to-list arena objs))
       ((none) (list-new arena Term)))
@@ -194,6 +211,7 @@
     (@intent "Return subjects for a predicate/object pair")
     (@spec ((Arena SnarlDataGraph Term Term) -> (List Term)))
     (@alloc arena)
+    (@post (>= (list-len $result) 0))
     (match (map-get (. (. g index) po) pred)
       ((some obj-map)
         (match (map-get obj-map obj)
@@ -206,6 +224,7 @@
     (@intent "Return subjects that use a predicate")
     (@spec ((Arena SnarlDataGraph Term) -> (List Term)))
     (@alloc arena)
+    (@post (>= (list-len $result) 0))
     (match (map-get (. (. g index) p-subjects) pred)
       ((some subjects) (snarl-data-graph-term-set-to-list arena subjects))
       ((none) (list-new arena Term)))
@@ -215,6 +234,7 @@
     (@intent "Return objects reached by a predicate")
     (@spec ((Arena SnarlDataGraph Term) -> (List Term)))
     (@alloc arena)
+    (@post (>= (list-len $result) 0))
     (match (map-get (. (. g index) p-objects) pred)
       ((some objects) (snarl-data-graph-term-set-to-list arena objects))
       ((none) (list-new arena Term)))
@@ -224,6 +244,7 @@
     (@intent "Return predicates used by a subject")
     (@spec ((Arena SnarlDataGraph Term) -> (List Term)))
     (@alloc arena)
+    (@post (>= (list-len $result) 0))
     (let ((mut result (list-new arena Term)))
       (match (map-get (. (. g index) sp) subj)
         ((some pred-map)
@@ -236,6 +257,7 @@
     (@intent "Return all triples with the given subject")
     (@spec ((Arena SnarlDataGraph Term) -> (List Triple)))
     (@alloc arena)
+    (@post (>= (list-len $result) 0))
     (let ((mut result (list-new arena Triple)))
       (match (map-get (. (. g index) sp) subj)
         ((some pred-map)
@@ -250,6 +272,7 @@
     (@intent "Convert a Snarl data graph into the general IndexedGraph representation")
     (@spec ((Arena SnarlDataGraph) -> IndexedGraph))
     (@alloc arena)
+    (@pre (>= (. g size) 0))
     (let ((mut out (indexed-graph-create arena)))
       (for-each (t (. g triples))
         (set! out (indexed-graph-add arena out t)))
@@ -260,6 +283,8 @@
     (@intent "Convert a general IndexedGraph into a Snarl data graph")
     (@spec ((Arena IndexedGraph) -> SnarlDataGraph))
     (@alloc arena)
+    (@pre (>= (indexed-graph-size g) 0))
+    (@post (>= (. $result size) 0))
     (let ((mut out (snarl-data-graph-create arena)))
       (for-each (t (. g triples))
         (set! out (snarl-data-graph-add arena out t)))

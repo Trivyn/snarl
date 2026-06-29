@@ -176,6 +176,8 @@
     (let ((mut results (list-new arena ValidationResult))
           (allowed-preds (set-new arena Term))
           (predicates (snarl-data-graph-predicates-for-subject arena data-graph focus-node)))
+      ;; Closed shapes only allow predicate paths here; complex ignored paths are
+      ;; preserved in allowed-paths but cannot match an outgoing predicate.
       (for-each (ap allowed-paths)
         (match ap
           ((path-predicate p) (set-put allowed-preds p))

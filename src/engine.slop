@@ -39,6 +39,7 @@
     (@intent "Count an optional term set")
     (@spec (((Option TermSet)) -> (Int 0 ..)))
     (@pure)
+    (@post (>= $result 0))
     (match values
       ((some terms) (snarl-data-graph-term-set-size terms))
       ((none) 0)))
@@ -47,6 +48,7 @@
     (@intent "Materialize an optional term set only when a list-based constraint needs it")
     (@spec ((Arena (Option TermSet)) -> (List Term)))
     (@alloc arena)
+    (@post (>= (list-len $result) 0))
     (match values
       ((some terms) (snarl-data-graph-term-set-to-list arena terms))
       ((none) (list-new arena Term))))
@@ -104,6 +106,8 @@
     (@alloc arena)
     (@pre (>= (snarl-data-graph-size data-graph) 0))
     (@example)
+    ;; Target and class indexes are per validation run: they cache shape-derived
+    ;; access patterns without becoming part of the data graph representation.
     (let ((class-index (build-class-index arena data-graph shapes-graph))
           (target-cache (target-cache-create arena))
           (mut report (make-validation-report arena))
@@ -227,6 +231,7 @@
         ->
         (List ValidationResult)))
     (@alloc arena)
+    (@post (>= (list-len $result) 0))
     (let ((path (. shape path)))
       (match path
         ((path-predicate pred)
@@ -253,6 +258,10 @@
         ->
         (List ValidationResult)))
     (@alloc arena)
+    (@post (>= (list-len $result) 0))
+    ;; Simple predicate paths dominate the benchmark fixtures. They can evaluate
+    ;; directly against the object set and only allocate a value list for
+    ;; constraints whose existing implementation requires list semantics.
     (let ((mut results (list-new arena ValidationResult))
           (shape-severity (. shape severity))
           (shape-message (. shape message))
@@ -286,6 +295,7 @@
         ->
         (List ValidationResult)))
     (@alloc arena)
+    (@post (>= (list-len $result) 0))
     (let ((mut results (list-new arena ValidationResult)))
       (match constraint
         ((con-class required-class)
@@ -458,6 +468,8 @@
         ->
         (List ValidationResult)))
     (@alloc arena)
+    (@post (>= (list-len $result) 0))
+    (@pre (>= value-count 0))
     (let ((mut results (list-new arena ValidationResult)))
       (match constraint
         ((con-min-count min-c)
@@ -537,6 +549,8 @@
         ->
         (List ValidationResult)))
     (@alloc arena)
+    (@pre (>= value-count 0))
+    (@post (>= (list-len $result) 0))
     (let ((mut results (list-new arena ValidationResult)))
       (match constraint
         ((con-min-count min-c)
@@ -560,6 +574,8 @@
                 (message message)))))
         ((con-closed _ _) (do))
         ((con-equals other-path)
+          ;; Pair constraints compare complete value sets, so they deliberately
+          ;; use the legacy list-based implementation after lazy materialization.
           (let ((value-nodes (optional-term-set-to-list arena value-set))
                 (eq-results (check-equals arena data-graph focus-node value-nodes other-path path shape-id severity message)))
             (for-each (r eq-results) (list-push results r))))

@@ -194,6 +194,8 @@ slop_option_index_IndexedGraph main_load_graph(slop_arena* arena, slop_string pa
 }
 
 slop_option_data_graph_SnarlDataGraph main_load_data_graph(slop_arena* arena, slop_string path, uint8_t quiet) {
+    SLOP_PRE(((string_len(path) > 0)), "(> (string-len path) 0)");
+    slop_option_data_graph_SnarlDataGraph _retval = {0};
     {
         __auto_type dg = snarl_data_graph_create(arena);
         __auto_type _mv_279 = ttl_parse_ttl_file_for_each_triple(arena, path, ({ main__lambda_278_env_t* main__lambda_278_env = (main__lambda_278_env_t*)slop_arena_alloc(arena, sizeof(main__lambda_278_env_t)); *main__lambda_278_env = (main__lambda_278_env_t){ .dg = &(dg), .arena = arena }; (slop_closure_t){ (void*)main__lambda_278, (void*)main__lambda_278_env }; }));
@@ -212,6 +214,8 @@ slop_option_data_graph_SnarlDataGraph main_load_data_graph(slop_arena* arena, sl
             return (slop_option_data_graph_SnarlDataGraph){.has_value = 1, .value = dg};
         }
     }
+    SLOP_POST((({ __auto_type _mv = _retval; _mv.has_value ? ({ __auto_type g = _mv.value; (snarl_data_graph_size(g) >= 0); }) : (1); })), "(match $result ((some g) (>= (snarl-data-graph-size g) 0)) ((none) true))");
+    return _retval;
 }
 
 int main(int argc, char** _c_argv) {

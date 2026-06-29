@@ -88,6 +88,10 @@
     (@alloc arena)
     (@pre (>= (snarl-data-graph-size data-graph) 0))
     (@pre (>= (indexed-graph-size shapes-graph) 0))
+    (@post
+      (match $result
+        ((validate-success report) (>= (list-len (. report results)) 0))
+        ((validate-error _) true)))
     :c-name
     "snarl_validate_data_graph"
     (validate-data-graph-with-config arena data-graph shapes-graph (default-config)))
@@ -98,6 +102,10 @@
     (@alloc arena)
     (@pre (>= (snarl-data-graph-size data-graph) 0))
     (@pre (>= (indexed-graph-size shapes-graph) 0))
+    (@post
+      (match $result
+        ((validate-success report) (>= (list-len (. report results)) 0))
+        ((validate-error _) true)))
     :c-name
     "snarl_validate_data_graph_with_config"
     (let ((shapes (parse-shapes-graph arena shapes-graph)))
@@ -125,6 +133,7 @@
     (@alloc arena)
     (@pre (>= (snarl-data-graph-size data-graph) 0))
     (@pre (>= (indexed-graph-size shapes-graph) 0))
+    (@post (or (== $result true) (== $result false)))
     :c-name
     "snarl_conforms_data_graph"
     (match (validate-data-graph arena data-graph shapes-graph)

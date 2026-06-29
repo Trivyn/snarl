@@ -178,6 +178,7 @@
   (fn print-ttl-error ((arena Arena) (path String) (e TtlFileError))
     (@intent "Print a Turtle file loading error")
     (@spec ((Arena String TtlFileError) -> Unit))
+    (@alloc arena)
     (print "Error: failed to parse ")
     (println path)
     (match e
@@ -215,6 +216,13 @@
     (@intent "Parse a Turtle file directly into SnarlDataGraph")
     (@spec ((Arena String Bool) -> (Option SnarlDataGraph)))
     (@alloc arena)
+    (@pre (> (string-len path) 0))
+    (@post
+      (match $result
+        ((some g) (>= (snarl-data-graph-size g) 0))
+        ((none) true)))
+    ;; The callback mutates dg as triples stream out of the Turtle parser, so the
+    ;; CLI avoids constructing a general RDF graph for large data files.
     (let ((mut dg (snarl-data-graph-create arena)))
       (match (parse-ttl-file-for-each-triple arena path
                (fn ((t Triple))
