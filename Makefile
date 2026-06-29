@@ -2,7 +2,7 @@
 # Build from transpiled C sources — no SLOP toolchain required.
 
 CC      ?= cc
-SNARL_VERSION ?= 0.3.0
+SNARL_VERSION ?= 0.3.1
 CFLAGS  ?= -O2 -Wall -Wno-unused-function -Wno-unused-variable \
            -Wno-return-type -Wno-pointer-sign \
            -DSLOP_ARENA_NO_CAP \

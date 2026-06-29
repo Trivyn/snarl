@@ -18,6 +18,7 @@ typedef struct ttl_StringResult ttl_StringResult;
 typedef struct ttl_EscapeResult ttl_EscapeResult;
 typedef struct ttl_TripleResult ttl_TripleResult;
 typedef struct ttl_TriplesResult ttl_TriplesResult;
+typedef struct ttl_GraphTriplesResult ttl_GraphTriplesResult;
 typedef struct ttl_TermTriplesResult ttl_TermTriplesResult;
 typedef struct ttl_TtlFileError ttl_TtlFileError;
 typedef struct ttl_TtlParseContext ttl_TtlParseContext;
@@ -181,6 +182,17 @@ typedef struct ttl_TriplesResult ttl_TriplesResult;
 SLOP_OPTION_DEFINE(ttl_TriplesResult, slop_option_ttl_TriplesResult)
 #endif
 
+struct ttl_GraphTriplesResult {
+    rdf_Graph graph;
+    ttl_TtlParseContext ctx;
+};
+typedef struct ttl_GraphTriplesResult ttl_GraphTriplesResult;
+
+#ifndef SLOP_OPTION_TTL_GRAPHTRIPLESRESULT_DEFINED
+#define SLOP_OPTION_TTL_GRAPHTRIPLESRESULT_DEFINED
+SLOP_OPTION_DEFINE(ttl_GraphTriplesResult, slop_option_ttl_GraphTriplesResult)
+#endif
+
 struct ttl_TermTriplesResult {
     rdf_Term term;
     slop_list_rdf_Triple extra_triples;
@@ -233,6 +245,11 @@ typedef struct { bool is_ok; union { ttl_TripleResult ok; common_ParseError err;
 typedef struct { bool is_ok; union { ttl_TriplesResult ok; common_ParseError err; } data; } slop_result_ttl_TriplesResult_common_ParseError;
 #endif
 
+#ifndef SLOP_RESULT_TTL_GRAPHTRIPLESRESULT_COMMON_PARSEERROR_DEFINED
+#define SLOP_RESULT_TTL_GRAPHTRIPLESRESULT_COMMON_PARSEERROR_DEFINED
+typedef struct { bool is_ok; union { ttl_GraphTriplesResult ok; common_ParseError err; } data; } slop_result_ttl_GraphTriplesResult_common_ParseError;
+#endif
+
 #ifndef SLOP_RESULT_RDF_GRAPH_COMMON_PARSEERROR_DEFINED
 #define SLOP_RESULT_RDF_GRAPH_COMMON_PARSEERROR_DEFINED
 typedef struct { bool is_ok; union { rdf_Graph ok; common_ParseError err; } data; } slop_result_rdf_Graph_common_ParseError;
@@ -274,6 +291,8 @@ slop_result_ttl_TripleResult_common_ParseError ttl_parse_triple(slop_arena* aren
 slop_result_ttl_TriplesResult_common_ParseError ttl_parse_predicate_object_list(slop_arena* arena, ttl_TtlParseContext ctx, rdf_Term subject);
 slop_result_ttl_TriplesResult_common_ParseError ttl_parse_annotation(slop_arena* arena, ttl_TtlParseContext ctx, rdf_Triple base_triple);
 slop_result_ttl_TriplesResult_common_ParseError ttl_parse_object_list(slop_arena* arena, ttl_TtlParseContext ctx, rdf_Term subject, rdf_Term predicate);
+slop_result_ttl_GraphTriplesResult_common_ParseError ttl_parse_object_list_into_graph(slop_arena* arena, ttl_TtlParseContext ctx, rdf_Graph g, rdf_Term subject, rdf_Term predicate);
+slop_result_ttl_GraphTriplesResult_common_ParseError ttl_parse_predicate_object_list_into_graph(slop_arena* arena, ttl_TtlParseContext ctx, rdf_Graph g, rdf_Term subject);
 slop_result_rdf_Graph_common_ParseError ttl_parse_ttl_string(slop_arena* arena, slop_string input);
 slop_result_rdf_Graph_ttl_TtlFileError ttl_parse_ttl_file(slop_arena* arena, slop_string path);
 uint8_t ttl_is_pn_chars_base(uint8_t c);
@@ -327,6 +346,11 @@ SLOP_OPTION_DEFINE(rdf_Triple, slop_option_rdf_Triple)
 #ifndef SLOP_OPTION_TTL_TRIPLESRESULT_DEFINED
 #define SLOP_OPTION_TTL_TRIPLESRESULT_DEFINED
 SLOP_OPTION_DEFINE(ttl_TriplesResult, slop_option_ttl_TriplesResult)
+#endif
+
+#ifndef SLOP_OPTION_TTL_GRAPHTRIPLESRESULT_DEFINED
+#define SLOP_OPTION_TTL_GRAPHTRIPLESRESULT_DEFINED
+SLOP_OPTION_DEFINE(ttl_GraphTriplesResult, slop_option_ttl_GraphTriplesResult)
 #endif
 
 #ifndef SLOP_OPTION_TTL_TERMTRIPLESRESULT_DEFINED
