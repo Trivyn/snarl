@@ -5,7 +5,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include "slop_rdf.h"
-#include "slop_index.h"
+#include "slop_data_graph.h"
 #include "slop_types.h"
 
 #ifndef SLOP_LIST_TYPES_SHACLPATH_DEFINED
@@ -116,18 +116,18 @@ static inline bool slop_eq_rdf_Term(const void* a, const void* b) {
 }
 #endif
 
-index_IndexedGraph path_fixture_g_alice_name(slop_arena* arena);
-index_IndexedGraph path_fixture_g_chain(slop_arena* arena);
-index_IndexedGraph path_fixture_g_alice_knows_bob(slop_arena* arena);
+data_graph_SnarlDataGraph path_fixture_g_alice_name(slop_arena* arena);
+data_graph_SnarlDataGraph path_fixture_g_chain(slop_arena* arena);
+data_graph_SnarlDataGraph path_fixture_g_alice_knows_bob(slop_arena* arena);
 slop_list_types_ShaclPath path_fixture_path_seq_knows_name(slop_arena* arena);
-slop_list_rdf_Term snarl_resolve_path(slop_arena* arena, index_IndexedGraph data_graph, rdf_Term focus_node, types_ShaclPath path);
-slop_list_rdf_Term snarl_resolve_path_from(slop_arena* arena, index_IndexedGraph data_graph, rdf_Term object, types_ShaclPath path);
-slop_list_rdf_Term path_resolve_sequence(slop_arena* arena, index_IndexedGraph g, rdf_Term focus, slop_list_types_ShaclPath steps);
-slop_list_rdf_Term path_resolve_alternative(slop_arena* arena, index_IndexedGraph g, rdf_Term focus, slop_list_types_ShaclPath alts);
-slop_list_rdf_Term path_resolve_inverse(slop_arena* arena, index_IndexedGraph g, rdf_Term focus, types_ShaclPath inner);
-slop_list_rdf_Term path_resolve_zero_or_more(slop_arena* arena, index_IndexedGraph g, rdf_Term focus, types_ShaclPath inner);
-slop_list_rdf_Term path_resolve_one_or_more(slop_arena* arena, index_IndexedGraph g, rdf_Term focus, types_ShaclPath inner);
-slop_list_rdf_Term path_resolve_zero_or_one(slop_arena* arena, index_IndexedGraph g, rdf_Term focus, types_ShaclPath inner);
+slop_list_rdf_Term snarl_resolve_path(slop_arena* arena, data_graph_SnarlDataGraph data_graph, rdf_Term focus_node, types_ShaclPath path);
+slop_list_rdf_Term snarl_resolve_path_from(slop_arena* arena, data_graph_SnarlDataGraph data_graph, rdf_Term object, types_ShaclPath path);
+slop_list_rdf_Term path_resolve_sequence(slop_arena* arena, data_graph_SnarlDataGraph g, rdf_Term focus, slop_list_types_ShaclPath steps);
+slop_list_rdf_Term path_resolve_alternative(slop_arena* arena, data_graph_SnarlDataGraph g, rdf_Term focus, slop_list_types_ShaclPath alts);
+slop_list_rdf_Term path_resolve_inverse(slop_arena* arena, data_graph_SnarlDataGraph g, rdf_Term focus, types_ShaclPath inner);
+slop_list_rdf_Term path_resolve_zero_or_more(slop_arena* arena, data_graph_SnarlDataGraph g, rdf_Term focus, types_ShaclPath inner);
+slop_list_rdf_Term path_resolve_one_or_more(slop_arena* arena, data_graph_SnarlDataGraph g, rdf_Term focus, types_ShaclPath inner);
+slop_list_rdf_Term path_resolve_zero_or_one(slop_arena* arena, data_graph_SnarlDataGraph g, rdf_Term focus, types_ShaclPath inner);
 
 /* Function name aliases for C interop */
 #define path_resolve_path snarl_resolve_path

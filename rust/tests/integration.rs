@@ -1,7 +1,7 @@
 use snarl::{
     conforms, get_result_count, get_violations, get_warnings, report_to_string, validate,
-    validate_with_config, Arena, IndexedGraph, OwnedValidationReport, OwnedValidatorResult,
-    Severity, Validator, ValidatorConfig, ValidatorResult,
+    validate_data_graph, validate_with_config, Arena, IndexedGraph, OwnedValidationReport,
+    OwnedValidatorResult, Severity, SnarlDataGraph, Validator, ValidatorConfig, ValidatorResult,
 };
 
 const SH: &str = "http://www.w3.org/ns/shacl#";
@@ -128,6 +128,29 @@ fn conforming_data() {
     data.add_triple(arena.make_triple(alice, name_prop, name_val));
 
     assert!(conforms(&arena, &data, &shapes));
+}
+
+#[test]
+fn fast_data_graph_validate() {
+    let arena = Arena::new(4 * 1024 * 1024);
+    let mut data = SnarlDataGraph::new(&arena);
+    let mut shapes = IndexedGraph::new(&arena);
+
+    let rdf_type = arena.make_iri(&format!("{RDF}type"));
+    let sh_node_shape = arena.make_iri(&format!("{SH}NodeShape"));
+    let sh_target_class = arena.make_iri(&format!("{SH}targetClass"));
+    let person_shape = arena.make_iri(&format!("{EX}PersonShape"));
+    let person = arena.make_iri(&format!("{EX}Person"));
+    let alice = arena.make_iri(&format!("{EX}alice"));
+
+    shapes.add_triple(arena.make_triple(person_shape, rdf_type, sh_node_shape));
+    shapes.add_triple(arena.make_triple(person_shape, sh_target_class, person));
+    data.add_triple(arena.make_triple(alice, rdf_type, person));
+
+    match validate_data_graph(&arena, &data, &shapes) {
+        ValidatorResult::Success(report) => assert!(report.conforms),
+        ValidatorResult::Error(msg) => panic!("unexpected error: {}", msg),
+    }
 }
 
 // ---------------------------------------------------------------------------
@@ -344,7 +367,11 @@ fn graph_match_pattern() {
 fn literal_and_blank_terms() {
     let arena = Arena::new(1024 * 1024);
 
-    let lit = arena.make_literal("hello", Some("http://www.w3.org/2001/XMLSchema#string"), None);
+    let lit = arena.make_literal(
+        "hello",
+        Some("http://www.w3.org/2001/XMLSchema#string"),
+        None,
+    );
     let t = snarl::Term::from_ffi(lit);
     assert!(matches!(t, snarl::Term::Literal { value: "hello", .. }));
 

@@ -1,6 +1,8 @@
 (module snarl
   (import rdf (Term Triple))
   (import index (IndexedGraph indexed-graph-size indexed-graph-create))
+  (import data-graph
+    (SnarlDataGraph snarl-data-graph-size snarl-data-graph-create snarl-data-graph-from-indexed))
   (import types
     (ShaclPath NodeKind Severity Constraint PropertyShape NodeShape ShapesGraph ValidationResult ValidationReport ValidatorConfig ValidatorResult default-validator-config make-validation-report report-conforms))
   (import parse (parse-shapes-graph))
@@ -21,7 +23,10 @@
     ValidatorResult
     validate
     validate-with-config
+    validate-data-graph
+    validate-data-graph-with-config
     conforms
+    conforms-data-graph
     default-config
     get-violations
     get-warnings
@@ -74,6 +79,35 @@
         (default-config)))
     :c-name
     "snarl_validate_with_config"
+    (let ((fast-data (snarl-data-graph-from-indexed arena data-graph)))
+      (validate-data-graph-with-config arena fast-data shapes-graph config)))
+
+  (fn validate-data-graph ((arena Arena) (data-graph SnarlDataGraph) (shapes-graph IndexedGraph))
+    (@intent "Validate a Snarl fast data graph against a shapes graph using default config")
+    (@spec ((Arena SnarlDataGraph IndexedGraph) -> ValidatorResult))
+    (@alloc arena)
+    (@pre (>= (snarl-data-graph-size data-graph) 0))
+    (@pre (>= (indexed-graph-size shapes-graph) 0))
+    (@post
+      (match $result
+        ((validate-success report) (>= (list-len (. report results)) 0))
+        ((validate-error _) true)))
+    :c-name
+    "snarl_validate_data_graph"
+    (validate-data-graph-with-config arena data-graph shapes-graph (default-config)))
+
+  (fn validate-data-graph-with-config ((arena Arena) (data-graph SnarlDataGraph) (shapes-graph IndexedGraph) (config ValidatorConfig))
+    (@intent "Validate a Snarl fast data graph against a shapes graph with custom config")
+    (@spec ((Arena SnarlDataGraph IndexedGraph ValidatorConfig) -> ValidatorResult))
+    (@alloc arena)
+    (@pre (>= (snarl-data-graph-size data-graph) 0))
+    (@pre (>= (indexed-graph-size shapes-graph) 0))
+    (@post
+      (match $result
+        ((validate-success report) (>= (list-len (. report results)) 0))
+        ((validate-error _) true)))
+    :c-name
+    "snarl_validate_data_graph_with_config"
     (let ((shapes (parse-shapes-graph arena shapes-graph)))
       (engine-validate arena data-graph shapes config)))
 
@@ -90,6 +124,19 @@
     :c-name
     "snarl_conforms"
     (match (validate arena data-graph shapes-graph)
+      ((validate-success report) (report-conforms report))
+      ((validate-error _) false)))
+
+  (fn conforms-data-graph ((arena Arena) (data-graph SnarlDataGraph) (shapes-graph IndexedGraph))
+    (@intent "Quick boolean check for a Snarl fast data graph")
+    (@spec ((Arena SnarlDataGraph IndexedGraph) -> Bool))
+    (@alloc arena)
+    (@pre (>= (snarl-data-graph-size data-graph) 0))
+    (@pre (>= (indexed-graph-size shapes-graph) 0))
+    (@post (or (== $result true) (== $result false)))
+    :c-name
+    "snarl_conforms_data_graph"
+    (match (validate-data-graph arena data-graph shapes-graph)
       ((validate-success report) (report-conforms report))
       ((validate-error _) false)))
 

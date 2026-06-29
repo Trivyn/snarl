@@ -58,16 +58,18 @@ Use `Validator::conforms()` when you only need a boolean conformance check.
 
 ## Lower-Level API
 
-For explicit arena and graph control, use `Arena` and `IndexedGraph` directly:
+For explicit arena and graph control, use `Arena`, `SnarlDataGraph`, and
+`IndexedGraph` directly. `SnarlDataGraph` is optimized for validation data;
+shapes continue to use `IndexedGraph`.
 
 ```rust
-use snarl::{validate, Arena, IndexedGraph, ValidatorResult};
+use snarl::{validate_data_graph, Arena, IndexedGraph, SnarlDataGraph, ValidatorResult};
 
 let arena = Arena::with_default_capacity();
-let data = IndexedGraph::new(&arena);
+let data = SnarlDataGraph::new(&arena);
 let shapes = IndexedGraph::new(&arena);
 
-match validate(&arena, &data, &shapes) {
+match validate_data_graph(&arena, &data, &shapes) {
     ValidatorResult::Success(report) => {
         assert!(report.conforms);
     }

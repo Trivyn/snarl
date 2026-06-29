@@ -17,9 +17,10 @@
 
   (import rdf (Term Triple Graph GraphSize make-graph graph-size make-iri))
   (import index (IndexedGraph indexed-graph-create indexed-graph-add indexed-graph-size))
-  (import ttl (parse-ttl-file TtlFileError))
+  (import data-graph (SnarlDataGraph snarl-data-graph-create snarl-data-graph-add snarl-data-graph-size))
+  (import ttl (parse-ttl-file parse-ttl-file-for-each-triple TtlFileError))
   (import common (ParseError Position))
-  (import snarl (validate validate-with-config conforms default-config
+  (import snarl (validate validate-with-config validate-data-graph-with-config conforms default-config
                  ValidatorConfig ValidatorResult ValidationReport
                  get-violations get-warnings get-result-count
                  report-to-string report-to-graph))
@@ -174,24 +175,30 @@
   ;; File Loading Helper
   ;; ============================================================
 
+  (fn print-ttl-error ((arena Arena) (path String) (e TtlFileError))
+    (@intent "Print a Turtle file loading error")
+    (@spec ((Arena String TtlFileError) -> Unit))
+    (@alloc arena)
+    (print "Error: failed to parse ")
+    (println path)
+    (match e
+      ((parse-error pe)
+        (print "  at line ")
+        (print (int-to-string arena (. (. pe position) line)))
+        (print ", column ")
+        (println (int-to-string arena (. (. pe position) column)))
+        (print "  ")
+        (println (. pe message)))
+      ((file-error _)
+        (println "  (file not found or unreadable)"))))
+
   (fn load-graph ((arena Arena) (path String) (quiet Bool))
     (@intent "Parse a Turtle file and convert to IndexedGraph")
     (@spec ((Arena String Bool) -> (Option IndexedGraph)))
     (@alloc arena)
     (match (parse-ttl-file arena path)
       ((error e)
-        (print "Error: failed to parse ")
-        (println path)
-        (match e
-          ((parse-error pe)
-            (print "  at line ")
-            (print (int-to-string arena (. (. pe position) line)))
-            (print ", column ")
-            (println (int-to-string arena (. (. pe position) column)))
-            (print "  ")
-            (println (. pe message)))
-          ((file-error _)
-            (println "  (file not found or unreadable)")))
+        (print-ttl-error arena path e)
         (none))
       ((ok g)
         ;; Convert Graph to IndexedGraph (no annotation filtering needed for SHACL)
@@ -204,6 +211,32 @@
             (print " triples from ")
             (println path))
           (some ig)))))
+
+  (fn load-data-graph ((arena Arena) (path String) (quiet Bool))
+    (@intent "Parse a Turtle file directly into SnarlDataGraph")
+    (@spec ((Arena String Bool) -> (Option SnarlDataGraph)))
+    (@alloc arena)
+    (@pre (> (string-len path) 0))
+    (@post
+      (match $result
+        ((some g) (>= (snarl-data-graph-size g) 0))
+        ((none) true)))
+    ;; The callback mutates dg as triples stream out of the Turtle parser, so the
+    ;; CLI avoids constructing a general RDF graph for large data files.
+    (let ((mut dg (snarl-data-graph-create arena)))
+      (match (parse-ttl-file-for-each-triple arena path
+               (fn ((t Triple))
+                 (set! dg (snarl-data-graph-add arena dg t))))
+        ((error e)
+          (print-ttl-error arena path e)
+          (none))
+        ((ok _)
+          (when (not quiet)
+            (print "Parsed ")
+            (print (int-to-string arena (snarl-data-graph-size dg)))
+            (print " triples from ")
+            (println path))
+          (some dg)))))
 
   ;; ============================================================
   ;; Main
@@ -237,7 +270,7 @@
                   (parse-start (slop_now_ms)))
 
             ;; Load data graph
-            (match (load-graph arena data-path quiet)
+            (match (load-data-graph arena data-path quiet)
               ((none) 2)  ;; Parse error
               ((some data-graph)
 
@@ -245,11 +278,7 @@
                 (let ((shapes-path (match (. args shapes-file)
                                      ((some sp) sp)
                                      ((none) data-path))))
-                  ;; If shapes-file is same as data-file, reuse the graph
-                  (let ((shapes-result
-                          (if (string-eq shapes-path data-path)
-                            (some data-graph)
-                            (load-graph arena shapes-path quiet))))
+                  (let ((shapes-result (load-graph arena shapes-path quiet)))
                     (match shapes-result
                       ((none) 2)  ;; Parse error
                       ((some shapes-graph)
@@ -263,7 +292,7 @@
                                         (include-infos (not (. args no-infos))))))
 
                           ;; Run validation
-                          (match (validate-with-config arena data-graph shapes-graph config)
+                          (match (validate-data-graph-with-config arena data-graph shapes-graph config)
                             ((validate-success report)
                               (let ((validate-elapsed (- (slop_now_ms) validate-start))
                                     (violations (get-violations arena report))

@@ -1,17 +1,14 @@
-#ifndef SLOP_index_H
-#define SLOP_index_H
+#ifndef SLOP_data_graph_H
+#define SLOP_data_graph_H
 
 #include "../runtime/slop_runtime.h"
 #include <stdint.h>
 #include <stdbool.h>
 #include "slop_rdf.h"
+#include "slop_index.h"
 
-typedef struct index_TripleIndex index_TripleIndex;
-typedef struct index_IndexedGraph index_IndexedGraph;
-
-typedef slop_map* index_TermSet;
-
-typedef slop_map* index_TermSetMap;
+typedef struct data_graph_SnarlDataIndex data_graph_SnarlDataIndex;
+typedef struct data_graph_SnarlDataGraph data_graph_SnarlDataGraph;
 
 #ifndef SLOP_LIST_RDF_TERM_DEFINED
 #define SLOP_LIST_RDF_TERM_DEFINED
@@ -28,34 +25,44 @@ SLOP_LIST_DEFINE(rdf_Triple, slop_list_rdf_Triple)
 SLOP_OPTION_DEFINE(rdf_Term, slop_option_rdf_Term)
 #endif
 
+#ifndef SLOP_OPTION_INDEX_TERMSETMAP_DEFINED
+#define SLOP_OPTION_INDEX_TERMSETMAP_DEFINED
+SLOP_OPTION_DEFINE(index_TermSetMap, slop_option_index_TermSetMap)
+#endif
+
+#ifndef SLOP_OPTION_INDEX_TERMSET_DEFINED
+#define SLOP_OPTION_INDEX_TERMSET_DEFINED
+SLOP_OPTION_DEFINE(index_TermSet, slop_option_index_TermSet)
+#endif
+
 #ifndef SLOP_OPTION_RDF_TRIPLE_DEFINED
 #define SLOP_OPTION_RDF_TRIPLE_DEFINED
 SLOP_OPTION_DEFINE(rdf_Triple, slop_option_rdf_Triple)
 #endif
 
-struct index_TripleIndex {
-    slop_map* spo;
-    slop_map* pso;
-    slop_map* osp;
-    slop_map* pos;
+struct data_graph_SnarlDataIndex {
+    slop_map* sp;
+    slop_map* po;
+    slop_map* p_subjects;
+    slop_map* p_objects;
 };
-typedef struct index_TripleIndex index_TripleIndex;
+typedef struct data_graph_SnarlDataIndex data_graph_SnarlDataIndex;
 
-#ifndef SLOP_OPTION_INDEX_TRIPLEINDEX_DEFINED
-#define SLOP_OPTION_INDEX_TRIPLEINDEX_DEFINED
-SLOP_OPTION_DEFINE(index_TripleIndex, slop_option_index_TripleIndex)
+#ifndef SLOP_OPTION_DATA_GRAPH_SNARLDATAINDEX_DEFINED
+#define SLOP_OPTION_DATA_GRAPH_SNARLDATAINDEX_DEFINED
+SLOP_OPTION_DEFINE(data_graph_SnarlDataIndex, slop_option_data_graph_SnarlDataIndex)
 #endif
 
-struct index_IndexedGraph {
+struct data_graph_SnarlDataGraph {
     slop_list_rdf_Triple triples;
-    index_TripleIndex index;
+    data_graph_SnarlDataIndex index;
     int64_t size;
 };
-typedef struct index_IndexedGraph index_IndexedGraph;
+typedef struct data_graph_SnarlDataGraph data_graph_SnarlDataGraph;
 
-#ifndef SLOP_OPTION_INDEX_INDEXEDGRAPH_DEFINED
-#define SLOP_OPTION_INDEX_INDEXEDGRAPH_DEFINED
-SLOP_OPTION_DEFINE(index_IndexedGraph, slop_option_index_IndexedGraph)
+#ifndef SLOP_OPTION_DATA_GRAPH_SNARLDATAGRAPH_DEFINED
+#define SLOP_OPTION_DATA_GRAPH_SNARLDATAGRAPH_DEFINED
+SLOP_OPTION_DEFINE(data_graph_SnarlDataGraph, slop_option_data_graph_SnarlDataGraph)
 #endif
 
 
@@ -146,33 +153,43 @@ static inline bool slop_eq_rdf_Term(const void* a, const void* b) {
 }
 #endif
 
-index_IndexedGraph rdf_indexed_graph_create(slop_arena* arena);
-index_IndexedGraph rdf_indexed_graph_add(slop_arena* arena, index_IndexedGraph g, rdf_Triple t);
-uint8_t rdf_indexed_graph_contains(index_IndexedGraph g, rdf_Triple t);
-slop_list_rdf_Triple rdf_indexed_graph_match(slop_arena* arena, index_IndexedGraph g, slop_option_rdf_Term subj, slop_option_rdf_Term pred, slop_option_rdf_Term obj);
-void rdf_indexed_graph_for_each(index_IndexedGraph g, slop_option_rdf_Term subj, slop_option_rdf_Term pred, slop_option_rdf_Term obj, slop_closure_t callback);
-int64_t rdf_indexed_graph_size(index_IndexedGraph g);
-slop_list_rdf_Term rdf_indexed_graph_subjects(slop_arena* arena, index_IndexedGraph g, rdf_Term pred, rdf_Term obj);
-slop_list_rdf_Term rdf_indexed_graph_objects(slop_arena* arena, index_IndexedGraph g, rdf_Term subj, rdf_Term pred);
+data_graph_SnarlDataGraph snarl_data_graph_create(slop_arena* arena);
+index_TermSet data_graph_make_term_set(slop_arena* arena, rdf_Term value);
+void data_graph_add_to_nested_set(slop_arena* arena, slop_map* outer, rdf_Term first, rdf_Term second, rdf_Term value);
+void data_graph_add_to_flat_set(slop_arena* arena, slop_map* outer, rdf_Term key, rdf_Term value);
+uint8_t snarl_data_graph_contains(data_graph_SnarlDataGraph g, rdf_Triple t);
+slop_option_index_TermSet data_graph_snarl_data_graph_object_set(data_graph_SnarlDataGraph g, rdf_Term subj, rdf_Term pred);
+int64_t data_graph_snarl_data_graph_term_set_size(index_TermSet terms);
+slop_list_rdf_Term data_graph_snarl_data_graph_term_set_to_list(slop_arena* arena, index_TermSet terms);
+uint8_t data_graph_snarl_data_graph_has_object(data_graph_SnarlDataGraph g, rdf_Term subj, rdf_Term pred, rdf_Term obj);
+uint8_t data_graph_add_to_sp_index_if_new(slop_arena* arena, slop_map* outer, rdf_Term subj, rdf_Term pred, rdf_Term obj);
+data_graph_SnarlDataGraph snarl_data_graph_add(slop_arena* arena, data_graph_SnarlDataGraph g, rdf_Triple t);
+int64_t snarl_data_graph_size(data_graph_SnarlDataGraph g);
+slop_list_rdf_Term snarl_data_graph_objects(slop_arena* arena, data_graph_SnarlDataGraph g, rdf_Term subj, rdf_Term pred);
+slop_list_rdf_Term snarl_data_graph_subjects(slop_arena* arena, data_graph_SnarlDataGraph g, rdf_Term pred, rdf_Term obj);
+slop_list_rdf_Term snarl_data_graph_subjects_of(slop_arena* arena, data_graph_SnarlDataGraph g, rdf_Term pred);
+slop_list_rdf_Term snarl_data_graph_objects_of(slop_arena* arena, data_graph_SnarlDataGraph g, rdf_Term pred);
+slop_list_rdf_Term data_graph_snarl_data_graph_predicates_for_subject(slop_arena* arena, data_graph_SnarlDataGraph g, rdf_Term subj);
+slop_list_rdf_Triple snarl_data_graph_triples_for_subject(slop_arena* arena, data_graph_SnarlDataGraph g, rdf_Term subj);
+index_IndexedGraph snarl_data_graph_to_indexed(slop_arena* arena, data_graph_SnarlDataGraph g);
+data_graph_SnarlDataGraph snarl_data_graph_from_indexed(slop_arena* arena, index_IndexedGraph g);
 
 /* Function name aliases for C interop */
-#define index_indexed_graph_create rdf_indexed_graph_create
-#define index_indexed_graph_add rdf_indexed_graph_add
-#define index_indexed_graph_contains rdf_indexed_graph_contains
-#define index_indexed_graph_match rdf_indexed_graph_match
-#define index_indexed_graph_for_each rdf_indexed_graph_for_each
-#define index_indexed_graph_size rdf_indexed_graph_size
-#define index_indexed_graph_subjects rdf_indexed_graph_subjects
-#define index_indexed_graph_objects rdf_indexed_graph_objects
+#define data_graph_snarl_data_graph_create snarl_data_graph_create
+#define data_graph_snarl_data_graph_contains snarl_data_graph_contains
+#define data_graph_snarl_data_graph_add snarl_data_graph_add
+#define data_graph_snarl_data_graph_size snarl_data_graph_size
+#define data_graph_snarl_data_graph_objects snarl_data_graph_objects
+#define data_graph_snarl_data_graph_subjects snarl_data_graph_subjects
+#define data_graph_snarl_data_graph_subjects_of snarl_data_graph_subjects_of
+#define data_graph_snarl_data_graph_objects_of snarl_data_graph_objects_of
+#define data_graph_snarl_data_graph_triples_for_subject snarl_data_graph_triples_for_subject
+#define data_graph_snarl_data_graph_to_indexed snarl_data_graph_to_indexed
+#define data_graph_snarl_data_graph_from_indexed snarl_data_graph_from_indexed
 
 #ifndef SLOP_OPTION_RDF_TERM_DEFINED
 #define SLOP_OPTION_RDF_TERM_DEFINED
 SLOP_OPTION_DEFINE(rdf_Term, slop_option_rdf_Term)
-#endif
-
-#ifndef SLOP_OPTION_INDEX_TERMSET_DEFINED
-#define SLOP_OPTION_INDEX_TERMSET_DEFINED
-SLOP_OPTION_DEFINE(index_TermSet, slop_option_index_TermSet)
 #endif
 
 #ifndef SLOP_OPTION_INDEX_TERMSETMAP_DEFINED
@@ -180,9 +197,14 @@ SLOP_OPTION_DEFINE(index_TermSet, slop_option_index_TermSet)
 SLOP_OPTION_DEFINE(index_TermSetMap, slop_option_index_TermSetMap)
 #endif
 
-#ifndef SLOP_OPTION_INDEX_TRIPLEINDEX_DEFINED
-#define SLOP_OPTION_INDEX_TRIPLEINDEX_DEFINED
-SLOP_OPTION_DEFINE(index_TripleIndex, slop_option_index_TripleIndex)
+#ifndef SLOP_OPTION_INDEX_TERMSET_DEFINED
+#define SLOP_OPTION_INDEX_TERMSET_DEFINED
+SLOP_OPTION_DEFINE(index_TermSet, slop_option_index_TermSet)
+#endif
+
+#ifndef SLOP_OPTION_DATA_GRAPH_SNARLDATAINDEX_DEFINED
+#define SLOP_OPTION_DATA_GRAPH_SNARLDATAINDEX_DEFINED
+SLOP_OPTION_DEFINE(data_graph_SnarlDataIndex, slop_option_data_graph_SnarlDataIndex)
 #endif
 
 #ifndef SLOP_OPTION_RDF_TRIPLE_DEFINED
@@ -190,9 +212,9 @@ SLOP_OPTION_DEFINE(index_TripleIndex, slop_option_index_TripleIndex)
 SLOP_OPTION_DEFINE(rdf_Triple, slop_option_rdf_Triple)
 #endif
 
-#ifndef SLOP_OPTION_INDEX_INDEXEDGRAPH_DEFINED
-#define SLOP_OPTION_INDEX_INDEXEDGRAPH_DEFINED
-SLOP_OPTION_DEFINE(index_IndexedGraph, slop_option_index_IndexedGraph)
+#ifndef SLOP_OPTION_DATA_GRAPH_SNARLDATAGRAPH_DEFINED
+#define SLOP_OPTION_DATA_GRAPH_SNARLDATAGRAPH_DEFINED
+SLOP_OPTION_DEFINE(data_graph_SnarlDataGraph, slop_option_data_graph_SnarlDataGraph)
 #endif
 
 

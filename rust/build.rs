@@ -7,6 +7,7 @@ fn main() {
     let sources = [
         "slop_cardinality.c",
         "slop_common.c",
+        "slop_data_graph.c",
         "slop_engine.c",
         "slop_file.c",
         "slop_index.c",

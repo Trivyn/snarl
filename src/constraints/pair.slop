@@ -11,7 +11,7 @@
   (@doc "SHACL property pair constraints: sh:equals, sh:disjoint, sh:lessThan, sh:lessThanOrEquals")
 
   (import rdf (Term term-eq make-iri make-literal make-triple))
-  (import index (IndexedGraph indexed-graph-create indexed-graph-add))
+  (import data-graph (SnarlDataGraph snarl-data-graph-create snarl-data-graph-add))
   (import path (resolve-path))
   (import xsd (xsd-compare XsdCompareResult))
   (import vocab (SHACL_EQUALS SHACL_DISJOINT SHACL_LESS_THAN SHACL_LESS_THAN_OR_EQUALS))
@@ -30,9 +30,9 @@
 
   (fn fixture-g-focus-p2-a ((arena Arena))
     (@intent "Graph with (focus ex:p2 ex:a)")
-    (@spec ((Arena) -> IndexedGraph))
-    (let ((mut g (indexed-graph-create arena)))
-      (set! g (indexed-graph-add arena g
+    (@spec ((Arena) -> SnarlDataGraph))
+    (let ((mut g (snarl-data-graph-create arena)))
+      (set! g (snarl-data-graph-add arena g
         (make-triple arena (make-iri arena EX_FOCUS) (make-iri arena EX_P2) (make-iri arena EX_A))))
       g))
 
@@ -53,12 +53,12 @@
   ;; sh:equals
   ;; ============================================================
 
-  (fn check-equals ((arena Arena) (data-graph IndexedGraph) (focus-node Term)
+  (fn check-equals ((arena Arena) (data-graph SnarlDataGraph) (focus-node Term)
                     (value-nodes (List Term)) (other-path ShaclPath)
                     (path (Option ShaclPath)) (shape-id Term)
                     (severity Severity) (message (Option String)))
     (@intent "Check sh:equals constraint: value set must equal other path's value set")
-    (@spec ((Arena IndexedGraph Term (List Term) ShaclPath (Option ShaclPath) Term Severity (Option String))
+    (@spec ((Arena SnarlDataGraph Term (List Term) ShaclPath (Option ShaclPath) Term Severity (Option String))
             -> (List ValidationResult)))
     (@alloc arena)
     (@pre {(list-len value-nodes) >= 0})
@@ -107,12 +107,12 @@
   ;; sh:disjoint
   ;; ============================================================
 
-  (fn check-disjoint ((arena Arena) (data-graph IndexedGraph) (focus-node Term)
+  (fn check-disjoint ((arena Arena) (data-graph SnarlDataGraph) (focus-node Term)
                       (value-nodes (List Term)) (other-path ShaclPath)
                       (path (Option ShaclPath)) (shape-id Term)
                       (severity Severity) (message (Option String)))
     (@intent "Check sh:disjoint constraint: value set must not overlap other path's value set")
-    (@spec ((Arena IndexedGraph Term (List Term) ShaclPath (Option ShaclPath) Term Severity (Option String))
+    (@spec ((Arena SnarlDataGraph Term (List Term) ShaclPath (Option ShaclPath) Term Severity (Option String))
             -> (List ValidationResult)))
     (@alloc arena)
     (@pre {(list-len value-nodes) >= 0})
@@ -145,12 +145,12 @@
   ;; sh:lessThan
   ;; ============================================================
 
-  (fn check-less-than ((arena Arena) (data-graph IndexedGraph) (focus-node Term)
+  (fn check-less-than ((arena Arena) (data-graph SnarlDataGraph) (focus-node Term)
                        (value-nodes (List Term)) (other-path ShaclPath)
                        (path (Option ShaclPath)) (shape-id Term)
                        (severity Severity) (message (Option String)))
     (@intent "Check sh:lessThan constraint: each value must be < each value of other path")
-    (@spec ((Arena IndexedGraph Term (List Term) ShaclPath (Option ShaclPath) Term Severity (Option String))
+    (@spec ((Arena SnarlDataGraph Term (List Term) ShaclPath (Option ShaclPath) Term Severity (Option String))
             -> (List ValidationResult)))
     (@alloc arena)
     (@pre {(list-len value-nodes) >= 0})
@@ -188,12 +188,12 @@
   ;; sh:lessThanOrEquals
   ;; ============================================================
 
-  (fn check-less-than-or-equals ((arena Arena) (data-graph IndexedGraph) (focus-node Term)
+  (fn check-less-than-or-equals ((arena Arena) (data-graph SnarlDataGraph) (focus-node Term)
                                  (value-nodes (List Term)) (other-path ShaclPath)
                                  (path (Option ShaclPath)) (shape-id Term)
                                  (severity Severity) (message (Option String)))
     (@intent "Check sh:lessThanOrEquals constraint: each value must be <= each value of other path")
-    (@spec ((Arena IndexedGraph Term (List Term) ShaclPath (Option ShaclPath) Term Severity (Option String))
+    (@spec ((Arena SnarlDataGraph Term (List Term) ShaclPath (Option ShaclPath) Term Severity (Option String))
             -> (List ValidationResult)))
     (@alloc arena)
     (@pre {(list-len value-nodes) >= 0})

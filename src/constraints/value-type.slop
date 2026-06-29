@@ -11,9 +11,8 @@
 
   (import rdf (Term term-eq term-kind make-iri make-literal make-triple
                triple-subject triple-predicate triple-object IRI Literal TermKind))
-  (import index (IndexedGraph indexed-graph-match indexed-graph-subjects
-                 indexed-graph-size
-                 indexed-graph-create indexed-graph-add))
+  (import data-graph (SnarlDataGraph snarl-data-graph-size
+                      snarl-data-graph-create snarl-data-graph-add))
   (import vocab (RDF_TYPE
                  SHACL_CLASS SHACL_DATATYPE SHACL_NODE_KIND
                  XSD_STRING XSD_INTEGER))
@@ -32,16 +31,16 @@
 
   (fn fixture-g-focus-is-person ((arena Arena))
     (@intent "Graph with (focus rdf:type Person)")
-    (@spec ((Arena) -> IndexedGraph))
-    (let ((mut g (indexed-graph-create arena)))
-      (set! g (indexed-graph-add arena g
+    (@spec ((Arena) -> SnarlDataGraph))
+    (let ((mut g (snarl-data-graph-create arena)))
+      (set! g (snarl-data-graph-add arena g
         (make-triple arena (make-iri arena EX_FOCUS) (make-iri arena RDF_TYPE) (make-iri arena EX_PERSON))))
       g))
 
   (fn fixture-g-empty ((arena Arena))
     (@intent "Empty graph for testing")
-    (@spec ((Arena) -> IndexedGraph))
-    (indexed-graph-create arena))
+    (@spec ((Arena) -> SnarlDataGraph))
+    (snarl-data-graph-create arena))
 
   (export
     check-class
@@ -53,15 +52,15 @@
   ;; sh:class — Value must be an instance of the given class
   ;; ============================================================
 
-  (fn check-class ((arena Arena) (data-graph IndexedGraph) (focus-node Term)
+  (fn check-class ((arena Arena) (data-graph SnarlDataGraph) (focus-node Term)
                    (value-node Term) (required-class Term)
                    (path (Option ShaclPath)) (shape-id Term) (severity Severity)
                    (message (Option String)))
     (@intent "Check sh:class: value node must be a SHACL instance of the required class — rdf:type the class itself or any transitive rdfs:subClassOf of it (SHACL 4.1)")
-    (@spec ((Arena IndexedGraph Term Term Term (Option ShaclPath) Term Severity (Option String))
+    (@spec ((Arena SnarlDataGraph Term Term Term (Option ShaclPath) Term Severity (Option String))
             -> (Option ValidationResult)))
     (@alloc arena)
-    (@pre {(indexed-graph-size data-graph) >= 0})
+    (@pre {(snarl-data-graph-size data-graph) >= 0})
     ;; Conforms (no result) iff the value node is a SHACL instance of the required
     ;; class — i.e. rdf:type C' for C' = required-class or a transitive subclass.
     ;; Pins the semantics to that relation so the check cannot silently regress to a
@@ -101,13 +100,13 @@
       (severity severity)
       (message message)))
 
-  (fn check-class-with-index ((arena Arena) (data-graph IndexedGraph)
+  (fn check-class-with-index ((arena Arena) (data-graph SnarlDataGraph)
                               (class-index ClassIndex) (focus-node Term)
                               (value-node Term) (required-class Term)
                               (path (Option ShaclPath)) (shape-id Term)
                               (severity Severity) (message (Option String)))
     (@intent "Check sh:class using a validation-time class membership index when available")
-    (@spec ((Arena IndexedGraph ClassIndex Term Term Term (Option ShaclPath) Term Severity (Option String))
+    (@spec ((Arena SnarlDataGraph ClassIndex Term Term Term (Option ShaclPath) Term Severity (Option String))
             -> (Option ValidationResult)))
     (@alloc arena)
     (if (class-index-has-class class-index required-class)

@@ -9,8 +9,8 @@
 (module other
   (@doc "SHACL other constraints: sh:closed, sh:hasValue, sh:in")
 
-  (import rdf (Term Triple term-eq triple-predicate make-iri make-literal make-triple))
-  (import index (IndexedGraph indexed-graph-match indexed-graph-create indexed-graph-add))
+  (import rdf (Term term-eq make-iri make-literal make-triple))
+  (import data-graph (SnarlDataGraph snarl-data-graph-predicates-for-subject snarl-data-graph-create snarl-data-graph-add))
   (import vocab (SHACL_CLOSED SHACL_HAS_VALUE SHACL_IN))
   (import types (Severity Constraint ValidationResult ShaclPath))
 
@@ -52,19 +52,19 @@
 
   (fn fixture-g-focus-name ((arena Arena))
     (@intent "Graph with (focus ex:name 'Alice')")
-    (@spec ((Arena) -> IndexedGraph))
-    (let ((mut g (indexed-graph-create arena)))
-      (set! g (indexed-graph-add arena g
+    (@spec ((Arena) -> SnarlDataGraph))
+    (let ((mut g (snarl-data-graph-create arena)))
+      (set! g (snarl-data-graph-add arena g
         (make-triple arena (make-iri arena EX_FOCUS) (make-iri arena EX_NAME) (make-literal arena "Alice" (none) (none)))))
       g))
 
   (fn fixture-g-focus-name-age ((arena Arena))
     (@intent "Graph with (focus ex:name 'Alice'), (focus ex:age 30) — age not allowed")
-    (@spec ((Arena) -> IndexedGraph))
-    (let ((mut g (indexed-graph-create arena)))
-      (set! g (indexed-graph-add arena g
+    (@spec ((Arena) -> SnarlDataGraph))
+    (let ((mut g (snarl-data-graph-create arena)))
+      (set! g (snarl-data-graph-add arena g
         (make-triple arena (make-iri arena EX_FOCUS) (make-iri arena EX_NAME) (make-literal arena "Alice" (none) (none)))))
-      (set! g (indexed-graph-add arena g
+      (set! g (snarl-data-graph-add arena g
         (make-triple arena (make-iri arena EX_FOCUS) (make-iri arena "http://example.org/age") (make-literal arena "30" (none) (none)))))
       g))
 
@@ -151,11 +151,11 @@
   ;; sh:closed — Only allowed properties may be present
   ;; ============================================================
 
-  (fn check-closed ((arena Arena) (data-graph IndexedGraph) (focus-node Term)
+  (fn check-closed ((arena Arena) (data-graph SnarlDataGraph) (focus-node Term)
                     (allowed-paths (List ShaclPath)) (path (Option ShaclPath))
                     (shape-id Term) (severity Severity) (message (Option String)))
     (@intent "Check sh:closed constraint: focus node must not have unexpected properties")
-    (@spec ((Arena IndexedGraph Term (List ShaclPath) (Option ShaclPath) Term Severity (Option String))
+    (@spec ((Arena SnarlDataGraph Term (List ShaclPath) (Option ShaclPath) Term Severity (Option String))
             -> (List ValidationResult)))
     (@alloc arena)
     (@pre {(list-len allowed-paths) >= 0})
@@ -174,25 +174,24 @@
       ;; ex:age present but not in allowed paths → 1 violation
       )
     (let ((mut results (list-new arena ValidationResult))
-          (triples (indexed-graph-match arena data-graph (some focus-node) (none) (none))))
-      (for-each (triple triples)
-        (let ((pred (triple-predicate triple))
-              (mut allowed false))
-          (for-each (ap allowed-paths)
-            (match ap
-              ((path-predicate p)
-                (when (term-eq p pred)
-                  (set! allowed true)))
-              (_ (do))))
-          (when (not allowed)
-            (list-push results
-              (record-new ValidationResult
-                (focus-node focus-node)
-                (result-path (some (union-new ShaclPath path-predicate pred)))
-                (value (some pred))
-                (source-shape shape-id)
-                (source-constraint-component SHACL_CLOSED)
-                (severity severity)
-                (message message))))))
+          (allowed-preds (set-new arena Term))
+          (predicates (snarl-data-graph-predicates-for-subject arena data-graph focus-node)))
+      ;; Closed shapes only allow predicate paths here; complex ignored paths are
+      ;; preserved in allowed-paths but cannot match an outgoing predicate.
+      (for-each (ap allowed-paths)
+        (match ap
+          ((path-predicate p) (set-put allowed-preds p))
+          (_ (do))))
+      (for-each (pred predicates)
+        (when (not (set-has allowed-preds pred))
+          (list-push results
+            (record-new ValidationResult
+              (focus-node focus-node)
+              (result-path (some (union-new ShaclPath path-predicate pred)))
+              (value (some pred))
+              (source-shape shape-id)
+              (source-constraint-component SHACL_CLOSED)
+              (severity severity)
+              (message message)))))
       results)
     :c-name "snarl_check_closed"))

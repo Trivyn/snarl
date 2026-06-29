@@ -5,7 +5,6 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include "slop_rdf.h"
-#include "slop_index.h"
 #include "slop_vocab.h"
 
 typedef struct types_ShaclPath types_ShaclPath;
