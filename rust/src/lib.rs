@@ -75,6 +75,13 @@ fn term_to_ffi(arena: &Arena, term: &Term) -> ffi::RdfTerm {
             datatype,
             lang,
         } => arena.make_literal(value, *datatype, *lang),
+        Term::Triple(triple) => {
+            let subject = term_to_ffi(arena, &triple.subject);
+            let predicate = term_to_ffi(arena, &triple.predicate);
+            let object = term_to_ffi(arena, &triple.object);
+            let raw = arena.make_triple(subject, predicate, object);
+            arena.make_triple_term(raw)
+        }
     }
 }
 
@@ -193,6 +200,11 @@ impl Arena {
     ) -> ffi::RdfTriple {
         unsafe { ffi::rdf_make_triple(self.ptr, subject, predicate, object) }
     }
+
+    /// Create an RDF 1.2 triple term from a triple.
+    pub fn make_triple_term(&self, triple: ffi::RdfTriple) -> ffi::RdfTerm {
+        unsafe { ffi::rdf_make_triple_term(self.ptr, triple) }
+    }
 }
 
 impl Drop for Arena {
@@ -219,6 +231,7 @@ pub enum Term<'a> {
         datatype: Option<&'a str>,
         lang: Option<&'a str>,
     },
+    Triple(Box<Triple<'a>>),
 }
 
 impl<'a> Term<'a> {
@@ -246,6 +259,11 @@ impl<'a> Term<'a> {
                         lang,
                     }
                 }
+                ffi::RdfTermTag::Triple => {
+                    let ptr = raw.data.term_triple;
+                    assert!(!ptr.is_null(), "rdf_Term_term_triple had null payload");
+                    Term::Triple(Box::new(Triple::from_ffi(*ptr)))
+                }
             }
         }
     }
@@ -270,6 +288,7 @@ impl<'a> std::fmt::Display for Term<'a> {
                 }
                 Ok(())
             }
+            Term::Triple(t) => write!(f, "<<{} {} {}>>", t.subject, t.predicate, t.object),
         }
     }
 }
@@ -752,6 +771,7 @@ pub enum OwnedTerm {
         datatype: Option<String>,
         lang: Option<String>,
     },
+    Triple(Box<OwnedTriple>),
 }
 
 impl<'a> From<Term<'a>> for OwnedTerm {
@@ -768,6 +788,7 @@ impl<'a> From<Term<'a>> for OwnedTerm {
                 datatype: datatype.map(|s| s.to_string()),
                 lang: lang.map(|s| s.to_string()),
             },
+            Term::Triple(t) => OwnedTerm::Triple(Box::new(OwnedTriple::from(*t))),
         }
     }
 }
@@ -791,6 +812,7 @@ impl std::fmt::Display for OwnedTerm {
                 }
                 Ok(())
             }
+            OwnedTerm::Triple(t) => write!(f, "<<{} {} {}>>", t.subject, t.predicate, t.object),
         }
     }
 }

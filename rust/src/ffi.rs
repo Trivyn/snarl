@@ -55,6 +55,7 @@ pub enum RdfTermTag {
     Iri = 0,
     Blank = 1,
     Literal = 2,
+    Triple = 3,
 }
 
 /// Data payload for `rdf_Term` -- a C union.
@@ -64,6 +65,7 @@ pub union RdfTermData {
     pub term_iri: RdfIri,
     pub term_blank: RdfBlankNode,
     pub term_literal: RdfLiteral,
+    pub term_triple: *mut RdfTriple,
 }
 
 /// Tagged union representing an RDF term.
@@ -290,6 +292,7 @@ extern "C" {
         datatype: SlopOptionString,
         lang: SlopOptionString,
     ) -> RdfTerm;
+    pub fn rdf_make_triple_term(arena: *mut SlopArena, t: RdfTriple) -> RdfTerm;
     pub fn rdf_make_triple(
         arena: *mut SlopArena,
         subject: RdfTerm,

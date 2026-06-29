@@ -379,3 +379,27 @@ fn literal_and_blank_terms() {
     let t = snarl::Term::from_ffi(blank);
     assert_eq!(t, snarl::Term::Blank(42));
 }
+
+#[test]
+fn rdf12_triple_term_round_trip() {
+    let arena = Arena::new(1024 * 1024);
+
+    let subject = arena.make_iri(&format!("{EX}stmt"));
+    let predicate = arena.make_iri(&format!("{EX}says"));
+    let object = arena.make_literal("hello", None, None);
+    let raw_triple = arena.make_triple(subject, predicate, object);
+    let raw_term = arena.make_triple_term(raw_triple);
+
+    let term = snarl::Term::from_ffi(raw_term);
+    match term {
+        snarl::Term::Triple(t) => {
+            assert!(matches!(t.subject, snarl::Term::Iri(v) if v.ends_with("stmt")));
+            assert!(matches!(t.predicate, snarl::Term::Iri(v) if v.ends_with("says")));
+            assert!(matches!(
+                t.object,
+                snarl::Term::Literal { value: "hello", .. }
+            ));
+        }
+        other => panic!("expected triple term, got {other:?}"),
+    }
+}
