@@ -1,8 +1,8 @@
 (module path
   (import rdf
     (Term Triple term-eq triple-subject triple-predicate triple-object make-iri make-literal make-triple))
-  (import index
-    (IndexedGraph indexed-graph-match indexed-graph-objects indexed-graph-subjects indexed-graph-size indexed-graph-create indexed-graph-add))
+  (import data-graph
+    (SnarlDataGraph snarl-data-graph-objects snarl-data-graph-subjects snarl-data-graph-size snarl-data-graph-create snarl-data-graph-add))
   (import types (ShaclPath))
   (export resolve-path resolve-path-from)
 
@@ -26,11 +26,11 @@
 
   (fn fixture-g-alice-name ((arena Arena))
     (@intent "Graph with (alice name 'Alice')")
-    (@spec ((Arena) -> IndexedGraph))
-    (let ((mut g (indexed-graph-create arena)))
+    (@spec ((Arena) -> SnarlDataGraph))
+    (let ((mut g (snarl-data-graph-create arena)))
       (set!
         g
-        (indexed-graph-add
+        (snarl-data-graph-add
           arena
           g
           (make-triple
@@ -42,11 +42,11 @@
 
   (fn fixture-g-chain ((arena Arena))
     (@intent "Graph with (a next b), (b next c)")
-    (@spec ((Arena) -> IndexedGraph))
-    (let ((mut g (indexed-graph-create arena)))
+    (@spec ((Arena) -> SnarlDataGraph))
+    (let ((mut g (snarl-data-graph-create arena)))
       (set!
         g
-        (indexed-graph-add
+        (snarl-data-graph-add
           arena
           g
           (make-triple
@@ -56,7 +56,7 @@
             (make-iri arena EX_B))))
       (set!
         g
-        (indexed-graph-add
+        (snarl-data-graph-add
           arena
           g
           (make-triple
@@ -68,11 +68,11 @@
 
   (fn fixture-g-alice-knows-bob ((arena Arena))
     (@intent "Graph with (alice knows bob), (bob name 'Bob')")
-    (@spec ((Arena) -> IndexedGraph))
-    (let ((mut g (indexed-graph-create arena)))
+    (@spec ((Arena) -> SnarlDataGraph))
+    (let ((mut g (snarl-data-graph-create arena)))
       (set!
         g
-        (indexed-graph-add
+        (snarl-data-graph-add
           arena
           g
           (make-triple
@@ -82,7 +82,7 @@
             (make-iri arena EX_BOB))))
       (set!
         g
-        (indexed-graph-add
+        (snarl-data-graph-add
           arena
           g
           (make-triple
@@ -105,12 +105,12 @@
         (union-new ShaclPath path-predicate (make-iri arena EX_NAME)))
       steps))
 
-  (fn resolve-path ((arena Arena) (data-graph IndexedGraph) (focus-node Term) (path ShaclPath))
+  (fn resolve-path ((arena Arena) (data-graph SnarlDataGraph) (focus-node Term) (path ShaclPath))
     (@intent
       "Resolve a SHACL property path from a focus node, returning all value nodes")
-    (@spec ((Arena IndexedGraph Term ShaclPath) -> (List Term)))
+    (@spec ((Arena SnarlDataGraph Term ShaclPath) -> (List Term)))
     (@alloc arena)
-    (@pre (>= (indexed-graph-size data-graph) 0))
+    (@pre (>= (snarl-data-graph-size data-graph) 0))
     (@post (>= (list-len $result) 0))
     (@example
       (arena
@@ -119,7 +119,7 @@
         (union-new ShaclPath path-predicate (make-iri arena EX_NAME))))
     (match path
       ((path-predicate pred)
-        (indexed-graph-objects arena data-graph focus-node pred))
+        (snarl-data-graph-objects arena data-graph focus-node pred))
       ((path-sequence steps)
         (resolve-sequence arena data-graph focus-node steps))
       ((path-alternative alternatives)
@@ -135,11 +135,11 @@
     :c-name
     "snarl_resolve_path")
 
-  (fn resolve-path-from ((arena Arena) (data-graph IndexedGraph) (object Term) (path ShaclPath))
+  (fn resolve-path-from ((arena Arena) (data-graph SnarlDataGraph) (object Term) (path ShaclPath))
     (@intent "Resolve a SHACL path in reverse: given an object, find subjects")
-    (@spec ((Arena IndexedGraph Term ShaclPath) -> (List Term)))
+    (@spec ((Arena SnarlDataGraph Term ShaclPath) -> (List Term)))
     (@alloc arena)
-    (@pre (>= (indexed-graph-size data-graph) 0))
+    (@pre (>= (snarl-data-graph-size data-graph) 0))
     (@post (>= (list-len $result) 0))
     (@example
       (arena
@@ -148,15 +148,15 @@
         (union-new ShaclPath path-predicate (make-iri arena EX_NAME))))
     (match path
       ((path-predicate pred)
-        (indexed-graph-subjects arena data-graph pred object))
+        (snarl-data-graph-subjects arena data-graph pred object))
       (_ (list-new arena Term)))
     :c-name
     "snarl_resolve_path_from")
 
-  (fn resolve-sequence ((arena Arena) (g IndexedGraph) (focus Term) (steps (List ShaclPath)))
+  (fn resolve-sequence ((arena Arena) (g SnarlDataGraph) (focus Term) (steps (List ShaclPath)))
     (@intent
       "Resolve sequence path by chaining each step's results as input to the next")
-    (@spec ((Arena IndexedGraph Term (List ShaclPath)) -> (List Term)))
+    (@spec ((Arena SnarlDataGraph Term (List ShaclPath)) -> (List Term)))
     (@alloc arena)
     (@example
       (arena
@@ -173,10 +173,10 @@
           (set! current-nodes next-nodes)))
       current-nodes))
 
-  (fn resolve-alternative ((arena Arena) (g IndexedGraph) (focus Term) (alts (List ShaclPath)))
+  (fn resolve-alternative ((arena Arena) (g SnarlDataGraph) (focus Term) (alts (List ShaclPath)))
     (@intent
       "Resolve alternative path by collecting results from all alternatives")
-    (@spec ((Arena IndexedGraph Term (List ShaclPath)) -> (List Term)))
+    (@spec ((Arena SnarlDataGraph Term (List ShaclPath)) -> (List Term)))
     (@alloc arena)
     (@example
       (arena
@@ -189,10 +189,10 @@
           (for-each (r alt-results) (list-push result r))))
       result))
 
-  (fn resolve-inverse ((arena Arena) (g IndexedGraph) (focus Term) (inner ShaclPath))
+  (fn resolve-inverse ((arena Arena) (g SnarlDataGraph) (focus Term) (inner ShaclPath))
     (@intent
       "Resolve inverse path: find nodes that reach focus-node via inner path")
-    (@spec ((Arena IndexedGraph Term ShaclPath) -> (List Term)))
+    (@spec ((Arena SnarlDataGraph Term ShaclPath) -> (List Term)))
     (@alloc arena)
     (@example
       (arena
@@ -200,14 +200,14 @@
         (make-iri arena EX_BOB)
         (union-new ShaclPath path-predicate (make-iri arena EX_KNOWS))))
     (match inner
-      ((path-predicate pred) (indexed-graph-subjects arena g pred focus))
+      ((path-predicate pred) (snarl-data-graph-subjects arena g pred focus))
       ((path-inverse inner2) (resolve-path arena g focus (deref inner2)))
       (_ (list-new arena Term))))
 
-  (fn resolve-zero-or-more ((arena Arena) (g IndexedGraph) (focus Term) (inner ShaclPath))
+  (fn resolve-zero-or-more ((arena Arena) (g SnarlDataGraph) (focus Term) (inner ShaclPath))
     (@intent
       "Resolve zero-or-more path: transitive closure including start node")
-    (@spec ((Arena IndexedGraph Term ShaclPath) -> (List Term)))
+    (@spec ((Arena SnarlDataGraph Term ShaclPath) -> (List Term)))
     (@alloc arena)
     (@example
       (arena
@@ -232,10 +232,10 @@
           ((none) (set! qi (+ qi 1)))))
       result))
 
-  (fn resolve-one-or-more ((arena Arena) (g IndexedGraph) (focus Term) (inner ShaclPath))
+  (fn resolve-one-or-more ((arena Arena) (g SnarlDataGraph) (focus Term) (inner ShaclPath))
     (@intent
       "Resolve one-or-more path: transitive closure excluding start node unless reachable")
-    (@spec ((Arena IndexedGraph Term ShaclPath) -> (List Term)))
+    (@spec ((Arena SnarlDataGraph Term ShaclPath) -> (List Term)))
     (@alloc arena)
     (@example
       (arena
@@ -261,10 +261,10 @@
           ((none) (set! qi (+ qi 1)))))
       result))
 
-  (fn resolve-zero-or-one ((arena Arena) (g IndexedGraph) (focus Term) (inner ShaclPath))
+  (fn resolve-zero-or-one ((arena Arena) (g SnarlDataGraph) (focus Term) (inner ShaclPath))
     (@intent
       "Resolve zero-or-one path: focus node itself plus one-step results (deduplicated)")
-    (@spec ((Arena IndexedGraph Term ShaclPath) -> (List Term)))
+    (@spec ((Arena SnarlDataGraph Term ShaclPath) -> (List Term)))
     (@alloc arena)
     (@example
       (arena

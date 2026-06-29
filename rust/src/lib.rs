@@ -355,8 +355,7 @@ impl<'a> IndexedGraph<'a> {
         let pred = predicate.map_or_else(none_term, some_term);
         let obj = object.map_or_else(none_term, some_term);
         unsafe {
-            let list =
-                ffi::rdf_indexed_graph_match(self.arena.as_ptr(), self.raw, subj, pred, obj);
+            let list = ffi::rdf_indexed_graph_match(self.arena.as_ptr(), self.raw, subj, pred, obj);
             ffi_triple_list_to_vec(list)
         }
     }
@@ -381,6 +380,68 @@ impl<'a> IndexedGraph<'a> {
 
     /// Get the raw FFI graph (for passing to validator functions).
     pub fn raw(&self) -> ffi::IndexedGraphFfi {
+        self.raw
+    }
+}
+
+// ---------------------------------------------------------------------------
+// SnarlDataGraph
+// ---------------------------------------------------------------------------
+
+/// A Snarl-specific data graph optimized for SHACL validation.
+pub struct SnarlDataGraph<'a> {
+    raw: ffi::SnarlDataGraphFfi,
+    arena: &'a Arena,
+}
+
+impl<'a> SnarlDataGraph<'a> {
+    /// Create a new, empty Snarl data graph.
+    pub fn new(arena: &'a Arena) -> Self {
+        let raw = unsafe { ffi::snarl_data_graph_create(arena.as_ptr()) };
+        SnarlDataGraph { raw, arena }
+    }
+
+    /// Build a Snarl data graph from a general indexed graph.
+    pub fn from_indexed(arena: &'a Arena, graph: &IndexedGraph) -> Self {
+        let raw = unsafe { ffi::snarl_data_graph_from_indexed(arena.as_ptr(), graph.raw()) };
+        SnarlDataGraph { raw, arena }
+    }
+
+    /// Convert this graph to the general indexed representation.
+    pub fn to_indexed(&self) -> IndexedGraph<'a> {
+        let raw = unsafe { ffi::snarl_data_graph_to_indexed(self.arena.as_ptr(), self.raw) };
+        IndexedGraph {
+            raw,
+            arena: self.arena,
+        }
+    }
+
+    /// Add a raw FFI triple to the graph.
+    pub fn add_triple(&mut self, triple: ffi::RdfTriple) {
+        self.raw = unsafe { ffi::snarl_data_graph_add(self.arena.as_ptr(), self.raw, triple) };
+    }
+
+    /// Add a triple from safe `Term` values.
+    pub fn add(&mut self, subject: &Term, predicate: &Term, object: &Term) {
+        let s = term_to_ffi(self.arena, subject);
+        let p = term_to_ffi(self.arena, predicate);
+        let o = term_to_ffi(self.arena, object);
+        let triple = self.arena.make_triple(s, p, o);
+        self.add_triple(triple);
+    }
+
+    /// Check whether the graph contains the given triple.
+    pub fn contains_triple(&self, triple: ffi::RdfTriple) -> bool {
+        unsafe { ffi::snarl_data_graph_contains(self.raw, triple) != 0 }
+    }
+
+    /// Return the number of triples in the graph.
+    pub fn size(&self) -> i64 {
+        unsafe { ffi::snarl_data_graph_size(self.raw) }
+    }
+
+    /// Get the raw FFI graph.
+    pub fn raw(&self) -> ffi::SnarlDataGraphFfi {
         self.raw
     }
 }
@@ -479,8 +540,7 @@ pub struct ValidationResult<'a> {
 impl<'a> ValidationResult<'a> {
     unsafe fn from_ffi(raw: ffi::ValidationResultFfi, arena: &Arena) -> ValidationResult<'a> {
         let result_path = if raw.result_path.has_value {
-            let display =
-                ffi::snarl_path_to_display_string(arena.as_ptr(), raw.result_path.value);
+            let display = ffi::snarl_path_to_display_string(arena.as_ptr(), raw.result_path.value);
             Some(slop_string_to_str(display).to_string())
         } else {
             None
@@ -598,6 +658,48 @@ pub fn conforms(arena: &Arena, data_graph: &IndexedGraph, shapes_graph: &Indexed
     unsafe { ffi::snarl_conforms(arena.as_ptr(), data_graph.raw(), shapes_graph.raw()) != 0 }
 }
 
+/// Validate a Snarl-optimized data graph against a shapes graph.
+pub fn validate_data_graph<'a>(
+    arena: &'a Arena,
+    data_graph: &SnarlDataGraph,
+    shapes_graph: &IndexedGraph,
+) -> ValidatorResult<'a> {
+    unsafe {
+        let raw =
+            ffi::snarl_validate_data_graph(arena.as_ptr(), data_graph.raw(), shapes_graph.raw());
+        ValidatorResult::from_ffi(raw, arena)
+    }
+}
+
+/// Validate a Snarl-optimized data graph with custom configuration.
+pub fn validate_data_graph_with_config<'a>(
+    arena: &'a Arena,
+    data_graph: &SnarlDataGraph,
+    shapes_graph: &IndexedGraph,
+    config: &ValidatorConfig,
+) -> ValidatorResult<'a> {
+    unsafe {
+        let raw = ffi::snarl_validate_data_graph_with_config(
+            arena.as_ptr(),
+            data_graph.raw(),
+            shapes_graph.raw(),
+            config.raw,
+        );
+        ValidatorResult::from_ffi(raw, arena)
+    }
+}
+
+/// Check whether a Snarl-optimized data graph conforms to a shapes graph.
+pub fn conforms_data_graph(
+    arena: &Arena,
+    data_graph: &SnarlDataGraph,
+    shapes_graph: &IndexedGraph,
+) -> bool {
+    unsafe {
+        ffi::snarl_conforms_data_graph(arena.as_ptr(), data_graph.raw(), shapes_graph.raw()) != 0
+    }
+}
+
 /// Get only the violation-severity results from a validation report.
 pub fn get_violations<'a>(
     arena: &'a Arena,
@@ -610,10 +712,7 @@ pub fn get_violations<'a>(
 }
 
 /// Get only the warning-severity results from a validation report.
-pub fn get_warnings<'a>(
-    arena: &'a Arena,
-    report: &ValidationReport,
-) -> Vec<ValidationResult<'a>> {
+pub fn get_warnings<'a>(arena: &'a Arena, report: &ValidationReport) -> Vec<ValidationResult<'a>> {
     unsafe {
         let list = ffi::snarl_get_warnings(arena.as_ptr(), report.raw);
         ffi_validation_result_list_to_vec(list, arena)
@@ -757,7 +856,11 @@ impl<'a> From<ValidationReport<'a>> for OwnedValidationReport {
     fn from(r: ValidationReport<'a>) -> Self {
         OwnedValidationReport {
             conforms: r.conforms,
-            results: r.results.into_iter().map(OwnedValidationResult::from).collect(),
+            results: r
+                .results
+                .into_iter()
+                .map(OwnedValidationResult::from)
+                .collect(),
         }
     }
 }

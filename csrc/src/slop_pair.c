@@ -7,17 +7,17 @@ static const slop_string pair_EX_A = SLOP_STR("http://example.org/a");
 static const slop_string pair_EX_B = SLOP_STR("http://example.org/b");
 static const slop_string pair_EX_P2 = SLOP_STR("http://example.org/p2");
 
-index_IndexedGraph pair_fixture_g_focus_p2_a(slop_arena* arena);
+data_graph_SnarlDataGraph pair_fixture_g_focus_p2_a(slop_arena* arena);
 slop_list_rdf_Term pair_fixture_term_list_a(slop_arena* arena);
-slop_list_types_ValidationResult snarl_check_equals(slop_arena* arena, index_IndexedGraph data_graph, rdf_Term focus_node, slop_list_rdf_Term value_nodes, types_ShaclPath other_path, slop_option_types_ShaclPath path, rdf_Term shape_id, types_Severity severity, slop_option_string message);
-slop_list_types_ValidationResult snarl_check_disjoint(slop_arena* arena, index_IndexedGraph data_graph, rdf_Term focus_node, slop_list_rdf_Term value_nodes, types_ShaclPath other_path, slop_option_types_ShaclPath path, rdf_Term shape_id, types_Severity severity, slop_option_string message);
-slop_list_types_ValidationResult snarl_check_less_than(slop_arena* arena, index_IndexedGraph data_graph, rdf_Term focus_node, slop_list_rdf_Term value_nodes, types_ShaclPath other_path, slop_option_types_ShaclPath path, rdf_Term shape_id, types_Severity severity, slop_option_string message);
-slop_list_types_ValidationResult snarl_check_less_than_or_equals(slop_arena* arena, index_IndexedGraph data_graph, rdf_Term focus_node, slop_list_rdf_Term value_nodes, types_ShaclPath other_path, slop_option_types_ShaclPath path, rdf_Term shape_id, types_Severity severity, slop_option_string message);
+slop_list_types_ValidationResult snarl_check_equals(slop_arena* arena, data_graph_SnarlDataGraph data_graph, rdf_Term focus_node, slop_list_rdf_Term value_nodes, types_ShaclPath other_path, slop_option_types_ShaclPath path, rdf_Term shape_id, types_Severity severity, slop_option_string message);
+slop_list_types_ValidationResult snarl_check_disjoint(slop_arena* arena, data_graph_SnarlDataGraph data_graph, rdf_Term focus_node, slop_list_rdf_Term value_nodes, types_ShaclPath other_path, slop_option_types_ShaclPath path, rdf_Term shape_id, types_Severity severity, slop_option_string message);
+slop_list_types_ValidationResult snarl_check_less_than(slop_arena* arena, data_graph_SnarlDataGraph data_graph, rdf_Term focus_node, slop_list_rdf_Term value_nodes, types_ShaclPath other_path, slop_option_types_ShaclPath path, rdf_Term shape_id, types_Severity severity, slop_option_string message);
+slop_list_types_ValidationResult snarl_check_less_than_or_equals(slop_arena* arena, data_graph_SnarlDataGraph data_graph, rdf_Term focus_node, slop_list_rdf_Term value_nodes, types_ShaclPath other_path, slop_option_types_ShaclPath path, rdf_Term shape_id, types_Severity severity, slop_option_string message);
 
-index_IndexedGraph pair_fixture_g_focus_p2_a(slop_arena* arena) {
+data_graph_SnarlDataGraph pair_fixture_g_focus_p2_a(slop_arena* arena) {
     {
-        __auto_type g = rdf_indexed_graph_create(arena);
-        g = rdf_indexed_graph_add(arena, g, rdf_make_triple(arena, rdf_make_iri(arena, pair_EX_FOCUS), rdf_make_iri(arena, pair_EX_P2), rdf_make_iri(arena, pair_EX_A)));
+        __auto_type g = snarl_data_graph_create(arena);
+        g = snarl_data_graph_add(arena, g, rdf_make_triple(arena, rdf_make_iri(arena, pair_EX_FOCUS), rdf_make_iri(arena, pair_EX_P2), rdf_make_iri(arena, pair_EX_A)));
         return g;
     }
 }
@@ -30,7 +30,7 @@ slop_list_rdf_Term pair_fixture_term_list_a(slop_arena* arena) {
     }
 }
 
-slop_list_types_ValidationResult snarl_check_equals(slop_arena* arena, index_IndexedGraph data_graph, rdf_Term focus_node, slop_list_rdf_Term value_nodes, types_ShaclPath other_path, slop_option_types_ShaclPath path, rdf_Term shape_id, types_Severity severity, slop_option_string message) {
+slop_list_types_ValidationResult snarl_check_equals(slop_arena* arena, data_graph_SnarlDataGraph data_graph, rdf_Term focus_node, slop_list_rdf_Term value_nodes, types_ShaclPath other_path, slop_option_types_ShaclPath path, rdf_Term shape_id, types_Severity severity, slop_option_string message) {
     SLOP_PRE(((((int64_t)((value_nodes).len)) >= 0)), "(>= (list-len value-nodes) 0)");
     slop_list_types_ValidationResult _retval = {0};
     {
@@ -84,7 +84,7 @@ slop_list_types_ValidationResult snarl_check_equals(slop_arena* arena, index_Ind
     return _retval;
 }
 
-slop_list_types_ValidationResult snarl_check_disjoint(slop_arena* arena, index_IndexedGraph data_graph, rdf_Term focus_node, slop_list_rdf_Term value_nodes, types_ShaclPath other_path, slop_option_types_ShaclPath path, rdf_Term shape_id, types_Severity severity, slop_option_string message) {
+slop_list_types_ValidationResult snarl_check_disjoint(slop_arena* arena, data_graph_SnarlDataGraph data_graph, rdf_Term focus_node, slop_list_rdf_Term value_nodes, types_ShaclPath other_path, slop_option_types_ShaclPath path, rdf_Term shape_id, types_Severity severity, slop_option_string message) {
     SLOP_PRE(((((int64_t)((value_nodes).len)) >= 0)), "(>= (list-len value-nodes) 0)");
     slop_list_types_ValidationResult _retval = {0};
     {
@@ -117,7 +117,7 @@ slop_list_types_ValidationResult snarl_check_disjoint(slop_arena* arena, index_I
     return _retval;
 }
 
-slop_list_types_ValidationResult snarl_check_less_than(slop_arena* arena, index_IndexedGraph data_graph, rdf_Term focus_node, slop_list_rdf_Term value_nodes, types_ShaclPath other_path, slop_option_types_ShaclPath path, rdf_Term shape_id, types_Severity severity, slop_option_string message) {
+slop_list_types_ValidationResult snarl_check_less_than(slop_arena* arena, data_graph_SnarlDataGraph data_graph, rdf_Term focus_node, slop_list_rdf_Term value_nodes, types_ShaclPath other_path, slop_option_types_ShaclPath path, rdf_Term shape_id, types_Severity severity, slop_option_string message) {
     SLOP_PRE(((((int64_t)((value_nodes).len)) >= 0)), "(>= (list-len value-nodes) 0)");
     slop_list_types_ValidationResult _retval = {0};
     {
@@ -133,8 +133,8 @@ slop_list_types_ValidationResult snarl_check_less_than(slop_arena* arena, index_
                         __auto_type o = _coll.data[_i];
                         {
                             __auto_type cmp = xsd_compare(arena, v, o);
-                            __auto_type _mv_104 = cmp;
-                            switch (_mv_104) {
+                            __auto_type _mv_123 = cmp;
+                            switch (_mv_123) {
                                 case xsd_XsdCompareResult_xsd_compare_less: {
                                     break;
                                 }
@@ -154,7 +154,7 @@ slop_list_types_ValidationResult snarl_check_less_than(slop_arena* arena, index_
     return _retval;
 }
 
-slop_list_types_ValidationResult snarl_check_less_than_or_equals(slop_arena* arena, index_IndexedGraph data_graph, rdf_Term focus_node, slop_list_rdf_Term value_nodes, types_ShaclPath other_path, slop_option_types_ShaclPath path, rdf_Term shape_id, types_Severity severity, slop_option_string message) {
+slop_list_types_ValidationResult snarl_check_less_than_or_equals(slop_arena* arena, data_graph_SnarlDataGraph data_graph, rdf_Term focus_node, slop_list_rdf_Term value_nodes, types_ShaclPath other_path, slop_option_types_ShaclPath path, rdf_Term shape_id, types_Severity severity, slop_option_string message) {
     SLOP_PRE(((((int64_t)((value_nodes).len)) >= 0)), "(>= (list-len value-nodes) 0)");
     slop_list_types_ValidationResult _retval = {0};
     {
@@ -170,8 +170,8 @@ slop_list_types_ValidationResult snarl_check_less_than_or_equals(slop_arena* are
                         __auto_type o = _coll.data[_i];
                         {
                             __auto_type cmp = xsd_compare(arena, v, o);
-                            __auto_type _mv_105 = cmp;
-                            switch (_mv_105) {
+                            __auto_type _mv_124 = cmp;
+                            switch (_mv_124) {
                                 case xsd_XsdCompareResult_xsd_compare_greater: {
                                     ({ __auto_type _lst_p = &(results); __auto_type _item = (((types_ValidationResult){.focus_node = focus_node, .result_path = path, .value = (slop_option_rdf_Term){.has_value = 1, .value = v}, .source_shape = shape_id, .source_constraint_component = vocab_SHACL_LESS_THAN_OR_EQUALS, .severity = severity, .message = message})); if (_lst_p->len >= _lst_p->cap) { size_t _new_cap = _lst_p->cap == 0 ? 16 : _lst_p->cap * 2; __typeof__(_lst_p->data) _new_data = (__typeof__(_lst_p->data))slop_arena_alloc(arena, _new_cap * sizeof(*_lst_p->data)); if (_lst_p->len > 0) memcpy(_new_data, _lst_p->data, _lst_p->len * sizeof(*_lst_p->data)); _lst_p->data = _new_data; _lst_p->cap = _new_cap; } _lst_p->data[_lst_p->len++] = _item; (void)0; });
                                     break;

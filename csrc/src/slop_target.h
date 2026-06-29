@@ -5,7 +5,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include "slop_rdf.h"
-#include "slop_index.h"
+#include "slop_data_graph.h"
 #include "slop_vocab.h"
 #include "slop_types.h"
 
@@ -136,27 +136,27 @@ static inline bool slop_eq_rdf_Term(const void* a, const void* b) {
 }
 #endif
 
-index_IndexedGraph target_fixture_g_typed(slop_arena* arena);
-index_IndexedGraph target_fixture_g_alice_name(slop_arena* arena);
-index_IndexedGraph target_fixture_g_alice_knows_bob(slop_arena* arena);
+data_graph_SnarlDataGraph target_fixture_g_typed(slop_arena* arena);
+data_graph_SnarlDataGraph target_fixture_g_alice_name(slop_arena* arena);
+data_graph_SnarlDataGraph target_fixture_g_alice_knows_bob(slop_arena* arena);
 slop_list_rdf_Term target_fixture_target_nodes_alice(slop_arena* arena);
 types_NodeShape target_fixture_ns_target_class(slop_arena* arena);
-slop_list_rdf_Term snarl_resolve_targets(slop_arena* arena, index_IndexedGraph data_graph, types_NodeShape shape);
+slop_list_rdf_Term snarl_resolve_targets(slop_arena* arena, data_graph_SnarlDataGraph data_graph, types_NodeShape shape);
 slop_list_rdf_Term snarl_resolve_target_node(slop_arena* arena, slop_list_rdf_Term nodes);
 void target_add_class_if_needed(slop_arena* arena, slop_list_rdf_Term classes, slop_map* seen, rdf_Term class_term);
 void target_collect_constraint_classes(slop_arena* arena, slop_list_rdf_Term classes, slop_map* seen, types_Constraint constraint);
 void target_collect_property_shape_classes(slop_arena* arena, slop_list_rdf_Term classes, slop_map* seen, types_PropertyShape ps);
 void target_collect_node_shape_classes(slop_arena* arena, slop_list_rdf_Term classes, slop_map* seen, types_NodeShape ns);
 slop_list_rdf_Term target_collect_class_constraints(slop_arena* arena, types_ShapesGraph shapes_graph);
-target_ClassIndex target_build_class_index(slop_arena* arena, index_IndexedGraph data_graph, types_ShapesGraph shapes_graph);
+target_ClassIndex target_build_class_index(slop_arena* arena, data_graph_SnarlDataGraph data_graph, types_ShapesGraph shapes_graph);
 uint8_t target_class_index_has_class(target_ClassIndex index, rdf_Term class_term);
 uint8_t target_class_index_has_instance(target_ClassIndex index, rdf_Term node, rdf_Term class_term);
-slop_list_rdf_Term target_find_subclasses(slop_arena* arena, index_IndexedGraph data_graph, rdf_Term class_term);
-uint8_t snarl_is_shacl_instance_of_class(slop_arena* arena, index_IndexedGraph data_graph, rdf_Term node, rdf_Term class_term);
-slop_list_rdf_Term snarl_resolve_target_class(slop_arena* arena, index_IndexedGraph data_graph, rdf_Term class_term);
-slop_list_rdf_Term snarl_resolve_target_subjects_of(slop_arena* arena, index_IndexedGraph data_graph, rdf_Term predicate);
-slop_list_rdf_Term snarl_resolve_target_objects_of(slop_arena* arena, index_IndexedGraph data_graph, rdf_Term predicate);
-slop_list_rdf_Term snarl_resolve_implicit_class_targets(slop_arena* arena, index_IndexedGraph data_graph, rdf_Term shape_id);
+slop_list_rdf_Term target_find_subclasses(slop_arena* arena, data_graph_SnarlDataGraph data_graph, rdf_Term class_term);
+uint8_t snarl_is_shacl_instance_of_class(slop_arena* arena, data_graph_SnarlDataGraph data_graph, rdf_Term node, rdf_Term class_term);
+slop_list_rdf_Term snarl_resolve_target_class(slop_arena* arena, data_graph_SnarlDataGraph data_graph, rdf_Term class_term);
+slop_list_rdf_Term snarl_resolve_target_subjects_of(slop_arena* arena, data_graph_SnarlDataGraph data_graph, rdf_Term predicate);
+slop_list_rdf_Term snarl_resolve_target_objects_of(slop_arena* arena, data_graph_SnarlDataGraph data_graph, rdf_Term predicate);
+slop_list_rdf_Term snarl_resolve_implicit_class_targets(slop_arena* arena, data_graph_SnarlDataGraph data_graph, rdf_Term shape_id);
 
 /* Function name aliases for C interop */
 #define target_resolve_targets snarl_resolve_targets

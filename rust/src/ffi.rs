@@ -147,6 +147,7 @@ pub struct TripleIndex {
     pub spo: *mut c_void,
     pub pso: *mut c_void,
     pub osp: *mut c_void,
+    pub pos: *mut c_void,
 }
 
 #[repr(C)]
@@ -154,6 +155,23 @@ pub struct TripleIndex {
 pub struct IndexedGraphFfi {
     pub triples: SlopListRdfTriple,
     pub index: TripleIndex,
+    pub size: i64,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct SnarlDataIndex {
+    pub sp: *mut c_void,
+    pub po: *mut c_void,
+    pub p_subjects: *mut c_void,
+    pub p_objects: *mut c_void,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct SnarlDataGraphFfi {
+    pub triples: SlopListRdfTriple,
+    pub index: SnarlDataIndex,
     pub size: i64,
 }
 
@@ -311,6 +329,24 @@ extern "C" {
         obj: RdfTerm,
     ) -> SlopListRdfTerm;
 
+    // SnarlDataGraph
+    pub fn snarl_data_graph_create(arena: *mut SlopArena) -> SnarlDataGraphFfi;
+    pub fn snarl_data_graph_add(
+        arena: *mut SlopArena,
+        g: SnarlDataGraphFfi,
+        t: RdfTriple,
+    ) -> SnarlDataGraphFfi;
+    pub fn snarl_data_graph_size(g: SnarlDataGraphFfi) -> i64;
+    pub fn snarl_data_graph_contains(g: SnarlDataGraphFfi, t: RdfTriple) -> u8;
+    pub fn snarl_data_graph_from_indexed(
+        arena: *mut SlopArena,
+        g: IndexedGraphFfi,
+    ) -> SnarlDataGraphFfi;
+    pub fn snarl_data_graph_to_indexed(
+        arena: *mut SlopArena,
+        g: SnarlDataGraphFfi,
+    ) -> IndexedGraphFfi;
+
     // Snarl API
     pub fn snarl_validate(
         arena: *mut SlopArena,
@@ -328,6 +364,22 @@ extern "C" {
         data_graph: IndexedGraphFfi,
         shapes_graph: IndexedGraphFfi,
     ) -> u8;
+    pub fn snarl_validate_data_graph(
+        arena: *mut SlopArena,
+        data_graph: SnarlDataGraphFfi,
+        shapes_graph: IndexedGraphFfi,
+    ) -> ValidatorResultFfi;
+    pub fn snarl_validate_data_graph_with_config(
+        arena: *mut SlopArena,
+        data_graph: SnarlDataGraphFfi,
+        shapes_graph: IndexedGraphFfi,
+        config: ValidatorConfigFfi,
+    ) -> ValidatorResultFfi;
+    pub fn snarl_conforms_data_graph(
+        arena: *mut SlopArena,
+        data_graph: SnarlDataGraphFfi,
+        shapes_graph: IndexedGraphFfi,
+    ) -> u8;
     pub fn snarl_default_config() -> ValidatorConfigFfi;
     pub fn snarl_get_violations(
         arena: *mut SlopArena,
@@ -342,12 +394,7 @@ extern "C" {
         arena: *mut SlopArena,
         report: ValidationReportFfi,
     ) -> IndexedGraphFfi;
-    pub fn snarl_report_to_string(
-        arena: *mut SlopArena,
-        report: ValidationReportFfi,
-    ) -> SlopString;
-    pub fn snarl_path_to_display_string(
-        arena: *mut SlopArena,
-        path: ShaclPath,
-    ) -> SlopString;
+    pub fn snarl_report_to_string(arena: *mut SlopArena, report: ValidationReportFfi)
+        -> SlopString;
+    pub fn snarl_path_to_display_string(arena: *mut SlopArena, path: ShaclPath) -> SlopString;
 }

@@ -4,7 +4,10 @@
 types_ValidatorConfig snarl_default_config(void);
 types_ValidatorResult snarl_validate(slop_arena* arena, index_IndexedGraph data_graph, index_IndexedGraph shapes_graph);
 types_ValidatorResult snarl_validate_with_config(slop_arena* arena, index_IndexedGraph data_graph, index_IndexedGraph shapes_graph, types_ValidatorConfig config);
+types_ValidatorResult snarl_validate_data_graph(slop_arena* arena, data_graph_SnarlDataGraph data_graph, index_IndexedGraph shapes_graph);
+types_ValidatorResult snarl_validate_data_graph_with_config(slop_arena* arena, data_graph_SnarlDataGraph data_graph, index_IndexedGraph shapes_graph, types_ValidatorConfig config);
 uint8_t snarl_conforms(slop_arena* arena, index_IndexedGraph data_graph, index_IndexedGraph shapes_graph);
+uint8_t snarl_conforms_data_graph(slop_arena* arena, data_graph_SnarlDataGraph data_graph, index_IndexedGraph shapes_graph);
 slop_list_types_ValidationResult snarl_get_violations(slop_arena* arena, types_ValidationReport report);
 slop_list_types_ValidationResult snarl_get_warnings(slop_arena* arena, types_ValidationReport report);
 int64_t snarl_get_result_count(types_ValidationReport report);
@@ -32,6 +35,21 @@ types_ValidatorResult snarl_validate_with_config(slop_arena* arena, index_Indexe
     SLOP_PRE(((rdf_indexed_graph_size(data_graph) >= 0)), "(>= (indexed-graph-size data-graph) 0)");
     SLOP_PRE(((rdf_indexed_graph_size(shapes_graph) >= 0)), "(>= (indexed-graph-size shapes-graph) 0)");
     {
+        __auto_type fast_data = snarl_data_graph_from_indexed(arena, data_graph);
+        return snarl_validate_data_graph_with_config(arena, fast_data, shapes_graph, config);
+    }
+}
+
+types_ValidatorResult snarl_validate_data_graph(slop_arena* arena, data_graph_SnarlDataGraph data_graph, index_IndexedGraph shapes_graph) {
+    SLOP_PRE(((snarl_data_graph_size(data_graph) >= 0)), "(>= (snarl-data-graph-size data-graph) 0)");
+    SLOP_PRE(((rdf_indexed_graph_size(shapes_graph) >= 0)), "(>= (indexed-graph-size shapes-graph) 0)");
+    return snarl_validate_data_graph_with_config(arena, data_graph, shapes_graph, snarl_default_config());
+}
+
+types_ValidatorResult snarl_validate_data_graph_with_config(slop_arena* arena, data_graph_SnarlDataGraph data_graph, index_IndexedGraph shapes_graph, types_ValidatorConfig config) {
+    SLOP_PRE(((snarl_data_graph_size(data_graph) >= 0)), "(>= (snarl-data-graph-size data-graph) 0)");
+    SLOP_PRE(((rdf_indexed_graph_size(shapes_graph) >= 0)), "(>= (indexed-graph-size shapes-graph) 0)");
+    {
         __auto_type shapes = snarl_parse_shapes_graph(arena, shapes_graph);
         return snarl_engine_validate(arena, data_graph, shapes, config);
     }
@@ -40,16 +58,34 @@ types_ValidatorResult snarl_validate_with_config(slop_arena* arena, index_Indexe
 uint8_t snarl_conforms(slop_arena* arena, index_IndexedGraph data_graph, index_IndexedGraph shapes_graph) {
     SLOP_PRE(((rdf_indexed_graph_size(data_graph) >= 0)), "(>= (indexed-graph-size data-graph) 0)");
     SLOP_PRE(((rdf_indexed_graph_size(shapes_graph) >= 0)), "(>= (indexed-graph-size shapes-graph) 0)");
-    __auto_type _mv_222 = snarl_validate(arena, data_graph, shapes_graph);
-    switch (_mv_222.tag) {
+    __auto_type _mv_241 = snarl_validate(arena, data_graph, shapes_graph);
+    switch (_mv_241.tag) {
         case types_ValidatorResult_validate_success:
         {
-            __auto_type report = _mv_222.data.validate_success;
+            __auto_type report = _mv_241.data.validate_success;
             return types_report_conforms(report);
         }
         case types_ValidatorResult_validate_error:
         {
-            __auto_type _ = _mv_222.data.validate_error;
+            __auto_type _ = _mv_241.data.validate_error;
+            return 0;
+        }
+    }
+}
+
+uint8_t snarl_conforms_data_graph(slop_arena* arena, data_graph_SnarlDataGraph data_graph, index_IndexedGraph shapes_graph) {
+    SLOP_PRE(((snarl_data_graph_size(data_graph) >= 0)), "(>= (snarl-data-graph-size data-graph) 0)");
+    SLOP_PRE(((rdf_indexed_graph_size(shapes_graph) >= 0)), "(>= (indexed-graph-size shapes-graph) 0)");
+    __auto_type _mv_242 = snarl_validate_data_graph(arena, data_graph, shapes_graph);
+    switch (_mv_242.tag) {
+        case types_ValidatorResult_validate_success:
+        {
+            __auto_type report = _mv_242.data.validate_success;
+            return types_report_conforms(report);
+        }
+        case types_ValidatorResult_validate_error:
+        {
+            __auto_type _ = _mv_242.data.validate_error;
             return 0;
         }
     }
@@ -63,8 +99,8 @@ slop_list_types_ValidationResult snarl_get_violations(slop_arena* arena, types_V
             __auto_type _coll = report.results;
             for (size_t _i = 0; _i < _coll.len; _i++) {
                 __auto_type r = _coll.data[_i];
-                __auto_type _mv_223 = r.severity;
-                switch (_mv_223) {
+                __auto_type _mv_243 = r.severity;
+                switch (_mv_243) {
                     case types_Severity_severity_violation: {
                         ({ __auto_type _lst_p = &(result); __auto_type _item = (r); if (_lst_p->len >= _lst_p->cap) { size_t _new_cap = _lst_p->cap == 0 ? 16 : _lst_p->cap * 2; __typeof__(_lst_p->data) _new_data = (__typeof__(_lst_p->data))slop_arena_alloc(arena, _new_cap * sizeof(*_lst_p->data)); if (_lst_p->len > 0) memcpy(_new_data, _lst_p->data, _lst_p->len * sizeof(*_lst_p->data)); _lst_p->data = _new_data; _lst_p->cap = _new_cap; } _lst_p->data[_lst_p->len++] = _item; (void)0; });
                         break;
@@ -90,8 +126,8 @@ slop_list_types_ValidationResult snarl_get_warnings(slop_arena* arena, types_Val
             __auto_type _coll = report.results;
             for (size_t _i = 0; _i < _coll.len; _i++) {
                 __auto_type r = _coll.data[_i];
-                __auto_type _mv_224 = r.severity;
-                switch (_mv_224) {
+                __auto_type _mv_244 = r.severity;
+                switch (_mv_244) {
                     case types_Severity_severity_warning: {
                         ({ __auto_type _lst_p = &(result); __auto_type _item = (r); if (_lst_p->len >= _lst_p->cap) { size_t _new_cap = _lst_p->cap == 0 ? 16 : _lst_p->cap * 2; __typeof__(_lst_p->data) _new_data = (__typeof__(_lst_p->data))slop_arena_alloc(arena, _new_cap * sizeof(*_lst_p->data)); if (_lst_p->len > 0) memcpy(_new_data, _lst_p->data, _lst_p->len * sizeof(*_lst_p->data)); _lst_p->data = _new_data; _lst_p->cap = _new_cap; } _lst_p->data[_lst_p->len++] = _item; (void)0; });
                         break;

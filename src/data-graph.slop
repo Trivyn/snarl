@@ -1,0 +1,202 @@
+(module data-graph
+  (@doc "Snarl-specific RDF data graph with only SHACL validation access paths")
+
+  (import rdf (Term Triple term-eq make-triple triple-subject triple-predicate triple-object))
+  (import index (IndexedGraph TermSet TermSetMap indexed-graph-create indexed-graph-add))
+
+  (export
+    SnarlDataIndex
+    SnarlDataGraph
+    snarl-data-graph-create
+    snarl-data-graph-add
+    snarl-data-graph-size
+    snarl-data-graph-contains
+    snarl-data-graph-objects
+    snarl-data-graph-subjects
+    snarl-data-graph-subjects-of
+    snarl-data-graph-objects-of
+    snarl-data-graph-triples-for-subject
+    snarl-data-graph-to-indexed
+    snarl-data-graph-from-indexed)
+  (type SnarlDataIndex (record
+    (sp (Map Term TermSetMap))       ;; subject -> predicate -> Set[object]
+    (po (Map Term TermSetMap))       ;; predicate -> object -> Set[subject]
+    (p-subjects (Map Term TermSet))  ;; predicate -> Set[subject]
+    (p-objects (Map Term TermSet)))) ;; predicate -> Set[object]
+
+  (type SnarlDataGraph (record
+    (triples (List Triple))
+    (index SnarlDataIndex)
+    (size (Int 0 ..))))
+
+  (fn snarl-data-graph-create ((arena Arena))
+    (@intent "Create an empty Snarl data graph")
+    (@spec ((Arena) -> SnarlDataGraph))
+    (@alloc arena)
+    (record-new SnarlDataGraph
+      (triples (list-new arena Triple))
+      (index (record-new SnarlDataIndex
+               (sp (map-new arena Term TermSetMap))
+               (po (map-new arena Term TermSetMap))
+               (p-subjects (map-new arena Term TermSet))
+               (p-objects (map-new arena Term TermSet))))
+      (size 0))
+    :c-name "snarl_data_graph_create")
+
+  (fn make-term-set ((arena Arena) (value Term))
+    (@intent "Create a term set containing one value")
+    (@spec ((Arena Term) -> TermSet))
+    (@alloc arena)
+    (let ((values (set-new arena Term)))
+      (set-put values value)
+      values))
+
+  (fn add-to-nested-set ((arena Arena) (outer (Map Term TermSetMap)) (first Term) (second Term) (value Term))
+    (@intent "Insert value into outer[first][second]")
+    (@spec ((Arena (Map Term TermSetMap) Term Term Term) -> Unit))
+    (@alloc arena)
+    (match (map-get outer first)
+      ((some inner)
+        (match (map-get inner second)
+          ((some values) (set-put values value))
+          ((none)
+            (map-put inner second (make-term-set arena value)))))
+      ((none)
+        (let ((inner-map (map-new arena Term TermSet)))
+          (map-put inner-map second (make-term-set arena value))
+          (map-put outer first inner-map)))))
+
+  (fn add-to-flat-set ((arena Arena) (outer (Map Term TermSet)) (key Term) (value Term))
+    (@intent "Insert value into outer[key]")
+    (@spec ((Arena (Map Term TermSet) Term Term) -> Unit))
+    (@alloc arena)
+    (match (map-get outer key)
+      ((some values) (set-put values value))
+      ((none) (map-put outer key (make-term-set arena value)))))
+
+  (fn snarl-data-graph-contains ((g SnarlDataGraph) (t Triple))
+    (@intent "Check whether the graph contains an exact triple")
+    (@spec ((SnarlDataGraph Triple) -> Bool))
+    (@pure)
+    (let ((s (triple-subject t))
+          (p (triple-predicate t))
+          (o (triple-object t)))
+      (match (map-get (. (. g index) sp) s)
+        ((some pred-map)
+          (match (map-get pred-map p)
+            ((some objs) (set-has objs o))
+            ((none) false)))
+        ((none) false)))
+    :c-name "snarl_data_graph_contains")
+
+  (fn snarl-data-graph-add ((arena Arena) (mut g SnarlDataGraph) (t Triple))
+    (@intent "Add a triple to the Snarl data graph")
+    (@spec ((Arena SnarlDataGraph Triple) -> SnarlDataGraph))
+    (@alloc arena)
+    (when (snarl-data-graph-contains g t)
+      (return g))
+    (let ((s (triple-subject t))
+          (p (triple-predicate t))
+          (o (triple-object t)))
+      (list-push (. g triples) t)
+      (add-to-nested-set arena (. (. g index) sp) s p o)
+      (add-to-nested-set arena (. (. g index) po) p o s)
+      (add-to-flat-set arena (. (. g index) p-subjects) p s)
+      (add-to-flat-set arena (. (. g index) p-objects) p o)
+      (record-new SnarlDataGraph
+        (triples (. g triples))
+        (index (. g index))
+        (size (+ (. g size) 1))))
+    :c-name "snarl_data_graph_add")
+
+  (fn snarl-data-graph-size ((g SnarlDataGraph))
+    (@intent "Return the number of triples in the Snarl data graph")
+    (@spec ((SnarlDataGraph) -> (Int 0 ..)))
+    (@pure)
+    (. g size)
+    :c-name "snarl_data_graph_size")
+
+  (fn term-set-to-list ((arena Arena) (terms TermSet))
+    (@intent "Copy a term set into a list")
+    (@spec ((Arena TermSet) -> (List Term)))
+    (@alloc arena)
+    (let ((mut result (list-new arena Term)))
+      (for-each (t terms)
+        (list-push result t))
+      result))
+
+  (fn snarl-data-graph-objects ((arena Arena) (g SnarlDataGraph) (subj Term) (pred Term))
+    (@intent "Return objects for a subject/predicate pair")
+    (@spec ((Arena SnarlDataGraph Term Term) -> (List Term)))
+    (@alloc arena)
+    (match (map-get (. (. g index) sp) subj)
+      ((some pred-map)
+        (match (map-get pred-map pred)
+          ((some objs) (term-set-to-list arena objs))
+          ((none) (list-new arena Term))))
+      ((none) (list-new arena Term)))
+    :c-name "snarl_data_graph_objects")
+
+  (fn snarl-data-graph-subjects ((arena Arena) (g SnarlDataGraph) (pred Term) (obj Term))
+    (@intent "Return subjects for a predicate/object pair")
+    (@spec ((Arena SnarlDataGraph Term Term) -> (List Term)))
+    (@alloc arena)
+    (match (map-get (. (. g index) po) pred)
+      ((some obj-map)
+        (match (map-get obj-map obj)
+          ((some subjects) (term-set-to-list arena subjects))
+          ((none) (list-new arena Term))))
+      ((none) (list-new arena Term)))
+    :c-name "snarl_data_graph_subjects")
+
+  (fn snarl-data-graph-subjects-of ((arena Arena) (g SnarlDataGraph) (pred Term))
+    (@intent "Return subjects that use a predicate")
+    (@spec ((Arena SnarlDataGraph Term) -> (List Term)))
+    (@alloc arena)
+    (match (map-get (. (. g index) p-subjects) pred)
+      ((some subjects) (term-set-to-list arena subjects))
+      ((none) (list-new arena Term)))
+    :c-name "snarl_data_graph_subjects_of")
+
+  (fn snarl-data-graph-objects-of ((arena Arena) (g SnarlDataGraph) (pred Term))
+    (@intent "Return objects reached by a predicate")
+    (@spec ((Arena SnarlDataGraph Term) -> (List Term)))
+    (@alloc arena)
+    (match (map-get (. (. g index) p-objects) pred)
+      ((some objects) (term-set-to-list arena objects))
+      ((none) (list-new arena Term)))
+    :c-name "snarl_data_graph_objects_of")
+
+  (fn snarl-data-graph-triples-for-subject ((arena Arena) (g SnarlDataGraph) (subj Term))
+    (@intent "Return all triples with the given subject")
+    (@spec ((Arena SnarlDataGraph Term) -> (List Triple)))
+    (@alloc arena)
+    (let ((mut result (list-new arena Triple)))
+      (match (map-get (. (. g index) sp) subj)
+        ((some pred-map)
+          (for-each ((p objs) pred-map)
+            (for-each (o objs)
+              (list-push result (make-triple arena subj p o)))))
+        ((none) (do)))
+      result)
+    :c-name "snarl_data_graph_triples_for_subject")
+
+  (fn snarl-data-graph-to-indexed ((arena Arena) (g SnarlDataGraph))
+    (@intent "Convert a Snarl data graph into the general IndexedGraph representation")
+    (@spec ((Arena SnarlDataGraph) -> IndexedGraph))
+    (@alloc arena)
+    (let ((mut out (indexed-graph-create arena)))
+      (for-each (t (. g triples))
+        (set! out (indexed-graph-add arena out t)))
+      out)
+    :c-name "snarl_data_graph_to_indexed")
+
+  (fn snarl-data-graph-from-indexed ((arena Arena) (g IndexedGraph))
+    (@intent "Convert a general IndexedGraph into a Snarl data graph")
+    (@spec ((Arena IndexedGraph) -> SnarlDataGraph))
+    (@alloc arena)
+    (let ((mut out (snarl-data-graph-create arena)))
+      (for-each (t (. g triples))
+        (set! out (snarl-data-graph-add arena out t)))
+      out)
+    :c-name "snarl_data_graph_from_indexed"))

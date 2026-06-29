@@ -5,7 +5,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include "slop_rdf.h"
-#include "slop_index.h"
+#include "slop_data_graph.h"
 #include "slop_vocab.h"
 #include "slop_types.h"
 #include "slop_target.h"
@@ -20,11 +20,11 @@ SLOP_OPTION_DEFINE(types_ShaclPath, slop_option_types_ShaclPath)
 SLOP_OPTION_DEFINE(types_ValidationResult, slop_option_types_ValidationResult)
 #endif
 
-index_IndexedGraph value_type_fixture_g_focus_is_person(slop_arena* arena);
-index_IndexedGraph value_type_fixture_g_empty(slop_arena* arena);
-slop_option_types_ValidationResult snarl_check_class(slop_arena* arena, index_IndexedGraph data_graph, rdf_Term focus_node, rdf_Term value_node, rdf_Term required_class, slop_option_types_ShaclPath path, rdf_Term shape_id, types_Severity severity, slop_option_string message);
+data_graph_SnarlDataGraph value_type_fixture_g_focus_is_person(slop_arena* arena);
+data_graph_SnarlDataGraph value_type_fixture_g_empty(slop_arena* arena);
+slop_option_types_ValidationResult snarl_check_class(slop_arena* arena, data_graph_SnarlDataGraph data_graph, rdf_Term focus_node, rdf_Term value_node, rdf_Term required_class, slop_option_types_ShaclPath path, rdf_Term shape_id, types_Severity severity, slop_option_string message);
 types_ValidationResult value_type_make_class_violation(rdf_Term focus_node, rdf_Term value_node, rdf_Term required_class, slop_option_types_ShaclPath path, rdf_Term shape_id, types_Severity severity, slop_option_string message);
-slop_option_types_ValidationResult value_type_check_class_with_index(slop_arena* arena, index_IndexedGraph data_graph, target_ClassIndex class_index, rdf_Term focus_node, rdf_Term value_node, rdf_Term required_class, slop_option_types_ShaclPath path, rdf_Term shape_id, types_Severity severity, slop_option_string message);
+slop_option_types_ValidationResult value_type_check_class_with_index(slop_arena* arena, data_graph_SnarlDataGraph data_graph, target_ClassIndex class_index, rdf_Term focus_node, rdf_Term value_node, rdf_Term required_class, slop_option_types_ShaclPath path, rdf_Term shape_id, types_Severity severity, slop_option_string message);
 uint8_t value_type_datatype_matches(rdf_Term value_node, rdf_Term required_datatype);
 slop_option_types_ValidationResult snarl_check_datatype(slop_arena* arena, rdf_Term focus_node, rdf_Term value_node, rdf_Term required_datatype, slop_option_types_ShaclPath path, rdf_Term shape_id, types_Severity severity, slop_option_string message);
 uint8_t value_type_node_kind_matches(types_NodeKind required, rdf_TermKind kind);

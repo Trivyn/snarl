@@ -1,8 +1,8 @@
 (module target
   (import rdf
     (Term Triple term-eq term-kind make-iri make-triple triple-subject triple-predicate triple-object))
-  (import index
-    (IndexedGraph indexed-graph-match indexed-graph-subjects indexed-graph-objects indexed-graph-size indexed-graph-for-each indexed-graph-create indexed-graph-add indexed-graph-contains))
+  (import data-graph
+    (SnarlDataGraph snarl-data-graph-subjects snarl-data-graph-subjects-of snarl-data-graph-objects-of snarl-data-graph-size snarl-data-graph-create snarl-data-graph-add snarl-data-graph-contains))
   (import vocab (RDF_TYPE RDFS_SUBCLASS_OF))
   (import types (NodeShape PropertyShape ShaclPath Severity Constraint ShapesGraph))
   (export
@@ -42,11 +42,11 @@
 
   (fn fixture-g-typed ((arena Arena))
     (@intent "Graph with (alice rdf:type Person), (bob rdf:type Person)")
-    (@spec ((Arena) -> IndexedGraph))
-    (let ((mut g (indexed-graph-create arena)))
+    (@spec ((Arena) -> SnarlDataGraph))
+    (let ((mut g (snarl-data-graph-create arena)))
       (set!
         g
-        (indexed-graph-add
+        (snarl-data-graph-add
           arena
           g
           (make-triple
@@ -56,7 +56,7 @@
             (make-iri arena EX_PERSON))))
       (set!
         g
-        (indexed-graph-add
+        (snarl-data-graph-add
           arena
           g
           (make-triple
@@ -68,11 +68,11 @@
 
   (fn fixture-g-alice-name ((arena Arena))
     (@intent "Graph with (alice name 'Alice')")
-    (@spec ((Arena) -> IndexedGraph))
-    (let ((mut g (indexed-graph-create arena)))
+    (@spec ((Arena) -> SnarlDataGraph))
+    (let ((mut g (snarl-data-graph-create arena)))
       (set!
         g
-        (indexed-graph-add
+        (snarl-data-graph-add
           arena
           g
           (make-triple
@@ -84,11 +84,11 @@
 
   (fn fixture-g-alice-knows-bob ((arena Arena))
     (@intent "Graph with (alice knows bob)")
-    (@spec ((Arena) -> IndexedGraph))
-    (let ((mut g (indexed-graph-create arena)))
+    (@spec ((Arena) -> SnarlDataGraph))
+    (let ((mut g (snarl-data-graph-create arena)))
       (set!
         g
-        (indexed-graph-add
+        (snarl-data-graph-add
           arena
           g
           (make-triple
@@ -124,12 +124,12 @@
       (message (none))
       (deactivated false)))
 
-  (fn resolve-targets ((arena Arena) (data-graph IndexedGraph) (shape NodeShape))
+  (fn resolve-targets ((arena Arena) (data-graph SnarlDataGraph) (shape NodeShape))
     (@intent
       "Resolve all target declarations for a shape, returning unique focus nodes")
-    (@spec ((Arena IndexedGraph NodeShape) -> (List Term)))
+    (@spec ((Arena SnarlDataGraph NodeShape) -> (List Term)))
     (@alloc arena)
-    (@pre (>= (indexed-graph-size data-graph) 0))
+    (@pre (>= (snarl-data-graph-size data-graph) 0))
     (@post (>= (list-len $result) 0))
     (@example (arena (fixture-g-typed arena) (fixture-ns-target-class arena)))
     (let ((mut result (list-new arena Term))
@@ -242,9 +242,9 @@
             (_ (do)))))
       classes))
 
-  (fn build-class-index ((arena Arena) (data-graph IndexedGraph) (shapes-graph ShapesGraph))
+  (fn build-class-index ((arena Arena) (data-graph SnarlDataGraph) (shapes-graph ShapesGraph))
     (@intent "Precompute instance sets for all classes used by sh:class constraints")
-    (@spec ((Arena IndexedGraph ShapesGraph) -> ClassIndex))
+    (@spec ((Arena SnarlDataGraph ShapesGraph) -> ClassIndex))
     (@alloc arena)
     (let ((classes (collect-class-constraints arena shapes-graph))
           (mut entries (list-new arena ClassInstances)))
@@ -280,10 +280,10 @@
             (set! found true))))
       found))
 
-  (fn find-subclasses ((arena Arena) (data-graph IndexedGraph) (class-term Term))
+  (fn find-subclasses ((arena Arena) (data-graph SnarlDataGraph) (class-term Term))
     (@intent
       "Find class-term plus all transitive subclasses via rdfs:subClassOf in the data graph")
-    (@spec ((Arena IndexedGraph Term) -> (List Term)))
+    (@spec ((Arena SnarlDataGraph Term) -> (List Term)))
     (@alloc arena)
     (@post (>= (list-len $result) 1))
     (@example (arena (fixture-g-typed arena) (make-iri arena EX_PERSON)))
@@ -298,7 +298,7 @@
         (match (list-get queue qi)
           ((some current)
             (list-push result current)
-            (let ((subs (indexed-graph-subjects arena data-graph subclass-pred current)))
+            (let ((subs (snarl-data-graph-subjects arena data-graph subclass-pred current)))
               (for-each (sub subs)
                 (when (not (set-has visited sub))
                   (set-put visited sub)
@@ -307,12 +307,12 @@
         (set! qi (+ qi 1)))
       result))
 
-  (fn is-shacl-instance-of-class ((arena Arena) (data-graph IndexedGraph) (node Term) (class-term Term))
+  (fn is-shacl-instance-of-class ((arena Arena) (data-graph SnarlDataGraph) (node Term) (class-term Term))
     (@intent
       "True if node is a SHACL instance of class-term: it has rdf:type C' where C' is class-term or a transitive rdfs:subClassOf of class-term (SHACL spec 2.1.3.1). Same relation used to resolve sh:targetClass.")
-    (@spec ((Arena IndexedGraph Term Term) -> Bool))
+    (@spec ((Arena SnarlDataGraph Term Term) -> Bool))
     (@alloc arena)
-    (@pre (>= (indexed-graph-size data-graph) 0))
+    (@pre (>= (snarl-data-graph-size data-graph) 0))
     (@example
       (arena
         (fixture-g-typed arena)
@@ -333,18 +333,18 @@
       (for-each (cls all-classes)
         (when (not result)
           (let ((type-triple (record-new Triple (subject node) (predicate type-pred) (object cls))))
-            (when (indexed-graph-contains data-graph type-triple)
+            (when (snarl-data-graph-contains data-graph type-triple)
               (set! result true)))))
       result)
     :c-name
     "snarl_is_shacl_instance_of_class")
 
-  (fn resolve-target-class ((arena Arena) (data-graph IndexedGraph) (class-term Term))
+  (fn resolve-target-class ((arena Arena) (data-graph SnarlDataGraph) (class-term Term))
     (@intent
       "Find all instances of a class and its subclasses via rdf:type in the data graph")
-    (@spec ((Arena IndexedGraph Term) -> (List Term)))
+    (@spec ((Arena SnarlDataGraph Term) -> (List Term)))
     (@alloc arena)
-    (@pre (>= (indexed-graph-size data-graph) 0))
+    (@pre (>= (snarl-data-graph-size data-graph) 0))
     (@post (>= (list-len $result) 0))
     (@example (arena (fixture-g-typed arena) (make-iri arena EX_PERSON)))
     (let ((type-pred (make-iri arena RDF_TYPE))
@@ -352,7 +352,7 @@
           (mut result (list-new arena Term))
           (seen (set-new arena Term)))
       (for-each (cls all-classes)
-        (let ((instances (indexed-graph-subjects arena data-graph type-pred cls)))
+        (let ((instances (snarl-data-graph-subjects arena data-graph type-pred cls)))
           (for-each (inst instances)
             (when (not (set-has seen inst))
               (set-put seen inst)
@@ -361,53 +361,35 @@
     :c-name
     "snarl_resolve_target_class")
 
-  (fn resolve-target-subjects-of ((arena Arena) (data-graph IndexedGraph) (predicate Term))
+  (fn resolve-target-subjects-of ((arena Arena) (data-graph SnarlDataGraph) (predicate Term))
     (@intent "Find all subjects that have a given predicate in the data graph")
-    (@spec ((Arena IndexedGraph Term) -> (List Term)))
+    (@spec ((Arena SnarlDataGraph Term) -> (List Term)))
     (@alloc arena)
-    (@pre (>= (indexed-graph-size data-graph) 0))
+    (@pre (>= (snarl-data-graph-size data-graph) 0))
     (@post (>= (list-len $result) 0))
     (@example (arena (fixture-g-alice-name arena) (make-iri arena EX_NAME)))
-    (let ((no-term (Option Term) (none))
-          (matches (indexed-graph-match arena data-graph no-term (some predicate) no-term))
-          (mut result (list-new arena Term))
-          (seen (set-new arena Term)))
-      (for-each (t matches)
-        (let ((subj (triple-subject t)))
-          (when (not (set-has seen subj))
-            (set-put seen subj)
-            (list-push result subj))))
-      result)
+    (snarl-data-graph-subjects-of arena data-graph predicate)
     :c-name
     "snarl_resolve_target_subjects_of")
 
-  (fn resolve-target-objects-of ((arena Arena) (data-graph IndexedGraph) (predicate Term))
+  (fn resolve-target-objects-of ((arena Arena) (data-graph SnarlDataGraph) (predicate Term))
     (@intent "Find all objects that have a given predicate in the data graph")
-    (@spec ((Arena IndexedGraph Term) -> (List Term)))
+    (@spec ((Arena SnarlDataGraph Term) -> (List Term)))
     (@alloc arena)
-    (@pre (>= (indexed-graph-size data-graph) 0))
+    (@pre (>= (snarl-data-graph-size data-graph) 0))
     (@post (>= (list-len $result) 0))
     (@example
       (arena (fixture-g-alice-knows-bob arena) (make-iri arena EX_KNOWS)))
-    (let ((no-term (Option Term) (none))
-          (matches (indexed-graph-match arena data-graph no-term (some predicate) no-term))
-          (mut result (list-new arena Term))
-          (seen (set-new arena Term)))
-      (for-each (t matches)
-        (let ((obj (triple-object t)))
-          (when (not (set-has seen obj))
-            (set-put seen obj)
-            (list-push result obj))))
-      result)
+    (snarl-data-graph-objects-of arena data-graph predicate)
     :c-name
     "snarl_resolve_target_objects_of")
 
-  (fn resolve-implicit-class-targets ((arena Arena) (data-graph IndexedGraph) (shape-id Term))
+  (fn resolve-implicit-class-targets ((arena Arena) (data-graph SnarlDataGraph) (shape-id Term))
     (@intent
       "If the shape IRI is used as an rdf:type class in the data graph, return those instances (including subclass instances)")
-    (@spec ((Arena IndexedGraph Term) -> (List Term)))
+    (@spec ((Arena SnarlDataGraph Term) -> (List Term)))
     (@alloc arena)
-    (@pre (>= (indexed-graph-size data-graph) 0))
+    (@pre (>= (snarl-data-graph-size data-graph) 0))
     (@post (>= (list-len $result) 0))
     (@example (arena (fixture-g-typed arena) (make-iri arena EX_PERSON)))
     (resolve-target-class arena data-graph shape-id)

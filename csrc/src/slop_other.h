@@ -5,7 +5,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include "slop_rdf.h"
-#include "slop_index.h"
+#include "slop_data_graph.h"
 #include "slop_vocab.h"
 #include "slop_types.h"
 
@@ -42,12 +42,12 @@ SLOP_OPTION_DEFINE(types_ValidationResult, slop_option_types_ValidationResult)
 slop_list_rdf_Term other_fixture_term_list_ab(slop_arena* arena);
 slop_list_rdf_Term other_fixture_allowed_terms_abc(slop_arena* arena);
 slop_list_types_ShaclPath other_fixture_allowed_path_name(slop_arena* arena);
-index_IndexedGraph other_fixture_g_focus_name(slop_arena* arena);
-index_IndexedGraph other_fixture_g_focus_name_age(slop_arena* arena);
+data_graph_SnarlDataGraph other_fixture_g_focus_name(slop_arena* arena);
+data_graph_SnarlDataGraph other_fixture_g_focus_name_age(slop_arena* arena);
 uint8_t other_list_contains_term(slop_list_rdf_Term terms, rdf_Term target);
 slop_option_types_ValidationResult snarl_check_has_value(slop_arena* arena, rdf_Term focus_node, slop_list_rdf_Term value_nodes, rdf_Term required_value, slop_option_types_ShaclPath path, rdf_Term shape_id, types_Severity severity, slop_option_string message);
 slop_option_types_ValidationResult snarl_check_in(slop_arena* arena, rdf_Term focus_node, rdf_Term value_node, slop_list_rdf_Term allowed_values, slop_option_types_ShaclPath path, rdf_Term shape_id, types_Severity severity, slop_option_string message);
-slop_list_types_ValidationResult snarl_check_closed(slop_arena* arena, index_IndexedGraph data_graph, rdf_Term focus_node, slop_list_types_ShaclPath allowed_paths, slop_option_types_ShaclPath path, rdf_Term shape_id, types_Severity severity, slop_option_string message);
+slop_list_types_ValidationResult snarl_check_closed(slop_arena* arena, data_graph_SnarlDataGraph data_graph, rdf_Term focus_node, slop_list_types_ShaclPath allowed_paths, slop_option_types_ShaclPath path, rdf_Term shape_id, types_Severity severity, slop_option_string message);
 
 /* Function name aliases for C interop */
 #define other_check_has_value snarl_check_has_value

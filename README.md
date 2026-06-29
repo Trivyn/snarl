@@ -68,11 +68,12 @@ Snarl provides a C-compatible static library (`libsnarl.a`) with a stable header
 #include "snarl.h"
 #include "slop_runtime.h"
 
-// Create arena, parse your TTL files into IndexedGraphs, then:
+// Existing compatibility path: validate general IndexedGraphs.
 types_ValidatorResult result = snarl_validate(arena, data_graph, shapes_graph);
 
-// Check conformance directly:
-bool ok = snarl_conforms(arena, data_graph, shapes_graph);
+// Fast data path: use SnarlDataGraph for large data graphs and IndexedGraph for shapes.
+types_ValidatorResult fast_result =
+    snarl_validate_data_graph(arena, snarl_data_graph, shapes_graph);
 ```
 
 Key API functions:
@@ -81,6 +82,7 @@ Key API functions:
 |----------|-------------|
 | `snarl_validate` | Full validation, returns report with all results |
 | `snarl_validate_with_config` | Validation with custom config (max errors, severity filtering) |
+| `snarl_validate_data_graph` | Validate a Snarl-optimized data graph against indexed shapes |
 | `snarl_conforms` | Quick boolean conformance check |
 | `snarl_report_to_string` | Serialize report as human-readable text |
 | `snarl_report_to_graph` | Serialize report as an RDF graph (Turtle) |
@@ -91,10 +93,12 @@ Key API functions:
 Rust bindings are in the `rust/` directory:
 
 ```rust
-use snarl::{Arena, validate, conforms};
+use snarl::{Arena, SnarlDataGraph, IndexedGraph, validate_data_graph};
 
-let arena = Arena::new();
-let result = validate(&arena, &data_graph, &shapes_graph);
+let arena = Arena::with_default_capacity();
+let data_graph = SnarlDataGraph::new(&arena);
+let shapes_graph = IndexedGraph::new(&arena);
+let result = validate_data_graph(&arena, &data_graph, &shapes_graph);
 ```
 
 ## Testing
@@ -116,15 +120,15 @@ A comparison benchmark script (`cli/tests/benchmark_compare.py`) runs the same v
 
 | Dataset | Triples | Snarl | pySHACL | Rudof | vs pySHACL | vs Rudof |
 |---------|--------:|------:|--------:|------:|-----------:|---------:|
-| employee-dir | 25 | 3ms | 106ms | 320ms | 31.0x | 93.8x |
-| library | 18 | 4ms | 93ms | 326ms | 25.5x | 89.5x |
-| product-catalog | 18 | 4ms | 102ms | 300ms | 28.6x | 84.0x |
-| address-book | 14 | 3ms | 93ms | 315ms | 27.9x | 94.5x |
-| multi-shape | 11 | 3ms | 101ms | 299ms | 31.4x | 92.9x |
-| employees-1k | 4,955 | 23ms | 290ms | 345ms | 12.8x | 15.2x |
-| employees-10k | 49,493 | 220ms | 2.10s | 581ms | 9.6x | 2.6x |
-| employees-100k | 494,962 | 2.54s | 21.69s | 4.04s | 8.5x | 1.6x |
-| meteorites | 1,010,109 | 2.83s | 22.09s | 4.93s | 7.8x | 1.7x |
+| employee-dir | 25 | 3ms | 108ms | 299ms | 36.9x | 102.6x |
+| library | 18 | 3ms | 92ms | 297ms | 33.7x | 108.3x |
+| product-catalog | 18 | 3ms | 93ms | 297ms | 34.8x | 110.7x |
+| address-book | 14 | 3ms | 91ms | 300ms | 33.9x | 112.3x |
+| multi-shape | 11 | 3ms | 91ms | 295ms | 34.3x | 111.9x |
+| employees-1k | 4,955 | 22ms | 285ms | 328ms | 13.0x | 15.0x |
+| employees-10k | 49,493 | 218ms | 2.09s | 584ms | 9.6x | 2.7x |
+| employees-100k | 494,962 | 2.41s | 21.72s | 4.00s | 9.0x | 1.7x |
+| meteorites | 1,010,109 | 2.94s | 21.89s | 4.90s | 7.4x | 1.7x |
 
 All validators produced matching result counts across these benchmarks. The Rudof comparison uses its minimal result format so the benchmark can parse validation counts directly instead of scraping table output. The meteorites row uses the data-only `test_data/large_meteorite_data.ttl` fixture so all three validators can parse the same graph.
 

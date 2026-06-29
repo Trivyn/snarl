@@ -1,6 +1,5 @@
 (module types
   (import rdf (Term Triple make-iri))
-  (import index (IndexedGraph))
   (import vocab (SHACL_CLASS))
   (export
     ShaclPath
