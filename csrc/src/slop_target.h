@@ -5,12 +5,16 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include "slop_rdf.h"
+#include "slop_index.h"
 #include "slop_data_graph.h"
 #include "slop_vocab.h"
 #include "slop_types.h"
 
 typedef struct target_ClassInstances target_ClassInstances;
 typedef struct target_ClassIndex target_ClassIndex;
+typedef struct target_TargetCache target_TargetCache;
+
+typedef slop_list_rdf_Term target_TermList;
 
 #ifndef SLOP_LIST_RDF_TERM_DEFINED
 #define SLOP_LIST_RDF_TERM_DEFINED
@@ -20,6 +24,11 @@ SLOP_LIST_DEFINE(rdf_Term, slop_list_rdf_Term)
 #ifndef SLOP_OPTION_RDF_TERM_DEFINED
 #define SLOP_OPTION_RDF_TERM_DEFINED
 SLOP_OPTION_DEFINE(rdf_Term, slop_option_rdf_Term)
+#endif
+
+#ifndef SLOP_OPTION_INDEX_TERMSET_DEFINED
+#define SLOP_OPTION_INDEX_TERMSET_DEFINED
+SLOP_OPTION_DEFINE(index_TermSet, slop_option_index_TermSet)
 #endif
 
 struct target_ClassInstances {
@@ -40,12 +49,23 @@ SLOP_LIST_DEFINE(target_ClassInstances, slop_list_target_ClassInstances)
 
 struct target_ClassIndex {
     slop_list_target_ClassInstances entries;
+    slop_map* entry_map;
 };
 typedef struct target_ClassIndex target_ClassIndex;
 
 #ifndef SLOP_OPTION_TARGET_CLASSINDEX_DEFINED
 #define SLOP_OPTION_TARGET_CLASSINDEX_DEFINED
 SLOP_OPTION_DEFINE(target_ClassIndex, slop_option_target_ClassIndex)
+#endif
+
+struct target_TargetCache {
+    slop_map* target_classes;
+};
+typedef struct target_TargetCache target_TargetCache;
+
+#ifndef SLOP_OPTION_TARGET_TARGETCACHE_DEFINED
+#define SLOP_OPTION_TARGET_TARGETCACHE_DEFINED
+SLOP_OPTION_DEFINE(target_TargetCache, slop_option_target_TargetCache)
 #endif
 
 
@@ -142,6 +162,9 @@ data_graph_SnarlDataGraph target_fixture_g_alice_knows_bob(slop_arena* arena);
 slop_list_rdf_Term target_fixture_target_nodes_alice(slop_arena* arena);
 types_NodeShape target_fixture_ns_target_class(slop_arena* arena);
 slop_list_rdf_Term snarl_resolve_targets(slop_arena* arena, data_graph_SnarlDataGraph data_graph, types_NodeShape shape);
+target_TargetCache target_target_cache_create(slop_arena* arena);
+target_TermList target_resolve_target_class_cached(slop_arena* arena, data_graph_SnarlDataGraph data_graph, target_TargetCache cache, rdf_Term class_term);
+slop_list_rdf_Term target_resolve_targets_cached(slop_arena* arena, data_graph_SnarlDataGraph data_graph, target_TargetCache cache, types_NodeShape shape);
 slop_list_rdf_Term snarl_resolve_target_node(slop_arena* arena, slop_list_rdf_Term nodes);
 void target_add_class_if_needed(slop_arena* arena, slop_list_rdf_Term classes, slop_map* seen, rdf_Term class_term);
 void target_collect_constraint_classes(slop_arena* arena, slop_list_rdf_Term classes, slop_map* seen, types_Constraint constraint);
@@ -177,9 +200,24 @@ SLOP_OPTION_DEFINE(rdf_Term, slop_option_rdf_Term)
 SLOP_OPTION_DEFINE(target_ClassInstances, slop_option_target_ClassInstances)
 #endif
 
+#ifndef SLOP_OPTION_INDEX_TERMSET_DEFINED
+#define SLOP_OPTION_INDEX_TERMSET_DEFINED
+SLOP_OPTION_DEFINE(index_TermSet, slop_option_index_TermSet)
+#endif
+
 #ifndef SLOP_OPTION_TARGET_CLASSINDEX_DEFINED
 #define SLOP_OPTION_TARGET_CLASSINDEX_DEFINED
 SLOP_OPTION_DEFINE(target_ClassIndex, slop_option_target_ClassIndex)
+#endif
+
+#ifndef SLOP_OPTION_TARGET_TERMLIST_DEFINED
+#define SLOP_OPTION_TARGET_TERMLIST_DEFINED
+SLOP_OPTION_DEFINE(target_TermList, slop_option_target_TermList)
+#endif
+
+#ifndef SLOP_OPTION_TARGET_TARGETCACHE_DEFINED
+#define SLOP_OPTION_TARGET_TARGETCACHE_DEFINED
+SLOP_OPTION_DEFINE(target_TargetCache, slop_option_target_TargetCache)
 #endif
 
 

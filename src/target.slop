@@ -1,6 +1,7 @@
 (module target
   (import rdf
     (Term Triple term-eq term-kind make-iri make-triple triple-subject triple-predicate triple-object))
+  (import index (TermSet))
   (import data-graph
     (SnarlDataGraph snarl-data-graph-subjects snarl-data-graph-subjects-of snarl-data-graph-objects-of snarl-data-graph-size snarl-data-graph-create snarl-data-graph-add snarl-data-graph-contains))
   (import vocab (RDF_TYPE RDFS_SUBCLASS_OF))
@@ -8,10 +9,13 @@
   (export
     ClassInstances
     ClassIndex
+    TargetCache
     build-class-index
+    target-cache-create
     class-index-has-class
     class-index-has-instance
     resolve-targets
+    resolve-targets-cached
     resolve-target-node
     resolve-target-class
     resolve-target-subjects-of
@@ -38,7 +42,13 @@
     (instances (Set Term))))
 
   (type ClassIndex (record
-    (entries (List ClassInstances))))
+    (entries (List ClassInstances))
+    (entry-map (Map Term TermSet))))
+
+  (type TermList (List Term))
+
+  (type TargetCache (record
+    (target-classes (Map Term TermList))))
 
   (fn fixture-g-typed ((arena Arena))
     (@intent "Graph with (alice rdf:type Person), (bob rdf:type Person)")
@@ -165,6 +175,62 @@
     :c-name
     "snarl_resolve_targets")
 
+  (fn target-cache-create ((arena Arena))
+    (@intent "Create per-validation target resolution cache")
+    (@spec ((Arena) -> TargetCache))
+    (@alloc arena)
+    (record-new TargetCache
+      (target-classes (map-new arena Term TermList))))
+
+  (fn resolve-target-class-cached ((arena Arena) (data-graph SnarlDataGraph) (cache TargetCache) (class-term Term))
+    (@intent "Resolve targetClass with a per-validation cache")
+    (@spec ((Arena SnarlDataGraph TargetCache Term) -> TermList))
+    (@alloc arena)
+    (match (map-get (. cache target-classes) class-term)
+      ((some cached) cached)
+      ((none)
+        (let ((resolved TermList (resolve-target-class arena data-graph class-term)))
+          (map-put (. cache target-classes) class-term resolved)
+          resolved))))
+
+  (fn resolve-targets-cached ((arena Arena) (data-graph SnarlDataGraph) (cache TargetCache) (shape NodeShape))
+    (@intent
+      "Resolve all target declarations for a shape using a per-validation class-target cache")
+    (@spec ((Arena SnarlDataGraph TargetCache NodeShape) -> (List Term)))
+    (@alloc arena)
+    (@pre (>= (snarl-data-graph-size data-graph) 0))
+    (@post (>= (list-len $result) 0))
+    (let ((mut result (list-new arena Term))
+          (seen (set-new arena Term)))
+      (for-each (node (. shape target-nodes))
+        (when (not (set-has seen node))
+          (set-put seen node)
+          (list-push result node)))
+      (for-each (cls (. shape target-classes))
+        (let ((instances (resolve-target-class-cached arena data-graph cache cls)))
+          (for-each (inst instances)
+            (when (not (set-has seen inst))
+              (set-put seen inst)
+              (list-push result inst)))))
+      (for-each (pred (. shape target-subjects-of))
+        (let ((subjects (resolve-target-subjects-of arena data-graph pred)))
+          (for-each (subj subjects)
+            (when (not (set-has seen subj))
+              (set-put seen subj)
+              (list-push result subj)))))
+      (for-each (pred (. shape target-objects-of))
+        (let ((objects (resolve-target-objects-of arena data-graph pred)))
+          (for-each (obj objects)
+            (when (not (set-has seen obj))
+              (set-put seen obj)
+              (list-push result obj)))))
+      (let ((implicit (resolve-target-class-cached arena data-graph cache (. shape id))))
+        (for-each (inst implicit)
+          (when (not (set-has seen inst))
+            (set-put seen inst)
+            (list-push result inst))))
+      result))
+
   (fn resolve-target-node ((arena Arena) (nodes (List Term)))
     (@intent "Return target nodes directly (they are the focus nodes)")
     (@spec ((Arena (List Term)) -> (List Term)))
@@ -247,38 +313,37 @@
     (@spec ((Arena SnarlDataGraph ShapesGraph) -> ClassIndex))
     (@alloc arena)
     (let ((classes (collect-class-constraints arena shapes-graph))
-          (mut entries (list-new arena ClassInstances)))
+          (mut entries (list-new arena ClassInstances))
+          (entry-map (map-new arena Term TermSet)))
       (for-each (class-term classes)
         (let ((instance-list (resolve-target-class arena data-graph class-term))
               (instances (set-new arena Term)))
           (for-each (inst instance-list)
             (set-put instances inst))
+          (map-put entry-map class-term instances)
           (list-push entries
             (record-new ClassInstances
               (class-term class-term)
               (instances instances)))))
-      (record-new ClassIndex (entries entries))))
+      (record-new ClassIndex
+        (entries entries)
+        (entry-map entry-map))))
 
   (fn class-index-has-class ((index ClassIndex) (class-term Term))
     (@intent "True if the class index has a cached entry for class-term")
     (@spec ((ClassIndex Term) -> Bool))
     (@pure)
-    (let ((mut found false))
-      (for-each (entry (. index entries))
-        (when (and (not found) (term-eq (. entry class-term) class-term))
-          (set! found true)))
-      found))
+    (match (map-get (. index entry-map) class-term)
+      ((some _) true)
+      ((none) false)))
 
   (fn class-index-has-instance ((index ClassIndex) (node Term) (class-term Term))
     (@intent "True if node is in the cached instance set for class-term")
     (@spec ((ClassIndex Term Term) -> Bool))
     (@pure)
-    (let ((mut found false))
-      (for-each (entry (. index entries))
-        (when (and (not found) (term-eq (. entry class-term) class-term))
-          (when (set-has (. entry instances) node)
-            (set! found true))))
-      found))
+    (match (map-get (. index entry-map) class-term)
+      ((some instances) (set-has instances node))
+      ((none) false)))
 
   (fn find-subclasses ((arena Arena) (data-graph SnarlDataGraph) (class-term Term))
     (@intent

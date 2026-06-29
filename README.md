@@ -120,15 +120,15 @@ A comparison benchmark script (`cli/tests/benchmark_compare.py`) runs the same v
 
 | Dataset | Triples | Snarl | pySHACL | Rudof | vs pySHACL | vs Rudof |
 |---------|--------:|------:|--------:|------:|-----------:|---------:|
-| employee-dir | 25 | 3ms | 108ms | 299ms | 36.9x | 102.6x |
-| library | 18 | 3ms | 92ms | 297ms | 33.7x | 108.3x |
-| product-catalog | 18 | 3ms | 93ms | 297ms | 34.8x | 110.7x |
-| address-book | 14 | 3ms | 91ms | 300ms | 33.9x | 112.3x |
-| multi-shape | 11 | 3ms | 91ms | 295ms | 34.3x | 111.9x |
-| employees-1k | 4,955 | 22ms | 285ms | 328ms | 13.0x | 15.0x |
-| employees-10k | 49,493 | 218ms | 2.09s | 584ms | 9.6x | 2.7x |
-| employees-100k | 494,962 | 2.41s | 21.72s | 4.00s | 9.0x | 1.7x |
-| meteorites | 1,010,109 | 2.94s | 21.89s | 4.90s | 7.4x | 1.7x |
+| employee-dir | 25 | 3ms | 105ms | 298ms | 33.1x | 93.8x |
+| library | 18 | 3ms | 93ms | 300ms | 30.9x | 99.9x |
+| product-catalog | 18 | 3ms | 106ms | 305ms | 36.9x | 106.3x |
+| address-book | 14 | 3ms | 94ms | 299ms | 34.6x | 110.4x |
+| multi-shape | 11 | 3ms | 97ms | 298ms | 31.9x | 98.4x |
+| employees-1k | 4,955 | 20ms | 288ms | 326ms | 14.7x | 16.6x |
+| employees-10k | 49,493 | 193ms | 2.09s | 585ms | 10.8x | 3.0x |
+| employees-100k | 494,962 | 2.14s | 21.59s | 4.06s | 10.1x | 1.9x |
+| meteorites | 1,010,109 | 2.44s | 22.04s | 4.88s | 9.0x | 2.0x |
 
 All validators produced matching result counts across these benchmarks. The Rudof comparison uses its minimal result format so the benchmark can parse validation counts directly instead of scraping table output. The meteorites row uses the data-only `test_data/large_meteorite_data.ttl` fixture so all three validators can parse the same graph.
 

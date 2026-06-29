@@ -11,10 +11,15 @@
     snarl-data-graph-add
     snarl-data-graph-size
     snarl-data-graph-contains
+    snarl-data-graph-object-set
+    snarl-data-graph-term-set-size
+    snarl-data-graph-term-set-to-list
+    snarl-data-graph-has-object
     snarl-data-graph-objects
     snarl-data-graph-subjects
     snarl-data-graph-subjects-of
     snarl-data-graph-objects-of
+    snarl-data-graph-predicates-for-subject
     snarl-data-graph-triples-for-subject
     snarl-data-graph-to-indexed
     snarl-data-graph-from-indexed)
@@ -89,24 +94,84 @@
         ((none) false)))
     :c-name "snarl_data_graph_contains")
 
+  (fn snarl-data-graph-object-set ((g SnarlDataGraph) (subj Term) (pred Term))
+    (@intent "Return the indexed object set for a subject/predicate pair")
+    (@spec ((SnarlDataGraph Term Term) -> (Option TermSet)))
+    (@pure)
+    (match (map-get (. (. g index) sp) subj)
+      ((some pred-map)
+        (match (map-get pred-map pred)
+          ((some objs) (some objs))
+          ((none) (none))))
+      ((none) (none))))
+
+  (fn snarl-data-graph-term-set-size ((terms TermSet))
+    (@intent "Count terms in a term set")
+    (@spec ((TermSet) -> (Int 0 ..)))
+    (@pure)
+    (let ((mut n 0))
+      (for-each (_ terms)
+        (set! n (+ n 1)))
+      n))
+
+  (fn snarl-data-graph-term-set-to-list ((arena Arena) (terms TermSet))
+    (@intent "Copy a term set into a list")
+    (@spec ((Arena TermSet) -> (List Term)))
+    (@alloc arena)
+    (let ((mut result (list-new arena Term)))
+      (for-each (t terms)
+        (list-push result t))
+      result))
+
+  (fn snarl-data-graph-has-object ((g SnarlDataGraph) (subj Term) (pred Term) (obj Term))
+    (@intent "Check whether a subject/predicate pair has an object")
+    (@spec ((SnarlDataGraph Term Term Term) -> Bool))
+    (@pure)
+    (match (snarl-data-graph-object-set g subj pred)
+      ((some objs) (set-has objs obj))
+      ((none) false)))
+
+  (fn add-to-sp-index-if-new ((arena Arena) (outer (Map Term TermSetMap)) (subj Term) (pred Term) (obj Term))
+    (@intent "Insert into the subject/predicate index and report whether the triple was new")
+    (@spec ((Arena (Map Term TermSetMap) Term Term Term) -> Bool))
+    (@alloc arena)
+    (match (map-get outer subj)
+      ((some pred-map)
+        (match (map-get pred-map pred)
+          ((some objs)
+            (if (set-has objs obj)
+              false
+              (do
+                (set-put objs obj)
+                true)))
+          ((none)
+            (do
+              (map-put pred-map pred (make-term-set arena obj))
+              true))))
+      ((none)
+        (let ((pred-map (map-new arena Term TermSet)))
+          (map-put pred-map pred (make-term-set arena obj))
+          (map-put outer subj pred-map)
+          true))))
+
   (fn snarl-data-graph-add ((arena Arena) (mut g SnarlDataGraph) (t Triple))
     (@intent "Add a triple to the Snarl data graph")
     (@spec ((Arena SnarlDataGraph Triple) -> SnarlDataGraph))
     (@alloc arena)
-    (when (snarl-data-graph-contains g t)
-      (return g))
     (let ((s (triple-subject t))
           (p (triple-predicate t))
           (o (triple-object t)))
-      (list-push (. g triples) t)
-      (add-to-nested-set arena (. (. g index) sp) s p o)
-      (add-to-nested-set arena (. (. g index) po) p o s)
-      (add-to-flat-set arena (. (. g index) p-subjects) p s)
-      (add-to-flat-set arena (. (. g index) p-objects) p o)
-      (record-new SnarlDataGraph
-        (triples (. g triples))
-        (index (. g index))
-        (size (+ (. g size) 1))))
+      (if (add-to-sp-index-if-new arena (. (. g index) sp) s p o)
+        (do
+          (list-push (. g triples) t)
+          (add-to-nested-set arena (. (. g index) po) p o s)
+          (add-to-flat-set arena (. (. g index) p-subjects) p s)
+          (add-to-flat-set arena (. (. g index) p-objects) p o)
+          (record-new SnarlDataGraph
+            (triples (. g triples))
+            (index (. g index))
+            (size (+ (. g size) 1))))
+        g))
     :c-name "snarl_data_graph_add")
 
   (fn snarl-data-graph-size ((g SnarlDataGraph))
@@ -116,24 +181,12 @@
     (. g size)
     :c-name "snarl_data_graph_size")
 
-  (fn term-set-to-list ((arena Arena) (terms TermSet))
-    (@intent "Copy a term set into a list")
-    (@spec ((Arena TermSet) -> (List Term)))
-    (@alloc arena)
-    (let ((mut result (list-new arena Term)))
-      (for-each (t terms)
-        (list-push result t))
-      result))
-
   (fn snarl-data-graph-objects ((arena Arena) (g SnarlDataGraph) (subj Term) (pred Term))
     (@intent "Return objects for a subject/predicate pair")
     (@spec ((Arena SnarlDataGraph Term Term) -> (List Term)))
     (@alloc arena)
-    (match (map-get (. (. g index) sp) subj)
-      ((some pred-map)
-        (match (map-get pred-map pred)
-          ((some objs) (term-set-to-list arena objs))
-          ((none) (list-new arena Term))))
+    (match (snarl-data-graph-object-set g subj pred)
+      ((some objs) (snarl-data-graph-term-set-to-list arena objs))
       ((none) (list-new arena Term)))
     :c-name "snarl_data_graph_objects")
 
@@ -144,7 +197,7 @@
     (match (map-get (. (. g index) po) pred)
       ((some obj-map)
         (match (map-get obj-map obj)
-          ((some subjects) (term-set-to-list arena subjects))
+          ((some subjects) (snarl-data-graph-term-set-to-list arena subjects))
           ((none) (list-new arena Term))))
       ((none) (list-new arena Term)))
     :c-name "snarl_data_graph_subjects")
@@ -154,7 +207,7 @@
     (@spec ((Arena SnarlDataGraph Term) -> (List Term)))
     (@alloc arena)
     (match (map-get (. (. g index) p-subjects) pred)
-      ((some subjects) (term-set-to-list arena subjects))
+      ((some subjects) (snarl-data-graph-term-set-to-list arena subjects))
       ((none) (list-new arena Term)))
     :c-name "snarl_data_graph_subjects_of")
 
@@ -163,9 +216,21 @@
     (@spec ((Arena SnarlDataGraph Term) -> (List Term)))
     (@alloc arena)
     (match (map-get (. (. g index) p-objects) pred)
-      ((some objects) (term-set-to-list arena objects))
+      ((some objects) (snarl-data-graph-term-set-to-list arena objects))
       ((none) (list-new arena Term)))
     :c-name "snarl_data_graph_objects_of")
+
+  (fn snarl-data-graph-predicates-for-subject ((arena Arena) (g SnarlDataGraph) (subj Term))
+    (@intent "Return predicates used by a subject")
+    (@spec ((Arena SnarlDataGraph Term) -> (List Term)))
+    (@alloc arena)
+    (let ((mut result (list-new arena Term)))
+      (match (map-get (. (. g index) sp) subj)
+        ((some pred-map)
+          (for-each ((p _) pred-map)
+            (list-push result p)))
+        ((none) (do)))
+      result))
 
   (fn snarl-data-graph-triples-for-subject ((arena Arena) (g SnarlDataGraph) (subj Term))
     (@intent "Return all triples with the given subject")

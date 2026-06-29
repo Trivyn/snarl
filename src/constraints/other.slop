@@ -9,8 +9,8 @@
 (module other
   (@doc "SHACL other constraints: sh:closed, sh:hasValue, sh:in")
 
-  (import rdf (Term Triple term-eq triple-predicate make-iri make-literal make-triple))
-  (import data-graph (SnarlDataGraph snarl-data-graph-triples-for-subject snarl-data-graph-create snarl-data-graph-add))
+  (import rdf (Term term-eq make-iri make-literal make-triple))
+  (import data-graph (SnarlDataGraph snarl-data-graph-predicates-for-subject snarl-data-graph-create snarl-data-graph-add))
   (import vocab (SHACL_CLOSED SHACL_HAS_VALUE SHACL_IN))
   (import types (Severity Constraint ValidationResult ShaclPath))
 
@@ -174,25 +174,22 @@
       ;; ex:age present but not in allowed paths → 1 violation
       )
     (let ((mut results (list-new arena ValidationResult))
-          (triples (snarl-data-graph-triples-for-subject arena data-graph focus-node)))
-      (for-each (triple triples)
-        (let ((pred (triple-predicate triple))
-              (mut allowed false))
-          (for-each (ap allowed-paths)
-            (match ap
-              ((path-predicate p)
-                (when (term-eq p pred)
-                  (set! allowed true)))
-              (_ (do))))
-          (when (not allowed)
-            (list-push results
-              (record-new ValidationResult
-                (focus-node focus-node)
-                (result-path (some (union-new ShaclPath path-predicate pred)))
-                (value (some pred))
-                (source-shape shape-id)
-                (source-constraint-component SHACL_CLOSED)
-                (severity severity)
-                (message message))))))
+          (allowed-preds (set-new arena Term))
+          (predicates (snarl-data-graph-predicates-for-subject arena data-graph focus-node)))
+      (for-each (ap allowed-paths)
+        (match ap
+          ((path-predicate p) (set-put allowed-preds p))
+          (_ (do))))
+      (for-each (pred predicates)
+        (when (not (set-has allowed-preds pred))
+          (list-push results
+            (record-new ValidationResult
+              (focus-node focus-node)
+              (result-path (some (union-new ShaclPath path-predicate pred)))
+              (value (some pred))
+              (source-shape shape-id)
+              (source-constraint-component SHACL_CLOSED)
+              (severity severity)
+              (message message)))))
       results)
     :c-name "snarl_check_closed"))

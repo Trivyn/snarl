@@ -214,6 +214,7 @@ typedef struct { bool has_value; types_ValidationResult value; } slop_option_typ
 
 struct target_ClassIndex {
     slop_list_target_ClassInstances entries;
+    slop_map* entry_map;
 };
 typedef struct target_ClassIndex target_ClassIndex;
 
