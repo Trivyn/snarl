@@ -1,0 +1,18 @@
+@prefix ex: <http://example.org/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+
+# Regression (FB1: property-shape-map bypass, sh:node): AShape's sh:node
+# resolves to PSCycle, a bare PropertyShape (has sh:path -- legal SHACL,
+# resolved via shapes-graph's property-shape-map, not shape-map). PSCycle's
+# own sh:node points back at AShape. Reflexive data edge closes the cycle.
+# Must produce the engine's shape-recursion error, not a crash.
+ex:AShape
+    a sh:NodeShape ;
+    sh:targetNode ex:a ;
+    sh:node ex:PSCycle .
+
+ex:PSCycle
+    sh:path ex:p ;
+    sh:node ex:AShape .
+
+ex:a ex:p ex:a .

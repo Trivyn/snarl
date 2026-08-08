@@ -1,0 +1,31 @@
+@prefix ex: <http://example.org/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+
+# Regression (shape-recursion guard): plain acyclic shape chain A -> B -> C.
+# No back-edge anywhere, so this must validate normally (conform) with no
+# false-positive recursion error from the guard.
+ex:AShape
+    a sh:NodeShape ;
+    sh:targetNode ex:a ;
+    sh:property [
+        sh:path ex:p ;
+        sh:node ex:BShape ;
+    ] .
+
+ex:BShape
+    a sh:NodeShape ;
+    sh:property [
+        sh:path ex:p ;
+        sh:node ex:CShape ;
+    ] .
+
+ex:CShape
+    a sh:NodeShape ;
+    sh:property [
+        sh:path ex:name ;
+        sh:minCount 1 ;
+    ] .
+
+ex:a ex:p ex:b .
+ex:b ex:p ex:c .
+ex:c ex:name "Charlie" .

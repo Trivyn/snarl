@@ -1,0 +1,6 @@
+@prefix ex: <http://example.org/> .
+
+# alice knows bob; bob has no outgoing ex:knows edge, so PersonShape applied
+# to bob is vacuously satisfied. No back-edge -- acyclic -- must conform.
+ex:alice a ex:Person .
+ex:alice ex:knows ex:bob .

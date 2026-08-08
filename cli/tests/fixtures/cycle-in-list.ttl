@@ -1,0 +1,15 @@
+@prefix ex: <http://example.org/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+
+# Regression (parse-time recursion hazard): sh:in's list has a cyclic
+# rdf:rest (never reaches rdf:nil). rdf-list-elements-indexed (vendored,
+# in slop-rdf) has no visited set at all, so this used to hang forever.
+# Must produce a deterministic parse/engine error, never a hang.
+ex:S
+    a sh:NodeShape ;
+    sh:targetClass ex:C ;
+    sh:in _:l .
+
+_:l rdf:first ex:x ;
+    rdf:rest _:l .

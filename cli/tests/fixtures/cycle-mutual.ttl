@@ -1,0 +1,25 @@
+@prefix ex: <http://example.org/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+
+# Regression (shape-recursion guard): AShape references BShape via sh:node,
+# BShape references AShape back. Data gives a<->b a matching mutual edge, so
+# evaluating AShape(a) -> BShape(b) -> AShape(a) revisits the pair
+# (AShape, a) on the current path. Must produce the engine's
+# ValidatorResult::Error (shape recursion), never a crash or silent conforms.
+ex:AShape
+    a sh:NodeShape ;
+    sh:targetNode ex:a ;
+    sh:property [
+        sh:path ex:p ;
+        sh:node ex:BShape ;
+    ] .
+
+ex:BShape
+    a sh:NodeShape ;
+    sh:property [
+        sh:path ex:p ;
+        sh:node ex:AShape ;
+    ] .
+
+ex:a ex:p ex:b .
+ex:b ex:p ex:a .

@@ -1,0 +1,17 @@
+@prefix ex: <http://example.org/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+
+# Regression (shape-recursion guard): SelfShape's own property shape points
+# sh:node back at SelfShape itself. Data gives x a reflexive ex:p edge, so
+# evaluating SelfShape against x recurses into evaluating SelfShape against
+# x again via the exact same (shape, node) pair. Must produce the engine's
+# ValidatorResult::Error (shape recursion), never a crash or silent conforms.
+ex:SelfShape
+    a sh:NodeShape ;
+    sh:targetNode ex:x ;
+    sh:property [
+        sh:path ex:p ;
+        sh:node ex:SelfShape ;
+    ] .
+
+ex:x ex:p ex:x .
