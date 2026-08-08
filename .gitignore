@@ -11,3 +11,13 @@ cli/tests/w3c/validation-reports/
 __pycache__
 rust/target
 rust/csrc
+
+# MOOSEDev: ignore the derived store/vector cache,
+# but commit the canonical project-graph text (kg.nq).
+/.moosedev/*
+!/.moosedev/kg.nq
+
+.agents/
+.claude/
+.codex/
+.mcp.json

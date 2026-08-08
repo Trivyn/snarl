@@ -82,6 +82,15 @@ csrc:
 crate-vendor:
 	@mkdir -p rust/csrc/src rust/csrc/runtime
 	cp csrc/src/*.c csrc/src/*.h rust/csrc/src/
+	rm -f rust/csrc/src/slop_common.c rust/csrc/src/slop_common.h \
+	      rust/csrc/src/slop_file.c rust/csrc/src/slop_file.h \
+	      rust/csrc/src/slop_index.c rust/csrc/src/slop_index.h \
+	      rust/csrc/src/slop_list.c rust/csrc/src/slop_list.h \
+	      rust/csrc/src/slop_rdf.c rust/csrc/src/slop_rdf.h \
+	      rust/csrc/src/slop_strlib.c rust/csrc/src/slop_strlib.h \
+	      rust/csrc/src/slop_ttl.c rust/csrc/src/slop_ttl.h \
+	      rust/csrc/src/slop_vocab.c rust/csrc/src/slop_vocab.h \
+	      rust/csrc/src/slop_xsd.c rust/csrc/src/slop_xsd.h
 	cp csrc/runtime/slop_runtime.h rust/csrc/runtime/
 
 crate-build: crate-vendor

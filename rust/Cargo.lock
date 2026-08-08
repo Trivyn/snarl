@@ -25,8 +25,25 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0fda2ff0d084019ba4d7c6f371c95d8fd75ce3524c3cb8fb653a3023f6323e64"
 
 [[package]]
+name = "slop-rdf-sys"
+version = "0.1.0"
+dependencies = [
+ "cc",
+ "slop-std-sys",
+]
+
+[[package]]
+name = "slop-std-sys"
+version = "0.1.0"
+dependencies = [
+ "cc",
+]
+
+[[package]]
 name = "snarl-shacl"
 version = "0.4.1"
 dependencies = [
  "cc",
+ "slop-rdf-sys",
+ "slop-std-sys",
 ]

@@ -24,6 +24,14 @@
 
 pub mod ffi;
 
+// slop-rdf-sys / slop-std-sys expose no Rust API — we only need their compiled C
+// code (linked into our own csrc/src/*.c). Without a real reference, rustc treats
+// them as unused and drops their (bundled) native objects from the final link of
+// any binary that depends on this crate (e.g. `cargo test` integration binaries).
+// `as _` forces them to be treated as used without an unused-import warning.
+use slop_rdf_sys as _;
+use slop_std_sys as _;
+
 use std::os::raw::c_char;
 
 // ---------------------------------------------------------------------------
