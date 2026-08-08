@@ -16,9 +16,19 @@
     default-validator-config
     make-validation-report
     report-add-result
-    report-conforms)
+    report-conforms
+    term-display-label)
 
   (@doc "Core type definitions for the snarl SHACL validator")
+
+  (fn term-display-label ((t Term) (fallback String))
+    (@intent
+      "Render a term as its IRI string, or a fixed fallback for non-IRI terms. Shared by engine.slop's cycle-recursion messages and parse.slop's parse-time hazard messages (both formerly duplicated this verbatim, CLEANUP per the fix-round lens-2 finding): those messages must be deterministic (identical input graph => identical message), so they must never embed a parser- or arena-assigned blank node id.")
+    (@spec ((Term String) -> String))
+    (@pure)
+    (match t
+      ((term-iri iri) (. iri value))
+      (_ fallback)))
 
   (const EX_FOCUS String "http://example.org/focus")
 

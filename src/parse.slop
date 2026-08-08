@@ -6,9 +6,9 @@
   (import list (rdf-list-elements-indexed))
   (import vocab
     (RDF_TYPE SHACL_NODE_SHAPE SHACL_PROPERTY_SHAPE SHACL_TARGET_NODE SHACL_TARGET_CLASS SHACL_TARGET_SUBJECTS_OF SHACL_TARGET_OBJECTS_OF SHACL_PATH SHACL_INVERSE_PATH SHACL_ALTERNATIVE_PATH SHACL_ZERO_OR_MORE_PATH SHACL_ONE_OR_MORE_PATH SHACL_ZERO_OR_ONE_PATH SHACL_CLASS SHACL_DATATYPE SHACL_NODE_KIND SHACL_MIN_COUNT SHACL_MAX_COUNT SHACL_MIN_INCLUSIVE SHACL_MAX_INCLUSIVE SHACL_MIN_EXCLUSIVE SHACL_MAX_EXCLUSIVE SHACL_MIN_LENGTH SHACL_MAX_LENGTH SHACL_PATTERN SHACL_FLAGS SHACL_LANGUAGE_IN SHACL_UNIQUE_LANG SHACL_EQUALS SHACL_DISJOINT SHACL_LESS_THAN SHACL_LESS_THAN_OR_EQUALS SHACL_NOT SHACL_AND SHACL_OR SHACL_XONE SHACL_NODE SHACL_PROPERTY SHACL_QUALIFIED_VALUE_SHAPE SHACL_QUALIFIED_MIN_COUNT SHACL_QUALIFIED_MAX_COUNT SHACL_QUALIFIED_VALUE_SHAPES_DISJOINT SHACL_CLOSED SHACL_IGNORED_PROPERTIES SHACL_HAS_VALUE SHACL_IN SHACL_IRI SHACL_BLANK_NODE SHACL_LITERAL SHACL_BLANK_NODE_OR_IRI SHACL_BLANK_NODE_OR_LITERAL SHACL_IRI_OR_LITERAL SHACL_SEVERITY SHACL_VIOLATION SHACL_WARNING SHACL_INFO SHACL_SHAPE RDF_FIRST RDF_REST RDF_NIL XSD_INTEGER XSD_BOOLEAN))
-  (import strlib (parse-int))
+  (import strlib (parse-int string-build))
   (import types
-    (ShaclPath NodeKind Severity Constraint PropertyShape NodeShape ShapesGraph))
+    (ShaclPath NodeKind Severity Constraint PropertyShape NodeShape ShapesGraph term-display-label))
   (export
     parse-shapes-graph
     parse-node-shape
@@ -16,9 +16,261 @@
     parse-path
     parse-constraints
     parse-node-kind
-    parse-severity)
+    parse-severity
+    shapes-graph-recursion-hazard-message
+    PathScanItem)
 
   (@doc "Parse SHACL shapes from RDF triples into structured shapes graph")
+
+  ;; ============================================================
+  ;; Parse-time recursion hazards (path expressions / RDF lists)
+  ;;
+  ;; parse-path (below) used to be unconditionally self-recursive over
+  ;; path-node structure (rdf:first sequence lists, sh:inversePath,
+  ;; sh:alternativePath, sh:zeroOrMorePath, sh:oneOrMorePath,
+  ;; sh:zeroOrOnePath) with no cycle guard of its own -- a shapes graph
+  ;; where a path expression references itself overflowed the C stack at
+  ;; parse time, and (fix-round finding, FB3) so did a LEGITIMATE, merely
+  ;; deep or heavily-shared path expression, since native recursion depth
+  ;; scales with path structure regardless of whether it is cyclic.
+  ;; parse-path is now iterative (see below), as is this pre-pass's own
+  ;; path-node-is-acyclic. rdf-list-elements-indexed (imported from the
+  ;; `list` module, defined in slop-rdf -- NOT editable here) is a bare
+  ;; rdf:first/rdf:rest walk with no visited set at all, and it backs six
+  ;; different constructs: sh:and, sh:or, sh:xone, sh:in,
+  ;; sh:ignoredProperties and sh:languageIn -- a malformed cyclic rdf:rest
+  ;; chain reached from ANY of them (or from a sequence path / alternative
+  ;; path) loops forever.
+  ;;
+  ;; Rather than threading an error channel through the whole parse
+  ;; pipeline (parse-shapes-graph -> parse-node-shape/parse-property-shape
+  ;; -> parse-constraints -> parse-path, ~10 call sites), this pre-pass
+  ;; scans the RAW shapes graph for both hazards in one shot, BEFORE any
+  ;; real parsing runs. snarl.slop's validate-data-graph-with-config runs
+  ;; it first and short-circuits to ValidatorResult::Error if it finds
+  ;; anything -- real parsing then never sees a CYCLIC input.
+  ;;
+  ;; The scan's own walks are now ITERATIVE (explicit worklist, no native
+  ;; recursion -- path-node-is-acyclic below) and MEMOIZED (each path
+  ;; node's subtree is expanded at most once per top-level sh:path triple,
+  ;; via a per-call `verified` set), so the scan itself is bounded linearly
+  ;; in the size of the shapes graph -- it no longer reproduces the
+  ;; crash/blowup classes it exists to catch (the false doc claims this
+  ;; comment used to make -- "bounded" and "never call the unsafe
+  ;; primitives" -- were both wrong pre-fix; see CLEANUP 1 in the lens-1
+  ;; finding). It DOES still call the unsafe rdf-list-elements-indexed
+  ;; primitive (for sequence-path and sh:alternativePath list elements),
+  ;; the same as the real parser does; safety comes from every such call
+  ;; being preceded by a shapes-graph-list-is-acyclic check on that exact
+  ;; list head, not from avoiding the primitive.
+  ;;
+  ;; The pre-scan clearing a shapes graph as acyclic is necessary but not
+  ;; sufficient for real parsing to be crash-free on it: parse-path's own
+  ;; recursion depth was a SEPARATE hazard (legitimate deep chains crashed
+  ;; it too, independent of whether the pre-scan ran) -- fixed by also
+  ;; making parse-path itself iterative and memoized, below.
+  ;;
+  ;; KNOWN RESIDUAL (fix-round finding, not fixed this round): parsing a
+  ;; shared-subpath DAG (e.g. sh:alternativePath (p p) nested N levels,
+  ;; each level referencing the same child twice) is now genuinely linear
+  ;; -- confirmed by parsing such a shapes graph alone (no targets, so
+  ;; evaluation never runs) at depth 30: instant. But EVALUATING a shape
+  ;; that uses such a path against real data is NOT linear: path.slop's
+  ;; resolve-alternative/resolve-sequence (untouched by this fix round)
+  ;; call resolve-path once per LIST POSITION with no memo of their own,
+  ;; so two identical alternatives are walked twice, and the same doubling
+  ;; nested N levels deep is once again O(2^N) -- at validation time, not
+  ;; parse time. Measured: depth 26 conforms in ~2.7s, depth 30 in ~48s.
+  ;; This is a pre-existing property of resolve-alternative's evaluation
+  ;; strategy (it has no notion of "the same path expression, so reuse the
+  ;; last result"), not a regression introduced by this fix or by round 1
+  ;; -- it was simply never observed before because the (now-fixed)
+  ;; pre-scan's own exponential blowup always dominated first. Closing
+  ;; this gap needs evaluation-level memoization of resolve-path results
+  ;; keyed by path-AST identity (e.g. the underlying List/Ptr address),
+  ;; in path.slop -- a distinct, additional change with its own risk
+  ;; profile, deliberately not attempted here. See the fix-round report's
+  ;; FB3 disposition for the full trade-off.
+  ;; ============================================================
+
+  (fn shapes-graph-list-is-acyclic ((arena Arena) (g IndexedGraph) (head Term))
+    (@intent
+      "Cycle-safe rdf:first/rdf:rest spine walk mirroring rdf-list-elements-indexed's own traversal and termination rules (rdf:nil, or no further rdf:rest, both end the list normally) but tracking visited nodes: false if a node on the rdf:rest chain is revisited before the list terminates. NIT (lens-2 finding): like the primitive it guards, this only follows the FIRST rdf:rest match per node (`(list-get rest-matches 0)`) -- verified faithful to rdf-list-elements-indexed's own `(list-get rest-matches 0)` selection in slop-rdf's list module, so the pre-scan and the real walker can never disagree about which branch of a multi-valued rdf:rest they follow; it does not scan non-first branches of a multi-valued rdf:rest.")
+    (@spec ((Arena IndexedGraph Term) -> Bool))
+    (@alloc arena)
+    (let ((rest-pred (make-iri arena RDF_REST))
+          (nil-term (make-iri arena RDF_NIL))
+          (no-term (Option Term) (none))
+          (visited (set-new arena Term))
+          (mut current head)
+          (mut acyclic true)
+          (mut continue-walk true))
+      (while continue-walk
+        (if (term-eq current nil-term)
+          (set! continue-walk false)
+          (if (set-has visited current)
+            (do (set! acyclic false) (set! continue-walk false))
+            (do
+              (set-put visited current)
+              (let ((rest-matches (indexed-graph-match arena g (some current) (some rest-pred) no-term)))
+                (match (list-get rest-matches 0)
+                  ((some rest-triple) (set! current (triple-object rest-triple)))
+                  ((none) (set! continue-walk false))))))))
+      acyclic))
+
+  ;; PathScanItem: one entry on path-node-is-acyclic's explicit worklist.
+  ;; is-exit=false ("enter"): first visit to `node` -- check on-path/verified,
+  ;; then (if neither) mark it gray and push its children.
+  ;; is-exit=true ("exit"): all of `node`'s children have been fully
+  ;; processed (its exit was pushed right after it was marked gray, so by
+  ;; stack LIFO order everything pushed after it is popped first) -- unmark
+  ;; gray, mark black (verified).
+  (type PathScanItem (record
+    (is-exit Bool)
+    (node Term)))
+
+  (fn path-scan-work-new ((arena Arena))
+    (@intent "Create an empty PathScanItem worklist")
+    (@spec ((Arena) -> (List PathScanItem)))
+    (@alloc arena)
+    (list-new arena PathScanItem))
+
+  (fn path-node-is-acyclic ((arena Arena) (g IndexedGraph) (root Term))
+    (@intent
+      "Path-scoped cycle-safe check mirroring parse-path's own dispatch (without recursing through parse-path itself): false if root structurally references itself, directly or indirectly, while still being expanded (an ancestor on the current descent, not merely a shared sub-expression reused from two different places), or if any rdf:list form nested in it (sequence path, sh:alternativePath) is a malformed cycle. Iterative -- an explicit worklist replaces native recursion, so depth is bounded by heap, not the C stack (fixes SIGSEGV on deep legitimate path chains) -- and memoized: each path node's own children are enumerated at most once per call via the `verified` set, so a DAG of shared sub-paths (e.g. sh:alternativePath referencing the same child from two branches) is linear in the path graph rather than exponential in its depth (fixes SIGKILL/OOM on legitimate shared-subpath DAGs). `on-path` (the gray/ancestor set) and `verified` (the black/done set) are both tracked via map-put-only reference counts, like CycleGuard in engine.slop (see FB2 there), so this never exercises the runtime's tombstone-less-deletion hazard either.")
+    (@spec ((Arena IndexedGraph Term) -> Bool))
+    (@alloc arena)
+    (let ((on-path (map-new arena Term Int))
+          (verified (set-new arena Term))
+          (mut work (path-scan-work-new arena))
+          (mut any-cycle false))
+      (list-push work (record-new PathScanItem (is-exit false) (node root)))
+      (while (and (> (list-len work) 0) (not any-cycle))
+        (match (list-pop work)
+          ((some item)
+            (let ((n (. item node)))
+              (if (. item is-exit)
+                (let ((c (match (map-get on-path n) ((some x) x) ((none) 0))))
+                  (map-put on-path n (- c 1))
+                  (set-put verified n))
+                (cond
+                  ((set-has verified n) (do))
+                  ((> (match (map-get on-path n) ((some x) x) ((none) 0)) 0)
+                    (set! any-cycle true))
+                  (true
+                    (let ((no-term (Option Term) (none))
+                          (first-objs (indexed-graph-objects arena g n (make-iri arena RDF_FIRST)))
+                          (inverse-objs (indexed-graph-objects arena g n (make-iri arena SHACL_INVERSE_PATH)))
+                          (alt-objs (indexed-graph-objects arena g n (make-iri arena SHACL_ALTERNATIVE_PATH)))
+                          (zom-objs (indexed-graph-objects arena g n (make-iri arena SHACL_ZERO_OR_MORE_PATH)))
+                          (oom-objs (indexed-graph-objects arena g n (make-iri arena SHACL_ONE_OR_MORE_PATH)))
+                          (zoo-objs (indexed-graph-objects arena g n (make-iri arena SHACL_ZERO_OR_ONE_PATH))))
+                      (map-put on-path n (+ (match (map-get on-path n) ((some x) x) ((none) 0)) 1))
+                      (list-push work (record-new PathScanItem (is-exit true) (node n)))
+                      (cond
+                        ((> (list-len first-objs) 0)
+                          (if (not (shapes-graph-list-is-acyclic arena g n))
+                            (set! any-cycle true)
+                            (let ((elements (rdf-list-elements-indexed arena g n)))
+                              (for-each (elem elements)
+                                (list-push work (record-new PathScanItem (is-exit false) (node elem)))))))
+                        ((> (list-len inverse-objs) 0)
+                          (match (list-get inverse-objs 0)
+                            ((some inner) (list-push work (record-new PathScanItem (is-exit false) (node inner))))
+                            ((none) (do))))
+                        ((> (list-len alt-objs) 0)
+                          (match (list-get alt-objs 0)
+                            ((some list-head)
+                              (if (not (shapes-graph-list-is-acyclic arena g list-head))
+                                (set! any-cycle true)
+                                (let ((elements (rdf-list-elements-indexed arena g list-head)))
+                                  (for-each (elem elements)
+                                    (list-push work (record-new PathScanItem (is-exit false) (node elem)))))))
+                            ((none) (do))))
+                        ((> (list-len zom-objs) 0)
+                          (match (list-get zom-objs 0)
+                            ((some inner) (list-push work (record-new PathScanItem (is-exit false) (node inner))))
+                            ((none) (do))))
+                        ((> (list-len oom-objs) 0)
+                          (match (list-get oom-objs 0)
+                            ((some inner) (list-push work (record-new PathScanItem (is-exit false) (node inner))))
+                            ((none) (do))))
+                        ((> (list-len zoo-objs) 0)
+                          (match (list-get zoo-objs 0)
+                            ((some inner) (list-push work (record-new PathScanItem (is-exit false) (node inner))))
+                            ((none) (do))))
+                        (true (do)))))))))
+          ((none) (do))))
+      (not any-cycle)))
+
+  (fn shapes-graph-path-cycle-message ((arena Arena) (g IndexedGraph))
+    (@intent
+      "Scan every sh:path value in the raw shapes graph for a structural path-expression cycle, before real parsing runs. Returns the offending path-node from the first hazardous sh:path triple found, in graph scan order, if any -- deterministic for a given input graph.")
+    (@spec ((Arena IndexedGraph) -> (Option Term)))
+    (@alloc arena)
+    (let ((no-term (Option Term) (none))
+          (triples (indexed-graph-match arena g no-term (some (make-iri arena SHACL_PATH)) no-term))
+          (mut result (Option Term) (none)))
+      (for-each (tr triples)
+        (match result
+          ((none)
+            (let ((path-node (triple-object tr)))
+              (when (not (path-node-is-acyclic arena g path-node))
+                (set! result (some path-node)))))
+          ((some _) (do))))
+      result))
+
+  (fn shapes-graph-list-cycle-message ((arena Arena) (g IndexedGraph))
+    (@intent
+      "Scan every sh:and/sh:or/sh:xone/sh:in/sh:ignoredProperties/sh:languageIn list head in the raw shapes graph for a malformed cyclic rdf:rest chain, before real parsing runs. Sequence-path and sh:alternativePath list heads are covered by shapes-graph-path-cycle-message instead, since they are only reachable by walking path structure. Returns the first offending list head, in a fixed predicate scan order, if any -- deterministic for a given input graph.")
+    (@spec ((Arena IndexedGraph) -> (Option Term)))
+    (@alloc arena)
+    (let ((no-term (Option Term) (none))
+          (mut list-preds (list-new arena Term))
+          (mut result (Option Term) (none)))
+      (list-push list-preds (make-iri arena SHACL_AND))
+      (list-push list-preds (make-iri arena SHACL_OR))
+      (list-push list-preds (make-iri arena SHACL_XONE))
+      (list-push list-preds (make-iri arena SHACL_IN))
+      (list-push list-preds (make-iri arena SHACL_IGNORED_PROPERTIES))
+      (list-push list-preds (make-iri arena SHACL_LANGUAGE_IN))
+      (for-each (pred list-preds)
+        (when (match result ((none) true) ((some _) false))
+          (let ((triples (indexed-graph-match arena g no-term (some pred) no-term)))
+            (for-each (tr triples)
+              (match result
+                ((none)
+                  (let ((list-head (triple-object tr)))
+                    (when (not (shapes-graph-list-is-acyclic arena g list-head))
+                      (set! result (some list-head)))))
+                ((some _) (do)))))))
+      result))
+
+  (fn shapes-graph-recursion-hazard-message ((arena Arena) (g IndexedGraph))
+    (@intent
+      "Detect, before real parsing runs, whether the raw shapes graph contains a cyclic sh:path expression or a malformed cyclic RDF list reachable from sh:and/sh:or/sh:xone/sh:in/sh:ignoredProperties/sh:languageIn/a path expression -- both of which the underlying parser would otherwise recurse or loop over unboundedly. Returns a deterministic error message naming the offending node, if any.")
+    (@spec ((Arena IndexedGraph) -> (Option String)))
+    (@alloc arena)
+    (match (shapes-graph-path-cycle-message arena g)
+      ((some node)
+        (let ((label (term-display-label node "[anonymous node]"))
+              (mut parts (list-new arena String)))
+          (list-push parts "Cyclic sh:path expression detected at ")
+          (list-push parts label)
+          (list-push parts " (path expression references itself)")
+          (some (string-build arena parts))))
+      ((none)
+        (match (shapes-graph-list-cycle-message arena g)
+          ((some node)
+            (let ((label (term-display-label node "[anonymous node]"))
+                  (mut parts (list-new arena String)))
+              (list-push parts "Malformed RDF list detected at ")
+              (list-push parts label)
+              (list-push parts " (rdf:rest chain does not terminate at rdf:nil)")
+              (some (string-build arena parts))))
+          ((none) (none)))))
+    :c-name
+    "snarl_shapes_graph_recursion_hazard_message")
 
   (fn shape-has-path ((arena Arena) (g IndexedGraph) (ref Term))
     (@intent
@@ -163,7 +415,7 @@
 
   (fn parse-shapes-graph ((arena Arena) (shapes-graph IndexedGraph))
     (@intent
-      "Extract all SHACL shapes from an RDF shapes graph into a structured ShapesGraph")
+      "Extract all SHACL shapes from an RDF shapes graph into a structured ShapesGraph. CONTRACT (CLEANUP, fix-round finding): this function does NOT pre-scan for the recursion hazards documented at the top of this module (cyclic sh:path expressions, malformed cyclic rdf:lists) -- it calls parse-path and rdf-list-elements-indexed directly and will hang or crash on a hazardous shapes graph, exactly like the pre-fix parser did. The choke point lives one level up, in snarl.slop's validate-data-graph-with-config, which always calls shapes-graph-recursion-hazard-message first. Every caller of parse-shapes-graph directly (this includes any future internal caller, and any external C consumer via :c-name \"snarl_parse_shapes_graph\") MUST call shapes-graph-recursion-hazard-message on the same shapes-graph first and treat a (some msg) result as fatal, exactly as validate-data-graph-with-config does. Left as a documented caller obligation rather than wired in here: parse-shapes-graph's signature/ABI (Arena IndexedGraph) -> ShapesGraph has no error channel, and adding one would be a bigger, riskier change to a stable, :c-name-exported function than this fix round's scope justifies for a single already-safe call path (the only real caller, validate-data-graph-with-config, already gets this right).")
     (@spec ((Arena IndexedGraph) -> ShapesGraph))
     (@alloc arena)
     (@pre (>= (indexed-graph-size shapes-graph) 0))
@@ -315,72 +567,147 @@
     :c-name
     "snarl_parse_property_shape")
 
-  (fn parse-path ((arena Arena) (g IndexedGraph) (path-node Term))
-    (@intent
-      "Parse a SHACL path expression from an RDF node in the shapes graph")
-    (@spec ((Arena IndexedGraph Term) -> ShaclPath))
+  (fn parse-path-built-or-leaf ((built (Map Term ShaclPath)) (child Term))
+    (@intent "Look up a child path-node's already-built ShaclPath (post-order guarantees it is always present when called from parse-path-build-node); falls back to a leaf predicate path only as a defensive no-op, never reached in practice")
+    (@spec (((Map Term ShaclPath) Term) -> ShaclPath))
+    (match (map-get built child)
+      ((some p) p)
+      ((none) (union-new ShaclPath path-predicate child))))
+
+  (fn parse-path-build-node ((arena Arena) (g IndexedGraph) (n Term) (built (Map Term ShaclPath)))
+    (@intent "Reconstruct path-node n's ShaclPath from its already-built children (post-order: called at n's EXIT, after parse-path-push-children's items for n have all been fully processed). Same six-way dispatch as parse-path-push-children, over the same graph triples for n.")
+    (@spec ((Arena IndexedGraph Term (Map Term ShaclPath)) -> ShaclPath))
     (@alloc arena)
-    (@example
-      (arena
-        (indexed-graph-create arena)
-        (make-iri arena "http://example.org/name")))
-    (let ((no-term (Option Term) (none))
-          (first-pred (make-iri arena RDF_FIRST))
-          (first-objs (indexed-graph-objects arena g path-node first-pred))
-          (inverse-objs (indexed-graph-objects arena g path-node (make-iri arena SHACL_INVERSE_PATH)))
-          (alt-objs (indexed-graph-objects arena g path-node (make-iri arena SHACL_ALTERNATIVE_PATH)))
-          (zom-objs (indexed-graph-objects arena g path-node (make-iri arena SHACL_ZERO_OR_MORE_PATH)))
-          (oom-objs (indexed-graph-objects arena g path-node (make-iri arena SHACL_ONE_OR_MORE_PATH)))
-          (zoo-objs (indexed-graph-objects arena g path-node (make-iri arena SHACL_ZERO_OR_ONE_PATH))))
+    (let ((first-objs (indexed-graph-objects arena g n (make-iri arena RDF_FIRST)))
+          (inverse-objs (indexed-graph-objects arena g n (make-iri arena SHACL_INVERSE_PATH)))
+          (alt-objs (indexed-graph-objects arena g n (make-iri arena SHACL_ALTERNATIVE_PATH)))
+          (zom-objs (indexed-graph-objects arena g n (make-iri arena SHACL_ZERO_OR_MORE_PATH)))
+          (oom-objs (indexed-graph-objects arena g n (make-iri arena SHACL_ONE_OR_MORE_PATH)))
+          (zoo-objs (indexed-graph-objects arena g n (make-iri arena SHACL_ZERO_OR_ONE_PATH))))
       (cond
         ((> (list-len first-objs) 0)
-          (let ((elements (rdf-list-elements-indexed arena g path-node))
+          (let ((elements (rdf-list-elements-indexed arena g n))
                 (mut paths (list-new arena ShaclPath)))
             (for-each (elem elements)
-              (list-push paths (parse-path arena g elem)))
+              (list-push paths (parse-path-built-or-leaf built elem)))
             (union-new ShaclPath path-sequence paths)))
         ((> (list-len inverse-objs) 0)
           (match (list-get inverse-objs 0)
             ((some inner)
-              (let ((p (parse-path arena g inner))
+              (let ((p (parse-path-built-or-leaf built inner))
                     (ptr (cast (Ptr ShaclPath) (arena-alloc arena 128))))
                 (set! (deref ptr) p)
                 (union-new ShaclPath path-inverse ptr)))
-            ((none) (union-new ShaclPath path-predicate path-node))))
+            ((none) (union-new ShaclPath path-predicate n))))
         ((> (list-len alt-objs) 0)
           (match (list-get alt-objs 0)
             ((some list-head)
               (let ((elements (rdf-list-elements-indexed arena g list-head))
                     (mut paths (list-new arena ShaclPath)))
                 (for-each (elem elements)
-                  (list-push paths (parse-path arena g elem)))
+                  (list-push paths (parse-path-built-or-leaf built elem)))
                 (union-new ShaclPath path-alternative paths)))
-            ((none) (union-new ShaclPath path-predicate path-node))))
+            ((none) (union-new ShaclPath path-predicate n))))
         ((> (list-len zom-objs) 0)
           (match (list-get zom-objs 0)
             ((some inner)
-              (let ((p (parse-path arena g inner))
+              (let ((p (parse-path-built-or-leaf built inner))
                     (ptr (cast (Ptr ShaclPath) (arena-alloc arena 128))))
                 (set! (deref ptr) p)
                 (union-new ShaclPath path-zero-or-more ptr)))
-            ((none) (union-new ShaclPath path-predicate path-node))))
+            ((none) (union-new ShaclPath path-predicate n))))
         ((> (list-len oom-objs) 0)
           (match (list-get oom-objs 0)
             ((some inner)
-              (let ((p (parse-path arena g inner))
+              (let ((p (parse-path-built-or-leaf built inner))
                     (ptr (cast (Ptr ShaclPath) (arena-alloc arena 128))))
                 (set! (deref ptr) p)
                 (union-new ShaclPath path-one-or-more ptr)))
-            ((none) (union-new ShaclPath path-predicate path-node))))
+            ((none) (union-new ShaclPath path-predicate n))))
         ((> (list-len zoo-objs) 0)
           (match (list-get zoo-objs 0)
             ((some inner)
-              (let ((p (parse-path arena g inner))
+              (let ((p (parse-path-built-or-leaf built inner))
                     (ptr (cast (Ptr ShaclPath) (arena-alloc arena 128))))
                 (set! (deref ptr) p)
                 (union-new ShaclPath path-zero-or-one ptr)))
-            ((none) (union-new ShaclPath path-predicate path-node))))
-        (true (union-new ShaclPath path-predicate path-node))))
+            ((none) (union-new ShaclPath path-predicate n))))
+        (true (union-new ShaclPath path-predicate n)))))
+
+  (fn parse-path ((arena Arena) (g IndexedGraph) (path-node Term))
+    (@intent
+      "Parse a SHACL path expression from an RDF node in the shapes graph. Iterative (explicit worklist, no native recursion -- bounded by heap, not the C stack) and memoized (`built`: each path node's ShaclPath is constructed at most once per call, so a DAG of shared sub-paths costs one build per distinct node, not one per reference). Callers MUST pre-scan the raw shapes graph with shapes-graph-recursion-hazard-message first (snarl.slop's validate-data-graph-with-config does this) -- a cyclic path reaching this function is a caller-contract violation this function survives (breaks the cycle at the revisited node, treating that occurrence as a leaf, rather than hanging or crashing) but does not itself reject or report. The child-pushing dispatch below is inlined rather than factored into a helper (unlike parse-path-build-node, which is read-only and safe to factor out): `work` is a List, a value-type struct with no pointer semantics the way Map/Set have -- passing it to a helper that calls list-push on it would mutate only that helper's local copy, silently losing every push (verified: this was tried and DID reproduce exactly that silent-loss bug, caught by a W3C conformance regression on a path-in-sequence case before landing).")
+    (@spec ((Arena IndexedGraph Term) -> ShaclPath))
+    (@alloc arena)
+    (@example
+      (arena
+        (indexed-graph-create arena)
+        (make-iri arena "http://example.org/name")))
+    (let ((built (map-new arena Term ShaclPath))
+          (on-path (map-new arena Term Int))
+          (mut work (path-scan-work-new arena)))
+      (list-push work (record-new PathScanItem (is-exit false) (node path-node)))
+      (while (> (list-len work) 0)
+        (match (list-pop work)
+          ((some item)
+            (let ((n (. item node)))
+              (if (. item is-exit)
+                (do
+                  (map-put built n (parse-path-build-node arena g n built))
+                  (map-put on-path n (- (match (map-get on-path n) ((some x) x) ((none) 0)) 1)))
+                (cond
+                  ((map-has built n) (do))
+                  ((> (match (map-get on-path n) ((some x) x) ((none) 0)) 0)
+                    ;; Residual cycle-safety net for the undocumented-caller
+                    ;; case (see @intent): break the cycle at this occurrence
+                    ;; rather than hang. Never reached via the public
+                    ;; validate-data-graph-with-config entry point, which
+                    ;; always pre-scans first.
+                    (map-put built n (union-new ShaclPath path-predicate n)))
+                  (true
+                    (let ((first-objs (indexed-graph-objects arena g n (make-iri arena RDF_FIRST)))
+                          (inverse-objs (indexed-graph-objects arena g n (make-iri arena SHACL_INVERSE_PATH)))
+                          (alt-objs (indexed-graph-objects arena g n (make-iri arena SHACL_ALTERNATIVE_PATH)))
+                          (zom-objs (indexed-graph-objects arena g n (make-iri arena SHACL_ZERO_OR_MORE_PATH)))
+                          (oom-objs (indexed-graph-objects arena g n (make-iri arena SHACL_ONE_OR_MORE_PATH)))
+                          (zoo-objs (indexed-graph-objects arena g n (make-iri arena SHACL_ZERO_OR_ONE_PATH))))
+                      (map-put on-path n (+ (match (map-get on-path n) ((some x) x) ((none) 0)) 1))
+                      (list-push work (record-new PathScanItem (is-exit true) (node n)))
+                      ;; Must exactly mirror parse-path-build-node's own
+                      ;; six-way dispatch (same predicates, same order) --
+                      ;; both re-query the same graph triples for n, so both
+                      ;; always agree on which of the six forms n is.
+                      (cond
+                        ((> (list-len first-objs) 0)
+                          (let ((elements (rdf-list-elements-indexed arena g n)))
+                            (for-each (elem elements) (list-push work (record-new PathScanItem (is-exit false) (node elem))))))
+                        ((> (list-len inverse-objs) 0)
+                          (match (list-get inverse-objs 0)
+                            ((some inner) (list-push work (record-new PathScanItem (is-exit false) (node inner))))
+                            ((none) (do))))
+                        ((> (list-len alt-objs) 0)
+                          (match (list-get alt-objs 0)
+                            ((some list-head)
+                              (let ((elements (rdf-list-elements-indexed arena g list-head)))
+                                (for-each (elem elements) (list-push work (record-new PathScanItem (is-exit false) (node elem))))))
+                            ((none) (do))))
+                        ((> (list-len zom-objs) 0)
+                          (match (list-get zom-objs 0)
+                            ((some inner) (list-push work (record-new PathScanItem (is-exit false) (node inner))))
+                            ((none) (do))))
+                        ((> (list-len oom-objs) 0)
+                          (match (list-get oom-objs 0)
+                            ((some inner) (list-push work (record-new PathScanItem (is-exit false) (node inner))))
+                            ((none) (do))))
+                        ((> (list-len zoo-objs) 0)
+                          (match (list-get zoo-objs 0)
+                            ((some inner) (list-push work (record-new PathScanItem (is-exit false) (node inner))))
+                            ((none) (do))))
+                        (true (do)))))))))
+          ((none) (do))))
+      (match (map-get built path-node)
+        ((some p) p)
+        ((none) (union-new ShaclPath path-predicate path-node))))
     :c-name
     "snarl_parse_path")
 
