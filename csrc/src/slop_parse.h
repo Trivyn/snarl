@@ -11,6 +11,8 @@
 #include "slop_strlib.h"
 #include "slop_types.h"
 
+typedef struct parse_PathScanItem parse_PathScanItem;
+
 #ifndef SLOP_OPTION_U8_DEFINED
 #define SLOP_OPTION_U8_DEFINED
 SLOP_OPTION_DEFINE(uint8_t, slop_option_u8)
@@ -36,6 +38,11 @@ SLOP_LIST_DEFINE(rdf_Term, slop_list_rdf_Term)
 SLOP_LIST_DEFINE(types_Constraint, slop_list_types_Constraint)
 #endif
 
+#ifndef SLOP_OPTION_RDF_TERM_DEFINED
+#define SLOP_OPTION_RDF_TERM_DEFINED
+SLOP_OPTION_DEFINE(rdf_Term, slop_option_rdf_Term)
+#endif
+
 #ifndef SLOP_OPTION_TYPES_NODESHAPE_DEFINED
 #define SLOP_OPTION_TYPES_NODESHAPE_DEFINED
 SLOP_OPTION_DEFINE(types_NodeShape, slop_option_types_NodeShape)
@@ -46,9 +53,9 @@ SLOP_OPTION_DEFINE(types_NodeShape, slop_option_types_NodeShape)
 SLOP_OPTION_DEFINE(types_PropertyShape, slop_option_types_PropertyShape)
 #endif
 
-#ifndef SLOP_OPTION_RDF_TERM_DEFINED
-#define SLOP_OPTION_RDF_TERM_DEFINED
-SLOP_OPTION_DEFINE(rdf_Term, slop_option_rdf_Term)
+#ifndef SLOP_OPTION_TYPES_SHACLPATH_DEFINED
+#define SLOP_OPTION_TYPES_SHACLPATH_DEFINED
+SLOP_OPTION_DEFINE(types_ShaclPath, slop_option_types_ShaclPath)
 #endif
 
 #ifndef SLOP_OPTION_TYPES_CONSTRAINT_DEFINED
@@ -59,6 +66,22 @@ SLOP_OPTION_DEFINE(types_Constraint, slop_option_types_Constraint)
 #ifndef SLOP_OPTION_TYPES_NODEKIND_DEFINED
 #define SLOP_OPTION_TYPES_NODEKIND_DEFINED
 SLOP_OPTION_DEFINE(types_NodeKind, slop_option_types_NodeKind)
+#endif
+
+struct parse_PathScanItem {
+    uint8_t is_exit;
+    rdf_Term node;
+};
+typedef struct parse_PathScanItem parse_PathScanItem;
+
+#ifndef SLOP_OPTION_PARSE_PATHSCANITEM_DEFINED
+#define SLOP_OPTION_PARSE_PATHSCANITEM_DEFINED
+SLOP_OPTION_DEFINE(parse_PathScanItem, slop_option_parse_PathScanItem)
+#endif
+
+#ifndef SLOP_LIST_PARSE_PATHSCANITEM_DEFINED
+#define SLOP_LIST_PARSE_PATHSCANITEM_DEFINED
+SLOP_LIST_DEFINE(parse_PathScanItem, slop_list_parse_PathScanItem)
 #endif
 
 
@@ -149,11 +172,19 @@ static inline bool slop_eq_rdf_Term(const void* a, const void* b) {
 }
 #endif
 
+uint8_t parse_shapes_graph_list_is_acyclic(slop_arena* arena, index_IndexedGraph g, rdf_Term head);
+slop_list_parse_PathScanItem parse_path_scan_work_new(slop_arena* arena);
+uint8_t parse_path_node_is_acyclic(slop_arena* arena, index_IndexedGraph g, rdf_Term root);
+slop_option_rdf_Term parse_shapes_graph_path_cycle_message(slop_arena* arena, index_IndexedGraph g);
+slop_option_rdf_Term parse_shapes_graph_list_cycle_message(slop_arena* arena, index_IndexedGraph g);
+slop_option_string snarl_shapes_graph_recursion_hazard_message(slop_arena* arena, index_IndexedGraph g);
 uint8_t parse_shape_has_path(slop_arena* arena, index_IndexedGraph g, rdf_Term ref);
 void parse_register_inline_shapes(slop_arena* arena, index_IndexedGraph g, slop_list_types_NodeShape node_shapes, slop_list_types_PropertyShape prop_shapes, slop_map* shape_map, slop_map* property_shape_map);
 types_ShapesGraph snarl_parse_shapes_graph(slop_arena* arena, index_IndexedGraph shapes_graph);
 types_NodeShape snarl_parse_node_shape(slop_arena* arena, index_IndexedGraph g, rdf_Term shape_id);
 types_PropertyShape snarl_parse_property_shape(slop_arena* arena, index_IndexedGraph g, rdf_Term shape_id);
+types_ShaclPath parse_parse_path_built_or_leaf(slop_map* built, rdf_Term child);
+types_ShaclPath parse_parse_path_build_node(slop_arena* arena, index_IndexedGraph g, rdf_Term n, slop_map* built);
 types_ShaclPath snarl_parse_path(slop_arena* arena, index_IndexedGraph g, rdf_Term path_node);
 slop_list_types_Constraint snarl_parse_constraints(slop_arena* arena, index_IndexedGraph g, rdf_Term shape_id);
 slop_option_types_NodeKind snarl_parse_node_kind(rdf_Term term);
@@ -167,6 +198,7 @@ slop_option_u8 parse_term_to_bool(rdf_Term t);
 slop_list_string parse_parse_string_list(slop_arena* arena, index_IndexedGraph g, rdf_Term list_head);
 
 /* Function name aliases for C interop */
+#define parse_shapes_graph_recursion_hazard_message snarl_shapes_graph_recursion_hazard_message
 #define parse_parse_shapes_graph snarl_parse_shapes_graph
 #define parse_parse_node_shape snarl_parse_node_shape
 #define parse_parse_property_shape snarl_parse_property_shape
@@ -174,6 +206,16 @@ slop_list_string parse_parse_string_list(slop_arena* arena, index_IndexedGraph g
 #define parse_parse_constraints snarl_parse_constraints
 #define parse_parse_node_kind snarl_parse_node_kind
 #define parse_parse_severity snarl_parse_severity
+
+#ifndef SLOP_OPTION_PARSE_PATHSCANITEM_DEFINED
+#define SLOP_OPTION_PARSE_PATHSCANITEM_DEFINED
+SLOP_OPTION_DEFINE(parse_PathScanItem, slop_option_parse_PathScanItem)
+#endif
+
+#ifndef SLOP_OPTION_RDF_TERM_DEFINED
+#define SLOP_OPTION_RDF_TERM_DEFINED
+SLOP_OPTION_DEFINE(rdf_Term, slop_option_rdf_Term)
+#endif
 
 #ifndef SLOP_OPTION_TYPES_NODESHAPE_DEFINED
 #define SLOP_OPTION_TYPES_NODESHAPE_DEFINED
@@ -185,9 +227,9 @@ SLOP_OPTION_DEFINE(types_NodeShape, slop_option_types_NodeShape)
 SLOP_OPTION_DEFINE(types_PropertyShape, slop_option_types_PropertyShape)
 #endif
 
-#ifndef SLOP_OPTION_RDF_TERM_DEFINED
-#define SLOP_OPTION_RDF_TERM_DEFINED
-SLOP_OPTION_DEFINE(rdf_Term, slop_option_rdf_Term)
+#ifndef SLOP_OPTION_TYPES_SHACLPATH_DEFINED
+#define SLOP_OPTION_TYPES_SHACLPATH_DEFINED
+SLOP_OPTION_DEFINE(types_ShaclPath, slop_option_types_ShaclPath)
 #endif
 
 #ifndef SLOP_OPTION_TYPES_CONSTRAINT_DEFINED

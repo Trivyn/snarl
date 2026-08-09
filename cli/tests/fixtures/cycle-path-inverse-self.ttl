@@ -1,0 +1,15 @@
+@prefix ex: <http://example.org/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+
+# Regression (parse-time recursion hazard): a blank-node path expression
+# whose sh:inversePath points back at itself. parse-path (snarl's own
+# recursive path parser) has no cycle guard, so this used to overflow the
+# C stack at parse time. Must produce a deterministic parse/engine error,
+# never a crash.
+ex:S
+    a sh:NodeShape ;
+    sh:targetClass ex:C ;
+    sh:property _:ps .
+
+_:ps sh:path _:p .
+_:p sh:inversePath _:p .

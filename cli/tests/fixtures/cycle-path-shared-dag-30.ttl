@@ -1,0 +1,49 @@
+@prefix ex: <http://example.org/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+
+# Regression (FB3): a legitimate, non-cyclic sh:alternativePath DAG where
+# each level references the SAME child twice (ex:pI sh:alternativePath
+# (ex:pI+1 ex:pI+1)), 30 levels deep -- 2^30 walks without memoization.
+# path-node-is-acyclic (the pre-scan) and parse-path (the real parser)
+# used to re-walk the shared subtree once per sibling occurrence with no
+# completed-node cache, i.e. O(2^depth). Both are now memoized: each
+# path node's subtree is walked/built at most once. Must conform FAST
+# (the untargeted evaluation-time cost of this specific shape is a
+# separate, documented residual -- see parse.slop's module doc and the
+# fix-round report's FB3 disposition -- so this shape is deliberately
+# left untargeted here: it isolates the parse/pre-scan cost this test
+# exists to cover, without also paying resolve-alternative's own,
+# pre-existing evaluation-time cost). Generated (30 levels).
+ex:S a sh:NodeShape ; sh:property [ sh:path ex:p0 ; sh:minCount 0 ] .
+
+ex:p0 sh:alternativePath ( ex:p1 ex:p1 ) .
+ex:p1 sh:alternativePath ( ex:p2 ex:p2 ) .
+ex:p2 sh:alternativePath ( ex:p3 ex:p3 ) .
+ex:p3 sh:alternativePath ( ex:p4 ex:p4 ) .
+ex:p4 sh:alternativePath ( ex:p5 ex:p5 ) .
+ex:p5 sh:alternativePath ( ex:p6 ex:p6 ) .
+ex:p6 sh:alternativePath ( ex:p7 ex:p7 ) .
+ex:p7 sh:alternativePath ( ex:p8 ex:p8 ) .
+ex:p8 sh:alternativePath ( ex:p9 ex:p9 ) .
+ex:p9 sh:alternativePath ( ex:p10 ex:p10 ) .
+ex:p10 sh:alternativePath ( ex:p11 ex:p11 ) .
+ex:p11 sh:alternativePath ( ex:p12 ex:p12 ) .
+ex:p12 sh:alternativePath ( ex:p13 ex:p13 ) .
+ex:p13 sh:alternativePath ( ex:p14 ex:p14 ) .
+ex:p14 sh:alternativePath ( ex:p15 ex:p15 ) .
+ex:p15 sh:alternativePath ( ex:p16 ex:p16 ) .
+ex:p16 sh:alternativePath ( ex:p17 ex:p17 ) .
+ex:p17 sh:alternativePath ( ex:p18 ex:p18 ) .
+ex:p18 sh:alternativePath ( ex:p19 ex:p19 ) .
+ex:p19 sh:alternativePath ( ex:p20 ex:p20 ) .
+ex:p20 sh:alternativePath ( ex:p21 ex:p21 ) .
+ex:p21 sh:alternativePath ( ex:p22 ex:p22 ) .
+ex:p22 sh:alternativePath ( ex:p23 ex:p23 ) .
+ex:p23 sh:alternativePath ( ex:p24 ex:p24 ) .
+ex:p24 sh:alternativePath ( ex:p25 ex:p25 ) .
+ex:p25 sh:alternativePath ( ex:p26 ex:p26 ) .
+ex:p26 sh:alternativePath ( ex:p27 ex:p27 ) .
+ex:p27 sh:alternativePath ( ex:p28 ex:p28 ) .
+ex:p28 sh:alternativePath ( ex:p29 ex:p29 ) .
+ex:p29 sh:alternativePath ( ex:p30 ex:p30 ) .
+ex:p30 a ex:Leaf .

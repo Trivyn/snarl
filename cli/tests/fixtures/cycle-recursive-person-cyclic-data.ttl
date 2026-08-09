@@ -1,0 +1,9 @@
+@prefix ex: <http://example.org/> .
+
+# alice knows bob, bob knows alice: a genuine back-edge. Evaluating
+# PersonShape(alice) -> PersonShape(bob) -> PersonShape(alice) revisits the
+# pair (PersonShape, alice) while it is still on the path. Must produce the
+# engine's ValidatorResult::Error, never unbounded recursion.
+ex:alice a ex:Person .
+ex:alice ex:knows ex:bob .
+ex:bob ex:knows ex:alice .

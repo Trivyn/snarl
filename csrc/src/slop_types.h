@@ -306,6 +306,7 @@ typedef struct types_ValidatorResult types_ValidatorResult;
 SLOP_OPTION_DEFINE(types_ValidatorResult, slop_option_types_ValidatorResult)
 #endif
 
+slop_string types_term_display_label(rdf_Term t, slop_string fallback);
 types_ValidationResult types_fixture_violation(slop_arena* arena);
 types_ValidatorConfig types_default_validator_config(void);
 types_ValidationReport types_make_validation_report(slop_arena* arena);

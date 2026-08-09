@@ -1,0 +1,11 @@
+@prefix ex: <http://example.org/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+
+# Regression (CLEANUP: max-errors precedence): an ordinary violating shape
+# (AAAShape, sorts/scans first) plus a recursive shape over cyclic data
+# (ZZZShape, scans second). With max-errors=1, AAAShape's single violation
+# alone reaches the cap -- ZZZShape's cycle must still be detected and take
+# precedence over the truncated report, not be silently skipped because the
+# per-node-shape loop stopped evaluating once the cap was hit.
+ex:AAAShape a sh:NodeShape ; sh:targetClass ex:V ; sh:property [ sh:path ex:name ; sh:minCount 1 ] .
+ex:ZZZShape a sh:NodeShape ; sh:targetClass ex:CY ; sh:property [ sh:path ex:p ; sh:node ex:ZZZShape ] .

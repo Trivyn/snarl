@@ -4,11 +4,26 @@
 static const slop_string types_EX_FOCUS = SLOP_STR("http://example.org/focus");
 static const slop_string types_EX_SHAPE = SLOP_STR("http://example.org/Shape1");
 
+slop_string types_term_display_label(rdf_Term t, slop_string fallback);
 types_ValidationResult types_fixture_violation(slop_arena* arena);
 types_ValidatorConfig types_default_validator_config(void);
 types_ValidationReport types_make_validation_report(slop_arena* arena);
 types_ValidationReport types_report_add_result(slop_arena* arena, types_ValidationReport report, types_ValidationResult result);
 uint8_t types_report_conforms(types_ValidationReport report);
+
+slop_string types_term_display_label(rdf_Term t, slop_string fallback) {
+    __auto_type _mv_55 = t;
+    switch (_mv_55.tag) {
+        case rdf_Term_term_iri:
+        {
+            __auto_type iri = _mv_55.data.term_iri;
+            return iri.value;
+        }
+        default: {
+            return fallback;
+        }
+    }
+}
 
 types_ValidationResult types_fixture_violation(slop_arena* arena) {
     return ((types_ValidationResult){.focus_node = rdf_make_iri(arena, types_EX_FOCUS), .result_path = (slop_option_types_ShaclPath){.has_value = false}, .value = (slop_option_rdf_Term){.has_value = false}, .source_shape = rdf_make_iri(arena, types_EX_SHAPE), .source_constraint_component = vocab_SHACL_CLASS, .severity = types_Severity_severity_violation, .message = (slop_option_string){.has_value = false}});

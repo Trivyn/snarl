@@ -1,0 +1,26 @@
+@prefix ex: <http://example.org/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+
+# Regression (parse-time recursion hazard): the new pre-parse hazard scan
+# must not false-positive on legitimate, non-cyclic sequence paths and
+# alternative paths -- both route through the same rdf:list / path-node
+# machinery the hazard scan inspects.
+ex:SequenceShape
+    a sh:NodeShape ;
+    sh:targetNode ex:alice ;
+    sh:property [
+        sh:path ( ex:knows ex:name ) ;
+        sh:minCount 1 ;
+    ] .
+
+ex:AlternativeShape
+    a sh:NodeShape ;
+    sh:targetNode ex:bob ;
+    sh:property [
+        sh:path [ sh:alternativePath ( ex:knows ex:friendOf ) ] ;
+        sh:minCount 1 ;
+    ] .
+
+ex:alice ex:knows ex:bob .
+ex:bob ex:name "Bob" .
+ex:bob ex:friendOf ex:carol .

@@ -58,18 +58,18 @@ slop_option_types_ValidationResult value_type_check_class_with_index(slop_arena*
 }
 
 uint8_t value_type_datatype_matches(rdf_Term value_node, rdf_Term required_datatype) {
-    __auto_type _mv_146 = value_node;
-    switch (_mv_146.tag) {
+    __auto_type _mv_147 = value_node;
+    switch (_mv_147.tag) {
         case rdf_Term_term_literal:
         {
-            __auto_type lit = _mv_146.data.term_literal;
+            __auto_type lit = _mv_147.data.term_literal;
             {
                 __auto_type required_dt_str = ({ __auto_type _mv = required_datatype; slop_string _mr = {0}; switch (_mv.tag) { case rdf_Term_term_iri: { __auto_type iri = _mv.data.term_iri; _mr = iri.value; break; } default: { _mr = SLOP_STR(""); break; }  } _mr; });
-                __auto_type _mv_147 = lit.datatype;
-                if (_mv_147.has_value) {
-                    __auto_type dt = _mv_147.value;
+                __auto_type _mv_148 = lit.datatype;
+                if (_mv_148.has_value) {
+                    __auto_type dt = _mv_148.value;
                     return string_eq(dt, required_dt_str);
-                } else if (!_mv_147.has_value) {
+                } else if (!_mv_148.has_value) {
                     return string_eq(required_dt_str, vocab_XSD_STRING);
                 }
             }
@@ -92,11 +92,11 @@ slop_option_types_ValidationResult snarl_check_datatype(slop_arena* arena, rdf_T
 }
 
 uint8_t value_type_node_kind_matches(types_NodeKind required, rdf_TermKind kind) {
-    __auto_type _mv_148 = required;
-    switch (_mv_148) {
+    __auto_type _mv_149 = required;
+    switch (_mv_149) {
         case types_NodeKind_node_kind_blank_node: {
-            __auto_type _mv_149 = kind;
-            switch (_mv_149) {
+            __auto_type _mv_150 = kind;
+            switch (_mv_150) {
                 case rdf_TermKind_blank: {
                     return 1;
                     break;
@@ -109,8 +109,8 @@ uint8_t value_type_node_kind_matches(types_NodeKind required, rdf_TermKind kind)
             break;
         }
         case types_NodeKind_node_kind_iri: {
-            __auto_type _mv_150 = kind;
-            switch (_mv_150) {
+            __auto_type _mv_151 = kind;
+            switch (_mv_151) {
                 case rdf_TermKind_iri: {
                     return 1;
                     break;
@@ -123,8 +123,8 @@ uint8_t value_type_node_kind_matches(types_NodeKind required, rdf_TermKind kind)
             break;
         }
         case types_NodeKind_node_kind_literal: {
-            __auto_type _mv_151 = kind;
-            switch (_mv_151) {
+            __auto_type _mv_152 = kind;
+            switch (_mv_152) {
                 case rdf_TermKind_literal: {
                     return 1;
                     break;
@@ -137,8 +137,8 @@ uint8_t value_type_node_kind_matches(types_NodeKind required, rdf_TermKind kind)
             break;
         }
         case types_NodeKind_node_kind_blank_node_or_iri: {
-            __auto_type _mv_152 = kind;
-            switch (_mv_152) {
+            __auto_type _mv_153 = kind;
+            switch (_mv_153) {
                 case rdf_TermKind_blank: {
                     return 1;
                     break;
@@ -155,8 +155,8 @@ uint8_t value_type_node_kind_matches(types_NodeKind required, rdf_TermKind kind)
             break;
         }
         case types_NodeKind_node_kind_blank_node_or_literal: {
-            __auto_type _mv_153 = kind;
-            switch (_mv_153) {
+            __auto_type _mv_154 = kind;
+            switch (_mv_154) {
                 case rdf_TermKind_blank: {
                     return 1;
                     break;
@@ -173,8 +173,8 @@ uint8_t value_type_node_kind_matches(types_NodeKind required, rdf_TermKind kind)
             break;
         }
         case types_NodeKind_node_kind_iri_or_literal: {
-            __auto_type _mv_154 = kind;
-            switch (_mv_154) {
+            __auto_type _mv_155 = kind;
+            switch (_mv_155) {
                 case rdf_TermKind_iri: {
                     return 1;
                     break;

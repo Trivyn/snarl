@@ -1,0 +1,24 @@
+@prefix ex: <http://example.org/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+
+# Regression (FB1 lens-1 "g1" case -- the swallowed-cycle finding): Root's
+# sh:property resolves (via property-shape-map) to PS, whose own sh:node
+# points to NS (a NodeShape), whose own property shape sh:node points back
+# to NS itself. The cycle is reached FROM INSIDE a property-shape-map
+# subtree. Pre-fix, the fresh guard mid-subtree discarded the cycle
+# detection and a fail-closed cut-short fabricated a spurious sh:node
+# violation instead of the real engine error. Must produce the engine's
+# shape-recursion error, NOT a violation report.
+ex:Root
+    a sh:NodeShape ;
+    sh:targetNode ex:alice ;
+    sh:property [ sh:path ex:knows ; sh:node ex:PS ] .
+
+ex:PS a sh:PropertyShape ; sh:path ex:knows ; sh:node ex:NS .
+
+ex:NS a sh:NodeShape ;
+    sh:property [ sh:path ex:knows ; sh:node ex:NS ] .
+
+ex:alice ex:knows ex:bob .
+ex:bob   ex:knows ex:carol .
+ex:carol ex:knows ex:bob .
