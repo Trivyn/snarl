@@ -18,6 +18,11 @@ typedef struct parse_PathScanItem parse_PathScanItem;
 SLOP_OPTION_DEFINE(uint8_t, slop_option_u8)
 #endif
 
+#ifndef SLOP_LIST_RDF_TERM_DEFINED
+#define SLOP_LIST_RDF_TERM_DEFINED
+SLOP_LIST_DEFINE(rdf_Term, slop_list_rdf_Term)
+#endif
+
 #ifndef SLOP_LIST_TYPES_NODESHAPE_DEFINED
 #define SLOP_LIST_TYPES_NODESHAPE_DEFINED
 SLOP_LIST_DEFINE(types_NodeShape, slop_list_types_NodeShape)
@@ -26,11 +31,6 @@ SLOP_LIST_DEFINE(types_NodeShape, slop_list_types_NodeShape)
 #ifndef SLOP_LIST_TYPES_PROPERTYSHAPE_DEFINED
 #define SLOP_LIST_TYPES_PROPERTYSHAPE_DEFINED
 SLOP_LIST_DEFINE(types_PropertyShape, slop_list_types_PropertyShape)
-#endif
-
-#ifndef SLOP_LIST_RDF_TERM_DEFINED
-#define SLOP_LIST_RDF_TERM_DEFINED
-SLOP_LIST_DEFINE(rdf_Term, slop_list_rdf_Term)
 #endif
 
 #ifndef SLOP_LIST_TYPES_CONSTRAINT_DEFINED
@@ -175,6 +175,10 @@ static inline bool slop_eq_rdf_Term(const void* a, const void* b) {
 uint8_t parse_shapes_graph_list_is_acyclic(slop_arena* arena, index_IndexedGraph g, rdf_Term head);
 slop_list_parse_PathScanItem parse_path_scan_work_new(slop_arena* arena);
 uint8_t parse_path_node_is_acyclic(slop_arena* arena, index_IndexedGraph g, rdf_Term root);
+int64_t parse_path_max_eval_depth(void);
+int64_t parse_path_node_eval_depth(slop_arena* arena, index_IndexedGraph g, rdf_Term root);
+slop_list_rdf_Term parse_path_node_eval_children(slop_arena* arena, index_IndexedGraph g, rdf_Term n);
+slop_option_rdf_Term parse_shapes_graph_path_depth_message(slop_arena* arena, index_IndexedGraph g);
 slop_option_rdf_Term parse_shapes_graph_path_cycle_message(slop_arena* arena, index_IndexedGraph g);
 slop_option_rdf_Term parse_shapes_graph_list_cycle_message(slop_arena* arena, index_IndexedGraph g);
 slop_option_string snarl_shapes_graph_recursion_hazard_message(slop_arena* arena, index_IndexedGraph g);

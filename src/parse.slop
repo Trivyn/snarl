@@ -203,6 +203,115 @@
           ((none) (do))))
       (not any-cycle)))
 
+  ;; ------------------------------------------------------------
+  ;; Path nesting-depth budget: a native-C-stack backstop for the path
+  ;; EVALUATOR (path.slop resolve-path), mirroring engine.slop's
+  ;; cycle-guard-max-recursion-depth for the shape evaluator.
+  ;;
+  ;; resolve-path still descends natively once per nesting level of a path
+  ;; expression: sequence/alternative recurse per element, and
+  ;; zeroOrMore/oneOrMore/zeroOrOne recurse into their inner path. Only
+  ;; nested sh:inversePath is exempt -- resolve-inverse peels a whole
+  ;; inversion chain iteratively (see path.slop), so a chain of any length
+  ;; costs a constant number of frames. Everything else pays stack per
+  ;; level, so a hostile (or merely absurd) deeply-nested path would
+  ;; SIGSEGV with no diagnostic, exactly the failure mode the depth budget
+  ;; exists to convert into an error.
+  ;;
+  ;; Checked in the pre-scan rather than threaded through resolve-path
+  ;; because resolve-path returns (List Term) with no error channel --
+  ;; bailing there could only return an empty result, silently turning a
+  ;; crash into a wrong answer. Reported here it is a real, named error.
+  (fn path-max-eval-depth ()
+    (@intent "Named ceiling on the path-expression nesting depth the evaluator will descend, see the note above")
+    (@spec (() -> Int))
+    (@pure)
+    1000)
+
+  (fn path-node-eval-depth ((arena Arena) (g IndexedGraph) (root Term))
+    (@intent
+      "Native-stack nesting depth resolve-path would descend for the path expression rooted at `root`: 1 for a leaf predicate, otherwise 1 + the deepest child. A chain of sh:inversePath counts as its innermost non-inverse path plus one, NOT one per link, because resolve-inverse peels the chain iteratively. Iterative (explicit enter/exit worklist) and memoized per node, matching path-node-is-acyclic, so shared sub-path DAGs stay linear. Assumes the path is already known acyclic (path-node-is-acyclic runs first), so the memo always terminates.")
+    (@spec ((Arena IndexedGraph Term) -> Int))
+    (@alloc arena)
+    (@post (>= $result 0))
+    (let ((depths (map-new arena Term Int))
+          (mut work (path-scan-work-new arena)))
+      (list-push work (record-new PathScanItem (is-exit false) (node root)))
+      (while (> (list-len work) 0)
+        (match (list-pop work)
+          ((some item)
+            (let ((n (. item node))
+                  (kids (path-node-eval-children arena g (. item node))))
+              (if (. item is-exit)
+                (let ((mut best 0))
+                  (for-each (c kids)
+                    (let ((d (match (map-get depths c) ((some x) x) ((none) 0))))
+                      (when (> d best) (set! best d))))
+                  (map-put depths n (+ best 1)))
+                (when (match (map-get depths n) ((none) true) ((some _) false))
+                  (list-push work (record-new PathScanItem (is-exit true) (node n)))
+                  (for-each (c kids)
+                    (list-push work (record-new PathScanItem (is-exit false) (node c))))))))
+          ((none) (do))))
+      (match (map-get depths root) ((some d) d) ((none) 0))))
+
+  (fn path-node-eval-children ((arena Arena) (g IndexedGraph) (n Term))
+    (@intent
+      "Structural children of a path node for depth accounting, i.e. the sub-paths resolve-path would descend into from `n`. A sh:inversePath yields the base of its whole inversion chain (peeled iteratively here, mirroring resolve-inverse) rather than the next link, so an N-deep inversion chain contributes one level, not N.")
+    (@spec ((Arena IndexedGraph Term) -> (List Term)))
+    (@alloc arena)
+    (@post (>= (list-len $result) 0))
+    (let ((mut kids (list-new arena Term))
+          (first-objs (indexed-graph-objects arena g n (make-iri arena RDF_FIRST)))
+          (inverse-objs (indexed-graph-objects arena g n (make-iri arena SHACL_INVERSE_PATH)))
+          (alt-objs (indexed-graph-objects arena g n (make-iri arena SHACL_ALTERNATIVE_PATH)))
+          (zom-objs (indexed-graph-objects arena g n (make-iri arena SHACL_ZERO_OR_MORE_PATH)))
+          (oom-objs (indexed-graph-objects arena g n (make-iri arena SHACL_ONE_OR_MORE_PATH)))
+          (zoo-objs (indexed-graph-objects arena g n (make-iri arena SHACL_ZERO_OR_ONE_PATH))))
+      (cond
+        ((> (list-len first-objs) 0)
+          (for-each (elem (rdf-list-elements-indexed arena g n)) (list-push kids elem)))
+        ((> (list-len inverse-objs) 0)
+          ;; Peel the whole inversion chain iteratively to its base.
+          (let ((mut cur n)
+                (mut peeling true))
+            (while peeling
+              (let ((objs (indexed-graph-objects arena g cur (make-iri arena SHACL_INVERSE_PATH))))
+                (match (list-get objs 0)
+                  ((some inner) (set! cur inner))
+                  ((none) (set! peeling false)))))
+            (list-push kids cur)))
+        ((> (list-len alt-objs) 0)
+          (match (list-get alt-objs 0)
+            ((some list-head)
+              (for-each (elem (rdf-list-elements-indexed arena g list-head)) (list-push kids elem)))
+            ((none) (do))))
+        ((> (list-len zom-objs) 0)
+          (match (list-get zom-objs 0) ((some inner) (list-push kids inner)) ((none) (do))))
+        ((> (list-len oom-objs) 0)
+          (match (list-get oom-objs 0) ((some inner) (list-push kids inner)) ((none) (do))))
+        ((> (list-len zoo-objs) 0)
+          (match (list-get zoo-objs 0) ((some inner) (list-push kids inner)) ((none) (do))))
+        (true (do)))
+      kids))
+
+  (fn shapes-graph-path-depth-message ((arena Arena) (g IndexedGraph))
+    (@intent
+      "Scan every sh:path value for a path expression nested deeper than the evaluator's native-stack budget. Returns the first offending path-node in graph scan order, if any -- deterministic for a given input graph. Runs only after the path-cycle pre-scan has passed, so every path here is known acyclic and the depth walk terminates.")
+    (@spec ((Arena IndexedGraph) -> (Option Term)))
+    (@alloc arena)
+    (let ((no-term (Option Term) (none))
+          (triples (indexed-graph-match arena g no-term (some (make-iri arena SHACL_PATH)) no-term))
+          (mut result (Option Term) (none)))
+      (for-each (tr triples)
+        (match result
+          ((none)
+            (let ((path-node (triple-object tr)))
+              (when (> (path-node-eval-depth arena g path-node) (path-max-eval-depth))
+                (set! result (some path-node)))))
+          ((some _) (do))))
+      result))
+
   (fn shapes-graph-path-cycle-message ((arena Arena) (g IndexedGraph))
     (@intent
       "Scan every sh:path value in the raw shapes graph for a structural path-expression cycle, before real parsing runs. Returns the offending path-node from the first hazardous sh:path triple found, in graph scan order, if any -- deterministic for a given input graph.")
@@ -268,7 +377,21 @@
               (list-push parts label)
               (list-push parts " (rdf:rest chain does not terminate at rdf:nil)")
               (some (string-build arena parts))))
-          ((none) (none)))))
+          ((none)
+            ;; Checked last: both scans above must pass first, since a
+            ;; cyclic path or malformed list would make the depth walk
+            ;; meaningless (and is the more specific diagnosis anyway).
+            (match (shapes-graph-path-depth-message arena g)
+              ((some node)
+                (let ((label (term-display-label node "[anonymous node]"))
+                      (mut parts (list-new arena String)))
+                  (list-push parts "Path nesting depth budget (")
+                  (list-push parts (int-to-string arena (path-max-eval-depth)))
+                  (list-push parts ") exceeded at ")
+                  (list-push parts label)
+                  (list-push parts " -- a path expression nested this deeply cannot be evaluated without risking a native stack overflow")
+                  (some (string-build arena parts))))
+              ((none) (none)))))))
     :c-name
     "snarl_shapes_graph_recursion_hazard_message")
 
