@@ -1,0 +1,26 @@
+@prefix ex: <http://example.org/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+
+# Regression (CycleGuard reference-count width): a LEGITIMATE revisit of the
+# same (shape, node) pair after the first visit has fully unwound.
+#
+# engine-validate mints one guard per node-shape, shared across all of that
+# shape's focus nodes, and there is no (shape, node) result memo. Both ex:p1 and
+# ex:p2 point at the SAME ex:kid, so (ChildShape, ex:kid) is genuinely
+# add -> remove -> add. That is not a cycle and must conform.
+#
+# Pre-fix, cycle-guard-add stored the count literal 1 as 4 bytes into a slot
+# read back as int64_t, so the count was (garbage << 32) | 1. cycle-guard-remove
+# then wrote (c - 1) = garbage << 32, which is NOT zero whenever the garbage was
+# nonzero -- leaving the pair permanently "active" so this second, legitimate
+# descent was reported as "Shape recursion detected".
+ex:ParentShape a sh:NodeShape ;
+    sh:targetNode ex:p1, ex:p2 ;
+    sh:property [ sh:path ex:child ; sh:node ex:ChildShape ] .
+
+ex:ChildShape a sh:NodeShape ;
+    sh:property [ sh:path ex:name ; sh:minCount 1 ] .
+
+ex:p1 ex:child ex:kid .
+ex:p2 ex:child ex:kid .
+ex:kid ex:name "Kid" .

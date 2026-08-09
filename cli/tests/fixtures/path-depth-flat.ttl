@@ -1,0 +1,18 @@
+@prefix ex: <http://example.org/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+
+# The downstream-reported shape, reduced: an entirely ordinary flat,
+# single-predicate sh:path (structural depth 1) that 0.4.2 intermittently
+# rejected with "Path nesting depth budget (1000) exceeded".
+#
+# The property shape is NAMED so one fixture serves both assertions: the direct
+# depth measurement (must be exactly 1) and the end-to-end outcome (CONFORMS).
+ex:FlatShape a sh:NodeShape ;
+    sh:targetNode ex:alice ;
+    sh:property ex:NameProp .
+
+ex:NameProp a sh:PropertyShape ;
+    sh:path ex:name ;
+    sh:minCount 1 .
+
+ex:alice ex:name "Alice" .

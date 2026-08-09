@@ -1,0 +1,34 @@
+@prefix ex: <http://example.org/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+
+# Structural fixture for path-node-eval-depth. Deliberately has NO targets, so
+# nothing is ever evaluated -- these shapes exist only so the pre-scan has
+# sh:path values to measure. Each named property shape pins one expected depth.
+#
+# Depth is "how many native frames resolve-path descends": 1 for a leaf
+# predicate, otherwise 1 + the deepest child. A whole sh:inversePath CHAIN
+# counts as one level, because resolve-inverse peels it iteratively (path.slop).
+
+# depth 1 -- a bare predicate, the shape the downstream bug misreported as >1000
+ex:FlatProp a sh:PropertyShape ;
+    sh:path ex:name .
+
+# depth 2 -- sequence: list of two leaf predicates
+ex:SeqProp a sh:PropertyShape ;
+    sh:path ( ex:knows ex:name ) .
+
+# depth 2 -- alternative: children are the list ELEMENTS, not the list head
+ex:AltProp a sh:PropertyShape ;
+    sh:path [ sh:alternativePath ( ex:knows ex:friendOf ) ] .
+
+# depth 2 -- NOT 3: the double inversion peels to its base in one level
+ex:InverseChainProp a sh:PropertyShape ;
+    sh:path [ sh:inversePath [ sh:inversePath ex:p ] ] .
+
+# depth 3 -- zeroOrMore(alternative(leaf, leaf))
+ex:NestedProp a sh:PropertyShape ;
+    sh:path [ sh:zeroOrMorePath [ sh:alternativePath ( ex:a ex:b ) ] ] .
+
+# depth 4 -- sequence( leaf, oneOrMore( zeroOrOne( leaf ) ) )
+ex:DeepSeqProp a sh:PropertyShape ;
+    sh:path ( ex:a [ sh:oneOrMorePath [ sh:zeroOrOnePath ex:b ] ] ) .

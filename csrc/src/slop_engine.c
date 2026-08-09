@@ -71,21 +71,21 @@ uint8_t engine_cycle_guard_has(engine_CycleGuard guard, rdf_Term shape_ref, rdf_
 }
 
 void engine_cycle_guard_add(slop_arena* arena, engine_CycleGuard guard, rdf_Term shape_ref, rdf_Term node) {
-    ({ __auto_type _val = (engine_cycle_guard_depth(guard) + 1); void* _vptr = slop_arena_alloc(arena, sizeof(_val)); memcpy(_vptr, &_val, sizeof(_val)); slop_map_put(arena, guard.depth, &(int64_t){engine_CYCLE_GUARD_SLOT}, _vptr); });
+    ({ int64_t _val = (engine_cycle_guard_depth(guard) + 1); void* _vptr = slop_arena_alloc(arena, sizeof(_val)); memcpy(_vptr, &_val, sizeof(_val)); slop_map_put(arena, guard.depth, &(int64_t){engine_CYCLE_GUARD_SLOT}, _vptr); });
     __auto_type _mv_179 = ({ void* _ptr = slop_map_get(guard.pairs, &(shape_ref)); _ptr ? (slop_option_ptr){ .has_value = true, .value = *(void**)_ptr } : (slop_option_ptr){ .has_value = false }; });
     if (_mv_179.has_value) {
         __auto_type counts = _mv_179.value;
         __auto_type _mv_180 = ({ void* _ptr = slop_map_get(counts, &(node)); _ptr ? (slop_option_int){ .has_value = true, .value = *(int64_t*)_ptr } : (slop_option_int){ .has_value = false }; });
         if (_mv_180.has_value) {
             __auto_type c = _mv_180.value;
-            ({ __auto_type _val = (c + 1); void* _vptr = slop_arena_alloc(arena, sizeof(_val)); memcpy(_vptr, &_val, sizeof(_val)); slop_map_put(arena, counts, &(node), _vptr); });
+            ({ int64_t _val = (c + 1); void* _vptr = slop_arena_alloc(arena, sizeof(_val)); memcpy(_vptr, &_val, sizeof(_val)); slop_map_put(arena, counts, &(node), _vptr); });
         } else if (!_mv_180.has_value) {
-            ({ __auto_type _val = 1; void* _vptr = slop_arena_alloc(arena, sizeof(_val)); memcpy(_vptr, &_val, sizeof(_val)); slop_map_put(arena, counts, &(node), _vptr); });
+            ({ int64_t _val = 1; void* _vptr = slop_arena_alloc(arena, sizeof(_val)); memcpy(_vptr, &_val, sizeof(_val)); slop_map_put(arena, counts, &(node), _vptr); });
         }
     } else if (!_mv_179.has_value) {
         {
             __auto_type counts = slop_map_new_ptr(arena, 16, sizeof(rdf_Term), slop_hash_rdf_Term, slop_eq_rdf_Term);
-            ({ __auto_type _val = 1; void* _vptr = slop_arena_alloc(arena, sizeof(_val)); memcpy(_vptr, &_val, sizeof(_val)); slop_map_put(arena, counts, &(node), _vptr); });
+            ({ int64_t _val = 1; void* _vptr = slop_arena_alloc(arena, sizeof(_val)); memcpy(_vptr, &_val, sizeof(_val)); slop_map_put(arena, counts, &(node), _vptr); });
             ({ __auto_type _val = counts; void* _vptr = slop_arena_alloc(arena, sizeof(_val)); memcpy(_vptr, &_val, sizeof(_val)); slop_map_put(arena, guard.pairs, &(shape_ref), _vptr); });
         }
     }
@@ -93,14 +93,14 @@ void engine_cycle_guard_add(slop_arena* arena, engine_CycleGuard guard, rdf_Term
 
 void engine_cycle_guard_remove(slop_arena* arena, engine_CycleGuard guard, rdf_Term shape_ref, rdf_Term node) {
     SLOP_PRE((engine_cycle_guard_pair_active(guard, shape_ref, node)), "(cycle-guard-pair-active guard shape-ref node)");
-    ({ __auto_type _val = (engine_cycle_guard_depth(guard) - 1); void* _vptr = slop_arena_alloc(arena, sizeof(_val)); memcpy(_vptr, &_val, sizeof(_val)); slop_map_put(arena, guard.depth, &(int64_t){engine_CYCLE_GUARD_SLOT}, _vptr); });
+    ({ int64_t _val = (engine_cycle_guard_depth(guard) - 1); void* _vptr = slop_arena_alloc(arena, sizeof(_val)); memcpy(_vptr, &_val, sizeof(_val)); slop_map_put(arena, guard.depth, &(int64_t){engine_CYCLE_GUARD_SLOT}, _vptr); });
     __auto_type _mv_181 = ({ void* _ptr = slop_map_get(guard.pairs, &(shape_ref)); _ptr ? (slop_option_ptr){ .has_value = true, .value = *(void**)_ptr } : (slop_option_ptr){ .has_value = false }; });
     if (_mv_181.has_value) {
         __auto_type counts = _mv_181.value;
         __auto_type _mv_182 = ({ void* _ptr = slop_map_get(counts, &(node)); _ptr ? (slop_option_int){ .has_value = true, .value = *(int64_t*)_ptr } : (slop_option_int){ .has_value = false }; });
         if (_mv_182.has_value) {
             __auto_type c = _mv_182.value;
-            ({ __auto_type _val = (c - 1); void* _vptr = slop_arena_alloc(arena, sizeof(_val)); memcpy(_vptr, &_val, sizeof(_val)); slop_map_put(arena, counts, &(node), _vptr); });
+            ({ int64_t _val = (c - 1); void* _vptr = slop_arena_alloc(arena, sizeof(_val)); memcpy(_vptr, &_val, sizeof(_val)); slop_map_put(arena, counts, &(node), _vptr); });
         } else if (!_mv_182.has_value) {
         }
     } else if (!_mv_181.has_value) {

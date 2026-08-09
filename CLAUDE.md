@@ -48,6 +48,34 @@ make dist       # Package lib + header for distribution
 make clean      # Remove build/
 ```
 
+### Regenerating `csrc/` (SLOP toolchain)
+
+`csrc/` is **generated — never hand-edit it.** A bug visible in the generated C
+is usually a bug in the SLOP transpiler, and belongs there.
+
+```bash
+cd $SLOP_HOME && make build-native     # REQUIRED FIRST after any SLOP change
+export SLOP_HOME=/Users/jcadam/code/slop
+make csrc
+```
+
+Three things that are easy to get wrong:
+
+- `make csrc` requires `SLOP_HOME` and invokes **`$SLOP_HOME/bin/slop-compiler`
+  directly, not the one on `PATH`** (a second copy often exists at
+  `/opt/homebrew/bin/slop-compiler`). Editing SLOP source without
+  `make build-native` regenerates byte-identical C and looks like the change
+  had no effect.
+- `csrc/update_bootstrap.sh` enforces `SLOP_MIN_VERSION` and refuses to run
+  against an older toolchain. Raise it whenever a SLOP codegen fix is
+  load-bearing for the committed C. Minimum today: **0.1.2** (map-put value
+  width — see the note in that script).
+- `csrc/SLOP_VERSION` records which toolchain produced the current C. Commit it
+  with the regenerated sources.
+
+W3C conformance cases are gitignored, so a fresh checkout has none — run
+`bash cli/tests/w3c/download.sh` before `make w3c-test`.
+
 ## Public API (`:c-name` mappings)
 
 | Function | C Name | Signature |

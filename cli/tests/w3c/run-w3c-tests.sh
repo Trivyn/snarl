@@ -148,6 +148,16 @@ if [ ${#FAILURES[@]} -gt 0 ]; then
   echo ""
 fi
 
+if [ "$total" -eq 0 ]; then
+  echo "RESULT: FAIL (no test cases found)"
+  echo ""
+  echo "The W3C case directories are gitignored, so a fresh checkout has none."
+  echo "Run 'bash cli/tests/w3c/download.sh' first."
+  echo "Without this guard an empty corpus reported OK, making this suite a"
+  echo "no-op gate in CI -- it passed no matter what the validator did."
+  exit 1
+fi
+
 if [ "$fail" -gt 0 ]; then
   echo "RESULT: FAIL ($fail unexpected failure(s))"
   exit 1
