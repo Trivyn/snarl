@@ -1,0 +1,51 @@
+@prefix ex: <http://example.org/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# Soak input: every well-formed RDF-list-bearing construct at once
+# (sh:and / sh:or / sh:xone / sh:in / sh:languageIn / sh:ignoredProperties)
+# plus sequence and alternative paths. These drive rdf-list-elements-indexed and
+# the list pre-scan, which allocate heavily and in a very different pattern from
+# the other two soak fixtures.
+ex:DocShape a sh:NodeShape ;
+    sh:targetClass ex:Doc ;
+    sh:closed true ;
+    sh:ignoredProperties ( <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> ex:internalNote ) ;
+    sh:property [
+        sh:path ex:status ;
+        sh:in ( "draft" "review" "published" )
+    ] ;
+    sh:property [
+        sh:path ex:title ;
+        sh:minCount 1 ;
+        sh:languageIn ( "en" "fr" "de" )
+    ] ;
+    sh:property [
+        sh:path ( ex:author ex:name ) ;
+        sh:minCount 1
+    ] ;
+    sh:property [
+        sh:path [ sh:alternativePath ( ex:editor ex:reviewer ) ] ;
+        sh:nodeKind sh:IRI
+    ] ;
+    sh:and (
+        [ sh:property [ sh:path ex:status ; sh:maxCount 1 ] ]
+        [ sh:property [ sh:path ex:title ; sh:maxCount 1 ] ]
+    ) ;
+    sh:or (
+        [ sh:property [ sh:path ex:editor ; sh:minCount 1 ] ]
+        [ sh:property [ sh:path ex:reviewer ; sh:minCount 1 ] ]
+    ) ;
+    sh:xone (
+        [ sh:property [ sh:path ex:archived ; sh:minCount 1 ] ]
+        [ sh:property [ sh:path ex:status ; sh:minCount 1 ] ]
+    ) .
+
+ex:doc1 a ex:Doc ;
+    ex:status "published" ;
+    ex:title "A Title"@en ;
+    ex:author ex:ada ;
+    ex:editor ex:bob ;
+    ex:internalNote "ignored" .
+
+ex:ada ex:name "Ada" .

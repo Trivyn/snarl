@@ -9,6 +9,11 @@ uint8_t test_cli_assert_conforms_separate(slop_arena* arena, slop_string data_pa
 uint8_t test_cli_assert_engine_error(slop_arena* arena, slop_string path, slop_string expected_substring);
 uint8_t test_cli_assert_engine_error_separate(slop_arena* arena, slop_string data_path, slop_string shapes_path, slop_string expected_substring);
 void test_cli_reset_test_arena(slop_arena* arena);
+void test_cli_poison_test_arena(slop_arena* arena, int64_t nbytes);
+int64_t test_cli_path_depth_of(slop_arena* arena, slop_string path, slop_string shape_iri);
+uint8_t test_cli_assert_validates(slop_arena* arena, slop_string path);
+uint8_t test_cli_soak_one(slop_arena* arena, slop_string fixture);
+uint8_t test_cli_assert_depth(slop_arena* arena, slop_string path, slop_string shape_iri, int64_t expected);
 uint8_t test_cli_assert_violations_separate(slop_arena* arena, slop_string data_path, slop_string shapes_path, int64_t expected_count);
 uint8_t test_cli_test_empty_graph(slop_arena* arena);
 uint8_t test_cli_test_valid_person(slop_arena* arena);
@@ -56,6 +61,15 @@ uint8_t test_cli_test_cycle_scale_acyclic_3000(slop_arena* arena);
 uint8_t test_cli_test_cycle_scale_cyclic_1000(slop_arena* arena);
 uint8_t test_cli_test_cycle_path_linear_50000(slop_arena* arena);
 uint8_t test_cli_test_cycle_path_shared_dag_30(slop_arena* arena);
+uint8_t test_cli_test_path_depth_structural(slop_arena* arena);
+uint8_t test_cli_test_path_depth_purity(slop_arena* arena);
+uint8_t test_cli_test_path_depth_poisoned_arena(slop_arena* arena);
+uint8_t test_cli_test_cycle_guard_revisit_after_unwind(slop_arena* arena);
+uint8_t test_cli_test_cycle_diamond_poisoned(slop_arena* arena);
+uint8_t test_cli_test_cycle_acyclic_controls_poisoned(slop_arena* arena);
+uint8_t test_cli_test_path_depth_over_budget(slop_arena* arena);
+uint8_t test_cli_test_path_depth_at_budget(slop_arena* arena);
+uint8_t test_cli_test_diverse_input_soak(slop_arena* arena);
 int main(int argc, char** _c_argv);
 
 slop_option_index_IndexedGraph test_cli_load_test_graph(slop_arena* arena, slop_string path) {
@@ -301,18 +315,161 @@ void test_cli_reset_test_arena(slop_arena* arena) {
     slop_arena_reset(arena);
 }
 
-uint8_t test_cli_assert_violations_separate(slop_arena* arena, slop_string data_path, slop_string shapes_path, int64_t expected_count) {
-    __auto_type _mv_329 = test_cli_load_test_graph(arena, data_path);
+void test_cli_poison_test_arena(slop_arena* arena, int64_t nbytes) {
+    memset(slop_arena_alloc(arena, (size_t)nbytes), 0x01, (size_t)nbytes);
+}
+
+int64_t test_cli_path_depth_of(slop_arena* arena, slop_string path, slop_string shape_iri) {
+    __auto_type _mv_329 = test_cli_load_test_graph(arena, path);
     if (_mv_329.has_value) {
-        __auto_type dg = _mv_329.value;
-        __auto_type _mv_330 = test_cli_load_test_graph(arena, shapes_path);
-        if (_mv_330.has_value) {
-            __auto_type sg = _mv_330.value;
-            __auto_type _mv_331 = snarl_validate(arena, dg, sg);
-            switch (_mv_331.tag) {
+        __auto_type g = _mv_329.value;
+        {
+            __auto_type objs = rdf_indexed_graph_objects(arena, g, rdf_make_iri(arena, shape_iri), rdf_make_iri(arena, vocab_SHACL_PATH));
+            __auto_type _mv_330 = ({ __auto_type _lst = objs; size_t _idx = (size_t)0; slop_option_rdf_Term _r = {0}; if (_idx < _lst.len) { _r.has_value = true; _r.value = _lst.data[_idx]; } else { _r.has_value = false; } _r; });
+            if (_mv_330.has_value) {
+                __auto_type path_node = _mv_330.value;
+                return parse_path_node_eval_depth(arena, g, path_node);
+            } else if (!_mv_330.has_value) {
+                return -1;
+            }
+        }
+    } else if (!_mv_329.has_value) {
+        return -2;
+    }
+}
+
+uint8_t test_cli_assert_validates(slop_arena* arena, slop_string path) {
+    __auto_type _mv_331 = test_cli_load_test_graph(arena, path);
+    if (_mv_331.has_value) {
+        __auto_type g = _mv_331.value;
+        __auto_type _mv_332 = snarl_validate(arena, g, g);
+        switch (_mv_332.tag) {
+            case types_ValidatorResult_validate_success:
+            {
+                __auto_type _ = _mv_332.data.validate_success;
+                printf("%s", "  PASS: ");
+                printf("%.*s", (int)(path).len, (path).data);
+                printf("%s\n", " validated (no engine error)");
+                return 1;
+            }
+            case types_ValidatorResult_validate_error:
+            {
+                __auto_type msg = _mv_332.data.validate_error;
+                printf("%s", "  FAIL: ");
+                printf("%.*s", (int)(path).len, (path).data);
+                printf("%s", " unexpected engine error: ");
+                printf("%.*s\n", (int)(msg).len, (msg).data);
+                return 0;
+            }
+        }
+    } else if (!_mv_331.has_value) {
+        printf("%s", "  FAIL: could not load ");
+        printf("%.*s\n", (int)(path).len, (path).data);
+        return 0;
+    }
+}
+
+uint8_t test_cli_soak_one(slop_arena* arena, slop_string fixture) {
+    test_cli_reset_test_arena(arena);
+    test_cli_poison_test_arena(arena, 4194304);
+    test_cli_reset_test_arena(arena);
+    {
+        uint8_t ok = 1;
+        __auto_type _mv_333 = test_cli_load_test_graph(arena, fixture);
+        if (_mv_333.has_value) {
+            __auto_type g = _mv_333.value;
+            __auto_type _mv_334 = snarl_validate(arena, g, g);
+            switch (_mv_334.tag) {
                 case types_ValidatorResult_validate_success:
                 {
-                    __auto_type report = _mv_331.data.validate_success;
+                    __auto_type _ = _mv_334.data.validate_success;
+                    break;
+                }
+                case types_ValidatorResult_validate_error:
+                {
+                    __auto_type msg = _mv_334.data.validate_error;
+                    printf("%s", "  FAIL: ");
+                    printf("%.*s", (int)(fixture).len, (fixture).data);
+                    printf("%s", " unexpected engine error: ");
+                    printf("%.*s\n", (int)(msg).len, (msg).data);
+                    ok = 0;
+                    break;
+                }
+            }
+        } else if (!_mv_333.has_value) {
+            printf("%s", "  FAIL: could not load ");
+            printf("%.*s\n", (int)(fixture).len, (fixture).data);
+            ok = 0;
+        }
+        if (!((test_cli_path_depth_of(arena, SLOP_STR("fixtures/path-depth-flat.ttl"), SLOP_STR("http://example.org/NameProp")) == 1))) {
+            printf("%s", "  FAIL: flat control depth drifted after ");
+            printf("%.*s\n", (int)(fixture).len, (fixture).data);
+            ok = 0;
+        }
+        __auto_type _mv_335 = test_cli_load_test_graph(arena, SLOP_STR("fixtures/path-depth-flat.ttl"));
+        if (_mv_335.has_value) {
+            __auto_type fg = _mv_335.value;
+            __auto_type _mv_336 = snarl_validate(arena, fg, fg);
+            switch (_mv_336.tag) {
+                case types_ValidatorResult_validate_success:
+                {
+                    __auto_type _ = _mv_336.data.validate_success;
+                    break;
+                }
+                case types_ValidatorResult_validate_error:
+                {
+                    __auto_type msg = _mv_336.data.validate_error;
+                    printf("%s", "  FAIL: flat control errored after ");
+                    printf("%.*s", (int)(fixture).len, (fixture).data);
+                    printf("%s", ": ");
+                    printf("%.*s\n", (int)(msg).len, (msg).data);
+                    ok = 0;
+                    break;
+                }
+            }
+        } else if (!_mv_335.has_value) {
+            printf("%s\n", "  FAIL: could not load flat control");
+            ok = 0;
+        }
+        return ok;
+    }
+}
+
+uint8_t test_cli_assert_depth(slop_arena* arena, slop_string path, slop_string shape_iri, int64_t expected) {
+    {
+        __auto_type actual = test_cli_path_depth_of(arena, path, shape_iri);
+        if (actual == expected) {
+            printf("%s", "  PASS: ");
+            printf("%.*s", (int)(shape_iri).len, (shape_iri).data);
+            printf("%s", " depth = ");
+            printf("%lld", (long long)(actual));
+            printf("%s\n", "");
+            return 1;
+        } else {
+            printf("%s", "  FAIL: ");
+            printf("%.*s", (int)(shape_iri).len, (shape_iri).data);
+            printf("%s", " expected depth ");
+            printf("%lld", (long long)(expected));
+            printf("%s", " but got ");
+            printf("%lld", (long long)(actual));
+            printf("%s\n", "");
+            return 0;
+        }
+    }
+}
+
+uint8_t test_cli_assert_violations_separate(slop_arena* arena, slop_string data_path, slop_string shapes_path, int64_t expected_count) {
+    __auto_type _mv_337 = test_cli_load_test_graph(arena, data_path);
+    if (_mv_337.has_value) {
+        __auto_type dg = _mv_337.value;
+        __auto_type _mv_338 = test_cli_load_test_graph(arena, shapes_path);
+        if (_mv_338.has_value) {
+            __auto_type sg = _mv_338.value;
+            __auto_type _mv_339 = snarl_validate(arena, dg, sg);
+            switch (_mv_339.tag) {
+                case types_ValidatorResult_validate_success:
+                {
+                    __auto_type report = _mv_339.data.validate_success;
                     {
                         __auto_type violations = snarl_get_violations(arena, report);
                         __auto_type actual_count = ((int64_t)((violations).len));
@@ -336,18 +493,18 @@ uint8_t test_cli_assert_violations_separate(slop_arena* arena, slop_string data_
                 }
                 case types_ValidatorResult_validate_error:
                 {
-                    __auto_type msg = _mv_331.data.validate_error;
+                    __auto_type msg = _mv_339.data.validate_error;
                     printf("%s", "  FAIL: validation error: ");
                     printf("%.*s\n", (int)(msg).len, (msg).data);
                     return 0;
                 }
             }
-        } else if (!_mv_330.has_value) {
+        } else if (!_mv_338.has_value) {
             printf("%s", "  FAIL: could not load shapes ");
             printf("%.*s\n", (int)(shapes_path).len, (shapes_path).data);
             return 0;
         }
-    } else if (!_mv_329.has_value) {
+    } else if (!_mv_337.has_value) {
         printf("%s", "  FAIL: could not load data ");
         printf("%.*s\n", (int)(data_path).len, (data_path).data);
         return 0;
@@ -363,9 +520,9 @@ uint8_t test_cli_test_valid_person(slop_arena* arena) {
 }
 
 uint8_t test_cli_test_rdf12_annotation_block(slop_arena* arena) {
-    __auto_type _mv_332 = test_cli_load_test_graph(arena, SLOP_STR("fixtures/rdf12-annotation-valid.ttl"));
-    if (_mv_332.has_value) {
-        __auto_type g = _mv_332.value;
+    __auto_type _mv_340 = test_cli_load_test_graph(arena, SLOP_STR("fixtures/rdf12-annotation-valid.ttl"));
+    if (_mv_340.has_value) {
+        __auto_type g = _mv_340.value;
         {
             __auto_type size = rdf_indexed_graph_size(g);
             if ((size == 17) && snarl_conforms(arena, g, g)) {
@@ -377,7 +534,7 @@ uint8_t test_cli_test_rdf12_annotation_block(slop_arena* arena) {
                 return 0;
             }
         }
-    } else if (!_mv_332.has_value) {
+    } else if (!_mv_340.has_value) {
         printf("%s\n", "  FAIL: could not load RDF 1.2 annotation fixture");
         return 0;
     }
@@ -408,14 +565,14 @@ uint8_t test_cli_test_multiple_violations(slop_arena* arena) {
 }
 
 uint8_t test_cli_test_report_string(slop_arena* arena) {
-    __auto_type _mv_333 = test_cli_load_test_graph(arena, SLOP_STR("fixtures/cardinality-violation.ttl"));
-    if (_mv_333.has_value) {
-        __auto_type g = _mv_333.value;
-        __auto_type _mv_334 = snarl_validate(arena, g, g);
-        switch (_mv_334.tag) {
+    __auto_type _mv_341 = test_cli_load_test_graph(arena, SLOP_STR("fixtures/cardinality-violation.ttl"));
+    if (_mv_341.has_value) {
+        __auto_type g = _mv_341.value;
+        __auto_type _mv_342 = snarl_validate(arena, g, g);
+        switch (_mv_342.tag) {
             case types_ValidatorResult_validate_success:
             {
-                __auto_type report = _mv_334.data.validate_success;
+                __auto_type report = _mv_342.data.validate_success;
                 {
                     __auto_type text = snarl_report_to_string(arena, report);
                     if (string_len(text) > 0) {
@@ -429,12 +586,12 @@ uint8_t test_cli_test_report_string(slop_arena* arena) {
             }
             case types_ValidatorResult_validate_error:
             {
-                __auto_type _ = _mv_334.data.validate_error;
+                __auto_type _ = _mv_342.data.validate_error;
                 printf("%s\n", "  FAIL: validation error");
                 return 0;
             }
         }
-    } else if (!_mv_333.has_value) {
+    } else if (!_mv_341.has_value) {
         printf("%s\n", "  FAIL: could not load fixture");
         return 0;
     }
@@ -565,19 +722,19 @@ uint8_t test_cli_test_cycle_list_ignored_properties(slop_arena* arena) {
 }
 
 uint8_t test_cli_test_max_errors_precedence(slop_arena* arena) {
-    __auto_type _mv_335 = test_cli_load_test_graph(arena, SLOP_STR("fixtures/cycle-maxerrors-data.ttl"));
-    if (_mv_335.has_value) {
-        __auto_type dg = _mv_335.value;
-        __auto_type _mv_336 = test_cli_load_test_graph(arena, SLOP_STR("fixtures/cycle-maxerrors-shapes.ttl"));
-        if (_mv_336.has_value) {
-            __auto_type sg = _mv_336.value;
+    __auto_type _mv_343 = test_cli_load_test_graph(arena, SLOP_STR("fixtures/cycle-maxerrors-data.ttl"));
+    if (_mv_343.has_value) {
+        __auto_type dg = _mv_343.value;
+        __auto_type _mv_344 = test_cli_load_test_graph(arena, SLOP_STR("fixtures/cycle-maxerrors-shapes.ttl"));
+        if (_mv_344.has_value) {
+            __auto_type sg = _mv_344.value;
             {
                 __auto_type config = ((types_ValidatorConfig){.verbose = 0, .max_errors = 1, .include_warnings = 1, .include_infos = 1});
-                __auto_type _mv_337 = snarl_validate_with_config(arena, dg, sg, config);
-                switch (_mv_337.tag) {
+                __auto_type _mv_345 = snarl_validate_with_config(arena, dg, sg, config);
+                switch (_mv_345.tag) {
                     case types_ValidatorResult_validate_error:
                     {
-                        __auto_type msg = _mv_337.data.validate_error;
+                        __auto_type msg = _mv_345.data.validate_error;
                         if (strlib_contains(msg, SLOP_STR("Shape recursion"))) {
                             printf("%s\n", "  PASS: max-errors=1 still surfaces the engine error");
                             return 1;
@@ -589,17 +746,17 @@ uint8_t test_cli_test_max_errors_precedence(slop_arena* arena) {
                     }
                     case types_ValidatorResult_validate_success:
                     {
-                        __auto_type _ = _mv_337.data.validate_success;
+                        __auto_type _ = _mv_345.data.validate_success;
                         printf("%s\n", "  FAIL: max-errors=1 silently truncated the engine error into a success report");
                         return 0;
                     }
                 }
             }
-        } else if (!_mv_336.has_value) {
+        } else if (!_mv_344.has_value) {
             printf("%s\n", "  FAIL: could not load fixtures/cycle-maxerrors-shapes.ttl");
             return 0;
         }
-    } else if (!_mv_335.has_value) {
+    } else if (!_mv_343.has_value) {
         printf("%s\n", "  FAIL: could not load fixtures/cycle-maxerrors-data.ttl");
         return 0;
     }
@@ -610,26 +767,26 @@ uint8_t test_cli_test_cycle_scale_acyclic_3000(slop_arena* arena) {
 }
 
 uint8_t test_cli_test_cycle_scale_cyclic_1000(slop_arena* arena) {
-    __auto_type _mv_338 = test_cli_load_test_graph(arena, SLOP_STR("fixtures/cycle-scale-cyclic-1000.ttl"));
-    if (_mv_338.has_value) {
-        __auto_type g = _mv_338.value;
-        __auto_type _mv_339 = snarl_validate(arena, g, g);
-        switch (_mv_339.tag) {
+    __auto_type _mv_346 = test_cli_load_test_graph(arena, SLOP_STR("fixtures/cycle-scale-cyclic-1000.ttl"));
+    if (_mv_346.has_value) {
+        __auto_type g = _mv_346.value;
+        __auto_type _mv_347 = snarl_validate(arena, g, g);
+        switch (_mv_347.tag) {
             case types_ValidatorResult_validate_error:
             {
-                __auto_type msg = _mv_339.data.validate_error;
+                __auto_type msg = _mv_347.data.validate_error;
                 printf("%s", "  PASS: fixtures/cycle-scale-cyclic-1000.ttl engine error: ");
                 printf("%.*s\n", (int)(msg).len, (msg).data);
                 return 1;
             }
             case types_ValidatorResult_validate_success:
             {
-                __auto_type _ = _mv_339.data.validate_success;
+                __auto_type _ = _mv_347.data.validate_success;
                 printf("%s\n", "  FAIL: fixtures/cycle-scale-cyclic-1000.ttl expected engine error but validation succeeded");
                 return 0;
             }
         }
-    } else if (!_mv_338.has_value) {
+    } else if (!_mv_346.has_value) {
         printf("%s\n", "  FAIL: could not load fixtures/cycle-scale-cyclic-1000.ttl");
         return 0;
     }
@@ -641,6 +798,187 @@ uint8_t test_cli_test_cycle_path_linear_50000(slop_arena* arena) {
 
 uint8_t test_cli_test_cycle_path_shared_dag_30(slop_arena* arena) {
     return test_cli_assert_conforms(arena, SLOP_STR("fixtures/cycle-path-shared-dag-30.ttl"));
+}
+
+uint8_t test_cli_test_path_depth_structural(slop_arena* arena) {
+    test_cli_reset_test_arena(arena);
+    test_cli_poison_test_arena(arena, 16777216);
+    test_cli_reset_test_arena(arena);
+    {
+        __auto_type p = SLOP_STR("fixtures/path-depth-cases.ttl");
+        uint8_t ok = 1;
+        if (!(test_cli_assert_depth(arena, p, SLOP_STR("http://example.org/FlatProp"), 1))) {
+            ok = 0;
+        }
+        if (!(test_cli_assert_depth(arena, p, SLOP_STR("http://example.org/SeqProp"), 2))) {
+            ok = 0;
+        }
+        if (!(test_cli_assert_depth(arena, p, SLOP_STR("http://example.org/AltProp"), 2))) {
+            ok = 0;
+        }
+        if (!(test_cli_assert_depth(arena, p, SLOP_STR("http://example.org/InverseChainProp"), 2))) {
+            ok = 0;
+        }
+        if (!(test_cli_assert_depth(arena, p, SLOP_STR("http://example.org/NestedProp"), 3))) {
+            ok = 0;
+        }
+        if (!(test_cli_assert_depth(arena, p, SLOP_STR("http://example.org/DeepSeqProp"), 4))) {
+            ok = 0;
+        }
+        return ok;
+    }
+}
+
+uint8_t test_cli_test_path_depth_purity(slop_arena* arena) {
+    {
+        __auto_type p = SLOP_STR("fixtures/path-depth-cases.ttl");
+        __auto_type d1 = test_cli_path_depth_of(arena, p, SLOP_STR("http://example.org/FlatProp"));
+        __auto_type d2 = test_cli_path_depth_of(arena, p, SLOP_STR("http://example.org/SeqProp"));
+        __auto_type d3 = test_cli_path_depth_of(arena, p, SLOP_STR("http://example.org/NestedProp"));
+        __auto_type d4 = test_cli_path_depth_of(arena, p, SLOP_STR("http://example.org/DeepSeqProp"));
+        test_cli_reset_test_arena(arena);
+        test_cli_poison_test_arena(arena, 16777216);
+        test_cli_reset_test_arena(arena);
+        {
+            __auto_type e1 = test_cli_path_depth_of(arena, p, SLOP_STR("http://example.org/FlatProp"));
+            __auto_type e2 = test_cli_path_depth_of(arena, p, SLOP_STR("http://example.org/SeqProp"));
+            __auto_type e3 = test_cli_path_depth_of(arena, p, SLOP_STR("http://example.org/NestedProp"));
+            __auto_type e4 = test_cli_path_depth_of(arena, p, SLOP_STR("http://example.org/DeepSeqProp"));
+            if (((d1 == e1) && (d2 == e2)) && ((d3 == e3) && (d4 == e4))) {
+                if (((e1 == 1) && (e2 == 2)) && ((e3 == 3) && (e4 == 4))) {
+                    printf("%s\n", "  PASS: path depth is stable and correct across a poisoned arena reset");
+                    return 1;
+                } else {
+                    printf("%s\n", "  FAIL: path depths stable but structurally wrong");
+                    return 0;
+                }
+            } else {
+                printf("%s", "  FAIL: path depth changed across arena reuse: ");
+                printf("%lld", (long long)(d1));
+                printf("%s", ",");
+                printf("%lld", (long long)(d2));
+                printf("%s", ",");
+                printf("%lld", (long long)(d3));
+                printf("%s", ",");
+                printf("%lld", (long long)(d4));
+                printf("%s", " -> ");
+                printf("%lld", (long long)(e1));
+                printf("%s", ",");
+                printf("%lld", (long long)(e2));
+                printf("%s", ",");
+                printf("%lld", (long long)(e3));
+                printf("%s", ",");
+                printf("%lld\n", (long long)(e4));
+                return 0;
+            }
+        }
+    }
+}
+
+uint8_t test_cli_test_path_depth_poisoned_arena(slop_arena* arena) {
+    test_cli_reset_test_arena(arena);
+    test_cli_poison_test_arena(arena, 16777216);
+    test_cli_reset_test_arena(arena);
+    {
+        __auto_type depth_ok = test_cli_assert_depth(arena, SLOP_STR("fixtures/path-depth-flat.ttl"), SLOP_STR("http://example.org/NameProp"), 1);
+        __auto_type conforms_ok = test_cli_assert_conforms(arena, SLOP_STR("fixtures/path-depth-flat.ttl"));
+        return (depth_ok && conforms_ok);
+    }
+}
+
+uint8_t test_cli_test_cycle_guard_revisit_after_unwind(slop_arena* arena) {
+    test_cli_reset_test_arena(arena);
+    test_cli_poison_test_arena(arena, 16777216);
+    test_cli_reset_test_arena(arena);
+    return test_cli_assert_conforms(arena, SLOP_STR("fixtures/cycle-guard-revisit-after-unwind.ttl"));
+}
+
+uint8_t test_cli_test_cycle_diamond_poisoned(slop_arena* arena) {
+    test_cli_reset_test_arena(arena);
+    test_cli_poison_test_arena(arena, 16777216);
+    test_cli_reset_test_arena(arena);
+    return test_cli_assert_conforms(arena, SLOP_STR("fixtures/cycle-diamond.ttl"));
+}
+
+uint8_t test_cli_test_cycle_acyclic_controls_poisoned(slop_arena* arena) {
+    test_cli_reset_test_arena(arena);
+    test_cli_poison_test_arena(arena, 16777216);
+    test_cli_reset_test_arena(arena);
+    {
+        __auto_type a = test_cli_assert_conforms(arena, SLOP_STR("fixtures/cycle-propshape-acyclic-control.ttl"));
+        __auto_type b = test_cli_assert_conforms(arena, SLOP_STR("fixtures/cycle-propshape-swallowed-control.ttl"));
+        __auto_type c = test_cli_assert_conforms(arena, SLOP_STR("fixtures/cycle-path-shared-dag-30.ttl"));
+        __auto_type d = test_cli_assert_conforms_separate(arena, SLOP_STR("fixtures/cycle-recursive-person-acyclic-data.ttl"), SLOP_STR("fixtures/cycle-recursive-person-shapes.ttl"));
+        return ((a && b) && (c && d));
+    }
+}
+
+uint8_t test_cli_test_path_depth_over_budget(slop_arena* arena) {
+    test_cli_reset_test_arena(arena);
+    test_cli_poison_test_arena(arena, 4194304);
+    test_cli_reset_test_arena(arena);
+    return test_cli_assert_engine_error(arena, SLOP_STR("fixtures/path-depth-over-budget.ttl"), SLOP_STR("Path nesting depth budget"));
+}
+
+uint8_t test_cli_test_path_depth_at_budget(slop_arena* arena) {
+    test_cli_reset_test_arena(arena);
+    test_cli_poison_test_arena(arena, 4194304);
+    test_cli_reset_test_arena(arena);
+    return test_cli_assert_validates(arena, SLOP_STR("fixtures/path-depth-at-budget.ttl"));
+}
+
+uint8_t test_cli_test_diverse_input_soak(slop_arena* arena) {
+    {
+        uint8_t ok = 1;
+        if (!(test_cli_soak_one(arena, SLOP_STR("fixtures/empty.ttl")))) {
+            ok = 0;
+        }
+        if (!(test_cli_soak_one(arena, SLOP_STR("fixtures/valid-person.ttl")))) {
+            ok = 0;
+        }
+        if (!(test_cli_soak_one(arena, SLOP_STR("fixtures/target-node.ttl")))) {
+            ok = 0;
+        }
+        if (!(test_cli_soak_one(arena, SLOP_STR("fixtures/soak-long-iris.ttl")))) {
+            ok = 0;
+        }
+        if (!(test_cli_soak_one(arena, SLOP_STR("fixtures/soak-blank-nodes.ttl")))) {
+            ok = 0;
+        }
+        if (!(test_cli_soak_one(arena, SLOP_STR("fixtures/soak-lists.ttl")))) {
+            ok = 0;
+        }
+        if (!(test_cli_soak_one(arena, SLOP_STR("fixtures/cycle-chain.ttl")))) {
+            ok = 0;
+        }
+        if (!(test_cli_soak_one(arena, SLOP_STR("fixtures/cycle-diamond.ttl")))) {
+            ok = 0;
+        }
+        if (!(test_cli_soak_one(arena, SLOP_STR("fixtures/cycle-path-legitimate.ttl")))) {
+            ok = 0;
+        }
+        if (!(test_cli_soak_one(arena, SLOP_STR("fixtures/cycle-propshape-acyclic-control.ttl")))) {
+            ok = 0;
+        }
+        if (!(test_cli_soak_one(arena, SLOP_STR("fixtures/cycle-path-shared-dag-30.ttl")))) {
+            ok = 0;
+        }
+        if (!(test_cli_soak_one(arena, SLOP_STR("fixtures/cardinality-violation.ttl")))) {
+            ok = 0;
+        }
+        if (!(test_cli_soak_one(arena, SLOP_STR("fixtures/multiple-violations.ttl")))) {
+            ok = 0;
+        }
+        if (!(test_cli_soak_one(arena, SLOP_STR("fixtures/rdf12-annotation-valid.ttl")))) {
+            ok = 0;
+        }
+        if (ok) {
+            printf("%s\n", "  PASS: diverse-input soak -- no engine errors, flat control stable throughout");
+            return 1;
+        } else {
+            return 0;
+        }
+    }
 }
 
 int main(int argc, char** _c_argv) {
@@ -890,6 +1228,51 @@ int main(int argc, char** _c_argv) {
             }
             test_cli_reset_test_arena(arena);
             if (test_cli_test_cycle_path_shared_dag_30(arena)) {
+                passed = (passed + 1);
+            } else {
+                failed = (failed + 1);
+            }
+            if (test_cli_test_path_depth_structural(arena)) {
+                passed = (passed + 1);
+            } else {
+                failed = (failed + 1);
+            }
+            if (test_cli_test_path_depth_purity(arena)) {
+                passed = (passed + 1);
+            } else {
+                failed = (failed + 1);
+            }
+            if (test_cli_test_path_depth_poisoned_arena(arena)) {
+                passed = (passed + 1);
+            } else {
+                failed = (failed + 1);
+            }
+            if (test_cli_test_cycle_guard_revisit_after_unwind(arena)) {
+                passed = (passed + 1);
+            } else {
+                failed = (failed + 1);
+            }
+            if (test_cli_test_cycle_diamond_poisoned(arena)) {
+                passed = (passed + 1);
+            } else {
+                failed = (failed + 1);
+            }
+            if (test_cli_test_cycle_acyclic_controls_poisoned(arena)) {
+                passed = (passed + 1);
+            } else {
+                failed = (failed + 1);
+            }
+            if (test_cli_test_path_depth_over_budget(arena)) {
+                passed = (passed + 1);
+            } else {
+                failed = (failed + 1);
+            }
+            if (test_cli_test_path_depth_at_budget(arena)) {
+                passed = (passed + 1);
+            } else {
+                failed = (failed + 1);
+            }
+            if (test_cli_test_diverse_input_soak(arena)) {
                 passed = (passed + 1);
             } else {
                 failed = (failed + 1);

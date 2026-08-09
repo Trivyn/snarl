@@ -18,6 +18,12 @@
     parse-node-kind
     parse-severity
     shapes-graph-recursion-hazard-message
+    ;; Exported for tests: the depth budget's INPUT must be assertable directly
+    ;; (exactly 1 for a flat predicate path), not only through the pass/fail of
+    ;; the end-to-end budget comparison -- a corrupted depth whose garbage upper
+    ;; half happens to set the sign bit compares < budget and passes silently.
+    path-node-eval-depth
+    path-max-eval-depth
     PathScanItem)
 
   (@doc "Parse SHACL shapes from RDF triples into structured shapes graph")

@@ -1,0 +1,32 @@
+@prefix ex: <http://example.org/very/long/namespace/segment/for/hash/spreading/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+
+# Soak input: long, highly varied IRIs. The point is hash/allocation DIVERSITY --
+# these land in different map buckets and push the arena bump pointer to
+# different offsets than the other soak fixtures, so the flat-path control that
+# runs after them starts from a different memory layout each time.
+ex:PersonShapeWithAnExtremelyLongLocalNameForBucketSpreading a sh:NodeShape ;
+    sh:targetClass ex:PersonTypeWithAnEquallyLongLocalNameHereToo ;
+    sh:property [
+        sh:path ex:givenNamePropertyWithALongLocalNameToVaryTheStringLength ;
+        sh:minCount 1 ;
+        sh:datatype <http://www.w3.org/2001/XMLSchema#string>
+    ] ;
+    sh:property [
+        sh:path ex:familyNamePropertyWithADifferentButAlsoLongLocalName ;
+        sh:maxCount 1
+    ] ;
+    sh:property [
+        sh:path ex:affiliatedOrganisationPropertyWithYetAnotherLongLocalName ;
+        sh:nodeKind sh:IRI
+    ] .
+
+ex:individualWithAVeryLongLocalNameNumberOne a ex:PersonTypeWithAnEquallyLongLocalNameHereToo ;
+    ex:givenNamePropertyWithALongLocalNameToVaryTheStringLength "Ada" ;
+    ex:familyNamePropertyWithADifferentButAlsoLongLocalName "Lovelace" ;
+    ex:affiliatedOrganisationPropertyWithYetAnotherLongLocalName ex:organisationWithARatherLongLocalNameAsWell .
+
+ex:individualWithAVeryLongLocalNameNumberTwo a ex:PersonTypeWithAnEquallyLongLocalNameHereToo ;
+    ex:givenNamePropertyWithALongLocalNameToVaryTheStringLength "Grace" ;
+    ex:familyNamePropertyWithADifferentButAlsoLongLocalName "Hopper" ;
+    ex:affiliatedOrganisationPropertyWithYetAnotherLongLocalName ex:organisationWithARatherLongLocalNameAsWell .
