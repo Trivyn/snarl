@@ -376,16 +376,26 @@
           (let ((focus-nodes (resolve-targets-cached arena data-graph target-cache ns))
                 (visited (cycle-guard-new arena)))
             (for-each (focus-node focus-nodes)
-              (let ((results (evaluate-node-shape-cached arena data-graph shapes-graph class-index ns focus-node visited config)))
-                (for-each (r results)
-                  (let ((include (match (. r severity) (severity-violation true) (severity-warning (. config include-warnings)) (severity-info (. config include-infos)))))
-                    (when include
-                      (when (or (== max-errors 0) (< error-count max-errors))
-                        (set! report (report-add-result arena report r))
-                        (match (. r severity)
-                          (severity-violation
-                            (set! error-count (+ error-count 1)))
-                          (_ (do)))))))))
+              ;; Once this guard has flagged, the run's outcome is already
+              ;; decided: the first flag wins (later flags on the same guard
+              ;; are no-ops) and an engine error discards `report` wholesale.
+              ;; Evaluating the remaining focus nodes cannot change the answer
+              ;; and costs a full depth-budget descent EACH -- O(targets x
+              ;; depth) arena that is never reclaimed (a 49KB cyclic ring hit
+              ;; 18GB before this exit, OOM-killing 7GB CI runners).
+              (match (map-get (. visited errors) 0)
+                ((some _) (do))
+                ((none)
+                  (let ((results (evaluate-node-shape-cached arena data-graph shapes-graph class-index ns focus-node visited config)))
+                    (for-each (r results)
+                      (let ((include (match (. r severity) (severity-violation true) (severity-warning (. config include-warnings)) (severity-info (. config include-infos)))))
+                        (when include
+                          (when (or (== max-errors 0) (< error-count max-errors))
+                            (set! report (report-add-result arena report r))
+                            (match (. r severity)
+                              (severity-violation
+                                (set! error-count (+ error-count 1)))
+                              (_ (do)))))))))))
             ;; Any shape-recursion cycle hit while evaluating this
             ;; node-shape overrides the whole run: first cycle found, in
             ;; deterministic traversal order, wins.
