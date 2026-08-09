@@ -1,6 +1,6 @@
 [project]
 name = "snarl"
-version = "0.4.1"
+version = "0.4.2"
 entry = "src/snarl.slop"
 
 [build]
