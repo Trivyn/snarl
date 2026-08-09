@@ -19,14 +19,10 @@ jobs:
             cc: gcc
           - os: macos-14
             platform: macos-arm64
-            cc: gcc-14
+            cc: clang
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
-
-      - name: Install GCC 14 (macOS)
-        if: runner.os == 'macOS'
-        run: brew install gcc@14
 
       - name: Run tests
         run: make test CC=${{ matrix.cc }}
@@ -37,7 +33,7 @@ jobs:
       - name: Build release CLI
         run: |
           VERSION=${GITHUB_REF_NAME#v}
-          make release CC=${{ matrix.cc }} SNARL_VERSION=$VERSION
+          make release CC=${{ matrix.cc }} SNARL_VERSION="$VERSION"
 
       - name: Rename CLI binary
         run: mv build/snarl snarl-${{ matrix.platform }}
