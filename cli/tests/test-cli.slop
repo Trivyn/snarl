@@ -135,6 +135,12 @@
       ((none)
         (print "  FAIL: could not load data ") (println data-path) false)))
 
+  (fn reset-test-arena ((arena Arena))
+    (@intent "Release allocations retained by completed integration tests before running another scale regression")
+    (@spec ((Arena) -> Unit))
+    (@alloc arena)
+    (c-inline "slop_arena_reset(arena)"))
+
   (fn assert-violations-separate ((arena Arena) (data-path String) (shapes-path String) (expected-count Int))
     (@intent "Assert that separate data/shapes files produce exactly N violations")
     (@spec ((Arena String String Int) -> Bool))
@@ -513,9 +519,13 @@
         (if (test-cycle-list-language-in arena) (set! passed (+ passed 1)) (set! failed (+ failed 1)))
         (if (test-cycle-list-ignored-properties arena) (set! passed (+ passed 1)) (set! failed (+ failed 1)))
         (if (test-max-errors-precedence arena) (set! passed (+ passed 1)) (set! failed (+ failed 1)))
+        (reset-test-arena arena)
         (if (test-cycle-scale-acyclic-3000 arena) (set! passed (+ passed 1)) (set! failed (+ failed 1)))
+        (reset-test-arena arena)
         (if (test-cycle-scale-cyclic-1000 arena) (set! passed (+ passed 1)) (set! failed (+ failed 1)))
+        (reset-test-arena arena)
         (if (test-cycle-path-linear-50000 arena) (set! passed (+ passed 1)) (set! failed (+ failed 1)))
+        (reset-test-arena arena)
         (if (test-cycle-path-shared-dag-30 arena) (set! passed (+ passed 1)) (set! failed (+ failed 1)))
 
         ;; Summary
