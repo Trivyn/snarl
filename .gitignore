@@ -11,3 +11,7 @@ cli/tests/w3c/validation-reports/
 __pycache__
 rust/target
 rust/csrc
+.claude/
+.codex/
+.moosedev/
+!/.moosedev/kg.nq
