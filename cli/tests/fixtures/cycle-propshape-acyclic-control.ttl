@@ -1,0 +1,17 @@
+@prefix ex: <http://example.org/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+
+# Control for cycle-propshape-*.ttl: identical shape structure (sh:node ->
+# PropertyShape whose own sh:node points back), but the data has NO back
+# edge, so recursion terminates normally. Must conform -- proves the guard
+# doesn't false-positive on the property-shape-map arm.
+ex:AShape
+    a sh:NodeShape ;
+    sh:targetNode ex:a ;
+    sh:node ex:PSCycle .
+
+ex:PSCycle
+    sh:path ex:p ;
+    sh:node ex:AShape .
+
+ex:a ex:p ex:b .

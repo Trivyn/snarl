@@ -1,0 +1,17 @@
+@prefix ex: <http://example.org/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+
+# Regression (CLEANUP: named coverage per list-consuming predicate):
+# sh:ignoredProperties' list has a cyclic rdf:rest (never reaches rdf:nil).
+# Shares shapes-graph-list-cycle-message with sh:in (already covered by
+# cycle-in-list.ttl) -- pins sh:ignoredProperties down as its own named
+# regression.
+ex:S
+    a sh:NodeShape ;
+    sh:targetClass ex:C ;
+    sh:closed true ;
+    sh:ignoredProperties _:l .
+
+_:l rdf:first ex:x ;
+    rdf:rest _:l .

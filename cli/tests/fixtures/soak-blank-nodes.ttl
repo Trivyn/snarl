@@ -1,0 +1,40 @@
+@prefix ex: <http://example.org/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+
+# Soak input: heavy anonymous (blank-node) shape nesting. Blank nodes hash on an
+# integer id rather than a string, so this exercises a different key path
+# through the same Term-keyed maps than the long-IRI fixture does, and allocates
+# a different shape of arena garbage for whatever runs next.
+ex:OrgShape a sh:NodeShape ;
+    sh:targetClass ex:Org ;
+    sh:property [
+        sh:path ex:lead ;
+        sh:node [
+            a sh:NodeShape ;
+            sh:property [
+                sh:path ex:name ;
+                sh:minCount 1
+            ] ;
+            sh:property [
+                sh:path ex:mentor ;
+                sh:node [
+                    a sh:NodeShape ;
+                    sh:property [ sh:path ex:name ; sh:minCount 1 ]
+                ]
+            ]
+        ]
+    ] ;
+    sh:property [
+        sh:path [ sh:inversePath ex:memberOf ] ;
+        sh:nodeKind sh:IRI
+    ] .
+
+ex:acme a ex:Org ;
+    ex:lead ex:bob .
+
+ex:bob ex:name "Bob" ;
+    ex:mentor ex:carol .
+
+ex:carol ex:name "Carol" .
+
+ex:dave ex:memberOf ex:acme .

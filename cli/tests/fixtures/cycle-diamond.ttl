@@ -1,0 +1,30 @@
+@prefix ex: <http://example.org/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+
+# Regression (shape-recursion guard): diamond shape DAG. AShape references
+# BShape and CShape (via sh:and); BShape and CShape both reference DShape
+# (via sh:node). D is reached twice on two different branches of the same
+# walk, but never while still on the path to itself -- a shared reference,
+# not a cycle. Must validate normally (conform), not a false-positive
+# recursion error.
+ex:AShape
+    a sh:NodeShape ;
+    sh:targetNode ex:a ;
+    sh:and ( ex:BShape ex:CShape ) .
+
+ex:BShape
+    a sh:NodeShape ;
+    sh:node ex:DShape .
+
+ex:CShape
+    a sh:NodeShape ;
+    sh:node ex:DShape .
+
+ex:DShape
+    a sh:NodeShape ;
+    sh:property [
+        sh:path ex:name ;
+        sh:minCount 1 ;
+    ] .
+
+ex:a ex:name "Alice" .

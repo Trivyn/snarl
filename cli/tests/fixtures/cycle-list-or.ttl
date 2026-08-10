@@ -1,0 +1,17 @@
+@prefix ex: <http://example.org/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+
+# Regression (CLEANUP: named coverage per list-consuming predicate): sh:or's
+# list has a cyclic rdf:rest (never reaches rdf:nil). Shares
+# shapes-graph-list-cycle-message with sh:in (already covered by
+# cycle-in-list.ttl) -- this pins sh:or down as its own named regression so
+# a change that dropped one predicate from the internal scan list would be
+# caught here instead of only by the sh:in case.
+ex:S
+    a sh:NodeShape ;
+    sh:targetClass ex:C ;
+    sh:or _:l .
+
+_:l rdf:first ex:x ;
+    rdf:rest _:l .

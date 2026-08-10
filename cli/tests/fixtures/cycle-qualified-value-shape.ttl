@@ -1,0 +1,19 @@
+@prefix ex: <http://example.org/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+
+# Regression (CLEANUP: named coverage for sh:qualifiedValueShape): QShape's
+# sh:qualifiedValueShape points back at QShape itself; data gives x a
+# reflexive edge. con-qualified-value-shape resolves shape-ref only through
+# shape-map (never property-shape-map), so this channel was already
+# guard-threaded pre-fix-round -- this test pins that down as a named
+# regression instead of resting on an adjacent, differently-shaped case.
+ex:QShape
+    a sh:NodeShape ;
+    sh:targetNode ex:x ;
+    sh:property [
+        sh:path ex:p ;
+        sh:qualifiedValueShape ex:QShape ;
+        sh:qualifiedMinCount 1 ;
+    ] .
+
+ex:x ex:p ex:x .

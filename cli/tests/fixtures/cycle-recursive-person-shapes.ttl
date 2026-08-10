@@ -1,0 +1,16 @@
+@prefix ex: <http://example.org/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+
+# Regression (shape-recursion guard): PersonShape has a property shape
+# (path ex:knows) whose sh:node points back at PersonShape itself. Legitimate
+# self-referential shape recursion -- whether it terminates depends entirely
+# on the data (see cycle-recursive-person-acyclic-data.ttl vs
+# cycle-recursive-person-cyclic-data.ttl). Shape-only keying would falsely
+# refuse the acyclic case; the guard must key on (PersonShape, node) pairs.
+ex:PersonShape
+    a sh:NodeShape ;
+    sh:targetClass ex:Person ;
+    sh:property [
+        sh:path ex:knows ;
+        sh:node ex:PersonShape ;
+    ] .

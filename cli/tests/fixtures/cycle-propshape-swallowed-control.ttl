@@ -1,0 +1,18 @@
+@prefix ex: <http://example.org/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+
+# Control for cycle-propshape-swallowed.ttl: identical shapes, but carol has
+# no outgoing ex:knows edge, so the chain terminates without a back-edge.
+# Must conform.
+ex:Root
+    a sh:NodeShape ;
+    sh:targetNode ex:alice ;
+    sh:property [ sh:path ex:knows ; sh:node ex:PS ] .
+
+ex:PS a sh:PropertyShape ; sh:path ex:knows ; sh:node ex:NS .
+
+ex:NS a sh:NodeShape ;
+    sh:property [ sh:path ex:knows ; sh:node ex:NS ] .
+
+ex:alice ex:knows ex:bob .
+ex:bob   ex:knows ex:carol .
