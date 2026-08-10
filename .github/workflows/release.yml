@@ -1,9 +1,15 @@
 name: Release
 
 on:
+  # Tags publish a release; push/PR run the gates only. Before this, tests ran
+  # ONLY on tag push, so a regression was discovered after the tag was already
+  # cut -- which is exactly how 0.4.2 shipped.
   push:
     tags:
       - 'v*'
+    branches:
+      - main
+  pull_request:
 
 permissions:
   contents: write
@@ -19,17 +25,20 @@ jobs:
             cc: gcc
           - os: macos-14
             platform: macos-arm64
-            cc: gcc-14
+            cc: clang
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install GCC 14 (macOS)
-        if: runner.os == 'macOS'
-        run: brew install gcc@14
-
       - name: Run tests
         run: make test CC=${{ matrix.cc }}
+
+      # The W3C case directories are gitignored, so a fresh checkout has none.
+      # Without this download the suite iterated zero files and reported OK,
+      # making it a gate that could not fail. run-w3c-tests.sh now also errors
+      # on an empty corpus, so a download failure cannot pass silently either.
+      - name: Download W3C conformance corpus
+        run: bash cli/tests/w3c/download.sh
 
       - name: Run W3C conformance tests
         run: make w3c-test CC=${{ matrix.cc }}
@@ -37,7 +46,7 @@ jobs:
       - name: Build release CLI
         run: |
           VERSION=${GITHUB_REF_NAME#v}
-          make release CC=${{ matrix.cc }} SNARL_VERSION=$VERSION
+          make release CC=${{ matrix.cc }} SNARL_VERSION="$VERSION"
 
       - name: Rename CLI binary
         run: mv build/snarl snarl-${{ matrix.platform }}
@@ -62,8 +71,26 @@ jobs:
           name: libsnarl-${{ matrix.platform }}
           path: libsnarl-${{ matrix.platform }}.zip
 
+  # The published crate ships the pre-transpiled C in csrc/, so the Rust
+  # bindings are a real consumer of the same generated sources the CLI uses.
+  # They were never exercised in CI before.
+  crate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - name: Vendor csrc into the crate and test
+        run: |
+          make crate-vendor
+          cd rust && cargo test
+
   release:
-    needs: build
+    needs: [build, crate]
+    # Only publish on a tag. build/crate now also run on push and PRs, where
+    # there is nothing to release.
+    if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     steps:
       - name: Download all artifacts

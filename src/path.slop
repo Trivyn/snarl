@@ -191,7 +191,7 @@
 
   (fn resolve-inverse ((arena Arena) (g SnarlDataGraph) (focus Term) (inner ShaclPath))
     (@intent
-      "Resolve inverse path: find nodes that reach focus-node via inner path")
+      "Resolve inverse path: find nodes that reach focus-node via inner path. Nested inversions are peeled ITERATIVELY rather than by mutual recursion with resolve-path: inverse(inverse(X)) = X, so a chain of inversions collapses to its innermost non-inverse path plus a parity bit (odd = still inverted, even = forward). The old formulation bounced resolve-inverse -> resolve-path -> resolve-inverse once per two levels, costing native C stack per level with no depth bound -- a legal 50000-deep sh:inversePath chain overflowed an 8MB stack on x86-64/gcc (it survived only on arm64/clang, whose frames are smaller). This loop is O(1) stack in the length of the chain.")
     (@spec ((Arena SnarlDataGraph Term ShaclPath) -> (List Term)))
     (@alloc arena)
     (@example
@@ -199,10 +199,25 @@
         (fixture-g-alice-knows-bob arena)
         (make-iri arena EX_BOB)
         (union-new ShaclPath path-predicate (make-iri arena EX_KNOWS))))
-    (match inner
-      ((path-predicate pred) (snarl-data-graph-subjects arena g pred focus))
-      ((path-inverse inner2) (resolve-path arena g focus (deref inner2)))
-      (_ (list-new arena Term))))
+    (let ((mut cur inner)
+          (mut inverted true)
+          (mut peeling true))
+      (while peeling
+        (match cur
+          ((path-inverse inner2)
+            (set! cur (deref inner2))
+            (set! inverted (not inverted)))
+          (_ (set! peeling false))))
+      ;; `cur` is now the innermost non-inverse path. Odd inversion count
+      ;; reproduces the original terminal case (subjects-of for a plain
+      ;; predicate, empty for anything else); even count is the identity,
+      ;; i.e. resolve `cur` forward -- one non-recursive descent, not one
+      ;; per level.
+      (if inverted
+        (match cur
+          ((path-predicate pred) (snarl-data-graph-subjects arena g pred focus))
+          (_ (list-new arena Term)))
+        (resolve-path arena g focus cur))))
 
   (fn resolve-zero-or-more ((arena Arena) (g SnarlDataGraph) (focus Term) (inner ShaclPath))
     (@intent

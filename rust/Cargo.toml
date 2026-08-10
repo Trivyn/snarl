@@ -1,6 +1,6 @@
 [package]
 name = "snarl-shacl"
-version = "0.4.1"
+version = "0.4.3"
 edition = "2021"
 description = "Rust bindings for the Snarl SHACL validator"
 license = "Apache-2.0"
@@ -23,8 +23,8 @@ include = [
 name = "snarl"
 
 [dependencies]
-slop-std-sys = { path = "../../slop-sys/slop-std-sys", version = "0.1.0" }
-slop-rdf-sys = { path = "../../slop-sys/slop-rdf-sys", version = "0.1.0" }
+slop-std-sys = "0.1.2"
+slop-rdf-sys = "0.3.0"
 
 [build-dependencies]
 cc = "1"

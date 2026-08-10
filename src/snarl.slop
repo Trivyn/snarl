@@ -5,7 +5,7 @@
     (SnarlDataGraph snarl-data-graph-size snarl-data-graph-create snarl-data-graph-from-indexed))
   (import types
     (ShaclPath NodeKind Severity Constraint PropertyShape NodeShape ShapesGraph ValidationResult ValidationReport ValidatorConfig ValidatorResult default-validator-config make-validation-report report-conforms))
-  (import parse (parse-shapes-graph))
+  (import parse (parse-shapes-graph shapes-graph-recursion-hazard-message))
   (import engine (engine-validate))
   (import report
     (report-to-string report-to-graph severity-to-string term-to-display-string path-to-display-string))
@@ -108,8 +108,18 @@
         ((validate-error _) true)))
     :c-name
     "snarl_validate_data_graph_with_config"
-    (let ((shapes (parse-shapes-graph arena shapes-graph)))
-      (engine-validate arena data-graph shapes config)))
+    ;; Guard against the two parse-time recursion hazards (cyclic sh:path
+    ;; expression; malformed cyclic rdf:list reachable from sh:and/sh:or/
+    ;; sh:xone/sh:in/sh:ignoredProperties/sh:languageIn/a path expression)
+    ;; BEFORE real parsing runs — parse-shapes-graph's own recursive descent
+    ;; (via parse-path and the vendored rdf-list-elements-indexed) has no
+    ;; cycle guard of its own and would otherwise crash or hang on exactly
+    ;; the inputs this rules out.
+    (match (shapes-graph-recursion-hazard-message arena shapes-graph)
+      ((some msg) (union-new ValidatorResult validate-error msg))
+      ((none)
+        (let ((shapes (parse-shapes-graph arena shapes-graph)))
+          (engine-validate arena data-graph shapes config)))))
 
   (fn conforms ((arena Arena) (data-graph IndexedGraph) (shapes-graph IndexedGraph))
     (@intent "Quick boolean check: does the data graph conform to the shapes?")

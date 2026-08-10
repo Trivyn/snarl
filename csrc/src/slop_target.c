@@ -169,11 +169,11 @@ target_TargetCache target_target_cache_create(slop_arena* arena) {
 target_TermList target_resolve_target_class_cached(slop_arena* arena, data_graph_SnarlDataGraph data_graph, target_TargetCache cache, rdf_Term class_term) {
     SLOP_PRE(((snarl_data_graph_size(data_graph) >= 0)), "(>= (snarl-data-graph-size data-graph) 0)");
     target_TermList _retval = {0};
-    __auto_type _mv_122 = ({ void* _ptr = slop_map_get(cache.target_classes, &(class_term)); _ptr ? (slop_option_target_TermList){ .has_value = true, .value = *(target_TermList*)_ptr } : (slop_option_target_TermList){ .has_value = false }; });
-    if (_mv_122.has_value) {
-        __auto_type cached = _mv_122.value;
+    __auto_type _mv_124 = ({ void* _ptr = slop_map_get(cache.target_classes, &(class_term)); _ptr ? (slop_option_target_TermList){ .has_value = true, .value = *(target_TermList*)_ptr } : (slop_option_target_TermList){ .has_value = false }; });
+    if (_mv_124.has_value) {
+        __auto_type cached = _mv_124.value;
         return cached;
-    } else if (!_mv_122.has_value) {
+    } else if (!_mv_124.has_value) {
         {
             target_TermList resolved = snarl_resolve_target_class(arena, data_graph, class_term);
             ({ __auto_type _val = resolved; void* _vptr = slop_arena_alloc(arena, sizeof(_val)); memcpy(_vptr, &_val, sizeof(_val)); slop_map_put(arena, cache.target_classes, &(class_term), _vptr); });
@@ -291,11 +291,11 @@ void target_add_class_if_needed(slop_arena* arena, slop_list_rdf_Term classes, s
 }
 
 void target_collect_constraint_classes(slop_arena* arena, slop_list_rdf_Term classes, slop_map* seen, types_Constraint constraint) {
-    __auto_type _mv_123 = constraint;
-    switch (_mv_123.tag) {
+    __auto_type _mv_125 = constraint;
+    switch (_mv_125.tag) {
         case types_Constraint_con_class:
         {
-            __auto_type class_term = _mv_123.data.con_class;
+            __auto_type class_term = _mv_125.data.con_class;
             target_add_class_if_needed(arena, classes, seen, class_term);
             break;
         }
@@ -344,11 +344,11 @@ slop_list_rdf_Term target_collect_class_constraints(slop_arena* arena, types_Sha
                     __auto_type _coll = ns.constraints;
                     for (size_t _i = 0; _i < _coll.len; _i++) {
                         __auto_type constraint = _coll.data[_i];
-                        __auto_type _mv_124 = constraint;
-                        switch (_mv_124.tag) {
+                        __auto_type _mv_126 = constraint;
+                        switch (_mv_126.tag) {
                             case types_Constraint_con_class:
                             {
-                                __auto_type class_term = _mv_124.data.con_class;
+                                __auto_type class_term = _mv_126.data.con_class;
                                 if (!((slop_map_get(seen, &(class_term)) != NULL))) {
                                     ({ uint8_t _dummy = 1; slop_map_put(arena, seen, &(class_term), &_dummy); });
                                     ({ __auto_type _lst_p = &(classes); __auto_type _item = (class_term); if (_lst_p->len >= _lst_p->cap) { size_t _new_cap = _lst_p->cap == 0 ? 16 : _lst_p->cap * 2; __typeof__(_lst_p->data) _new_data = (__typeof__(_lst_p->data))slop_arena_alloc(arena, _new_cap * sizeof(*_lst_p->data)); if (_lst_p->len > 0) memcpy(_new_data, _lst_p->data, _lst_p->len * sizeof(*_lst_p->data)); _lst_p->data = _new_data; _lst_p->cap = _new_cap; } _lst_p->data[_lst_p->len++] = _item; (void)0; });
@@ -369,11 +369,11 @@ slop_list_rdf_Term target_collect_class_constraints(slop_arena* arena, types_Sha
                             __auto_type _coll = ps.constraints;
                             for (size_t _i = 0; _i < _coll.len; _i++) {
                                 __auto_type constraint = _coll.data[_i];
-                                __auto_type _mv_125 = constraint;
-                                switch (_mv_125.tag) {
+                                __auto_type _mv_127 = constraint;
+                                switch (_mv_127.tag) {
                                     case types_Constraint_con_class:
                                     {
-                                        __auto_type class_term = _mv_125.data.con_class;
+                                        __auto_type class_term = _mv_127.data.con_class;
                                         if (!((slop_map_get(seen, &(class_term)) != NULL))) {
                                             ({ uint8_t _dummy = 1; slop_map_put(arena, seen, &(class_term), &_dummy); });
                                             ({ __auto_type _lst_p = &(classes); __auto_type _item = (class_term); if (_lst_p->len >= _lst_p->cap) { size_t _new_cap = _lst_p->cap == 0 ? 16 : _lst_p->cap * 2; __typeof__(_lst_p->data) _new_data = (__typeof__(_lst_p->data))slop_arena_alloc(arena, _new_cap * sizeof(*_lst_p->data)); if (_lst_p->len > 0) memcpy(_new_data, _lst_p->data, _lst_p->len * sizeof(*_lst_p->data)); _lst_p->data = _new_data; _lst_p->cap = _new_cap; } _lst_p->data[_lst_p->len++] = _item; (void)0; });
@@ -398,11 +398,11 @@ slop_list_rdf_Term target_collect_class_constraints(slop_arena* arena, types_Sha
                     __auto_type _coll = ps.constraints;
                     for (size_t _i = 0; _i < _coll.len; _i++) {
                         __auto_type constraint = _coll.data[_i];
-                        __auto_type _mv_126 = constraint;
-                        switch (_mv_126.tag) {
+                        __auto_type _mv_128 = constraint;
+                        switch (_mv_128.tag) {
                             case types_Constraint_con_class:
                             {
-                                __auto_type class_term = _mv_126.data.con_class;
+                                __auto_type class_term = _mv_128.data.con_class;
                                 if (!((slop_map_get(seen, &(class_term)) != NULL))) {
                                     ({ uint8_t _dummy = 1; slop_map_put(arena, seen, &(class_term), &_dummy); });
                                     ({ __auto_type _lst_p = &(classes); __auto_type _item = (class_term); if (_lst_p->len >= _lst_p->cap) { size_t _new_cap = _lst_p->cap == 0 ? 16 : _lst_p->cap * 2; __typeof__(_lst_p->data) _new_data = (__typeof__(_lst_p->data))slop_arena_alloc(arena, _new_cap * sizeof(*_lst_p->data)); if (_lst_p->len > 0) memcpy(_new_data, _lst_p->data, _lst_p->len * sizeof(*_lst_p->data)); _lst_p->data = _new_data; _lst_p->cap = _new_cap; } _lst_p->data[_lst_p->len++] = _item; (void)0; });
@@ -451,21 +451,21 @@ target_ClassIndex target_build_class_index(slop_arena* arena, data_graph_SnarlDa
 }
 
 uint8_t target_class_index_has_class(target_ClassIndex index, rdf_Term class_term) {
-    __auto_type _mv_127 = ({ void* _ptr = slop_map_get(index.entry_map, &(class_term)); _ptr ? (slop_option_ptr){ .has_value = true, .value = *(void**)_ptr } : (slop_option_ptr){ .has_value = false }; });
-    if (_mv_127.has_value) {
-        __auto_type _ = _mv_127.value;
+    __auto_type _mv_129 = ({ void* _ptr = slop_map_get(index.entry_map, &(class_term)); _ptr ? (slop_option_ptr){ .has_value = true, .value = *(void**)_ptr } : (slop_option_ptr){ .has_value = false }; });
+    if (_mv_129.has_value) {
+        __auto_type _ = _mv_129.value;
         return 1;
-    } else if (!_mv_127.has_value) {
+    } else if (!_mv_129.has_value) {
         return 0;
     }
 }
 
 uint8_t target_class_index_has_instance(target_ClassIndex index, rdf_Term node, rdf_Term class_term) {
-    __auto_type _mv_128 = ({ void* _ptr = slop_map_get(index.entry_map, &(class_term)); _ptr ? (slop_option_ptr){ .has_value = true, .value = *(void**)_ptr } : (slop_option_ptr){ .has_value = false }; });
-    if (_mv_128.has_value) {
-        __auto_type instances = _mv_128.value;
+    __auto_type _mv_130 = ({ void* _ptr = slop_map_get(index.entry_map, &(class_term)); _ptr ? (slop_option_ptr){ .has_value = true, .value = *(void**)_ptr } : (slop_option_ptr){ .has_value = false }; });
+    if (_mv_130.has_value) {
+        __auto_type instances = _mv_130.value;
         return (slop_map_get(instances, &(node)) != NULL);
-    } else if (!_mv_128.has_value) {
+    } else if (!_mv_130.has_value) {
         return 0;
     }
 }
@@ -481,9 +481,9 @@ slop_list_rdf_Term target_find_subclasses(slop_arena* arena, data_graph_SnarlDat
         ({ __auto_type _lst_p = &(queue); __auto_type _item = (class_term); if (_lst_p->len >= _lst_p->cap) { size_t _new_cap = _lst_p->cap == 0 ? 16 : _lst_p->cap * 2; __typeof__(_lst_p->data) _new_data = (__typeof__(_lst_p->data))slop_arena_alloc(arena, _new_cap * sizeof(*_lst_p->data)); if (_lst_p->len > 0) memcpy(_new_data, _lst_p->data, _lst_p->len * sizeof(*_lst_p->data)); _lst_p->data = _new_data; _lst_p->cap = _new_cap; } _lst_p->data[_lst_p->len++] = _item; (void)0; });
         ({ uint8_t _dummy = 1; slop_map_put(arena, visited, &(class_term), &_dummy); });
         while (qi < ((int64_t)((queue).len))) {
-            __auto_type _mv_129 = ({ __auto_type _lst = queue; size_t _idx = (size_t)qi; slop_option_rdf_Term _r = {0}; if (_idx < _lst.len) { _r.has_value = true; _r.value = _lst.data[_idx]; } else { _r.has_value = false; } _r; });
-            if (_mv_129.has_value) {
-                __auto_type current = _mv_129.value;
+            __auto_type _mv_131 = ({ __auto_type _lst = queue; size_t _idx = (size_t)qi; slop_option_rdf_Term _r = {0}; if (_idx < _lst.len) { _r.has_value = true; _r.value = _lst.data[_idx]; } else { _r.has_value = false; } _r; });
+            if (_mv_131.has_value) {
+                __auto_type current = _mv_131.value;
                 ({ __auto_type _lst_p = &(result); __auto_type _item = (current); if (_lst_p->len >= _lst_p->cap) { size_t _new_cap = _lst_p->cap == 0 ? 16 : _lst_p->cap * 2; __typeof__(_lst_p->data) _new_data = (__typeof__(_lst_p->data))slop_arena_alloc(arena, _new_cap * sizeof(*_lst_p->data)); if (_lst_p->len > 0) memcpy(_new_data, _lst_p->data, _lst_p->len * sizeof(*_lst_p->data)); _lst_p->data = _new_data; _lst_p->cap = _new_cap; } _lst_p->data[_lst_p->len++] = _item; (void)0; });
                 {
                     __auto_type subs = snarl_data_graph_subjects(arena, data_graph, subclass_pred, current);
@@ -498,7 +498,7 @@ slop_list_rdf_Term target_find_subclasses(slop_arena* arena, data_graph_SnarlDat
                         }
                     }
                 }
-            } else if (!_mv_129.has_value) {
+            } else if (!_mv_131.has_value) {
             }
             qi = (qi + 1);
         }
