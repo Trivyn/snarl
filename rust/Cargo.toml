@@ -22,5 +22,9 @@ include = [
 [lib]
 name = "snarl"
 
+[dependencies]
+slop-std-sys = "0.1.2"
+slop-rdf-sys = "0.3.0"
+
 [build-dependencies]
 cc = "1"
