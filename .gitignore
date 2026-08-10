@@ -15,3 +15,5 @@ rust/csrc
 .codex/
 .moosedev/
 !/.moosedev/kg.nq
+.mcp.json
+.agents/
