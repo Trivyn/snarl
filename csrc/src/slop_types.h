@@ -34,6 +34,7 @@ typedef enum {
 
 #ifndef SLOP_LIST_RDF_TERM_DEFINED
 #define SLOP_LIST_RDF_TERM_DEFINED
+#define SLOP_LIST_RDF_TERM_IMPL_DEFINED
 SLOP_LIST_DEFINE(rdf_Term, slop_list_rdf_Term)
 #endif
 
@@ -361,6 +362,31 @@ SLOP_OPTION_DEFINE(types_ValidatorConfig, slop_option_types_ValidatorConfig)
 #ifndef SLOP_OPTION_TYPES_VALIDATORRESULT_DEFINED
 #define SLOP_OPTION_TYPES_VALIDATORRESULT_DEFINED
 SLOP_OPTION_DEFINE(types_ValidatorResult, slop_option_types_ValidatorResult)
+#endif
+
+#ifndef SLOP_LIST_TYPES_SHACLPATH_IMPL_DEFINED
+#define SLOP_LIST_TYPES_SHACLPATH_IMPL_DEFINED
+SLOP_LIST_IMPL(types_ShaclPath, slop_list_types_ShaclPath)
+#endif
+
+#ifndef SLOP_LIST_TYPES_CONSTRAINT_IMPL_DEFINED
+#define SLOP_LIST_TYPES_CONSTRAINT_IMPL_DEFINED
+SLOP_LIST_IMPL(types_Constraint, slop_list_types_Constraint)
+#endif
+
+#ifndef SLOP_LIST_TYPES_PROPERTYSHAPE_IMPL_DEFINED
+#define SLOP_LIST_TYPES_PROPERTYSHAPE_IMPL_DEFINED
+SLOP_LIST_IMPL(types_PropertyShape, slop_list_types_PropertyShape)
+#endif
+
+#ifndef SLOP_LIST_TYPES_NODESHAPE_IMPL_DEFINED
+#define SLOP_LIST_TYPES_NODESHAPE_IMPL_DEFINED
+SLOP_LIST_IMPL(types_NodeShape, slop_list_types_NodeShape)
+#endif
+
+#ifndef SLOP_LIST_TYPES_VALIDATIONRESULT_IMPL_DEFINED
+#define SLOP_LIST_TYPES_VALIDATIONRESULT_IMPL_DEFINED
+SLOP_LIST_IMPL(types_ValidationResult, slop_list_types_ValidationResult)
 #endif
 
 

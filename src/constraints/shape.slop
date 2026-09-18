@@ -38,8 +38,8 @@
     (@alloc arena)
     (@example (arena (make-iri arena EX_FOCUS) (make-iri arena EX_VALUE) true (none) (make-iri arena EX_SHAPE) severity-violation (none)) -> (none))
     (@example (arena (make-iri arena EX_FOCUS) (make-iri arena EX_VALUE) false (none) (make-iri arena EX_SHAPE) severity-violation (none)) -> (some (ValidationResult _ _ _ _ _ _ _)))
-    (@post {(== (== $result (none)) value-conforms)})
-    (@property correctness (== (== $result (none)) value-conforms))
+    (@post {(== (is-none $result) value-conforms)})
+    (@property correctness (== (is-none $result) value-conforms))
     (if value-conforms
       (none)
       (some (record-new ValidationResult

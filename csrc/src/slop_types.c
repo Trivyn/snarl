@@ -12,11 +12,11 @@ types_ValidationReport types_report_add_result(slop_arena* arena, types_Validati
 uint8_t types_report_conforms(types_ValidationReport report);
 
 slop_string types_term_display_label(rdf_Term t, slop_string fallback) {
-    __auto_type _mv_55 = t;
-    switch (_mv_55.tag) {
+    __auto_type _mv_112 = t;
+    switch (_mv_112.tag) {
         case rdf_Term_term_iri:
         {
-            __auto_type iri = _mv_55.data.term_iri;
+            __auto_type iri = _mv_112.data.term_iri;
             return iri.value;
         }
         default: {

@@ -65,8 +65,8 @@
     ;; class — i.e. rdf:type C' for C' = required-class or a transitive subclass.
     ;; Pins the semantics to that relation so the check cannot silently regress to a
     ;; direct-rdf:type test.
-    (@post {(== (== $result (none)) (is-shacl-instance-of-class arena data-graph value-node required-class))})
-    (@property sound-wrt-shacl-instance (== (== $result (none)) (is-shacl-instance-of-class arena data-graph value-node required-class)))
+    (@post {(== (is-none $result) (is-shacl-instance-of-class arena data-graph value-node required-class))})
+    (@property sound-wrt-shacl-instance (== (is-none $result) (is-shacl-instance-of-class arena data-graph value-node required-class)))
     (@example (arena (fixture-g-focus-is-person arena) (make-iri arena EX_FOCUS) (make-iri arena EX_FOCUS) (make-iri arena EX_PERSON) (none) (make-iri arena EX_SHAPE) severity-violation (none)) -> (none))
     (@example (arena (fixture-g-empty arena) (make-iri arena EX_FOCUS) (make-iri arena EX_FOCUS) (make-iri arena EX_PERSON) (none) (make-iri arena EX_SHAPE) severity-violation (none)) -> (some (ValidationResult _ _ _ _ _ _ _)))
     ;; Value node must be a SHACL instance of required-class: it has rdf:type C'
@@ -141,8 +141,8 @@
             -> (Option ValidationResult)))
     (@alloc arena)
     ;; Conforms (no result) iff the value node is a literal whose datatype matches.
-    (@post {(== (== $result (none)) (datatype-matches value-node required-datatype))})
-    (@property correctness (== (== $result (none)) (datatype-matches value-node required-datatype)))
+    (@post {(== (is-none $result) (datatype-matches value-node required-datatype))})
+    (@property correctness (== (is-none $result) (datatype-matches value-node required-datatype)))
     (@example (arena (make-iri arena EX_FOCUS) (make-literal arena "42" (some "http://www.w3.org/2001/XMLSchema#integer") (none)) (make-iri arena "http://www.w3.org/2001/XMLSchema#integer") (none) (make-iri arena EX_SHAPE) severity-violation (none)) -> (none))
     (@example (arena (make-iri arena EX_FOCUS) (make-literal arena "hello" (none) (none)) (make-iri arena "http://www.w3.org/2001/XMLSchema#integer") (none) (make-iri arena EX_SHAPE) severity-violation (none)) -> (some (ValidationResult _ _ _ _ _ _ _)))
     (@example (arena (make-iri arena EX_FOCUS) (make-iri arena EX_VALUE) (make-iri arena "http://www.w3.org/2001/XMLSchema#integer") (none) (make-iri arena EX_SHAPE) severity-violation (none)) -> (some (ValidationResult _ _ _ _ _ _ _)))
@@ -176,8 +176,8 @@
             -> (Option ValidationResult)))
     (@alloc arena)
     ;; Conforms (no result) iff the value node's term kind satisfies the requirement.
-    (@post {(== (== $result (none)) (node-kind-matches required-kind (term-kind value-node)))})
-    (@property correctness (== (== $result (none)) (node-kind-matches required-kind (term-kind value-node))))
+    (@post {(== (is-none $result) (node-kind-matches required-kind (term-kind value-node)))})
+    (@property correctness (== (is-none $result) (node-kind-matches required-kind (term-kind value-node))))
     (@example (arena (make-iri arena EX_FOCUS) (make-iri arena EX_VALUE) node-kind-iri (none) (make-iri arena EX_SHAPE) severity-violation (none)) -> (none))
     (@example (arena (make-iri arena EX_FOCUS) (make-literal arena "hi" (none) (none)) node-kind-iri (none) (make-iri arena EX_SHAPE) severity-violation (none)) -> (some (ValidationResult _ _ _ _ _ _ _)))
     (@example (arena (make-iri arena EX_FOCUS) (make-iri arena EX_VALUE) node-kind-iri-or-literal (none) (make-iri arena EX_SHAPE) severity-violation (none)) -> (none))

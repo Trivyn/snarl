@@ -21,46 +21,48 @@ slop_list_types_ValidationResult snarl_check_unique_lang(slop_arena* arena, rdf_
 
 slop_string string_term_string_value(rdf_Term t) {
     slop_string _retval = {0};
-    __auto_type _mv_136 = t;
-    switch (_mv_136.tag) {
+    __auto_type _mv_273 = t;
+    switch (_mv_273.tag) {
         case rdf_Term_term_literal:
         {
-            __auto_type lit = _mv_136.data.term_literal;
+            __auto_type lit = _mv_273.data.term_literal;
             return lit.value;
         }
         case rdf_Term_term_iri:
         {
-            __auto_type iri = _mv_136.data.term_iri;
+            __auto_type iri = _mv_273.data.term_iri;
             return iri.value;
         }
         case rdf_Term_term_blank:
         {
-            __auto_type _ = _mv_136.data.term_blank;
+            __auto_type _ = _mv_273.data.term_blank;
             return SLOP_STR("");
         }
         case rdf_Term_term_triple:
         {
-            __auto_type _ = _mv_136.data.term_triple;
+            __auto_type _ = _mv_273.data.term_triple;
             return SLOP_STR("");
         }
     }
+    SLOP_UNREACHABLE();
     SLOP_POST((({ __auto_type _mv = t; uint8_t _mr = {0}; switch (_mv.tag) { case rdf_Term_term_literal: { __auto_type lit = _mv.data.term_literal; _mr = slop_string_eq(_retval, lit.value); break; } case rdf_Term_term_iri: { __auto_type iri = _mv.data.term_iri; _mr = slop_string_eq(_retval, iri.value); break; } case rdf_Term_term_blank: { __auto_type _ = _mv.data.term_blank; _mr = slop_string_eq(_retval, SLOP_STR("")); break; } case rdf_Term_term_triple: { __auto_type _ = _mv.data.term_triple; _mr = slop_string_eq(_retval, SLOP_STR("")); break; }  } _mr; })), "(match t ((term-literal lit) (== $result (. lit value))) ((term-iri iri) (== $result (. iri value))) ((term-blank _) (== $result \"\")) ((term-triple _) (== $result \"\")))");
     return _retval;
 }
 
 slop_string string_term_lang(rdf_Term t) {
-    __auto_type _mv_137 = t;
-    switch (_mv_137.tag) {
+    __auto_type _mv_274 = t;
+    switch (_mv_274.tag) {
         case rdf_Term_term_literal:
         {
-            __auto_type lit = _mv_137.data.term_literal;
-            __auto_type _mv_138 = lit.lang;
-            if (_mv_138.has_value) {
-                __auto_type lang = _mv_138.value;
+            __auto_type lit = _mv_274.data.term_literal;
+            __auto_type _mv_275 = lit.lang;
+            if (_mv_275.has_value) {
+                __auto_type lang = _mv_275.value;
                 return lang;
-            } else if (!_mv_138.has_value) {
+            } else if (!_mv_275.has_value) {
                 return SLOP_STR("");
             }
+            SLOP_UNREACHABLE();
         }
         default: {
             return SLOP_STR("");
@@ -69,11 +71,11 @@ slop_string string_term_lang(rdf_Term t) {
 }
 
 uint8_t string_term_is_literal(rdf_Term t) {
-    __auto_type _mv_139 = t;
-    switch (_mv_139.tag) {
+    __auto_type _mv_276 = t;
+    switch (_mv_276.tag) {
         case rdf_Term_term_literal:
         {
-            __auto_type _ = _mv_139.data.term_literal;
+            __auto_type _ = _mv_276.data.term_literal;
             return 1;
         }
         default: {
@@ -117,7 +119,7 @@ slop_option_types_ValidationResult snarl_check_min_length(slop_arena* arena, rdf
     } else {
         return (slop_option_types_ValidationResult){.has_value = 1, .value = ((types_ValidationResult){.focus_node = focus_node, .result_path = path, .value = (slop_option_rdf_Term){.has_value = 1, .value = value_node}, .source_shape = shape_id, .source_constraint_component = vocab_SHACL_MIN_LENGTH, .severity = severity, .message = message})};
     }
-    SLOP_POST((((_retval == ((slop_option_types_ValidationResult){.has_value = false})) == string_min_length_satisfied(value_node, min_len))), "(== (== $result (none)) (min-length-satisfied value-node min-len))");
+    SLOP_POST((((!((_retval).has_value)) == string_min_length_satisfied(value_node, min_len))), "(== (is-none $result) (min-length-satisfied value-node min-len))");
     return _retval;
 }
 
@@ -129,7 +131,7 @@ slop_option_types_ValidationResult snarl_check_max_length(slop_arena* arena, rdf
     } else {
         return (slop_option_types_ValidationResult){.has_value = 1, .value = ((types_ValidationResult){.focus_node = focus_node, .result_path = path, .value = (slop_option_rdf_Term){.has_value = 1, .value = value_node}, .source_shape = shape_id, .source_constraint_component = vocab_SHACL_MAX_LENGTH, .severity = severity, .message = message})};
     }
-    SLOP_POST((((_retval == ((slop_option_types_ValidationResult){.has_value = false})) == string_max_length_satisfied(value_node, max_len))), "(== (== $result (none)) (max-length-satisfied value-node max-len))");
+    SLOP_POST((((!((_retval).has_value)) == string_max_length_satisfied(value_node, max_len))), "(== (is-none $result) (max-length-satisfied value-node max-len))");
     return _retval;
 }
 
@@ -141,21 +143,21 @@ slop_option_types_ValidationResult snarl_check_pattern(slop_arena* arena, rdf_Te
     } else {
         return (slop_option_types_ValidationResult){.has_value = 1, .value = ((types_ValidationResult){.focus_node = focus_node, .result_path = path, .value = (slop_option_rdf_Term){.has_value = 1, .value = value_node}, .source_shape = shape_id, .source_constraint_component = vocab_SHACL_PATTERN, .severity = severity, .message = message})};
     }
-    SLOP_POST((((_retval == ((slop_option_types_ValidationResult){.has_value = false})) == string_pattern_satisfied(arena, value_node, pattern))), "(== (== $result (none)) (pattern-satisfied arena value-node pattern))");
+    SLOP_POST((((!((_retval).has_value)) == string_pattern_satisfied(arena, value_node, pattern))), "(== (is-none $result) (pattern-satisfied arena value-node pattern))");
     return _retval;
 }
 
 slop_option_types_ValidationResult snarl_check_language_in(slop_arena* arena, rdf_Term focus_node, rdf_Term value_node, slop_list_string allowed_langs, slop_option_types_ShaclPath path, rdf_Term shape_id, types_Severity severity, slop_option_string message) {
     SLOP_PRE(((((int64_t)((allowed_langs).len)) > 0)), "(> (list-len allowed-langs) 0)");
     slop_option_types_ValidationResult _retval = {0};
-    __auto_type _mv_140 = value_node;
-    switch (_mv_140.tag) {
+    __auto_type _mv_277 = value_node;
+    switch (_mv_277.tag) {
         case rdf_Term_term_literal:
         {
-            __auto_type lit = _mv_140.data.term_literal;
-            __auto_type _mv_141 = lit.lang;
-            if (_mv_141.has_value) {
-                __auto_type lang = _mv_141.value;
+            __auto_type lit = _mv_277.data.term_literal;
+            __auto_type _mv_278 = lit.lang;
+            if (_mv_278.has_value) {
+                __auto_type lang = _mv_278.value;
                 {
                     __auto_type found = 0;
                     {
@@ -173,15 +175,16 @@ slop_option_types_ValidationResult snarl_check_language_in(slop_arena* arena, rd
                         return (slop_option_types_ValidationResult){.has_value = 1, .value = ((types_ValidationResult){.focus_node = focus_node, .result_path = path, .value = (slop_option_rdf_Term){.has_value = 1, .value = value_node}, .source_shape = shape_id, .source_constraint_component = vocab_SHACL_LANGUAGE_IN, .severity = severity, .message = message})};
                     }
                 }
-            } else if (!_mv_141.has_value) {
+            } else if (!_mv_278.has_value) {
                 return (slop_option_types_ValidationResult){.has_value = 1, .value = ((types_ValidationResult){.focus_node = focus_node, .result_path = path, .value = (slop_option_rdf_Term){.has_value = 1, .value = value_node}, .source_shape = shape_id, .source_constraint_component = vocab_SHACL_LANGUAGE_IN, .severity = severity, .message = message})};
             }
+            SLOP_UNREACHABLE();
         }
         default: {
             return (slop_option_types_ValidationResult){.has_value = 1, .value = ((types_ValidationResult){.focus_node = focus_node, .result_path = path, .value = (slop_option_rdf_Term){.has_value = 1, .value = value_node}, .source_shape = shape_id, .source_constraint_component = vocab_SHACL_LANGUAGE_IN, .severity = severity, .message = message})};
         }
     }
-    SLOP_POST((({ __auto_type _mv = value_node; uint8_t _mr = {0}; switch (_mv.tag) { case rdf_Term_term_literal: { __auto_type _ = _mv.data.term_literal; _mr = 1; break; } default: { _mr = (_retval != ((slop_option_types_ValidationResult){.has_value = false})); break; }  } _mr; })), "(match value-node ((term-literal _) true) (_ (!= $result (none))))");
+    SLOP_POST((({ __auto_type _mv = value_node; uint8_t _mr = {0}; switch (_mv.tag) { case rdf_Term_term_literal: { __auto_type _ = _mv.data.term_literal; _mr = 1; break; } default: { _mr = (((_retval).has_value)); break; }  } _mr; })), "(match value-node ((term-literal _) true) (_ (is-some $result)))");
     return _retval;
 }
 
@@ -212,20 +215,20 @@ slop_list_types_ValidationResult snarl_check_unique_lang(slop_arena* arena, rdf_
             __auto_type _coll = value_nodes;
             for (size_t _i = 0; _i < _coll.len; _i++) {
                 __auto_type vn = _coll.data[_i];
-                __auto_type _mv_142 = vn;
-                switch (_mv_142.tag) {
+                __auto_type _mv_279 = vn;
+                switch (_mv_279.tag) {
                     case rdf_Term_term_literal:
                     {
-                        __auto_type lit = _mv_142.data.term_literal;
-                        __auto_type _mv_143 = lit.lang;
-                        if (_mv_143.has_value) {
-                            __auto_type lang = _mv_143.value;
+                        __auto_type lit = _mv_279.data.term_literal;
+                        __auto_type _mv_280 = lit.lang;
+                        if (_mv_280.has_value) {
+                            __auto_type lang = _mv_280.value;
                             if (slop_map_get(seen, &(lang)) != NULL) {
                                 ({ __auto_type _lst_p = &(results); __auto_type _item = (((types_ValidationResult){.focus_node = focus_node, .result_path = path, .value = (slop_option_rdf_Term){.has_value = 1, .value = vn}, .source_shape = shape_id, .source_constraint_component = vocab_SHACL_UNIQUE_LANG, .severity = severity, .message = message})); if (_lst_p->len >= _lst_p->cap) { size_t _new_cap = _lst_p->cap == 0 ? 16 : _lst_p->cap * 2; __typeof__(_lst_p->data) _new_data = (__typeof__(_lst_p->data))slop_arena_alloc(arena, _new_cap * sizeof(*_lst_p->data)); if (_lst_p->len > 0) memcpy(_new_data, _lst_p->data, _lst_p->len * sizeof(*_lst_p->data)); _lst_p->data = _new_data; _lst_p->cap = _new_cap; } _lst_p->data[_lst_p->len++] = _item; (void)0; });
                             } else {
                                 ({ uint8_t _dummy = 1; slop_map_put(arena, seen, &(lang), &_dummy); });
                             }
-                        } else if (!_mv_143.has_value) {
+                        } else if (!_mv_280.has_value) {
                         }
                         break;
                     }

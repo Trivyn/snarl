@@ -20,21 +20,25 @@ SLOP_OPTION_DEFINE(uint8_t, slop_option_u8)
 
 #ifndef SLOP_LIST_RDF_TERM_DEFINED
 #define SLOP_LIST_RDF_TERM_DEFINED
+#define SLOP_LIST_RDF_TERM_IMPL_DEFINED
 SLOP_LIST_DEFINE(rdf_Term, slop_list_rdf_Term)
 #endif
 
 #ifndef SLOP_LIST_TYPES_NODESHAPE_DEFINED
 #define SLOP_LIST_TYPES_NODESHAPE_DEFINED
+#define SLOP_LIST_TYPES_NODESHAPE_IMPL_DEFINED
 SLOP_LIST_DEFINE(types_NodeShape, slop_list_types_NodeShape)
 #endif
 
 #ifndef SLOP_LIST_TYPES_PROPERTYSHAPE_DEFINED
 #define SLOP_LIST_TYPES_PROPERTYSHAPE_DEFINED
+#define SLOP_LIST_TYPES_PROPERTYSHAPE_IMPL_DEFINED
 SLOP_LIST_DEFINE(types_PropertyShape, slop_list_types_PropertyShape)
 #endif
 
 #ifndef SLOP_LIST_TYPES_CONSTRAINT_DEFINED
 #define SLOP_LIST_TYPES_CONSTRAINT_DEFINED
+#define SLOP_LIST_TYPES_CONSTRAINT_IMPL_DEFINED
 SLOP_LIST_DEFINE(types_Constraint, slop_list_types_Constraint)
 #endif
 
@@ -81,6 +85,7 @@ SLOP_OPTION_DEFINE(parse_PathScanItem, slop_option_parse_PathScanItem)
 
 #ifndef SLOP_LIST_PARSE_PATHSCANITEM_DEFINED
 #define SLOP_LIST_PARSE_PATHSCANITEM_DEFINED
+#define SLOP_LIST_PARSE_PATHSCANITEM_IMPL_DEFINED
 SLOP_LIST_DEFINE(parse_PathScanItem, slop_list_parse_PathScanItem)
 #endif
 
@@ -249,6 +254,12 @@ SLOP_OPTION_DEFINE(types_NodeKind, slop_option_types_NodeKind)
 #ifndef SLOP_OPTION_U8_DEFINED
 #define SLOP_OPTION_U8_DEFINED
 SLOP_OPTION_DEFINE(uint8_t, slop_option_u8)
+#endif
+
+#ifndef SLOP_LIST_TYPES_SHACLPATH_DEFINED
+#define SLOP_LIST_TYPES_SHACLPATH_DEFINED
+#define SLOP_LIST_TYPES_SHACLPATH_IMPL_DEFINED
+SLOP_LIST_DEFINE(types_ShaclPath, slop_list_types_ShaclPath)
 #endif
 
 

@@ -37,7 +37,7 @@ slop_option_types_ValidationResult snarl_check_class(slop_arena* arena, data_gra
     } else {
         return (slop_option_types_ValidationResult){.has_value = 1, .value = ((types_ValidationResult){.focus_node = focus_node, .result_path = path, .value = (slop_option_rdf_Term){.has_value = 1, .value = value_node}, .source_shape = shape_id, .source_constraint_component = vocab_SHACL_CLASS, .severity = severity, .message = message})};
     }
-    SLOP_POST((((_retval == ((slop_option_types_ValidationResult){.has_value = false})) == snarl_is_shacl_instance_of_class(arena, data_graph, value_node, required_class))), "(== (== $result (none)) (is-shacl-instance-of-class arena data-graph value-node required-class))");
+    SLOP_POST((((!((_retval).has_value)) == snarl_is_shacl_instance_of_class(arena, data_graph, value_node, required_class))), "(== (is-none $result) (is-shacl-instance-of-class arena data-graph value-node required-class))");
     return _retval;
 }
 
@@ -58,20 +58,21 @@ slop_option_types_ValidationResult value_type_check_class_with_index(slop_arena*
 }
 
 uint8_t value_type_datatype_matches(rdf_Term value_node, rdf_Term required_datatype) {
-    __auto_type _mv_148 = value_node;
-    switch (_mv_148.tag) {
+    __auto_type _mv_287 = value_node;
+    switch (_mv_287.tag) {
         case rdf_Term_term_literal:
         {
-            __auto_type lit = _mv_148.data.term_literal;
+            __auto_type lit = _mv_287.data.term_literal;
             {
                 __auto_type required_dt_str = ({ __auto_type _mv = required_datatype; slop_string _mr = {0}; switch (_mv.tag) { case rdf_Term_term_iri: { __auto_type iri = _mv.data.term_iri; _mr = iri.value; break; } default: { _mr = SLOP_STR(""); break; }  } _mr; });
-                __auto_type _mv_149 = lit.datatype;
-                if (_mv_149.has_value) {
-                    __auto_type dt = _mv_149.value;
+                __auto_type _mv_288 = lit.datatype;
+                if (_mv_288.has_value) {
+                    __auto_type dt = _mv_288.value;
                     return string_eq(dt, required_dt_str);
-                } else if (!_mv_149.has_value) {
+                } else if (!_mv_288.has_value) {
                     return string_eq(required_dt_str, vocab_XSD_STRING);
                 }
+                SLOP_UNREACHABLE();
             }
         }
         default: {
@@ -87,16 +88,16 @@ slop_option_types_ValidationResult snarl_check_datatype(slop_arena* arena, rdf_T
     } else {
         return (slop_option_types_ValidationResult){.has_value = 1, .value = value_type_make_vr(arena, focus_node, path, value_node, shape_id, vocab_SHACL_DATATYPE, severity, message)};
     }
-    SLOP_POST((((_retval == ((slop_option_types_ValidationResult){.has_value = false})) == value_type_datatype_matches(value_node, required_datatype))), "(== (== $result (none)) (datatype-matches value-node required-datatype))");
+    SLOP_POST((((!((_retval).has_value)) == value_type_datatype_matches(value_node, required_datatype))), "(== (is-none $result) (datatype-matches value-node required-datatype))");
     return _retval;
 }
 
 uint8_t value_type_node_kind_matches(types_NodeKind required, rdf_TermKind kind) {
-    __auto_type _mv_150 = required;
-    switch (_mv_150) {
+    __auto_type _mv_289 = required;
+    switch (_mv_289) {
         case types_NodeKind_node_kind_blank_node: {
-            __auto_type _mv_151 = kind;
-            switch (_mv_151) {
+            __auto_type _mv_290 = kind;
+            switch (_mv_290) {
                 case rdf_TermKind_blank: {
                     return 1;
                     break;
@@ -109,8 +110,8 @@ uint8_t value_type_node_kind_matches(types_NodeKind required, rdf_TermKind kind)
             break;
         }
         case types_NodeKind_node_kind_iri: {
-            __auto_type _mv_152 = kind;
-            switch (_mv_152) {
+            __auto_type _mv_291 = kind;
+            switch (_mv_291) {
                 case rdf_TermKind_iri: {
                     return 1;
                     break;
@@ -123,8 +124,8 @@ uint8_t value_type_node_kind_matches(types_NodeKind required, rdf_TermKind kind)
             break;
         }
         case types_NodeKind_node_kind_literal: {
-            __auto_type _mv_153 = kind;
-            switch (_mv_153) {
+            __auto_type _mv_292 = kind;
+            switch (_mv_292) {
                 case rdf_TermKind_literal: {
                     return 1;
                     break;
@@ -137,8 +138,8 @@ uint8_t value_type_node_kind_matches(types_NodeKind required, rdf_TermKind kind)
             break;
         }
         case types_NodeKind_node_kind_blank_node_or_iri: {
-            __auto_type _mv_154 = kind;
-            switch (_mv_154) {
+            __auto_type _mv_293 = kind;
+            switch (_mv_293) {
                 case rdf_TermKind_blank: {
                     return 1;
                     break;
@@ -155,8 +156,8 @@ uint8_t value_type_node_kind_matches(types_NodeKind required, rdf_TermKind kind)
             break;
         }
         case types_NodeKind_node_kind_blank_node_or_literal: {
-            __auto_type _mv_155 = kind;
-            switch (_mv_155) {
+            __auto_type _mv_294 = kind;
+            switch (_mv_294) {
                 case rdf_TermKind_blank: {
                     return 1;
                     break;
@@ -173,8 +174,8 @@ uint8_t value_type_node_kind_matches(types_NodeKind required, rdf_TermKind kind)
             break;
         }
         case types_NodeKind_node_kind_iri_or_literal: {
-            __auto_type _mv_156 = kind;
-            switch (_mv_156) {
+            __auto_type _mv_295 = kind;
+            switch (_mv_295) {
                 case rdf_TermKind_iri: {
                     return 1;
                     break;
@@ -191,6 +192,7 @@ uint8_t value_type_node_kind_matches(types_NodeKind required, rdf_TermKind kind)
             break;
         }
     }
+    SLOP_UNREACHABLE();
 }
 
 slop_option_types_ValidationResult snarl_check_node_kind(slop_arena* arena, rdf_Term focus_node, rdf_Term value_node, types_NodeKind required_kind, slop_option_types_ShaclPath path, rdf_Term shape_id, types_Severity severity, slop_option_string message) {
@@ -200,7 +202,7 @@ slop_option_types_ValidationResult snarl_check_node_kind(slop_arena* arena, rdf_
     } else {
         return (slop_option_types_ValidationResult){.has_value = 1, .value = value_type_make_vr(arena, focus_node, path, value_node, shape_id, vocab_SHACL_NODE_KIND, severity, message)};
     }
-    SLOP_POST((((_retval == ((slop_option_types_ValidationResult){.has_value = false})) == value_type_node_kind_matches(required_kind, rdf_term_kind(value_node)))), "(== (== $result (none)) (node-kind-matches required-kind (term-kind value-node)))");
+    SLOP_POST((((!((_retval).has_value)) == value_type_node_kind_matches(required_kind, rdf_term_kind(value_node)))), "(== (is-none $result) (node-kind-matches required-kind (term-kind value-node)))");
     return _retval;
 }
 
