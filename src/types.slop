@@ -130,7 +130,7 @@
       (conforms true)
       (results (list-new arena ValidationResult))))
 
-  (fn report-add-result ((arena Arena) (report ValidationReport) (result ValidationResult))
+  (fn report-add-result ((arena Arena) (mut report ValidationReport) (result ValidationResult))
     (@intent "Add a validation result to the report, updating conforms flag")
     (@spec ((Arena ValidationReport ValidationResult) -> ValidationReport))
     (@alloc arena)
