@@ -248,39 +248,6 @@
     :c-name
     "snarl_resolve_target_node")
 
-  (fn add-class-if-needed ((arena Arena) (classes (List Term)) (seen (Set Term)) (class-term Term))
-    (@intent "Append a class to a collection once")
-    (@spec ((Arena (List Term) (Set Term) Term) -> Unit))
-    (@alloc arena)
-    (when (not (set-has seen class-term))
-      (set-put seen class-term)
-      (list-push classes class-term)))
-
-  (fn collect-constraint-classes ((arena Arena) (classes (List Term)) (seen (Set Term)) (constraint Constraint))
-    (@intent "Collect classes referenced by sh:class constraints")
-    (@spec ((Arena (List Term) (Set Term) Constraint) -> Unit))
-    (@alloc arena)
-    (match constraint
-      ((con-class class-term)
-        (add-class-if-needed arena classes seen class-term))
-      (_ (do))))
-
-  (fn collect-property-shape-classes ((arena Arena) (classes (List Term)) (seen (Set Term)) (ps PropertyShape))
-    (@intent "Collect sh:class values from a property shape")
-    (@spec ((Arena (List Term) (Set Term) PropertyShape) -> Unit))
-    (@alloc arena)
-    (for-each (constraint (. ps constraints))
-      (collect-constraint-classes arena classes seen constraint)))
-
-  (fn collect-node-shape-classes ((arena Arena) (classes (List Term)) (seen (Set Term)) (ns NodeShape))
-    (@intent "Collect sh:class values from a node shape and its inline property shapes")
-    (@spec ((Arena (List Term) (Set Term) NodeShape) -> Unit))
-    (@alloc arena)
-    (for-each (constraint (. ns constraints))
-      (collect-constraint-classes arena classes seen constraint))
-    (for-each (ps (. ns property-shapes))
-      (collect-property-shape-classes arena classes seen ps)))
-
   (fn collect-class-constraints ((arena Arena) (shapes-graph ShapesGraph))
     (@intent "Collect all unique class terms used by sh:class constraints")
     (@spec ((Arena ShapesGraph) -> (List Term)))

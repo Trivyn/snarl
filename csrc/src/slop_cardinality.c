@@ -16,7 +16,7 @@ slop_option_types_ValidationResult snarl_check_min_count(slop_arena* arena, rdf_
     } else {
         return (slop_option_types_ValidationResult){.has_value = 1, .value = ((types_ValidationResult){.focus_node = focus_node, .result_path = path, .value = (slop_option_rdf_Term){.has_value = false}, .source_shape = shape_id, .source_constraint_component = vocab_SHACL_MIN_COUNT, .severity = severity, .message = message})};
     }
-    SLOP_POST((((_retval == ((slop_option_types_ValidationResult){.has_value = false})) == (value_count >= min_count))), "(== (== $result (none)) (>= value-count min-count))");
+    SLOP_POST((((!((_retval).has_value)) == (value_count >= min_count))), "(== (is-none $result) (>= value-count min-count))");
     return _retval;
 }
 
@@ -29,7 +29,7 @@ slop_option_types_ValidationResult snarl_check_max_count(slop_arena* arena, rdf_
     } else {
         return (slop_option_types_ValidationResult){.has_value = 1, .value = ((types_ValidationResult){.focus_node = focus_node, .result_path = path, .value = (slop_option_rdf_Term){.has_value = false}, .source_shape = shape_id, .source_constraint_component = vocab_SHACL_MAX_COUNT, .severity = severity, .message = message})};
     }
-    SLOP_POST((((_retval == ((slop_option_types_ValidationResult){.has_value = false})) == (value_count <= max_count))), "(== (== $result (none)) (<= value-count max-count))");
+    SLOP_POST((((!((_retval).has_value)) == (value_count <= max_count))), "(== (is-none $result) (<= value-count max-count))");
     return _retval;
 }
 

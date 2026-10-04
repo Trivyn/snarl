@@ -15,11 +15,13 @@ typedef slop_map* index_TermSetMap;
 
 #ifndef SLOP_LIST_RDF_TERM_DEFINED
 #define SLOP_LIST_RDF_TERM_DEFINED
+#define SLOP_LIST_RDF_TERM_IMPL_DEFINED
 SLOP_LIST_DEFINE(rdf_Term, slop_list_rdf_Term)
 #endif
 
 #ifndef SLOP_LIST_RDF_TRIPLE_DEFINED
 #define SLOP_LIST_RDF_TRIPLE_DEFINED
+#define SLOP_LIST_RDF_TRIPLE_IMPL_DEFINED
 SLOP_LIST_DEFINE(rdf_Triple, slop_list_rdf_Triple)
 #endif
 

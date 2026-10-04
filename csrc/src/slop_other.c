@@ -86,7 +86,7 @@ slop_option_types_ValidationResult snarl_check_has_value(slop_arena* arena, rdf_
     } else {
         return (slop_option_types_ValidationResult){.has_value = 1, .value = ((types_ValidationResult){.focus_node = focus_node, .result_path = path, .value = (slop_option_rdf_Term){.has_value = false}, .source_shape = shape_id, .source_constraint_component = vocab_SHACL_HAS_VALUE, .severity = severity, .message = message})};
     }
-    SLOP_POST((((_retval == ((slop_option_types_ValidationResult){.has_value = false})) == other_list_contains_term(value_nodes, required_value))), "(== (== $result (none)) (list-contains-term value-nodes required-value))");
+    SLOP_POST((((!((_retval).has_value)) == other_list_contains_term(value_nodes, required_value))), "(== (is-none $result) (list-contains-term value-nodes required-value))");
     return _retval;
 }
 
@@ -98,7 +98,7 @@ slop_option_types_ValidationResult snarl_check_in(slop_arena* arena, rdf_Term fo
     } else {
         return (slop_option_types_ValidationResult){.has_value = 1, .value = ((types_ValidationResult){.focus_node = focus_node, .result_path = path, .value = (slop_option_rdf_Term){.has_value = 1, .value = value_node}, .source_shape = shape_id, .source_constraint_component = vocab_SHACL_IN, .severity = severity, .message = message})};
     }
-    SLOP_POST((((_retval == ((slop_option_types_ValidationResult){.has_value = false})) == other_list_contains_term(allowed_values, value_node))), "(== (== $result (none)) (list-contains-term allowed-values value-node))");
+    SLOP_POST((((!((_retval).has_value)) == other_list_contains_term(allowed_values, value_node))), "(== (is-none $result) (list-contains-term allowed-values value-node))");
     return _retval;
 }
 
@@ -113,11 +113,11 @@ slop_list_types_ValidationResult snarl_check_closed(slop_arena* arena, data_grap
             __auto_type _coll = allowed_paths;
             for (size_t _i = 0; _i < _coll.len; _i++) {
                 __auto_type ap = _coll.data[_i];
-                __auto_type _mv_135 = ap;
-                switch (_mv_135.tag) {
+                __auto_type _mv_270 = ap;
+                switch (_mv_270.tag) {
                     case types_ShaclPath_path_predicate:
                     {
-                        __auto_type p = _mv_135.data.path_predicate;
+                        __auto_type p = _mv_270.data.path_predicate;
                         ({ uint8_t _dummy = 1; slop_map_put(arena, allowed_preds, &(p), &_dummy); });
                         break;
                     }

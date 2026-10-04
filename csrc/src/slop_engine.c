@@ -41,29 +41,32 @@ engine_CycleGuard engine_cycle_guard_new(slop_arena* arena) {
 }
 
 int64_t engine_cycle_guard_depth(engine_CycleGuard guard) {
-    __auto_type _mv_176 = ({ void* _ptr = slop_map_get(guard.depth, &(int64_t){engine_CYCLE_GUARD_SLOT}); _ptr ? (slop_option_int){ .has_value = true, .value = *(int64_t*)_ptr } : (slop_option_int){ .has_value = false }; });
-    if (_mv_176.has_value) {
-        __auto_type d = _mv_176.value;
+    __auto_type _mv_316 = ({ void* _ptr = slop_map_get(guard.depth, &(int64_t){engine_CYCLE_GUARD_SLOT}); _ptr ? (slop_option_int){ .has_value = true, .value = *(int64_t*)_ptr } : (slop_option_int){ .has_value = false }; });
+    if (_mv_316.has_value) {
+        __auto_type d = _mv_316.value;
         return d;
-    } else if (!_mv_176.has_value) {
+    } else if (!_mv_316.has_value) {
         return 0;
     }
+    SLOP_UNREACHABLE();
 }
 
 uint8_t engine_cycle_guard_pair_active(engine_CycleGuard guard, rdf_Term shape_ref, rdf_Term node) {
-    __auto_type _mv_177 = ({ void* _ptr = slop_map_get(guard.pairs, &(shape_ref)); _ptr ? (slop_option_ptr){ .has_value = true, .value = *(void**)_ptr } : (slop_option_ptr){ .has_value = false }; });
-    if (_mv_177.has_value) {
-        __auto_type counts = _mv_177.value;
-        __auto_type _mv_178 = ({ void* _ptr = slop_map_get(counts, &(node)); _ptr ? (slop_option_int){ .has_value = true, .value = *(int64_t*)_ptr } : (slop_option_int){ .has_value = false }; });
-        if (_mv_178.has_value) {
-            __auto_type c = _mv_178.value;
+    __auto_type _mv_318 = ({ void* _ptr = slop_map_get(guard.pairs, &(shape_ref)); _ptr ? (slop_option_ptr){ .has_value = true, .value = *(void**)_ptr } : (slop_option_ptr){ .has_value = false }; });
+    if (_mv_318.has_value) {
+        __auto_type counts = _mv_318.value;
+        __auto_type _mv_320 = ({ void* _ptr = slop_map_get(counts, &(node)); _ptr ? (slop_option_int){ .has_value = true, .value = *(int64_t*)_ptr } : (slop_option_int){ .has_value = false }; });
+        if (_mv_320.has_value) {
+            __auto_type c = _mv_320.value;
             return (c > 0);
-        } else if (!_mv_178.has_value) {
+        } else if (!_mv_320.has_value) {
             return 0;
         }
-    } else if (!_mv_177.has_value) {
+        SLOP_UNREACHABLE();
+    } else if (!_mv_318.has_value) {
         return 0;
     }
+    SLOP_UNREACHABLE();
 }
 
 uint8_t engine_cycle_guard_has(engine_CycleGuard guard, rdf_Term shape_ref, rdf_Term node) {
@@ -72,17 +75,17 @@ uint8_t engine_cycle_guard_has(engine_CycleGuard guard, rdf_Term shape_ref, rdf_
 
 void engine_cycle_guard_add(slop_arena* arena, engine_CycleGuard guard, rdf_Term shape_ref, rdf_Term node) {
     ({ int64_t _val = (engine_cycle_guard_depth(guard) + 1); void* _vptr = slop_arena_alloc(arena, sizeof(_val)); memcpy(_vptr, &_val, sizeof(_val)); slop_map_put(arena, guard.depth, &(int64_t){engine_CYCLE_GUARD_SLOT}, _vptr); });
-    __auto_type _mv_179 = ({ void* _ptr = slop_map_get(guard.pairs, &(shape_ref)); _ptr ? (slop_option_ptr){ .has_value = true, .value = *(void**)_ptr } : (slop_option_ptr){ .has_value = false }; });
-    if (_mv_179.has_value) {
-        __auto_type counts = _mv_179.value;
-        __auto_type _mv_180 = ({ void* _ptr = slop_map_get(counts, &(node)); _ptr ? (slop_option_int){ .has_value = true, .value = *(int64_t*)_ptr } : (slop_option_int){ .has_value = false }; });
-        if (_mv_180.has_value) {
-            __auto_type c = _mv_180.value;
+    __auto_type _mv_323 = ({ void* _ptr = slop_map_get(guard.pairs, &(shape_ref)); _ptr ? (slop_option_ptr){ .has_value = true, .value = *(void**)_ptr } : (slop_option_ptr){ .has_value = false }; });
+    if (_mv_323.has_value) {
+        __auto_type counts = _mv_323.value;
+        __auto_type _mv_325 = ({ void* _ptr = slop_map_get(counts, &(node)); _ptr ? (slop_option_int){ .has_value = true, .value = *(int64_t*)_ptr } : (slop_option_int){ .has_value = false }; });
+        if (_mv_325.has_value) {
+            __auto_type c = _mv_325.value;
             ({ int64_t _val = (c + 1); void* _vptr = slop_arena_alloc(arena, sizeof(_val)); memcpy(_vptr, &_val, sizeof(_val)); slop_map_put(arena, counts, &(node), _vptr); });
-        } else if (!_mv_180.has_value) {
+        } else if (!_mv_325.has_value) {
             ({ int64_t _val = 1; void* _vptr = slop_arena_alloc(arena, sizeof(_val)); memcpy(_vptr, &_val, sizeof(_val)); slop_map_put(arena, counts, &(node), _vptr); });
         }
-    } else if (!_mv_179.has_value) {
+    } else if (!_mv_323.has_value) {
         {
             __auto_type counts = slop_map_new_ptr(arena, 16, sizeof(rdf_Term), slop_hash_rdf_Term, slop_eq_rdf_Term);
             ({ int64_t _val = 1; void* _vptr = slop_arena_alloc(arena, sizeof(_val)); memcpy(_vptr, &_val, sizeof(_val)); slop_map_put(arena, counts, &(node), _vptr); });
@@ -94,16 +97,16 @@ void engine_cycle_guard_add(slop_arena* arena, engine_CycleGuard guard, rdf_Term
 void engine_cycle_guard_remove(slop_arena* arena, engine_CycleGuard guard, rdf_Term shape_ref, rdf_Term node) {
     SLOP_PRE((engine_cycle_guard_pair_active(guard, shape_ref, node)), "(cycle-guard-pair-active guard shape-ref node)");
     ({ int64_t _val = (engine_cycle_guard_depth(guard) - 1); void* _vptr = slop_arena_alloc(arena, sizeof(_val)); memcpy(_vptr, &_val, sizeof(_val)); slop_map_put(arena, guard.depth, &(int64_t){engine_CYCLE_GUARD_SLOT}, _vptr); });
-    __auto_type _mv_181 = ({ void* _ptr = slop_map_get(guard.pairs, &(shape_ref)); _ptr ? (slop_option_ptr){ .has_value = true, .value = *(void**)_ptr } : (slop_option_ptr){ .has_value = false }; });
-    if (_mv_181.has_value) {
-        __auto_type counts = _mv_181.value;
-        __auto_type _mv_182 = ({ void* _ptr = slop_map_get(counts, &(node)); _ptr ? (slop_option_int){ .has_value = true, .value = *(int64_t*)_ptr } : (slop_option_int){ .has_value = false }; });
-        if (_mv_182.has_value) {
-            __auto_type c = _mv_182.value;
+    __auto_type _mv_332 = ({ void* _ptr = slop_map_get(guard.pairs, &(shape_ref)); _ptr ? (slop_option_ptr){ .has_value = true, .value = *(void**)_ptr } : (slop_option_ptr){ .has_value = false }; });
+    if (_mv_332.has_value) {
+        __auto_type counts = _mv_332.value;
+        __auto_type _mv_334 = ({ void* _ptr = slop_map_get(counts, &(node)); _ptr ? (slop_option_int){ .has_value = true, .value = *(int64_t*)_ptr } : (slop_option_int){ .has_value = false }; });
+        if (_mv_334.has_value) {
+            __auto_type c = _mv_334.value;
             ({ int64_t _val = (c - 1); void* _vptr = slop_arena_alloc(arena, sizeof(_val)); memcpy(_vptr, &_val, sizeof(_val)); slop_map_put(arena, counts, &(node), _vptr); });
-        } else if (!_mv_182.has_value) {
+        } else if (!_mv_334.has_value) {
         }
-    } else if (!_mv_181.has_value) {
+    } else if (!_mv_332.has_value) {
     }
 }
 
@@ -151,26 +154,28 @@ void engine_cycle_guard_flag_recursion(slop_arena* arena, engine_CycleGuard guar
 
 int64_t engine_optional_term_set_size(slop_option_index_TermSet values) {
     int64_t _retval = {0};
-    __auto_type _mv_183 = values;
-    if (_mv_183.has_value) {
-        __auto_type terms = _mv_183.value;
+    __auto_type _mv_340 = values;
+    if (_mv_340.has_value) {
+        __auto_type terms = _mv_340.value;
         return data_graph_snarl_data_graph_term_set_size(terms);
-    } else if (!_mv_183.has_value) {
+    } else if (!_mv_340.has_value) {
         return 0;
     }
+    SLOP_UNREACHABLE();
     SLOP_POST(((_retval >= 0)), "(>= $result 0)");
     return _retval;
 }
 
 slop_list_rdf_Term engine_optional_term_set_to_list(slop_arena* arena, slop_option_index_TermSet values) {
     slop_list_rdf_Term _retval = {0};
-    __auto_type _mv_184 = values;
-    if (_mv_184.has_value) {
-        __auto_type terms = _mv_184.value;
+    __auto_type _mv_341 = values;
+    if (_mv_341.has_value) {
+        __auto_type terms = _mv_341.value;
         return data_graph_snarl_data_graph_term_set_to_list(arena, terms);
-    } else if (!_mv_184.has_value) {
+    } else if (!_mv_341.has_value) {
         return ((slop_list_rdf_Term){ .data = (rdf_Term*)slop_arena_alloc(arena, 16 * sizeof(rdf_Term)), .len = 0, .cap = 16 });
     }
+    SLOP_UNREACHABLE();
     SLOP_POST(((((int64_t)((_retval).len)) >= 0)), "(>= (list-len $result) 0)");
     return _retval;
 }
@@ -235,10 +240,10 @@ types_ValidatorResult snarl_engine_validate(slop_arena* arena, data_graph_SnarlD
                             __auto_type _coll = focus_nodes;
                             for (size_t _i = 0; _i < _coll.len; _i++) {
                                 __auto_type focus_node = _coll.data[_i];
-                                __auto_type _mv_185 = ({ void* _ptr = slop_map_get(visited.errors, &(int64_t){0}); _ptr ? (slop_option_string){ .has_value = true, .value = *(slop_string*)_ptr } : (slop_option_string){ .has_value = false }; });
-                                if (_mv_185.has_value) {
-                                    __auto_type _ = _mv_185.value;
-                                } else if (!_mv_185.has_value) {
+                                __auto_type _mv_343 = ({ void* _ptr = slop_map_get(visited.errors, &(int64_t){0}); _ptr ? (slop_option_string){ .has_value = true, .value = *(slop_string*)_ptr } : (slop_option_string){ .has_value = false }; });
+                                if (_mv_343.has_value) {
+                                    __auto_type _ = _mv_343.value;
+                                } else if (!_mv_343.has_value) {
                                     {
                                         __auto_type results = snarl_evaluate_node_shape_cached(arena, data_graph, shapes_graph, class_index, ns, focus_node, visited, config);
                                         {
@@ -250,8 +255,8 @@ types_ValidatorResult snarl_engine_validate(slop_arena* arena, data_graph_SnarlD
                                                     if (include) {
                                                         if ((max_errors == 0) || (error_count < max_errors)) {
                                                             report = types_report_add_result(arena, report, r);
-                                                            __auto_type _mv_186 = r.severity;
-                                                            switch (_mv_186) {
+                                                            __auto_type _mv_344 = r.severity;
+                                                            switch (_mv_344) {
                                                                 case types_Severity_severity_violation: {
                                                                     error_count = (error_count + 1);
                                                                     break;
@@ -269,28 +274,29 @@ types_ValidatorResult snarl_engine_validate(slop_arena* arena, data_graph_SnarlD
                                 }
                             }
                         }
-                        __auto_type _mv_187 = cycle_message;
-                        if (!_mv_187.has_value) {
-                            __auto_type _mv_188 = ({ void* _ptr = slop_map_get(visited.errors, &(int64_t){0}); _ptr ? (slop_option_string){ .has_value = true, .value = *(slop_string*)_ptr } : (slop_option_string){ .has_value = false }; });
-                            if (_mv_188.has_value) {
-                                __auto_type msg = _mv_188.value;
+                        __auto_type _mv_345 = cycle_message;
+                        if (!_mv_345.has_value) {
+                            __auto_type _mv_347 = ({ void* _ptr = slop_map_get(visited.errors, &(int64_t){0}); _ptr ? (slop_option_string){ .has_value = true, .value = *(slop_string*)_ptr } : (slop_option_string){ .has_value = false }; });
+                            if (_mv_347.has_value) {
+                                __auto_type msg = _mv_347.value;
                                 cycle_message = (slop_option_string){.has_value = 1, .value = msg};
-                            } else if (!_mv_188.has_value) {
+                            } else if (!_mv_347.has_value) {
                             }
-                        } else if (_mv_187.has_value) {
-                            __auto_type _ = _mv_187.value;
+                        } else if (_mv_345.has_value) {
+                            __auto_type _ = _mv_345.value;
                         }
                     }
                 }
             }
         }
-        __auto_type _mv_189 = cycle_message;
-        if (_mv_189.has_value) {
-            __auto_type msg = _mv_189.value;
+        __auto_type _mv_348 = cycle_message;
+        if (_mv_348.has_value) {
+            __auto_type msg = _mv_348.value;
             return ((types_ValidatorResult){ .tag = types_ValidatorResult_validate_error, .data.validate_error = msg });
-        } else if (!_mv_189.has_value) {
+        } else if (!_mv_348.has_value) {
             return ((types_ValidatorResult){ .tag = types_ValidatorResult_validate_success, .data.validate_success = report });
         }
+        SLOP_UNREACHABLE();
     }
 }
 
@@ -328,9 +334,9 @@ slop_list_types_ValidationResult snarl_evaluate_node_shape_cached(slop_arena* ar
             __auto_type _coll = shape.constraints;
             for (size_t _i = 0; _i < _coll.len; _i++) {
                 __auto_type constraint = _coll.data[_i];
-                __auto_type _mv_190 = constraint;
-                if (_mv_190.tag == types_Constraint_con_closed && _mv_190.data.con_closed.f0 == 1) {
-                    __auto_type ignored_paths = _mv_190.data.con_closed.f1;
+                __auto_type _mv_349 = constraint;
+                if (_mv_349.tag == types_Constraint_con_closed && _mv_349.data.con_closed.f0 == 1) {
+                    __auto_type ignored_paths = _mv_349.data.con_closed.f1;
                     {
                         __auto_type allowed_paths = ((slop_list_types_ShaclPath){ .data = (types_ShaclPath*)slop_arena_alloc(arena, 16 * sizeof(types_ShaclPath)), .len = 0, .cap = 16 });
                         __auto_type ign_len = ((int64_t)((ignored_paths).len));
@@ -344,11 +350,11 @@ slop_list_types_ValidationResult snarl_evaluate_node_shape_cached(slop_arena* ar
                         {
                             __auto_type i = 0;
                             while (i < ign_len) {
-                                __auto_type _mv_191 = ({ __auto_type _lst = ignored_paths; size_t _idx = (size_t)i; slop_option_types_ShaclPath _r = {0}; if (_idx < _lst.len) { _r.has_value = true; _r.value = _lst.data[_idx]; } else { _r.has_value = false; } _r; });
-                                if (_mv_191.has_value) {
-                                    __auto_type ip = _mv_191.value;
+                                __auto_type _mv_350 = ({ __auto_type _lst = ignored_paths; size_t _idx = (size_t)i; slop_option_types_ShaclPath _r = {0}; if (_idx < _lst.len) { _r.has_value = true; _r.value = _lst.data[_idx]; } else { _r.has_value = false; } _r; });
+                                if (_mv_350.has_value) {
+                                    __auto_type ip = _mv_350.value;
                                     ({ __auto_type _lst_p = &(allowed_paths); __auto_type _item = (ip); if (_lst_p->len >= _lst_p->cap) { size_t _new_cap = _lst_p->cap == 0 ? 16 : _lst_p->cap * 2; __typeof__(_lst_p->data) _new_data = (__typeof__(_lst_p->data))slop_arena_alloc(arena, _new_cap * sizeof(*_lst_p->data)); if (_lst_p->len > 0) memcpy(_new_data, _lst_p->data, _lst_p->len * sizeof(*_lst_p->data)); _lst_p->data = _new_data; _lst_p->cap = _new_cap; } _lst_p->data[_lst_p->len++] = _item; (void)0; });
-                                } else if (!_mv_191.has_value) {
+                                } else if (!_mv_350.has_value) {
                                 }
                                 i = (i + 1);
                             }
@@ -380,12 +386,12 @@ slop_list_types_ValidationResult snarl_evaluate_node_shape_cached(slop_arena* ar
                             __auto_type _coll = ps.constraints;
                             for (size_t _i = 0; _i < _coll.len; _i++) {
                                 __auto_type c = _coll.data[_i];
-                                __auto_type _mv_192 = c;
-                                switch (_mv_192.tag) {
+                                __auto_type _mv_351 = c;
+                                switch (_mv_351.tag) {
                                     case types_Constraint_con_qualified_value_shape:
                                     {
-                                        __auto_type ref = _mv_192.data.con_qualified_value_shape.f0;
-                                        __auto_type disjoint = _mv_192.data.con_qualified_value_shape.f3;
+                                        __auto_type ref = _mv_351.data.con_qualified_value_shape.f0;
+                                        __auto_type disjoint = _mv_351.data.con_qualified_value_shape.f3;
                                         if (disjoint) {
                                             ({ __auto_type _lst_p = &(all_disjoint_qvs); __auto_type _item = (ref); if (_lst_p->len >= _lst_p->cap) { size_t _new_cap = _lst_p->cap == 0 ? 16 : _lst_p->cap * 2; __typeof__(_lst_p->data) _new_data = (__typeof__(_lst_p->data))slop_arena_alloc(arena, _new_cap * sizeof(*_lst_p->data)); if (_lst_p->len > 0) memcpy(_new_data, _lst_p->data, _lst_p->len * sizeof(*_lst_p->data)); _lst_p->data = _new_data; _lst_p->cap = _new_cap; } _lst_p->data[_lst_p->len++] = _item; (void)0; });
                                             ({ __auto_type _lst_p = &(all_disjoint_ps_ids); __auto_type _item = (ps.id); if (_lst_p->len >= _lst_p->cap) { size_t _new_cap = _lst_p->cap == 0 ? 16 : _lst_p->cap * 2; __typeof__(_lst_p->data) _new_data = (__typeof__(_lst_p->data))slop_arena_alloc(arena, _new_cap * sizeof(*_lst_p->data)); if (_lst_p->len > 0) memcpy(_new_data, _lst_p->data, _lst_p->len * sizeof(*_lst_p->data)); _lst_p->data = _new_data; _lst_p->cap = _new_cap; } _lst_p->data[_lst_p->len++] = _item; (void)0; });
@@ -412,18 +418,18 @@ slop_list_types_ValidationResult snarl_evaluate_node_shape_cached(slop_arena* ar
                             int64_t i = 0;
                             __auto_type n = ((int64_t)((all_disjoint_qvs).len));
                             while (i < n) {
-                                __auto_type _mv_193 = ({ __auto_type _lst = all_disjoint_ps_ids; size_t _idx = (size_t)i; slop_option_rdf_Term _r = {0}; if (_idx < _lst.len) { _r.has_value = true; _r.value = _lst.data[_idx]; } else { _r.has_value = false; } _r; });
-                                if (_mv_193.has_value) {
-                                    __auto_type pid = _mv_193.value;
+                                __auto_type _mv_352 = ({ __auto_type _lst = all_disjoint_ps_ids; size_t _idx = (size_t)i; slop_option_rdf_Term _r = {0}; if (_idx < _lst.len) { _r.has_value = true; _r.value = _lst.data[_idx]; } else { _r.has_value = false; } _r; });
+                                if (_mv_352.has_value) {
+                                    __auto_type pid = _mv_352.value;
                                     if (!(rdf_term_eq(pid, ps_id))) {
-                                        __auto_type _mv_194 = ({ __auto_type _lst = all_disjoint_qvs; size_t _idx = (size_t)i; slop_option_rdf_Term _r = {0}; if (_idx < _lst.len) { _r.has_value = true; _r.value = _lst.data[_idx]; } else { _r.has_value = false; } _r; });
-                                        if (_mv_194.has_value) {
-                                            __auto_type ref = _mv_194.value;
+                                        __auto_type _mv_353 = ({ __auto_type _lst = all_disjoint_qvs; size_t _idx = (size_t)i; slop_option_rdf_Term _r = {0}; if (_idx < _lst.len) { _r.has_value = true; _r.value = _lst.data[_idx]; } else { _r.has_value = false; } _r; });
+                                        if (_mv_353.has_value) {
+                                            __auto_type ref = _mv_353.value;
                                             ({ __auto_type _lst_p = &(sibling_refs); __auto_type _item = (ref); if (_lst_p->len >= _lst_p->cap) { size_t _new_cap = _lst_p->cap == 0 ? 16 : _lst_p->cap * 2; __typeof__(_lst_p->data) _new_data = (__typeof__(_lst_p->data))slop_arena_alloc(arena, _new_cap * sizeof(*_lst_p->data)); if (_lst_p->len > 0) memcpy(_new_data, _lst_p->data, _lst_p->len * sizeof(*_lst_p->data)); _lst_p->data = _new_data; _lst_p->cap = _new_cap; } _lst_p->data[_lst_p->len++] = _item; (void)0; });
-                                        } else if (!_mv_194.has_value) {
+                                        } else if (!_mv_353.has_value) {
                                         }
                                     }
-                                } else if (!_mv_193.has_value) {
+                                } else if (!_mv_352.has_value) {
                                 }
                                 i = (i + 1);
                             }
@@ -457,11 +463,11 @@ slop_list_types_ValidationResult snarl_evaluate_property_shape_cached(slop_arena
     slop_list_types_ValidationResult _retval = {0};
     {
         __auto_type path = shape.path;
-        __auto_type _mv_195 = path;
-        switch (_mv_195.tag) {
+        __auto_type _mv_354 = path;
+        switch (_mv_354.tag) {
             case types_ShaclPath_path_predicate:
             {
-                __auto_type pred = _mv_195.data.path_predicate;
+                __auto_type pred = _mv_354.data.path_predicate;
                 return engine_evaluate_simple_predicate_property_shape_cached(arena, data_graph, shapes_graph, class_index, shape, focus_node, pred, visited, config, sibling_qvs_refs);
             }
             default: {
@@ -542,147 +548,147 @@ slop_list_types_ValidationResult snarl_evaluate_constraint_cached(slop_arena* ar
     slop_list_types_ValidationResult _retval = {0};
     {
         __auto_type results = ((slop_list_types_ValidationResult){ .data = (types_ValidationResult*)slop_arena_alloc(arena, 16 * sizeof(types_ValidationResult)), .len = 0, .cap = 16 });
-        __auto_type _mv_196 = constraint;
-        switch (_mv_196.tag) {
+        __auto_type _mv_355 = constraint;
+        switch (_mv_355.tag) {
             case types_Constraint_con_class:
             {
-                __auto_type required_class = _mv_196.data.con_class;
-                __auto_type _mv_197 = value_type_check_class_with_index(arena, data_graph, class_index, focus_node, value_node, required_class, path, shape_id, severity, message);
-                if (_mv_197.has_value) {
-                    __auto_type r = _mv_197.value;
+                __auto_type required_class = _mv_355.data.con_class;
+                __auto_type _mv_356 = value_type_check_class_with_index(arena, data_graph, class_index, focus_node, value_node, required_class, path, shape_id, severity, message);
+                if (_mv_356.has_value) {
+                    __auto_type r = _mv_356.value;
                     ({ __auto_type _lst_p = &(results); __auto_type _item = (r); if (_lst_p->len >= _lst_p->cap) { size_t _new_cap = _lst_p->cap == 0 ? 16 : _lst_p->cap * 2; __typeof__(_lst_p->data) _new_data = (__typeof__(_lst_p->data))slop_arena_alloc(arena, _new_cap * sizeof(*_lst_p->data)); if (_lst_p->len > 0) memcpy(_new_data, _lst_p->data, _lst_p->len * sizeof(*_lst_p->data)); _lst_p->data = _new_data; _lst_p->cap = _new_cap; } _lst_p->data[_lst_p->len++] = _item; (void)0; });
-                } else if (!_mv_197.has_value) {
+                } else if (!_mv_356.has_value) {
                 }
                 break;
             }
             case types_Constraint_con_datatype:
             {
-                __auto_type required_dt = _mv_196.data.con_datatype;
-                __auto_type _mv_198 = snarl_check_datatype(arena, focus_node, value_node, required_dt, path, shape_id, severity, message);
-                if (_mv_198.has_value) {
-                    __auto_type r = _mv_198.value;
+                __auto_type required_dt = _mv_355.data.con_datatype;
+                __auto_type _mv_357 = snarl_check_datatype(arena, focus_node, value_node, required_dt, path, shape_id, severity, message);
+                if (_mv_357.has_value) {
+                    __auto_type r = _mv_357.value;
                     ({ __auto_type _lst_p = &(results); __auto_type _item = (r); if (_lst_p->len >= _lst_p->cap) { size_t _new_cap = _lst_p->cap == 0 ? 16 : _lst_p->cap * 2; __typeof__(_lst_p->data) _new_data = (__typeof__(_lst_p->data))slop_arena_alloc(arena, _new_cap * sizeof(*_lst_p->data)); if (_lst_p->len > 0) memcpy(_new_data, _lst_p->data, _lst_p->len * sizeof(*_lst_p->data)); _lst_p->data = _new_data; _lst_p->cap = _new_cap; } _lst_p->data[_lst_p->len++] = _item; (void)0; });
-                } else if (!_mv_198.has_value) {
+                } else if (!_mv_357.has_value) {
                 }
                 break;
             }
             case types_Constraint_con_node_kind:
             {
-                __auto_type required_kind = _mv_196.data.con_node_kind;
-                __auto_type _mv_199 = snarl_check_node_kind(arena, focus_node, value_node, required_kind, path, shape_id, severity, message);
-                if (_mv_199.has_value) {
-                    __auto_type r = _mv_199.value;
+                __auto_type required_kind = _mv_355.data.con_node_kind;
+                __auto_type _mv_358 = snarl_check_node_kind(arena, focus_node, value_node, required_kind, path, shape_id, severity, message);
+                if (_mv_358.has_value) {
+                    __auto_type r = _mv_358.value;
                     ({ __auto_type _lst_p = &(results); __auto_type _item = (r); if (_lst_p->len >= _lst_p->cap) { size_t _new_cap = _lst_p->cap == 0 ? 16 : _lst_p->cap * 2; __typeof__(_lst_p->data) _new_data = (__typeof__(_lst_p->data))slop_arena_alloc(arena, _new_cap * sizeof(*_lst_p->data)); if (_lst_p->len > 0) memcpy(_new_data, _lst_p->data, _lst_p->len * sizeof(*_lst_p->data)); _lst_p->data = _new_data; _lst_p->cap = _new_cap; } _lst_p->data[_lst_p->len++] = _item; (void)0; });
-                } else if (!_mv_199.has_value) {
+                } else if (!_mv_358.has_value) {
                 }
                 break;
             }
             case types_Constraint_con_min_count:
             {
-                __auto_type _ = _mv_196.data.con_min_count;
+                __auto_type _ = _mv_355.data.con_min_count;
                 break;
             }
             case types_Constraint_con_max_count:
             {
-                __auto_type _ = _mv_196.data.con_max_count;
+                __auto_type _ = _mv_355.data.con_max_count;
                 break;
             }
             case types_Constraint_con_min_inclusive:
             {
-                __auto_type limit = _mv_196.data.con_min_inclusive;
-                __auto_type _mv_200 = snarl_check_min_inclusive(arena, focus_node, value_node, limit, path, shape_id, severity, message);
-                if (_mv_200.has_value) {
-                    __auto_type r = _mv_200.value;
+                __auto_type limit = _mv_355.data.con_min_inclusive;
+                __auto_type _mv_359 = snarl_check_min_inclusive(arena, focus_node, value_node, limit, path, shape_id, severity, message);
+                if (_mv_359.has_value) {
+                    __auto_type r = _mv_359.value;
                     ({ __auto_type _lst_p = &(results); __auto_type _item = (r); if (_lst_p->len >= _lst_p->cap) { size_t _new_cap = _lst_p->cap == 0 ? 16 : _lst_p->cap * 2; __typeof__(_lst_p->data) _new_data = (__typeof__(_lst_p->data))slop_arena_alloc(arena, _new_cap * sizeof(*_lst_p->data)); if (_lst_p->len > 0) memcpy(_new_data, _lst_p->data, _lst_p->len * sizeof(*_lst_p->data)); _lst_p->data = _new_data; _lst_p->cap = _new_cap; } _lst_p->data[_lst_p->len++] = _item; (void)0; });
-                } else if (!_mv_200.has_value) {
+                } else if (!_mv_359.has_value) {
                 }
                 break;
             }
             case types_Constraint_con_max_inclusive:
             {
-                __auto_type limit = _mv_196.data.con_max_inclusive;
-                __auto_type _mv_201 = snarl_check_max_inclusive(arena, focus_node, value_node, limit, path, shape_id, severity, message);
-                if (_mv_201.has_value) {
-                    __auto_type r = _mv_201.value;
+                __auto_type limit = _mv_355.data.con_max_inclusive;
+                __auto_type _mv_360 = snarl_check_max_inclusive(arena, focus_node, value_node, limit, path, shape_id, severity, message);
+                if (_mv_360.has_value) {
+                    __auto_type r = _mv_360.value;
                     ({ __auto_type _lst_p = &(results); __auto_type _item = (r); if (_lst_p->len >= _lst_p->cap) { size_t _new_cap = _lst_p->cap == 0 ? 16 : _lst_p->cap * 2; __typeof__(_lst_p->data) _new_data = (__typeof__(_lst_p->data))slop_arena_alloc(arena, _new_cap * sizeof(*_lst_p->data)); if (_lst_p->len > 0) memcpy(_new_data, _lst_p->data, _lst_p->len * sizeof(*_lst_p->data)); _lst_p->data = _new_data; _lst_p->cap = _new_cap; } _lst_p->data[_lst_p->len++] = _item; (void)0; });
-                } else if (!_mv_201.has_value) {
+                } else if (!_mv_360.has_value) {
                 }
                 break;
             }
             case types_Constraint_con_min_exclusive:
             {
-                __auto_type limit = _mv_196.data.con_min_exclusive;
-                __auto_type _mv_202 = snarl_check_min_exclusive(arena, focus_node, value_node, limit, path, shape_id, severity, message);
-                if (_mv_202.has_value) {
-                    __auto_type r = _mv_202.value;
+                __auto_type limit = _mv_355.data.con_min_exclusive;
+                __auto_type _mv_361 = snarl_check_min_exclusive(arena, focus_node, value_node, limit, path, shape_id, severity, message);
+                if (_mv_361.has_value) {
+                    __auto_type r = _mv_361.value;
                     ({ __auto_type _lst_p = &(results); __auto_type _item = (r); if (_lst_p->len >= _lst_p->cap) { size_t _new_cap = _lst_p->cap == 0 ? 16 : _lst_p->cap * 2; __typeof__(_lst_p->data) _new_data = (__typeof__(_lst_p->data))slop_arena_alloc(arena, _new_cap * sizeof(*_lst_p->data)); if (_lst_p->len > 0) memcpy(_new_data, _lst_p->data, _lst_p->len * sizeof(*_lst_p->data)); _lst_p->data = _new_data; _lst_p->cap = _new_cap; } _lst_p->data[_lst_p->len++] = _item; (void)0; });
-                } else if (!_mv_202.has_value) {
+                } else if (!_mv_361.has_value) {
                 }
                 break;
             }
             case types_Constraint_con_max_exclusive:
             {
-                __auto_type limit = _mv_196.data.con_max_exclusive;
-                __auto_type _mv_203 = snarl_check_max_exclusive(arena, focus_node, value_node, limit, path, shape_id, severity, message);
-                if (_mv_203.has_value) {
-                    __auto_type r = _mv_203.value;
+                __auto_type limit = _mv_355.data.con_max_exclusive;
+                __auto_type _mv_362 = snarl_check_max_exclusive(arena, focus_node, value_node, limit, path, shape_id, severity, message);
+                if (_mv_362.has_value) {
+                    __auto_type r = _mv_362.value;
                     ({ __auto_type _lst_p = &(results); __auto_type _item = (r); if (_lst_p->len >= _lst_p->cap) { size_t _new_cap = _lst_p->cap == 0 ? 16 : _lst_p->cap * 2; __typeof__(_lst_p->data) _new_data = (__typeof__(_lst_p->data))slop_arena_alloc(arena, _new_cap * sizeof(*_lst_p->data)); if (_lst_p->len > 0) memcpy(_new_data, _lst_p->data, _lst_p->len * sizeof(*_lst_p->data)); _lst_p->data = _new_data; _lst_p->cap = _new_cap; } _lst_p->data[_lst_p->len++] = _item; (void)0; });
-                } else if (!_mv_203.has_value) {
+                } else if (!_mv_362.has_value) {
                 }
                 break;
             }
             case types_Constraint_con_min_length:
             {
-                __auto_type min_len = _mv_196.data.con_min_length;
-                __auto_type _mv_204 = snarl_check_min_length(arena, focus_node, value_node, min_len, path, shape_id, severity, message);
-                if (_mv_204.has_value) {
-                    __auto_type r = _mv_204.value;
+                __auto_type min_len = _mv_355.data.con_min_length;
+                __auto_type _mv_363 = snarl_check_min_length(arena, focus_node, value_node, min_len, path, shape_id, severity, message);
+                if (_mv_363.has_value) {
+                    __auto_type r = _mv_363.value;
                     ({ __auto_type _lst_p = &(results); __auto_type _item = (r); if (_lst_p->len >= _lst_p->cap) { size_t _new_cap = _lst_p->cap == 0 ? 16 : _lst_p->cap * 2; __typeof__(_lst_p->data) _new_data = (__typeof__(_lst_p->data))slop_arena_alloc(arena, _new_cap * sizeof(*_lst_p->data)); if (_lst_p->len > 0) memcpy(_new_data, _lst_p->data, _lst_p->len * sizeof(*_lst_p->data)); _lst_p->data = _new_data; _lst_p->cap = _new_cap; } _lst_p->data[_lst_p->len++] = _item; (void)0; });
-                } else if (!_mv_204.has_value) {
+                } else if (!_mv_363.has_value) {
                 }
                 break;
             }
             case types_Constraint_con_max_length:
             {
-                __auto_type max_len = _mv_196.data.con_max_length;
-                __auto_type _mv_205 = snarl_check_max_length(arena, focus_node, value_node, max_len, path, shape_id, severity, message);
-                if (_mv_205.has_value) {
-                    __auto_type r = _mv_205.value;
+                __auto_type max_len = _mv_355.data.con_max_length;
+                __auto_type _mv_364 = snarl_check_max_length(arena, focus_node, value_node, max_len, path, shape_id, severity, message);
+                if (_mv_364.has_value) {
+                    __auto_type r = _mv_364.value;
                     ({ __auto_type _lst_p = &(results); __auto_type _item = (r); if (_lst_p->len >= _lst_p->cap) { size_t _new_cap = _lst_p->cap == 0 ? 16 : _lst_p->cap * 2; __typeof__(_lst_p->data) _new_data = (__typeof__(_lst_p->data))slop_arena_alloc(arena, _new_cap * sizeof(*_lst_p->data)); if (_lst_p->len > 0) memcpy(_new_data, _lst_p->data, _lst_p->len * sizeof(*_lst_p->data)); _lst_p->data = _new_data; _lst_p->cap = _new_cap; } _lst_p->data[_lst_p->len++] = _item; (void)0; });
-                } else if (!_mv_205.has_value) {
+                } else if (!_mv_364.has_value) {
                 }
                 break;
             }
             case types_Constraint_con_pattern:
             {
-                __auto_type pat = _mv_196.data.con_pattern;
-                __auto_type _mv_206 = snarl_check_pattern(arena, focus_node, value_node, pat, path, shape_id, severity, message);
-                if (_mv_206.has_value) {
-                    __auto_type r = _mv_206.value;
+                __auto_type pat = _mv_355.data.con_pattern;
+                __auto_type _mv_365 = snarl_check_pattern(arena, focus_node, value_node, pat, path, shape_id, severity, message);
+                if (_mv_365.has_value) {
+                    __auto_type r = _mv_365.value;
                     ({ __auto_type _lst_p = &(results); __auto_type _item = (r); if (_lst_p->len >= _lst_p->cap) { size_t _new_cap = _lst_p->cap == 0 ? 16 : _lst_p->cap * 2; __typeof__(_lst_p->data) _new_data = (__typeof__(_lst_p->data))slop_arena_alloc(arena, _new_cap * sizeof(*_lst_p->data)); if (_lst_p->len > 0) memcpy(_new_data, _lst_p->data, _lst_p->len * sizeof(*_lst_p->data)); _lst_p->data = _new_data; _lst_p->cap = _new_cap; } _lst_p->data[_lst_p->len++] = _item; (void)0; });
-                } else if (!_mv_206.has_value) {
+                } else if (!_mv_365.has_value) {
                 }
                 break;
             }
             case types_Constraint_con_language_in:
             {
-                __auto_type allowed_langs = _mv_196.data.con_language_in;
-                __auto_type _mv_207 = snarl_check_language_in(arena, focus_node, value_node, allowed_langs, path, shape_id, severity, message);
-                if (_mv_207.has_value) {
-                    __auto_type r = _mv_207.value;
+                __auto_type allowed_langs = _mv_355.data.con_language_in;
+                __auto_type _mv_366 = snarl_check_language_in(arena, focus_node, value_node, allowed_langs, path, shape_id, severity, message);
+                if (_mv_366.has_value) {
+                    __auto_type r = _mv_366.value;
                     ({ __auto_type _lst_p = &(results); __auto_type _item = (r); if (_lst_p->len >= _lst_p->cap) { size_t _new_cap = _lst_p->cap == 0 ? 16 : _lst_p->cap * 2; __typeof__(_lst_p->data) _new_data = (__typeof__(_lst_p->data))slop_arena_alloc(arena, _new_cap * sizeof(*_lst_p->data)); if (_lst_p->len > 0) memcpy(_new_data, _lst_p->data, _lst_p->len * sizeof(*_lst_p->data)); _lst_p->data = _new_data; _lst_p->cap = _new_cap; } _lst_p->data[_lst_p->len++] = _item; (void)0; });
-                } else if (!_mv_207.has_value) {
+                } else if (!_mv_366.has_value) {
                 }
                 break;
             }
             case types_Constraint_con_unique_lang:
             {
-                __auto_type _ = _mv_196.data.con_unique_lang;
+                __auto_type _ = _mv_355.data.con_unique_lang;
                 break;
             }
             case types_Constraint_con_equals:
             {
-                __auto_type other_path = _mv_196.data.con_equals;
+                __auto_type other_path = _mv_355.data.con_equals;
                 {
                     __auto_type single_list = ((slop_list_rdf_Term){ .data = (rdf_Term*)slop_arena_alloc(arena, 16 * sizeof(rdf_Term)), .len = 0, .cap = 16 });
                     ({ __auto_type _lst_p = &(single_list); __auto_type _item = (value_node); if (_lst_p->len >= _lst_p->cap) { size_t _new_cap = _lst_p->cap == 0 ? 16 : _lst_p->cap * 2; __typeof__(_lst_p->data) _new_data = (__typeof__(_lst_p->data))slop_arena_alloc(arena, _new_cap * sizeof(*_lst_p->data)); if (_lst_p->len > 0) memcpy(_new_data, _lst_p->data, _lst_p->len * sizeof(*_lst_p->data)); _lst_p->data = _new_data; _lst_p->cap = _new_cap; } _lst_p->data[_lst_p->len++] = _item; (void)0; });
@@ -701,7 +707,7 @@ slop_list_types_ValidationResult snarl_evaluate_constraint_cached(slop_arena* ar
             }
             case types_Constraint_con_disjoint:
             {
-                __auto_type other_path = _mv_196.data.con_disjoint;
+                __auto_type other_path = _mv_355.data.con_disjoint;
                 {
                     __auto_type single_list = ((slop_list_rdf_Term){ .data = (rdf_Term*)slop_arena_alloc(arena, 16 * sizeof(rdf_Term)), .len = 0, .cap = 16 });
                     ({ __auto_type _lst_p = &(single_list); __auto_type _item = (value_node); if (_lst_p->len >= _lst_p->cap) { size_t _new_cap = _lst_p->cap == 0 ? 16 : _lst_p->cap * 2; __typeof__(_lst_p->data) _new_data = (__typeof__(_lst_p->data))slop_arena_alloc(arena, _new_cap * sizeof(*_lst_p->data)); if (_lst_p->len > 0) memcpy(_new_data, _lst_p->data, _lst_p->len * sizeof(*_lst_p->data)); _lst_p->data = _new_data; _lst_p->cap = _new_cap; } _lst_p->data[_lst_p->len++] = _item; (void)0; });
@@ -720,7 +726,7 @@ slop_list_types_ValidationResult snarl_evaluate_constraint_cached(slop_arena* ar
             }
             case types_Constraint_con_less_than:
             {
-                __auto_type other_path = _mv_196.data.con_less_than;
+                __auto_type other_path = _mv_355.data.con_less_than;
                 {
                     __auto_type single_list = ((slop_list_rdf_Term){ .data = (rdf_Term*)slop_arena_alloc(arena, 16 * sizeof(rdf_Term)), .len = 0, .cap = 16 });
                     ({ __auto_type _lst_p = &(single_list); __auto_type _item = (value_node); if (_lst_p->len >= _lst_p->cap) { size_t _new_cap = _lst_p->cap == 0 ? 16 : _lst_p->cap * 2; __typeof__(_lst_p->data) _new_data = (__typeof__(_lst_p->data))slop_arena_alloc(arena, _new_cap * sizeof(*_lst_p->data)); if (_lst_p->len > 0) memcpy(_new_data, _lst_p->data, _lst_p->len * sizeof(*_lst_p->data)); _lst_p->data = _new_data; _lst_p->cap = _new_cap; } _lst_p->data[_lst_p->len++] = _item; (void)0; });
@@ -739,7 +745,7 @@ slop_list_types_ValidationResult snarl_evaluate_constraint_cached(slop_arena* ar
             }
             case types_Constraint_con_less_than_or_equals:
             {
-                __auto_type other_path = _mv_196.data.con_less_than_or_equals;
+                __auto_type other_path = _mv_355.data.con_less_than_or_equals;
                 {
                     __auto_type single_list = ((slop_list_rdf_Term){ .data = (rdf_Term*)slop_arena_alloc(arena, 16 * sizeof(rdf_Term)), .len = 0, .cap = 16 });
                     ({ __auto_type _lst_p = &(single_list); __auto_type _item = (value_node); if (_lst_p->len >= _lst_p->cap) { size_t _new_cap = _lst_p->cap == 0 ? 16 : _lst_p->cap * 2; __typeof__(_lst_p->data) _new_data = (__typeof__(_lst_p->data))slop_arena_alloc(arena, _new_cap * sizeof(*_lst_p->data)); if (_lst_p->len > 0) memcpy(_new_data, _lst_p->data, _lst_p->len * sizeof(*_lst_p->data)); _lst_p->data = _new_data; _lst_p->cap = _new_cap; } _lst_p->data[_lst_p->len++] = _item; (void)0; });
@@ -758,27 +764,27 @@ slop_list_types_ValidationResult snarl_evaluate_constraint_cached(slop_arena* ar
             }
             case types_Constraint_con_has_value:
             {
-                __auto_type required_value = _mv_196.data.con_has_value;
+                __auto_type required_value = _mv_355.data.con_has_value;
                 {
                     __auto_type single_list = ((slop_list_rdf_Term){ .data = (rdf_Term*)slop_arena_alloc(arena, 16 * sizeof(rdf_Term)), .len = 0, .cap = 16 });
                     ({ __auto_type _lst_p = &(single_list); __auto_type _item = (value_node); if (_lst_p->len >= _lst_p->cap) { size_t _new_cap = _lst_p->cap == 0 ? 16 : _lst_p->cap * 2; __typeof__(_lst_p->data) _new_data = (__typeof__(_lst_p->data))slop_arena_alloc(arena, _new_cap * sizeof(*_lst_p->data)); if (_lst_p->len > 0) memcpy(_new_data, _lst_p->data, _lst_p->len * sizeof(*_lst_p->data)); _lst_p->data = _new_data; _lst_p->cap = _new_cap; } _lst_p->data[_lst_p->len++] = _item; (void)0; });
-                    __auto_type _mv_208 = snarl_check_has_value(arena, focus_node, single_list, required_value, path, shape_id, severity, message);
-                    if (_mv_208.has_value) {
-                        __auto_type r = _mv_208.value;
+                    __auto_type _mv_367 = snarl_check_has_value(arena, focus_node, single_list, required_value, path, shape_id, severity, message);
+                    if (_mv_367.has_value) {
+                        __auto_type r = _mv_367.value;
                         ({ __auto_type _lst_p = &(results); __auto_type _item = (r); if (_lst_p->len >= _lst_p->cap) { size_t _new_cap = _lst_p->cap == 0 ? 16 : _lst_p->cap * 2; __typeof__(_lst_p->data) _new_data = (__typeof__(_lst_p->data))slop_arena_alloc(arena, _new_cap * sizeof(*_lst_p->data)); if (_lst_p->len > 0) memcpy(_new_data, _lst_p->data, _lst_p->len * sizeof(*_lst_p->data)); _lst_p->data = _new_data; _lst_p->cap = _new_cap; } _lst_p->data[_lst_p->len++] = _item; (void)0; });
-                    } else if (!_mv_208.has_value) {
+                    } else if (!_mv_367.has_value) {
                     }
                 }
                 break;
             }
             case types_Constraint_con_in:
             {
-                __auto_type allowed_values = _mv_196.data.con_in;
-                __auto_type _mv_209 = snarl_check_in(arena, focus_node, value_node, allowed_values, path, shape_id, severity, message);
-                if (_mv_209.has_value) {
-                    __auto_type r = _mv_209.value;
+                __auto_type allowed_values = _mv_355.data.con_in;
+                __auto_type _mv_368 = snarl_check_in(arena, focus_node, value_node, allowed_values, path, shape_id, severity, message);
+                if (_mv_368.has_value) {
+                    __auto_type r = _mv_368.value;
                     ({ __auto_type _lst_p = &(results); __auto_type _item = (r); if (_lst_p->len >= _lst_p->cap) { size_t _new_cap = _lst_p->cap == 0 ? 16 : _lst_p->cap * 2; __typeof__(_lst_p->data) _new_data = (__typeof__(_lst_p->data))slop_arena_alloc(arena, _new_cap * sizeof(*_lst_p->data)); if (_lst_p->len > 0) memcpy(_new_data, _lst_p->data, _lst_p->len * sizeof(*_lst_p->data)); _lst_p->data = _new_data; _lst_p->cap = _new_cap; } _lst_p->data[_lst_p->len++] = _item; (void)0; });
-                } else if (!_mv_209.has_value) {
+                } else if (!_mv_368.has_value) {
                 }
                 break;
             }
@@ -788,30 +794,30 @@ slop_list_types_ValidationResult snarl_evaluate_constraint_cached(slop_arena* ar
             }
             case types_Constraint_con_not:
             {
-                __auto_type shape_ref = _mv_196.data.con_not;
+                __auto_type shape_ref = _mv_355.data.con_not;
                 {
                     __auto_type conforms = ({ __auto_type _mv = ({ void* _ptr = slop_map_get(shapes_graph.property_shape_map, &(shape_ref)); _ptr ? (slop_option_types_PropertyShape){ .has_value = true, .value = *(types_PropertyShape*)_ptr } : (slop_option_types_PropertyShape){ .has_value = false }; }); _mv.has_value ? ({ __auto_type ref_ps = _mv.value; ((engine_cycle_guard_has(visited, shape_ref, value_node)) ? ({ engine_cycle_guard_flag(arena, visited, shape_ref, value_node); 1; }) : ({ engine_cycle_guard_add(arena, visited, shape_ref, value_node); ({ __auto_type r = engine_property_shape_conforms_with_guard(arena, data_graph, shapes_graph, class_index, value_node, ref_ps, visited); engine_cycle_guard_remove(arena, visited, shape_ref, value_node); r; }); })); }) : (({ __auto_type _mv = ({ void* _ptr = slop_map_get(shapes_graph.shape_map, &(shape_ref)); _ptr ? (slop_option_types_NodeShape){ .has_value = true, .value = *(types_NodeShape*)_ptr } : (slop_option_types_NodeShape){ .has_value = false }; }); _mv.has_value ? ({ __auto_type ref_shape = _mv.value; ((engine_cycle_guard_has(visited, shape_ref, value_node)) ? ({ engine_cycle_guard_flag(arena, visited, shape_ref, value_node); 1; }) : ({ engine_cycle_guard_add(arena, visited, shape_ref, value_node); ({ __auto_type r = snarl_evaluate_shape_against_node_cached(arena, data_graph, shapes_graph, class_index, value_node, ref_shape, visited); engine_cycle_guard_remove(arena, visited, shape_ref, value_node); r; }); })); }) : (0); })); });
-                    __auto_type _mv_210 = snarl_check_not(arena, focus_node, conforms, path, shape_id, severity, message);
-                    if (_mv_210.has_value) {
-                        __auto_type r = _mv_210.value;
+                    __auto_type _mv_371 = snarl_check_not(arena, focus_node, conforms, path, shape_id, severity, message);
+                    if (_mv_371.has_value) {
+                        __auto_type r = _mv_371.value;
                         ({ __auto_type _lst_p = &(results); __auto_type _item = (r); if (_lst_p->len >= _lst_p->cap) { size_t _new_cap = _lst_p->cap == 0 ? 16 : _lst_p->cap * 2; __typeof__(_lst_p->data) _new_data = (__typeof__(_lst_p->data))slop_arena_alloc(arena, _new_cap * sizeof(*_lst_p->data)); if (_lst_p->len > 0) memcpy(_new_data, _lst_p->data, _lst_p->len * sizeof(*_lst_p->data)); _lst_p->data = _new_data; _lst_p->cap = _new_cap; } _lst_p->data[_lst_p->len++] = _item; (void)0; });
-                    } else if (!_mv_210.has_value) {
+                    } else if (!_mv_371.has_value) {
                     }
                 }
                 break;
             }
             case types_Constraint_con_and:
             {
-                __auto_type shape_refs = _mv_196.data.con_and;
+                __auto_type shape_refs = _mv_355.data.con_and;
                 {
                     __auto_type all_pass = 1;
                     {
                         __auto_type _coll = shape_refs;
                         for (size_t _i = 0; _i < _coll.len; _i++) {
                             __auto_type ref = _coll.data[_i];
-                            __auto_type _mv_211 = ({ void* _ptr = slop_map_get(shapes_graph.property_shape_map, &(ref)); _ptr ? (slop_option_types_PropertyShape){ .has_value = true, .value = *(types_PropertyShape*)_ptr } : (slop_option_types_PropertyShape){ .has_value = false }; });
-                            if (_mv_211.has_value) {
-                                __auto_type ref_ps = _mv_211.value;
+                            __auto_type _mv_373 = ({ void* _ptr = slop_map_get(shapes_graph.property_shape_map, &(ref)); _ptr ? (slop_option_types_PropertyShape){ .has_value = true, .value = *(types_PropertyShape*)_ptr } : (slop_option_types_PropertyShape){ .has_value = false }; });
+                            if (_mv_373.has_value) {
+                                __auto_type ref_ps = _mv_373.value;
                                 if (engine_cycle_guard_has(visited, ref, value_node)) {
                                     engine_cycle_guard_flag(arena, visited, ref, value_node);
                                     all_pass = 0;
@@ -825,10 +831,10 @@ slop_list_types_ValidationResult snarl_evaluate_constraint_cached(slop_arena* ar
                                         }
                                     }
                                 }
-                            } else if (!_mv_211.has_value) {
-                                __auto_type _mv_212 = ({ void* _ptr = slop_map_get(shapes_graph.shape_map, &(ref)); _ptr ? (slop_option_types_NodeShape){ .has_value = true, .value = *(types_NodeShape*)_ptr } : (slop_option_types_NodeShape){ .has_value = false }; });
-                                if (_mv_212.has_value) {
-                                    __auto_type ref_shape = _mv_212.value;
+                            } else if (!_mv_373.has_value) {
+                                __auto_type _mv_375 = ({ void* _ptr = slop_map_get(shapes_graph.shape_map, &(ref)); _ptr ? (slop_option_types_NodeShape){ .has_value = true, .value = *(types_NodeShape*)_ptr } : (slop_option_types_NodeShape){ .has_value = false }; });
+                                if (_mv_375.has_value) {
+                                    __auto_type ref_shape = _mv_375.value;
                                     if (engine_cycle_guard_has(visited, ref, value_node)) {
                                         engine_cycle_guard_flag(arena, visited, ref, value_node);
                                         all_pass = 0;
@@ -842,32 +848,32 @@ slop_list_types_ValidationResult snarl_evaluate_constraint_cached(slop_arena* ar
                                             }
                                         }
                                     }
-                                } else if (!_mv_212.has_value) {
+                                } else if (!_mv_375.has_value) {
                                 }
                             }
                         }
                     }
-                    __auto_type _mv_213 = snarl_check_and(arena, focus_node, all_pass, path, shape_id, severity, message);
-                    if (_mv_213.has_value) {
-                        __auto_type r = _mv_213.value;
+                    __auto_type _mv_376 = snarl_check_and(arena, focus_node, all_pass, path, shape_id, severity, message);
+                    if (_mv_376.has_value) {
+                        __auto_type r = _mv_376.value;
                         ({ __auto_type _lst_p = &(results); __auto_type _item = (r); if (_lst_p->len >= _lst_p->cap) { size_t _new_cap = _lst_p->cap == 0 ? 16 : _lst_p->cap * 2; __typeof__(_lst_p->data) _new_data = (__typeof__(_lst_p->data))slop_arena_alloc(arena, _new_cap * sizeof(*_lst_p->data)); if (_lst_p->len > 0) memcpy(_new_data, _lst_p->data, _lst_p->len * sizeof(*_lst_p->data)); _lst_p->data = _new_data; _lst_p->cap = _new_cap; } _lst_p->data[_lst_p->len++] = _item; (void)0; });
-                    } else if (!_mv_213.has_value) {
+                    } else if (!_mv_376.has_value) {
                     }
                 }
                 break;
             }
             case types_Constraint_con_or:
             {
-                __auto_type shape_refs = _mv_196.data.con_or;
+                __auto_type shape_refs = _mv_355.data.con_or;
                 {
                     __auto_type any_pass = 0;
                     {
                         __auto_type _coll = shape_refs;
                         for (size_t _i = 0; _i < _coll.len; _i++) {
                             __auto_type ref = _coll.data[_i];
-                            __auto_type _mv_214 = ({ void* _ptr = slop_map_get(shapes_graph.property_shape_map, &(ref)); _ptr ? (slop_option_types_PropertyShape){ .has_value = true, .value = *(types_PropertyShape*)_ptr } : (slop_option_types_PropertyShape){ .has_value = false }; });
-                            if (_mv_214.has_value) {
-                                __auto_type ref_ps = _mv_214.value;
+                            __auto_type _mv_378 = ({ void* _ptr = slop_map_get(shapes_graph.property_shape_map, &(ref)); _ptr ? (slop_option_types_PropertyShape){ .has_value = true, .value = *(types_PropertyShape*)_ptr } : (slop_option_types_PropertyShape){ .has_value = false }; });
+                            if (_mv_378.has_value) {
+                                __auto_type ref_ps = _mv_378.value;
                                 if (engine_cycle_guard_has(visited, ref, value_node)) {
                                     engine_cycle_guard_flag(arena, visited, ref, value_node);
                                 } else {
@@ -880,10 +886,10 @@ slop_list_types_ValidationResult snarl_evaluate_constraint_cached(slop_arena* ar
                                         }
                                     }
                                 }
-                            } else if (!_mv_214.has_value) {
-                                __auto_type _mv_215 = ({ void* _ptr = slop_map_get(shapes_graph.shape_map, &(ref)); _ptr ? (slop_option_types_NodeShape){ .has_value = true, .value = *(types_NodeShape*)_ptr } : (slop_option_types_NodeShape){ .has_value = false }; });
-                                if (_mv_215.has_value) {
-                                    __auto_type ref_shape = _mv_215.value;
+                            } else if (!_mv_378.has_value) {
+                                __auto_type _mv_380 = ({ void* _ptr = slop_map_get(shapes_graph.shape_map, &(ref)); _ptr ? (slop_option_types_NodeShape){ .has_value = true, .value = *(types_NodeShape*)_ptr } : (slop_option_types_NodeShape){ .has_value = false }; });
+                                if (_mv_380.has_value) {
+                                    __auto_type ref_shape = _mv_380.value;
                                     if (engine_cycle_guard_has(visited, ref, value_node)) {
                                         engine_cycle_guard_flag(arena, visited, ref, value_node);
                                     } else {
@@ -896,32 +902,32 @@ slop_list_types_ValidationResult snarl_evaluate_constraint_cached(slop_arena* ar
                                             }
                                         }
                                     }
-                                } else if (!_mv_215.has_value) {
+                                } else if (!_mv_380.has_value) {
                                 }
                             }
                         }
                     }
-                    __auto_type _mv_216 = snarl_check_or(arena, focus_node, any_pass, path, shape_id, severity, message);
-                    if (_mv_216.has_value) {
-                        __auto_type r = _mv_216.value;
+                    __auto_type _mv_381 = snarl_check_or(arena, focus_node, any_pass, path, shape_id, severity, message);
+                    if (_mv_381.has_value) {
+                        __auto_type r = _mv_381.value;
                         ({ __auto_type _lst_p = &(results); __auto_type _item = (r); if (_lst_p->len >= _lst_p->cap) { size_t _new_cap = _lst_p->cap == 0 ? 16 : _lst_p->cap * 2; __typeof__(_lst_p->data) _new_data = (__typeof__(_lst_p->data))slop_arena_alloc(arena, _new_cap * sizeof(*_lst_p->data)); if (_lst_p->len > 0) memcpy(_new_data, _lst_p->data, _lst_p->len * sizeof(*_lst_p->data)); _lst_p->data = _new_data; _lst_p->cap = _new_cap; } _lst_p->data[_lst_p->len++] = _item; (void)0; });
-                    } else if (!_mv_216.has_value) {
+                    } else if (!_mv_381.has_value) {
                     }
                 }
                 break;
             }
             case types_Constraint_con_xone:
             {
-                __auto_type shape_refs = _mv_196.data.con_xone;
+                __auto_type shape_refs = _mv_355.data.con_xone;
                 {
                     __auto_type pass_count = 0;
                     {
                         __auto_type _coll = shape_refs;
                         for (size_t _i = 0; _i < _coll.len; _i++) {
                             __auto_type ref = _coll.data[_i];
-                            __auto_type _mv_217 = ({ void* _ptr = slop_map_get(shapes_graph.property_shape_map, &(ref)); _ptr ? (slop_option_types_PropertyShape){ .has_value = true, .value = *(types_PropertyShape*)_ptr } : (slop_option_types_PropertyShape){ .has_value = false }; });
-                            if (_mv_217.has_value) {
-                                __auto_type ref_ps = _mv_217.value;
+                            __auto_type _mv_383 = ({ void* _ptr = slop_map_get(shapes_graph.property_shape_map, &(ref)); _ptr ? (slop_option_types_PropertyShape){ .has_value = true, .value = *(types_PropertyShape*)_ptr } : (slop_option_types_PropertyShape){ .has_value = false }; });
+                            if (_mv_383.has_value) {
+                                __auto_type ref_ps = _mv_383.value;
                                 if (engine_cycle_guard_has(visited, ref, value_node)) {
                                     engine_cycle_guard_flag(arena, visited, ref, value_node);
                                 } else {
@@ -934,10 +940,10 @@ slop_list_types_ValidationResult snarl_evaluate_constraint_cached(slop_arena* ar
                                         }
                                     }
                                 }
-                            } else if (!_mv_217.has_value) {
-                                __auto_type _mv_218 = ({ void* _ptr = slop_map_get(shapes_graph.shape_map, &(ref)); _ptr ? (slop_option_types_NodeShape){ .has_value = true, .value = *(types_NodeShape*)_ptr } : (slop_option_types_NodeShape){ .has_value = false }; });
-                                if (_mv_218.has_value) {
-                                    __auto_type ref_shape = _mv_218.value;
+                            } else if (!_mv_383.has_value) {
+                                __auto_type _mv_385 = ({ void* _ptr = slop_map_get(shapes_graph.shape_map, &(ref)); _ptr ? (slop_option_types_NodeShape){ .has_value = true, .value = *(types_NodeShape*)_ptr } : (slop_option_types_NodeShape){ .has_value = false }; });
+                                if (_mv_385.has_value) {
+                                    __auto_type ref_shape = _mv_385.value;
                                     if (engine_cycle_guard_has(visited, ref, value_node)) {
                                         engine_cycle_guard_flag(arena, visited, ref, value_node);
                                     } else {
@@ -950,37 +956,37 @@ slop_list_types_ValidationResult snarl_evaluate_constraint_cached(slop_arena* ar
                                             }
                                         }
                                     }
-                                } else if (!_mv_218.has_value) {
+                                } else if (!_mv_385.has_value) {
                                 }
                             }
                         }
                     }
-                    __auto_type _mv_219 = snarl_check_xone(arena, focus_node, pass_count, path, shape_id, severity, message);
-                    if (_mv_219.has_value) {
-                        __auto_type r = _mv_219.value;
+                    __auto_type _mv_386 = snarl_check_xone(arena, focus_node, pass_count, path, shape_id, severity, message);
+                    if (_mv_386.has_value) {
+                        __auto_type r = _mv_386.value;
                         ({ __auto_type _lst_p = &(results); __auto_type _item = (r); if (_lst_p->len >= _lst_p->cap) { size_t _new_cap = _lst_p->cap == 0 ? 16 : _lst_p->cap * 2; __typeof__(_lst_p->data) _new_data = (__typeof__(_lst_p->data))slop_arena_alloc(arena, _new_cap * sizeof(*_lst_p->data)); if (_lst_p->len > 0) memcpy(_new_data, _lst_p->data, _lst_p->len * sizeof(*_lst_p->data)); _lst_p->data = _new_data; _lst_p->cap = _new_cap; } _lst_p->data[_lst_p->len++] = _item; (void)0; });
-                    } else if (!_mv_219.has_value) {
+                    } else if (!_mv_386.has_value) {
                     }
                 }
                 break;
             }
             case types_Constraint_con_node:
             {
-                __auto_type shape_ref = _mv_196.data.con_node;
+                __auto_type shape_ref = _mv_355.data.con_node;
                 {
                     __auto_type value_conforms = ({ __auto_type _mv = ({ void* _ptr = slop_map_get(shapes_graph.property_shape_map, &(shape_ref)); _ptr ? (slop_option_types_PropertyShape){ .has_value = true, .value = *(types_PropertyShape*)_ptr } : (slop_option_types_PropertyShape){ .has_value = false }; }); _mv.has_value ? ({ __auto_type ref_ps = _mv.value; ((engine_cycle_guard_has(visited, shape_ref, value_node)) ? ({ engine_cycle_guard_flag(arena, visited, shape_ref, value_node); 0; }) : ({ engine_cycle_guard_add(arena, visited, shape_ref, value_node); ({ __auto_type ok = engine_property_shape_conforms_with_guard(arena, data_graph, shapes_graph, class_index, value_node, ref_ps, visited); engine_cycle_guard_remove(arena, visited, shape_ref, value_node); ok; }); })); }) : (({ __auto_type _mv = ({ void* _ptr = slop_map_get(shapes_graph.shape_map, &(shape_ref)); _ptr ? (slop_option_types_NodeShape){ .has_value = true, .value = *(types_NodeShape*)_ptr } : (slop_option_types_NodeShape){ .has_value = false }; }); _mv.has_value ? ({ __auto_type ref_shape = _mv.value; ((engine_cycle_guard_has(visited, shape_ref, value_node)) ? ({ engine_cycle_guard_flag(arena, visited, shape_ref, value_node); 0; }) : ({ engine_cycle_guard_add(arena, visited, shape_ref, value_node); ({ __auto_type ok = snarl_evaluate_shape_against_node_cached(arena, data_graph, shapes_graph, class_index, value_node, ref_shape, visited); engine_cycle_guard_remove(arena, visited, shape_ref, value_node); ok; }); })); }) : (1); })); });
-                    __auto_type _mv_220 = snarl_check_node(arena, focus_node, value_node, value_conforms, path, shape_id, severity, message);
-                    if (_mv_220.has_value) {
-                        __auto_type r = _mv_220.value;
+                    __auto_type _mv_389 = snarl_check_node(arena, focus_node, value_node, value_conforms, path, shape_id, severity, message);
+                    if (_mv_389.has_value) {
+                        __auto_type r = _mv_389.value;
                         ({ __auto_type _lst_p = &(results); __auto_type _item = (r); if (_lst_p->len >= _lst_p->cap) { size_t _new_cap = _lst_p->cap == 0 ? 16 : _lst_p->cap * 2; __typeof__(_lst_p->data) _new_data = (__typeof__(_lst_p->data))slop_arena_alloc(arena, _new_cap * sizeof(*_lst_p->data)); if (_lst_p->len > 0) memcpy(_new_data, _lst_p->data, _lst_p->len * sizeof(*_lst_p->data)); _lst_p->data = _new_data; _lst_p->cap = _new_cap; } _lst_p->data[_lst_p->len++] = _item; (void)0; });
-                    } else if (!_mv_220.has_value) {
+                    } else if (!_mv_389.has_value) {
                     }
                 }
                 break;
             }
             case types_Constraint_con_property:
             {
-                __auto_type _ = _mv_196.data.con_property;
+                __auto_type _ = _mv_355.data.con_property;
                 break;
             }
             case types_Constraint_con_qualified_value_shape:
@@ -1006,33 +1012,33 @@ slop_list_types_ValidationResult snarl_evaluate_constraint_for_property_cached(s
     slop_list_types_ValidationResult _retval = {0};
     {
         __auto_type results = ((slop_list_types_ValidationResult){ .data = (types_ValidationResult*)slop_arena_alloc(arena, 16 * sizeof(types_ValidationResult)), .len = 0, .cap = 16 });
-        __auto_type _mv_221 = constraint;
-        switch (_mv_221.tag) {
+        __auto_type _mv_390 = constraint;
+        switch (_mv_390.tag) {
             case types_Constraint_con_min_count:
             {
-                __auto_type min_c = _mv_221.data.con_min_count;
-                __auto_type _mv_222 = snarl_check_min_count(arena, focus_node, value_count, min_c, path, shape_id, severity, message);
-                if (_mv_222.has_value) {
-                    __auto_type r = _mv_222.value;
+                __auto_type min_c = _mv_390.data.con_min_count;
+                __auto_type _mv_391 = snarl_check_min_count(arena, focus_node, value_count, min_c, path, shape_id, severity, message);
+                if (_mv_391.has_value) {
+                    __auto_type r = _mv_391.value;
                     ({ __auto_type _lst_p = &(results); __auto_type _item = (r); if (_lst_p->len >= _lst_p->cap) { size_t _new_cap = _lst_p->cap == 0 ? 16 : _lst_p->cap * 2; __typeof__(_lst_p->data) _new_data = (__typeof__(_lst_p->data))slop_arena_alloc(arena, _new_cap * sizeof(*_lst_p->data)); if (_lst_p->len > 0) memcpy(_new_data, _lst_p->data, _lst_p->len * sizeof(*_lst_p->data)); _lst_p->data = _new_data; _lst_p->cap = _new_cap; } _lst_p->data[_lst_p->len++] = _item; (void)0; });
-                } else if (!_mv_222.has_value) {
+                } else if (!_mv_391.has_value) {
                 }
                 break;
             }
             case types_Constraint_con_max_count:
             {
-                __auto_type max_c = _mv_221.data.con_max_count;
-                __auto_type _mv_223 = snarl_check_max_count(arena, focus_node, value_count, max_c, path, shape_id, severity, message);
-                if (_mv_223.has_value) {
-                    __auto_type r = _mv_223.value;
+                __auto_type max_c = _mv_390.data.con_max_count;
+                __auto_type _mv_392 = snarl_check_max_count(arena, focus_node, value_count, max_c, path, shape_id, severity, message);
+                if (_mv_392.has_value) {
+                    __auto_type r = _mv_392.value;
                     ({ __auto_type _lst_p = &(results); __auto_type _item = (r); if (_lst_p->len >= _lst_p->cap) { size_t _new_cap = _lst_p->cap == 0 ? 16 : _lst_p->cap * 2; __typeof__(_lst_p->data) _new_data = (__typeof__(_lst_p->data))slop_arena_alloc(arena, _new_cap * sizeof(*_lst_p->data)); if (_lst_p->len > 0) memcpy(_new_data, _lst_p->data, _lst_p->len * sizeof(*_lst_p->data)); _lst_p->data = _new_data; _lst_p->cap = _new_cap; } _lst_p->data[_lst_p->len++] = _item; (void)0; });
-                } else if (!_mv_223.has_value) {
+                } else if (!_mv_392.has_value) {
                 }
                 break;
             }
             case types_Constraint_con_unique_lang:
             {
-                __auto_type b = _mv_221.data.con_unique_lang;
+                __auto_type b = _mv_390.data.con_unique_lang;
                 if (b) {
                     {
                         __auto_type ul_results = snarl_check_unique_lang(arena, focus_node, value_nodes, path, shape_id, severity, message);
@@ -1049,12 +1055,12 @@ slop_list_types_ValidationResult snarl_evaluate_constraint_for_property_cached(s
             }
             case types_Constraint_con_has_value:
             {
-                __auto_type required_value = _mv_221.data.con_has_value;
-                __auto_type _mv_224 = snarl_check_has_value(arena, focus_node, value_nodes, required_value, path, shape_id, severity, message);
-                if (_mv_224.has_value) {
-                    __auto_type r = _mv_224.value;
+                __auto_type required_value = _mv_390.data.con_has_value;
+                __auto_type _mv_393 = snarl_check_has_value(arena, focus_node, value_nodes, required_value, path, shape_id, severity, message);
+                if (_mv_393.has_value) {
+                    __auto_type r = _mv_393.value;
                     ({ __auto_type _lst_p = &(results); __auto_type _item = (r); if (_lst_p->len >= _lst_p->cap) { size_t _new_cap = _lst_p->cap == 0 ? 16 : _lst_p->cap * 2; __typeof__(_lst_p->data) _new_data = (__typeof__(_lst_p->data))slop_arena_alloc(arena, _new_cap * sizeof(*_lst_p->data)); if (_lst_p->len > 0) memcpy(_new_data, _lst_p->data, _lst_p->len * sizeof(*_lst_p->data)); _lst_p->data = _new_data; _lst_p->cap = _new_cap; } _lst_p->data[_lst_p->len++] = _item; (void)0; });
-                } else if (!_mv_224.has_value) {
+                } else if (!_mv_393.has_value) {
                 }
                 break;
             }
@@ -1064,7 +1070,7 @@ slop_list_types_ValidationResult snarl_evaluate_constraint_for_property_cached(s
             }
             case types_Constraint_con_equals:
             {
-                __auto_type other_path = _mv_221.data.con_equals;
+                __auto_type other_path = _mv_390.data.con_equals;
                 {
                     __auto_type eq_results = snarl_check_equals(arena, data_graph, focus_node, value_nodes, other_path, path, shape_id, severity, message);
                     {
@@ -1079,7 +1085,7 @@ slop_list_types_ValidationResult snarl_evaluate_constraint_for_property_cached(s
             }
             case types_Constraint_con_disjoint:
             {
-                __auto_type other_path = _mv_221.data.con_disjoint;
+                __auto_type other_path = _mv_390.data.con_disjoint;
                 {
                     __auto_type dj_results = snarl_check_disjoint(arena, data_graph, focus_node, value_nodes, other_path, path, shape_id, severity, message);
                     {
@@ -1094,7 +1100,7 @@ slop_list_types_ValidationResult snarl_evaluate_constraint_for_property_cached(s
             }
             case types_Constraint_con_less_than:
             {
-                __auto_type other_path = _mv_221.data.con_less_than;
+                __auto_type other_path = _mv_390.data.con_less_than;
                 {
                     __auto_type lt_results = snarl_check_less_than(arena, data_graph, focus_node, value_nodes, other_path, path, shape_id, severity, message);
                     {
@@ -1109,7 +1115,7 @@ slop_list_types_ValidationResult snarl_evaluate_constraint_for_property_cached(s
             }
             case types_Constraint_con_less_than_or_equals:
             {
-                __auto_type other_path = _mv_221.data.con_less_than_or_equals;
+                __auto_type other_path = _mv_390.data.con_less_than_or_equals;
                 {
                     __auto_type le_results = snarl_check_less_than_or_equals(arena, data_graph, focus_node, value_nodes, other_path, path, shape_id, severity, message);
                     {
@@ -1124,19 +1130,19 @@ slop_list_types_ValidationResult snarl_evaluate_constraint_for_property_cached(s
             }
             case types_Constraint_con_qualified_value_shape:
             {
-                __auto_type shape_ref = _mv_221.data.con_qualified_value_shape.f0;
-                __auto_type q_min = _mv_221.data.con_qualified_value_shape.f1;
-                __auto_type q_max = _mv_221.data.con_qualified_value_shape.f2;
-                __auto_type disjoint = _mv_221.data.con_qualified_value_shape.f3;
+                __auto_type shape_ref = _mv_390.data.con_qualified_value_shape.f0;
+                __auto_type q_min = _mv_390.data.con_qualified_value_shape.f1;
+                __auto_type q_max = _mv_390.data.con_qualified_value_shape.f2;
+                __auto_type disjoint = _mv_390.data.con_qualified_value_shape.f3;
                 {
                     __auto_type conforming_count = 0;
                     {
                         __auto_type _coll = value_nodes;
                         for (size_t _i = 0; _i < _coll.len; _i++) {
                             __auto_type vn = _coll.data[_i];
-                            __auto_type _mv_225 = ({ void* _ptr = slop_map_get(shapes_graph.shape_map, &(shape_ref)); _ptr ? (slop_option_types_NodeShape){ .has_value = true, .value = *(types_NodeShape*)_ptr } : (slop_option_types_NodeShape){ .has_value = false }; });
-                            if (_mv_225.has_value) {
-                                __auto_type ref_shape = _mv_225.value;
+                            __auto_type _mv_395 = ({ void* _ptr = slop_map_get(shapes_graph.shape_map, &(shape_ref)); _ptr ? (slop_option_types_NodeShape){ .has_value = true, .value = *(types_NodeShape*)_ptr } : (slop_option_types_NodeShape){ .has_value = false }; });
+                            if (_mv_395.has_value) {
+                                __auto_type ref_shape = _mv_395.value;
                                 {
                                     __auto_type vn_conforms = ((engine_cycle_guard_has(visited, shape_ref, vn)) ? ({ engine_cycle_guard_flag(arena, visited, shape_ref, vn); 0; }) : ({ engine_cycle_guard_add(arena, visited, shape_ref, vn); ({ __auto_type ok = snarl_evaluate_shape_against_node_cached(arena, data_graph, shapes_graph, class_index, vn, ref_shape, visited); engine_cycle_guard_remove(arena, visited, shape_ref, vn); ok; }); }));
                                     if (vn_conforms) {
@@ -1147,16 +1153,16 @@ slop_list_types_ValidationResult snarl_evaluate_constraint_for_property_cached(s
                                                     __auto_type _coll = sibling_qvs_refs;
                                                     for (size_t _i = 0; _i < _coll.len; _i++) {
                                                         __auto_type sib_ref = _coll.data[_i];
-                                                        __auto_type _mv_226 = ({ void* _ptr = slop_map_get(shapes_graph.shape_map, &(sib_ref)); _ptr ? (slop_option_types_NodeShape){ .has_value = true, .value = *(types_NodeShape*)_ptr } : (slop_option_types_NodeShape){ .has_value = false }; });
-                                                        if (_mv_226.has_value) {
-                                                            __auto_type sib_shape = _mv_226.value;
+                                                        __auto_type _mv_397 = ({ void* _ptr = slop_map_get(shapes_graph.shape_map, &(sib_ref)); _ptr ? (slop_option_types_NodeShape){ .has_value = true, .value = *(types_NodeShape*)_ptr } : (slop_option_types_NodeShape){ .has_value = false }; });
+                                                        if (_mv_397.has_value) {
+                                                            __auto_type sib_shape = _mv_397.value;
                                                             {
                                                                 __auto_type sib_ok = ((engine_cycle_guard_has(visited, sib_ref, vn)) ? ({ engine_cycle_guard_flag(arena, visited, sib_ref, vn); 0; }) : ({ engine_cycle_guard_add(arena, visited, sib_ref, vn); ({ __auto_type ok = snarl_evaluate_shape_against_node_cached(arena, data_graph, shapes_graph, class_index, vn, sib_shape, visited); engine_cycle_guard_remove(arena, visited, sib_ref, vn); ok; }); }));
                                                                 if (sib_ok) {
                                                                     conforms_to_sibling = 1;
                                                                 }
                                                             }
-                                                        } else if (!_mv_226.has_value) {
+                                                        } else if (!_mv_397.has_value) {
                                                         }
                                                     }
                                                 }
@@ -1169,7 +1175,7 @@ slop_list_types_ValidationResult snarl_evaluate_constraint_for_property_cached(s
                                         }
                                     }
                                 }
-                            } else if (!_mv_225.has_value) {
+                            } else if (!_mv_395.has_value) {
                             }
                         }
                     }
@@ -1188,10 +1194,10 @@ slop_list_types_ValidationResult snarl_evaluate_constraint_for_property_cached(s
             }
             case types_Constraint_con_property:
             {
-                __auto_type ps_ref = _mv_221.data.con_property;
-                __auto_type _mv_227 = ({ void* _ptr = slop_map_get(shapes_graph.property_shape_map, &(ps_ref)); _ptr ? (slop_option_types_PropertyShape){ .has_value = true, .value = *(types_PropertyShape*)_ptr } : (slop_option_types_PropertyShape){ .has_value = false }; });
-                if (_mv_227.has_value) {
-                    __auto_type ref_ps = _mv_227.value;
+                __auto_type ps_ref = _mv_390.data.con_property;
+                __auto_type _mv_399 = ({ void* _ptr = slop_map_get(shapes_graph.property_shape_map, &(ps_ref)); _ptr ? (slop_option_types_PropertyShape){ .has_value = true, .value = *(types_PropertyShape*)_ptr } : (slop_option_types_PropertyShape){ .has_value = false }; });
+                if (_mv_399.has_value) {
+                    __auto_type ref_ps = _mv_399.value;
                     {
                         __auto_type _coll = value_nodes;
                         for (size_t _i = 0; _i < _coll.len; _i++) {
@@ -1217,7 +1223,7 @@ slop_list_types_ValidationResult snarl_evaluate_constraint_for_property_cached(s
                             }
                         }
                     }
-                } else if (!_mv_227.has_value) {
+                } else if (!_mv_399.has_value) {
                 }
                 break;
             }
@@ -1252,33 +1258,33 @@ slop_list_types_ValidationResult engine_evaluate_constraint_for_simple_predicate
     slop_list_types_ValidationResult _retval = {0};
     {
         __auto_type results = ((slop_list_types_ValidationResult){ .data = (types_ValidationResult*)slop_arena_alloc(arena, 16 * sizeof(types_ValidationResult)), .len = 0, .cap = 16 });
-        __auto_type _mv_228 = constraint;
-        switch (_mv_228.tag) {
+        __auto_type _mv_400 = constraint;
+        switch (_mv_400.tag) {
             case types_Constraint_con_min_count:
             {
-                __auto_type min_c = _mv_228.data.con_min_count;
-                __auto_type _mv_229 = snarl_check_min_count(arena, focus_node, value_count, min_c, path, shape_id, severity, message);
-                if (_mv_229.has_value) {
-                    __auto_type r = _mv_229.value;
+                __auto_type min_c = _mv_400.data.con_min_count;
+                __auto_type _mv_401 = snarl_check_min_count(arena, focus_node, value_count, min_c, path, shape_id, severity, message);
+                if (_mv_401.has_value) {
+                    __auto_type r = _mv_401.value;
                     ({ __auto_type _lst_p = &(results); __auto_type _item = (r); if (_lst_p->len >= _lst_p->cap) { size_t _new_cap = _lst_p->cap == 0 ? 16 : _lst_p->cap * 2; __typeof__(_lst_p->data) _new_data = (__typeof__(_lst_p->data))slop_arena_alloc(arena, _new_cap * sizeof(*_lst_p->data)); if (_lst_p->len > 0) memcpy(_new_data, _lst_p->data, _lst_p->len * sizeof(*_lst_p->data)); _lst_p->data = _new_data; _lst_p->cap = _new_cap; } _lst_p->data[_lst_p->len++] = _item; (void)0; });
-                } else if (!_mv_229.has_value) {
+                } else if (!_mv_401.has_value) {
                 }
                 break;
             }
             case types_Constraint_con_max_count:
             {
-                __auto_type max_c = _mv_228.data.con_max_count;
-                __auto_type _mv_230 = snarl_check_max_count(arena, focus_node, value_count, max_c, path, shape_id, severity, message);
-                if (_mv_230.has_value) {
-                    __auto_type r = _mv_230.value;
+                __auto_type max_c = _mv_400.data.con_max_count;
+                __auto_type _mv_402 = snarl_check_max_count(arena, focus_node, value_count, max_c, path, shape_id, severity, message);
+                if (_mv_402.has_value) {
+                    __auto_type r = _mv_402.value;
                     ({ __auto_type _lst_p = &(results); __auto_type _item = (r); if (_lst_p->len >= _lst_p->cap) { size_t _new_cap = _lst_p->cap == 0 ? 16 : _lst_p->cap * 2; __typeof__(_lst_p->data) _new_data = (__typeof__(_lst_p->data))slop_arena_alloc(arena, _new_cap * sizeof(*_lst_p->data)); if (_lst_p->len > 0) memcpy(_new_data, _lst_p->data, _lst_p->len * sizeof(*_lst_p->data)); _lst_p->data = _new_data; _lst_p->cap = _new_cap; } _lst_p->data[_lst_p->len++] = _item; (void)0; });
-                } else if (!_mv_230.has_value) {
+                } else if (!_mv_402.has_value) {
                 }
                 break;
             }
             case types_Constraint_con_has_value:
             {
-                __auto_type required_value = _mv_228.data.con_has_value;
+                __auto_type required_value = _mv_400.data.con_has_value;
                 if (!(data_graph_snarl_data_graph_has_object(data_graph, focus_node, pred, required_value))) {
                     ({ __auto_type _lst_p = &(results); __auto_type _item = (((types_ValidationResult){.focus_node = focus_node, .result_path = path, .value = (slop_option_rdf_Term){.has_value = false}, .source_shape = shape_id, .source_constraint_component = vocab_SHACL_HAS_VALUE, .severity = severity, .message = message})); if (_lst_p->len >= _lst_p->cap) { size_t _new_cap = _lst_p->cap == 0 ? 16 : _lst_p->cap * 2; __typeof__(_lst_p->data) _new_data = (__typeof__(_lst_p->data))slop_arena_alloc(arena, _new_cap * sizeof(*_lst_p->data)); if (_lst_p->len > 0) memcpy(_new_data, _lst_p->data, _lst_p->len * sizeof(*_lst_p->data)); _lst_p->data = _new_data; _lst_p->cap = _new_cap; } _lst_p->data[_lst_p->len++] = _item; (void)0; });
                 }
@@ -1290,7 +1296,7 @@ slop_list_types_ValidationResult engine_evaluate_constraint_for_simple_predicate
             }
             case types_Constraint_con_equals:
             {
-                __auto_type other_path = _mv_228.data.con_equals;
+                __auto_type other_path = _mv_400.data.con_equals;
                 {
                     __auto_type value_nodes = engine_optional_term_set_to_list(arena, value_set);
                     __auto_type eq_results = snarl_check_equals(arena, data_graph, focus_node, value_nodes, other_path, path, shape_id, severity, message);
@@ -1306,7 +1312,7 @@ slop_list_types_ValidationResult engine_evaluate_constraint_for_simple_predicate
             }
             case types_Constraint_con_disjoint:
             {
-                __auto_type other_path = _mv_228.data.con_disjoint;
+                __auto_type other_path = _mv_400.data.con_disjoint;
                 {
                     __auto_type value_nodes = engine_optional_term_set_to_list(arena, value_set);
                     __auto_type dj_results = snarl_check_disjoint(arena, data_graph, focus_node, value_nodes, other_path, path, shape_id, severity, message);
@@ -1322,7 +1328,7 @@ slop_list_types_ValidationResult engine_evaluate_constraint_for_simple_predicate
             }
             case types_Constraint_con_less_than:
             {
-                __auto_type other_path = _mv_228.data.con_less_than;
+                __auto_type other_path = _mv_400.data.con_less_than;
                 {
                     __auto_type value_nodes = engine_optional_term_set_to_list(arena, value_set);
                     __auto_type lt_results = snarl_check_less_than(arena, data_graph, focus_node, value_nodes, other_path, path, shape_id, severity, message);
@@ -1338,7 +1344,7 @@ slop_list_types_ValidationResult engine_evaluate_constraint_for_simple_predicate
             }
             case types_Constraint_con_less_than_or_equals:
             {
-                __auto_type other_path = _mv_228.data.con_less_than_or_equals;
+                __auto_type other_path = _mv_400.data.con_less_than_or_equals;
                 {
                     __auto_type value_nodes = engine_optional_term_set_to_list(arena, value_set);
                     __auto_type le_results = snarl_check_less_than_or_equals(arena, data_graph, focus_node, value_nodes, other_path, path, shape_id, severity, message);
@@ -1354,7 +1360,7 @@ slop_list_types_ValidationResult engine_evaluate_constraint_for_simple_predicate
             }
             case types_Constraint_con_unique_lang:
             {
-                __auto_type b = _mv_228.data.con_unique_lang;
+                __auto_type b = _mv_400.data.con_unique_lang;
                 if (b) {
                     {
                         __auto_type value_nodes = engine_optional_term_set_to_list(arena, value_set);
@@ -1387,7 +1393,7 @@ slop_list_types_ValidationResult engine_evaluate_constraint_for_simple_predicate
             }
             case types_Constraint_con_property:
             {
-                __auto_type _ = _mv_228.data.con_property;
+                __auto_type _ = _mv_400.data.con_property;
                 {
                     __auto_type value_nodes = engine_optional_term_set_to_list(arena, value_set);
                     __auto_type property_results = snarl_evaluate_constraint_for_property_cached(arena, data_graph, shapes_graph, class_index, focus_node, value_nodes, value_count, constraint, path, shape_id, severity, message, visited, sibling_qvs_refs);
@@ -1402,9 +1408,9 @@ slop_list_types_ValidationResult engine_evaluate_constraint_for_simple_predicate
                 break;
             }
             default: {
-                __auto_type _mv_231 = value_set;
-                if (_mv_231.has_value) {
-                    __auto_type terms = _mv_231.value;
+                __auto_type _mv_403 = value_set;
+                if (_mv_403.has_value) {
+                    __auto_type terms = _mv_403.value;
                     {
                         slop_map* _coll = (slop_map*)terms;
                         for (size_t _i = 0; _i < _coll->cap; _i++) {
@@ -1423,7 +1429,7 @@ slop_list_types_ValidationResult engine_evaluate_constraint_for_simple_predicate
                             }
                         }
                     }
-                } else if (!_mv_231.has_value) {
+                } else if (!_mv_403.has_value) {
                 }
                 break;
             }

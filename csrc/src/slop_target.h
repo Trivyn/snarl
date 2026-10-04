@@ -14,10 +14,9 @@ typedef struct target_ClassInstances target_ClassInstances;
 typedef struct target_ClassIndex target_ClassIndex;
 typedef struct target_TargetCache target_TargetCache;
 
-typedef slop_list_rdf_Term target_TermList;
-
 #ifndef SLOP_LIST_RDF_TERM_DEFINED
 #define SLOP_LIST_RDF_TERM_DEFINED
+#define SLOP_LIST_RDF_TERM_IMPL_DEFINED
 SLOP_LIST_DEFINE(rdf_Term, slop_list_rdf_Term)
 #endif
 
@@ -44,6 +43,7 @@ SLOP_OPTION_DEFINE(target_ClassInstances, slop_option_target_ClassInstances)
 
 #ifndef SLOP_LIST_TARGET_CLASSINSTANCES_DEFINED
 #define SLOP_LIST_TARGET_CLASSINSTANCES_DEFINED
+#define SLOP_LIST_TARGET_CLASSINSTANCES_IMPL_DEFINED
 SLOP_LIST_DEFINE(target_ClassInstances, slop_list_target_ClassInstances)
 #endif
 
@@ -57,6 +57,8 @@ typedef struct target_ClassIndex target_ClassIndex;
 #define SLOP_OPTION_TARGET_CLASSINDEX_DEFINED
 SLOP_OPTION_DEFINE(target_ClassIndex, slop_option_target_ClassIndex)
 #endif
+
+typedef slop_list_rdf_Term target_TermList;
 
 struct target_TargetCache {
     slop_map* target_classes;
@@ -218,6 +220,28 @@ SLOP_OPTION_DEFINE(target_TermList, slop_option_target_TermList)
 #ifndef SLOP_OPTION_TARGET_TARGETCACHE_DEFINED
 #define SLOP_OPTION_TARGET_TARGETCACHE_DEFINED
 SLOP_OPTION_DEFINE(target_TargetCache, slop_option_target_TargetCache)
+#endif
+
+#ifndef SLOP_OPTION_TYPES_PROPERTYSHAPE_DEFINED
+#define SLOP_OPTION_TYPES_PROPERTYSHAPE_DEFINED
+SLOP_OPTION_DEFINE(types_PropertyShape, slop_option_types_PropertyShape)
+#endif
+
+#ifndef SLOP_OPTION_TYPES_CONSTRAINT_DEFINED
+#define SLOP_OPTION_TYPES_CONSTRAINT_DEFINED
+SLOP_OPTION_DEFINE(types_Constraint, slop_option_types_Constraint)
+#endif
+
+#ifndef SLOP_LIST_TYPES_PROPERTYSHAPE_DEFINED
+#define SLOP_LIST_TYPES_PROPERTYSHAPE_DEFINED
+#define SLOP_LIST_TYPES_PROPERTYSHAPE_IMPL_DEFINED
+SLOP_LIST_DEFINE(types_PropertyShape, slop_list_types_PropertyShape)
+#endif
+
+#ifndef SLOP_LIST_TYPES_CONSTRAINT_DEFINED
+#define SLOP_LIST_TYPES_CONSTRAINT_DEFINED
+#define SLOP_LIST_TYPES_CONSTRAINT_IMPL_DEFINED
+SLOP_LIST_DEFINE(types_Constraint, slop_list_types_Constraint)
 #endif
 
 

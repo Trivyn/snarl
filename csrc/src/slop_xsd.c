@@ -30,21 +30,22 @@ xsd_XsdType xsd_parse_type(slop_string datatype_iri) {
 }
 
 slop_result_xsd_XsdValue_xsd_XsdError xsd_parse_value(slop_arena* arena, slop_string lexical, xsd_XsdType dtype) {
-    __auto_type _mv_73 = dtype;
-    switch (_mv_73) {
+    __auto_type _mv_159 = dtype;
+    switch (_mv_159) {
         case xsd_XsdType_xsd_string: {
             return ((slop_result_xsd_XsdValue_xsd_XsdError){ .is_ok = true, .data.ok = ((xsd_XsdValue){ .tag = xsd_XsdValue_xsd_string_val, .data.xsd_string_val = lexical }) });
             break;
         }
         case xsd_XsdType_xsd_integer: {
-            __auto_type _mv_74 = strlib_parse_int(lexical);
-            if (_mv_74.is_ok) {
-                __auto_type val = _mv_74.data.ok;
+            __auto_type _mv_160 = strlib_parse_int(lexical);
+            if (_mv_160.is_ok) {
+                __auto_type val = _mv_160.data.ok;
                 return ((slop_result_xsd_XsdValue_xsd_XsdError){ .is_ok = true, .data.ok = ((xsd_XsdValue){ .tag = xsd_XsdValue_xsd_integer_val, .data.xsd_integer_val = val }) });
-            } else if (!_mv_74.is_ok) {
-                __auto_type _ = _mv_74.data.err;
+            } else if (!_mv_160.is_ok) {
+                __auto_type _ = _mv_160.data.err;
                 return ((slop_result_xsd_XsdValue_xsd_XsdError){ .is_ok = false, .data.err = xsd_XsdError_invalid_lexical_form });
             }
+            SLOP_UNREACHABLE();
             break;
         }
         case xsd_XsdType_xsd_boolean: {
@@ -60,36 +61,39 @@ slop_result_xsd_XsdValue_xsd_XsdError xsd_parse_value(slop_arena* arena, slop_st
             break;
         }
         case xsd_XsdType_xsd_decimal: {
-            __auto_type _mv_75 = strlib_parse_float(lexical);
-            if (_mv_75.is_ok) {
-                __auto_type val = _mv_75.data.ok;
+            __auto_type _mv_161 = strlib_parse_float(lexical);
+            if (_mv_161.is_ok) {
+                __auto_type val = _mv_161.data.ok;
                 return ((slop_result_xsd_XsdValue_xsd_XsdError){ .is_ok = true, .data.ok = ((xsd_XsdValue){ .tag = xsd_XsdValue_xsd_decimal_val, .data.xsd_decimal_val = val }) });
-            } else if (!_mv_75.is_ok) {
-                __auto_type _ = _mv_75.data.err;
+            } else if (!_mv_161.is_ok) {
+                __auto_type _ = _mv_161.data.err;
                 return ((slop_result_xsd_XsdValue_xsd_XsdError){ .is_ok = false, .data.err = xsd_XsdError_invalid_lexical_form });
             }
+            SLOP_UNREACHABLE();
             break;
         }
         case xsd_XsdType_xsd_float: {
-            __auto_type _mv_76 = strlib_parse_float(lexical);
-            if (_mv_76.is_ok) {
-                __auto_type val = _mv_76.data.ok;
+            __auto_type _mv_162 = strlib_parse_float(lexical);
+            if (_mv_162.is_ok) {
+                __auto_type val = _mv_162.data.ok;
                 return ((slop_result_xsd_XsdValue_xsd_XsdError){ .is_ok = true, .data.ok = ((xsd_XsdValue){ .tag = xsd_XsdValue_xsd_float_val, .data.xsd_float_val = ((float)(val)) }) });
-            } else if (!_mv_76.is_ok) {
-                __auto_type _ = _mv_76.data.err;
+            } else if (!_mv_162.is_ok) {
+                __auto_type _ = _mv_162.data.err;
                 return ((slop_result_xsd_XsdValue_xsd_XsdError){ .is_ok = false, .data.err = xsd_XsdError_invalid_lexical_form });
             }
+            SLOP_UNREACHABLE();
             break;
         }
         case xsd_XsdType_xsd_double: {
-            __auto_type _mv_77 = strlib_parse_float(lexical);
-            if (_mv_77.is_ok) {
-                __auto_type val = _mv_77.data.ok;
+            __auto_type _mv_163 = strlib_parse_float(lexical);
+            if (_mv_163.is_ok) {
+                __auto_type val = _mv_163.data.ok;
                 return ((slop_result_xsd_XsdValue_xsd_XsdError){ .is_ok = true, .data.ok = ((xsd_XsdValue){ .tag = xsd_XsdValue_xsd_double_val, .data.xsd_double_val = val }) });
-            } else if (!_mv_77.is_ok) {
-                __auto_type _ = _mv_77.data.err;
+            } else if (!_mv_163.is_ok) {
+                __auto_type _ = _mv_163.data.err;
                 return ((slop_result_xsd_XsdValue_xsd_XsdError){ .is_ok = false, .data.err = xsd_XsdError_invalid_lexical_form });
             }
+            SLOP_UNREACHABLE();
             break;
         }
         case xsd_XsdType_xsd_unknown: {
@@ -97,157 +101,174 @@ slop_result_xsd_XsdValue_xsd_XsdError xsd_parse_value(slop_arena* arena, slop_st
             break;
         }
     }
+    SLOP_UNREACHABLE();
 }
 
 uint8_t xsd_validate_lexical(slop_string lexical, slop_string datatype_iri) {
     if (string_eq(datatype_iri, vocab_XSD_STRING)) {
         return 1;
     } else if (string_eq(datatype_iri, vocab_XSD_INTEGER)) {
-        __auto_type _mv_78 = strlib_parse_int(lexical);
-        if (_mv_78.is_ok) {
-            __auto_type _ = _mv_78.data.ok;
+        __auto_type _mv_164 = strlib_parse_int(lexical);
+        if (_mv_164.is_ok) {
+            __auto_type _ = _mv_164.data.ok;
             return 1;
-        } else if (!_mv_78.is_ok) {
-            __auto_type _ = _mv_78.data.err;
+        } else if (!_mv_164.is_ok) {
+            __auto_type _ = _mv_164.data.err;
             return 0;
         }
+        SLOP_UNREACHABLE();
     } else if (string_eq(datatype_iri, vocab_XSD_BOOLEAN)) {
         return ((string_eq(lexical, SLOP_STR("true"))) || (string_eq(lexical, SLOP_STR("false"))) || (string_eq(lexical, SLOP_STR("1"))) || (string_eq(lexical, SLOP_STR("0"))));
     } else if (string_eq(datatype_iri, vocab_XSD_DECIMAL)) {
-        __auto_type _mv_79 = strlib_parse_float(lexical);
-        if (_mv_79.is_ok) {
-            __auto_type _ = _mv_79.data.ok;
+        __auto_type _mv_165 = strlib_parse_float(lexical);
+        if (_mv_165.is_ok) {
+            __auto_type _ = _mv_165.data.ok;
             return 1;
-        } else if (!_mv_79.is_ok) {
-            __auto_type _ = _mv_79.data.err;
+        } else if (!_mv_165.is_ok) {
+            __auto_type _ = _mv_165.data.err;
             return 0;
         }
+        SLOP_UNREACHABLE();
     } else if (string_eq(datatype_iri, vocab_XSD_FLOAT)) {
-        __auto_type _mv_80 = strlib_parse_float(lexical);
-        if (_mv_80.is_ok) {
-            __auto_type _ = _mv_80.data.ok;
+        __auto_type _mv_166 = strlib_parse_float(lexical);
+        if (_mv_166.is_ok) {
+            __auto_type _ = _mv_166.data.ok;
             return 1;
-        } else if (!_mv_80.is_ok) {
-            __auto_type _ = _mv_80.data.err;
+        } else if (!_mv_166.is_ok) {
+            __auto_type _ = _mv_166.data.err;
             return 0;
         }
+        SLOP_UNREACHABLE();
     } else if (string_eq(datatype_iri, vocab_XSD_DOUBLE)) {
-        __auto_type _mv_81 = strlib_parse_float(lexical);
-        if (_mv_81.is_ok) {
-            __auto_type _ = _mv_81.data.ok;
+        __auto_type _mv_167 = strlib_parse_float(lexical);
+        if (_mv_167.is_ok) {
+            __auto_type _ = _mv_167.data.ok;
             return 1;
-        } else if (!_mv_81.is_ok) {
-            __auto_type _ = _mv_81.data.err;
+        } else if (!_mv_167.is_ok) {
+            __auto_type _ = _mv_167.data.err;
             return 0;
         }
+        SLOP_UNREACHABLE();
     } else if (string_eq(datatype_iri, vocab_XSD_LONG)) {
-        __auto_type _mv_82 = strlib_parse_int(lexical);
-        if (_mv_82.is_ok) {
-            __auto_type _ = _mv_82.data.ok;
+        __auto_type _mv_168 = strlib_parse_int(lexical);
+        if (_mv_168.is_ok) {
+            __auto_type _ = _mv_168.data.ok;
             return 1;
-        } else if (!_mv_82.is_ok) {
-            __auto_type _ = _mv_82.data.err;
+        } else if (!_mv_168.is_ok) {
+            __auto_type _ = _mv_168.data.err;
             return 0;
         }
+        SLOP_UNREACHABLE();
     } else if (string_eq(datatype_iri, vocab_XSD_INT)) {
-        __auto_type _mv_83 = strlib_parse_int(lexical);
-        if (_mv_83.is_ok) {
-            __auto_type v = _mv_83.data.ok;
+        __auto_type _mv_169 = strlib_parse_int(lexical);
+        if (_mv_169.is_ok) {
+            __auto_type v = _mv_169.data.ok;
             return ((v >= -2147483648) && (v <= 2147483647));
-        } else if (!_mv_83.is_ok) {
-            __auto_type _ = _mv_83.data.err;
+        } else if (!_mv_169.is_ok) {
+            __auto_type _ = _mv_169.data.err;
             return 0;
         }
+        SLOP_UNREACHABLE();
     } else if (string_eq(datatype_iri, vocab_XSD_SHORT)) {
-        __auto_type _mv_84 = strlib_parse_int(lexical);
-        if (_mv_84.is_ok) {
-            __auto_type v = _mv_84.data.ok;
+        __auto_type _mv_170 = strlib_parse_int(lexical);
+        if (_mv_170.is_ok) {
+            __auto_type v = _mv_170.data.ok;
             return ((v >= -32768) && (v <= 32767));
-        } else if (!_mv_84.is_ok) {
-            __auto_type _ = _mv_84.data.err;
+        } else if (!_mv_170.is_ok) {
+            __auto_type _ = _mv_170.data.err;
             return 0;
         }
+        SLOP_UNREACHABLE();
     } else if (string_eq(datatype_iri, vocab_XSD_BYTE)) {
-        __auto_type _mv_85 = strlib_parse_int(lexical);
-        if (_mv_85.is_ok) {
-            __auto_type v = _mv_85.data.ok;
+        __auto_type _mv_171 = strlib_parse_int(lexical);
+        if (_mv_171.is_ok) {
+            __auto_type v = _mv_171.data.ok;
             return ((v >= -128) && (v <= 127));
-        } else if (!_mv_85.is_ok) {
-            __auto_type _ = _mv_85.data.err;
+        } else if (!_mv_171.is_ok) {
+            __auto_type _ = _mv_171.data.err;
             return 0;
         }
+        SLOP_UNREACHABLE();
     } else if (string_eq(datatype_iri, vocab_XSD_UNSIGNED_LONG)) {
-        __auto_type _mv_86 = strlib_parse_int(lexical);
-        if (_mv_86.is_ok) {
-            __auto_type v = _mv_86.data.ok;
+        __auto_type _mv_172 = strlib_parse_int(lexical);
+        if (_mv_172.is_ok) {
+            __auto_type v = _mv_172.data.ok;
             return (v >= 0);
-        } else if (!_mv_86.is_ok) {
-            __auto_type _ = _mv_86.data.err;
+        } else if (!_mv_172.is_ok) {
+            __auto_type _ = _mv_172.data.err;
             return 0;
         }
+        SLOP_UNREACHABLE();
     } else if (string_eq(datatype_iri, vocab_XSD_UNSIGNED_INT)) {
-        __auto_type _mv_87 = strlib_parse_int(lexical);
-        if (_mv_87.is_ok) {
-            __auto_type v = _mv_87.data.ok;
+        __auto_type _mv_173 = strlib_parse_int(lexical);
+        if (_mv_173.is_ok) {
+            __auto_type v = _mv_173.data.ok;
             return ((v >= 0) && (v <= 4294967295));
-        } else if (!_mv_87.is_ok) {
-            __auto_type _ = _mv_87.data.err;
+        } else if (!_mv_173.is_ok) {
+            __auto_type _ = _mv_173.data.err;
             return 0;
         }
+        SLOP_UNREACHABLE();
     } else if (string_eq(datatype_iri, vocab_XSD_UNSIGNED_SHORT)) {
-        __auto_type _mv_88 = strlib_parse_int(lexical);
-        if (_mv_88.is_ok) {
-            __auto_type v = _mv_88.data.ok;
+        __auto_type _mv_174 = strlib_parse_int(lexical);
+        if (_mv_174.is_ok) {
+            __auto_type v = _mv_174.data.ok;
             return ((v >= 0) && (v <= 65535));
-        } else if (!_mv_88.is_ok) {
-            __auto_type _ = _mv_88.data.err;
+        } else if (!_mv_174.is_ok) {
+            __auto_type _ = _mv_174.data.err;
             return 0;
         }
+        SLOP_UNREACHABLE();
     } else if (string_eq(datatype_iri, vocab_XSD_UNSIGNED_BYTE)) {
-        __auto_type _mv_89 = strlib_parse_int(lexical);
-        if (_mv_89.is_ok) {
-            __auto_type v = _mv_89.data.ok;
+        __auto_type _mv_175 = strlib_parse_int(lexical);
+        if (_mv_175.is_ok) {
+            __auto_type v = _mv_175.data.ok;
             return ((v >= 0) && (v <= 255));
-        } else if (!_mv_89.is_ok) {
-            __auto_type _ = _mv_89.data.err;
+        } else if (!_mv_175.is_ok) {
+            __auto_type _ = _mv_175.data.err;
             return 0;
         }
+        SLOP_UNREACHABLE();
     } else if (string_eq(datatype_iri, vocab_XSD_NON_NEGATIVE_INTEGER)) {
-        __auto_type _mv_90 = strlib_parse_int(lexical);
-        if (_mv_90.is_ok) {
-            __auto_type v = _mv_90.data.ok;
+        __auto_type _mv_176 = strlib_parse_int(lexical);
+        if (_mv_176.is_ok) {
+            __auto_type v = _mv_176.data.ok;
             return (v >= 0);
-        } else if (!_mv_90.is_ok) {
-            __auto_type _ = _mv_90.data.err;
+        } else if (!_mv_176.is_ok) {
+            __auto_type _ = _mv_176.data.err;
             return 0;
         }
+        SLOP_UNREACHABLE();
     } else if (string_eq(datatype_iri, vocab_XSD_POSITIVE_INTEGER)) {
-        __auto_type _mv_91 = strlib_parse_int(lexical);
-        if (_mv_91.is_ok) {
-            __auto_type v = _mv_91.data.ok;
+        __auto_type _mv_177 = strlib_parse_int(lexical);
+        if (_mv_177.is_ok) {
+            __auto_type v = _mv_177.data.ok;
             return (v >= 1);
-        } else if (!_mv_91.is_ok) {
-            __auto_type _ = _mv_91.data.err;
+        } else if (!_mv_177.is_ok) {
+            __auto_type _ = _mv_177.data.err;
             return 0;
         }
+        SLOP_UNREACHABLE();
     } else if (string_eq(datatype_iri, vocab_XSD_NEGATIVE_INTEGER)) {
-        __auto_type _mv_92 = strlib_parse_int(lexical);
-        if (_mv_92.is_ok) {
-            __auto_type v = _mv_92.data.ok;
+        __auto_type _mv_178 = strlib_parse_int(lexical);
+        if (_mv_178.is_ok) {
+            __auto_type v = _mv_178.data.ok;
             return (v <= -1);
-        } else if (!_mv_92.is_ok) {
-            __auto_type _ = _mv_92.data.err;
+        } else if (!_mv_178.is_ok) {
+            __auto_type _ = _mv_178.data.err;
             return 0;
         }
+        SLOP_UNREACHABLE();
     } else if (string_eq(datatype_iri, vocab_XSD_NON_POSITIVE_INTEGER)) {
-        __auto_type _mv_93 = strlib_parse_int(lexical);
-        if (_mv_93.is_ok) {
-            __auto_type v = _mv_93.data.ok;
+        __auto_type _mv_179 = strlib_parse_int(lexical);
+        if (_mv_179.is_ok) {
+            __auto_type v = _mv_179.data.ok;
             return (v <= 0);
-        } else if (!_mv_93.is_ok) {
-            __auto_type _ = _mv_93.data.err;
+        } else if (!_mv_179.is_ok) {
+            __auto_type _ = _mv_179.data.err;
             return 0;
         }
+        SLOP_UNREACHABLE();
     } else if (string_eq(datatype_iri, vocab_RDF_LANG_STRING)) {
         return 1;
     } else {
@@ -256,16 +277,16 @@ uint8_t xsd_validate_lexical(slop_string lexical, slop_string datatype_iri) {
 }
 
 uint8_t xsd_values_equal(xsd_XsdValue a, xsd_XsdValue b) {
-    __auto_type _mv_94 = a;
-    switch (_mv_94.tag) {
+    __auto_type _mv_180 = a;
+    switch (_mv_180.tag) {
         case xsd_XsdValue_xsd_string_val:
         {
-            __auto_type s1 = _mv_94.data.xsd_string_val;
-            __auto_type _mv_95 = b;
-            switch (_mv_95.tag) {
+            __auto_type s1 = _mv_180.data.xsd_string_val;
+            __auto_type _mv_181 = b;
+            switch (_mv_181.tag) {
                 case xsd_XsdValue_xsd_string_val:
                 {
-                    __auto_type s2 = _mv_95.data.xsd_string_val;
+                    __auto_type s2 = _mv_181.data.xsd_string_val;
                     return string_eq(s1, s2);
                 }
                 default: {
@@ -275,27 +296,27 @@ uint8_t xsd_values_equal(xsd_XsdValue a, xsd_XsdValue b) {
         }
         case xsd_XsdValue_xsd_integer_val:
         {
-            __auto_type i1 = _mv_94.data.xsd_integer_val;
-            __auto_type _mv_96 = b;
-            switch (_mv_96.tag) {
+            __auto_type i1 = _mv_180.data.xsd_integer_val;
+            __auto_type _mv_182 = b;
+            switch (_mv_182.tag) {
                 case xsd_XsdValue_xsd_integer_val:
                 {
-                    __auto_type i2 = _mv_96.data.xsd_integer_val;
+                    __auto_type i2 = _mv_182.data.xsd_integer_val;
                     return (i1 == i2);
                 }
                 case xsd_XsdValue_xsd_decimal_val:
                 {
-                    __auto_type d2 = _mv_96.data.xsd_decimal_val;
+                    __auto_type d2 = _mv_182.data.xsd_decimal_val;
                     return (((double)(i1)) == d2);
                 }
                 case xsd_XsdValue_xsd_float_val:
                 {
-                    __auto_type f2 = _mv_96.data.xsd_float_val;
+                    __auto_type f2 = _mv_182.data.xsd_float_val;
                     return (((double)(i1)) == ((double)(f2)));
                 }
                 case xsd_XsdValue_xsd_double_val:
                 {
-                    __auto_type d2 = _mv_96.data.xsd_double_val;
+                    __auto_type d2 = _mv_182.data.xsd_double_val;
                     return (((double)(i1)) == d2);
                 }
                 default: {
@@ -305,27 +326,27 @@ uint8_t xsd_values_equal(xsd_XsdValue a, xsd_XsdValue b) {
         }
         case xsd_XsdValue_xsd_decimal_val:
         {
-            __auto_type d1 = _mv_94.data.xsd_decimal_val;
-            __auto_type _mv_97 = b;
-            switch (_mv_97.tag) {
+            __auto_type d1 = _mv_180.data.xsd_decimal_val;
+            __auto_type _mv_183 = b;
+            switch (_mv_183.tag) {
                 case xsd_XsdValue_xsd_integer_val:
                 {
-                    __auto_type i2 = _mv_97.data.xsd_integer_val;
+                    __auto_type i2 = _mv_183.data.xsd_integer_val;
                     return (d1 == ((double)(i2)));
                 }
                 case xsd_XsdValue_xsd_decimal_val:
                 {
-                    __auto_type d2 = _mv_97.data.xsd_decimal_val;
+                    __auto_type d2 = _mv_183.data.xsd_decimal_val;
                     return (d1 == d2);
                 }
                 case xsd_XsdValue_xsd_float_val:
                 {
-                    __auto_type f2 = _mv_97.data.xsd_float_val;
+                    __auto_type f2 = _mv_183.data.xsd_float_val;
                     return (d1 == ((double)(f2)));
                 }
                 case xsd_XsdValue_xsd_double_val:
                 {
-                    __auto_type d2 = _mv_97.data.xsd_double_val;
+                    __auto_type d2 = _mv_183.data.xsd_double_val;
                     return (d1 == d2);
                 }
                 default: {
@@ -335,27 +356,27 @@ uint8_t xsd_values_equal(xsd_XsdValue a, xsd_XsdValue b) {
         }
         case xsd_XsdValue_xsd_float_val:
         {
-            __auto_type f1 = _mv_94.data.xsd_float_val;
-            __auto_type _mv_98 = b;
-            switch (_mv_98.tag) {
+            __auto_type f1 = _mv_180.data.xsd_float_val;
+            __auto_type _mv_184 = b;
+            switch (_mv_184.tag) {
                 case xsd_XsdValue_xsd_integer_val:
                 {
-                    __auto_type i2 = _mv_98.data.xsd_integer_val;
+                    __auto_type i2 = _mv_184.data.xsd_integer_val;
                     return (((double)(f1)) == ((double)(i2)));
                 }
                 case xsd_XsdValue_xsd_decimal_val:
                 {
-                    __auto_type d2 = _mv_98.data.xsd_decimal_val;
+                    __auto_type d2 = _mv_184.data.xsd_decimal_val;
                     return (((double)(f1)) == d2);
                 }
                 case xsd_XsdValue_xsd_float_val:
                 {
-                    __auto_type f2 = _mv_98.data.xsd_float_val;
+                    __auto_type f2 = _mv_184.data.xsd_float_val;
                     return (f1 == f2);
                 }
                 case xsd_XsdValue_xsd_double_val:
                 {
-                    __auto_type d2 = _mv_98.data.xsd_double_val;
+                    __auto_type d2 = _mv_184.data.xsd_double_val;
                     return (((double)(f1)) == d2);
                 }
                 default: {
@@ -365,27 +386,27 @@ uint8_t xsd_values_equal(xsd_XsdValue a, xsd_XsdValue b) {
         }
         case xsd_XsdValue_xsd_double_val:
         {
-            __auto_type d1 = _mv_94.data.xsd_double_val;
-            __auto_type _mv_99 = b;
-            switch (_mv_99.tag) {
+            __auto_type d1 = _mv_180.data.xsd_double_val;
+            __auto_type _mv_185 = b;
+            switch (_mv_185.tag) {
                 case xsd_XsdValue_xsd_integer_val:
                 {
-                    __auto_type i2 = _mv_99.data.xsd_integer_val;
+                    __auto_type i2 = _mv_185.data.xsd_integer_val;
                     return (d1 == ((double)(i2)));
                 }
                 case xsd_XsdValue_xsd_decimal_val:
                 {
-                    __auto_type d2 = _mv_99.data.xsd_decimal_val;
+                    __auto_type d2 = _mv_185.data.xsd_decimal_val;
                     return (d1 == d2);
                 }
                 case xsd_XsdValue_xsd_float_val:
                 {
-                    __auto_type f2 = _mv_99.data.xsd_float_val;
+                    __auto_type f2 = _mv_185.data.xsd_float_val;
                     return (d1 == ((double)(f2)));
                 }
                 case xsd_XsdValue_xsd_double_val:
                 {
-                    __auto_type d2 = _mv_99.data.xsd_double_val;
+                    __auto_type d2 = _mv_185.data.xsd_double_val;
                     return (d1 == d2);
                 }
                 default: {
@@ -395,12 +416,12 @@ uint8_t xsd_values_equal(xsd_XsdValue a, xsd_XsdValue b) {
         }
         case xsd_XsdValue_xsd_boolean_val:
         {
-            __auto_type b1 = _mv_94.data.xsd_boolean_val;
-            __auto_type _mv_100 = b;
-            switch (_mv_100.tag) {
+            __auto_type b1 = _mv_180.data.xsd_boolean_val;
+            __auto_type _mv_186 = b;
+            switch (_mv_186.tag) {
                 case xsd_XsdValue_xsd_boolean_val:
                 {
-                    __auto_type b2 = _mv_100.data.xsd_boolean_val;
+                    __auto_type b2 = _mv_186.data.xsd_boolean_val;
                     return (b1 == b2);
                 }
                 default: {
@@ -410,12 +431,12 @@ uint8_t xsd_values_equal(xsd_XsdValue a, xsd_XsdValue b) {
         }
         case xsd_XsdValue_xsd_unknown_val:
         {
-            __auto_type u1 = _mv_94.data.xsd_unknown_val;
-            __auto_type _mv_101 = b;
-            switch (_mv_101.tag) {
+            __auto_type u1 = _mv_180.data.xsd_unknown_val;
+            __auto_type _mv_187 = b;
+            switch (_mv_187.tag) {
                 case xsd_XsdValue_xsd_unknown_val:
                 {
-                    __auto_type u2 = _mv_101.data.xsd_unknown_val;
+                    __auto_type u2 = _mv_187.data.xsd_unknown_val;
                     return string_eq(u1, u2);
                 }
                 default: {
@@ -424,6 +445,7 @@ uint8_t xsd_values_equal(xsd_XsdValue a, xsd_XsdValue b) {
             }
         }
     }
+    SLOP_UNREACHABLE();
 }
 
 uint8_t xsd_types_compatible(xsd_XsdType t1, xsd_XsdType t2) {
@@ -431,27 +453,28 @@ uint8_t xsd_types_compatible(xsd_XsdType t1, xsd_XsdType t2) {
 }
 
 slop_result_u8_xsd_XsdError xsd_literal_values_equal(slop_arena* arena, rdf_Literal a, rdf_Literal b) {
-    __auto_type _mv_102 = a.lang;
-    if (_mv_102.has_value) {
-        __auto_type lang_a = _mv_102.value;
-        __auto_type _mv_103 = b.lang;
-        if (_mv_103.has_value) {
-            __auto_type lang_b = _mv_103.value;
+    __auto_type _mv_188 = a.lang;
+    if (_mv_188.has_value) {
+        __auto_type lang_a = _mv_188.value;
+        __auto_type _mv_189 = b.lang;
+        if (_mv_189.has_value) {
+            __auto_type lang_b = _mv_189.value;
             if (string_eq(lang_a, lang_b)) {
                 return ((slop_result_u8_xsd_XsdError){ .is_ok = true, .data.ok = string_eq(a.value, b.value) });
             } else {
                 return ((slop_result_u8_xsd_XsdError){ .is_ok = true, .data.ok = 0 });
             }
-        } else if (!_mv_103.has_value) {
+        } else if (!_mv_189.has_value) {
             return ((slop_result_u8_xsd_XsdError){ .is_ok = true, .data.ok = 0 });
         }
-    } else if (!_mv_102.has_value) {
-        __auto_type _mv_104 = a.datatype;
-        if (_mv_104.has_value) {
-            __auto_type dt_a = _mv_104.value;
-            __auto_type _mv_105 = b.datatype;
-            if (_mv_105.has_value) {
-                __auto_type dt_b = _mv_105.value;
+        SLOP_UNREACHABLE();
+    } else if (!_mv_188.has_value) {
+        __auto_type _mv_190 = a.datatype;
+        if (_mv_190.has_value) {
+            __auto_type dt_a = _mv_190.value;
+            __auto_type _mv_191 = b.datatype;
+            if (_mv_191.has_value) {
+                __auto_type dt_b = _mv_191.value;
                 {
                     __auto_type type_a = xsd_parse_type(dt_a);
                     {
@@ -465,19 +488,23 @@ slop_result_u8_xsd_XsdError xsd_literal_values_equal(slop_arena* arena, rdf_Lite
                         }
                     }
                 }
-            } else if (!_mv_105.has_value) {
+            } else if (!_mv_191.has_value) {
                 return ((slop_result_u8_xsd_XsdError){ .is_ok = true, .data.ok = 0 });
             }
-        } else if (!_mv_104.has_value) {
-            __auto_type _mv_106 = b.datatype;
-            if (_mv_106.has_value) {
-                __auto_type dt_b = _mv_106.value;
+            SLOP_UNREACHABLE();
+        } else if (!_mv_190.has_value) {
+            __auto_type _mv_192 = b.datatype;
+            if (_mv_192.has_value) {
+                __auto_type dt_b = _mv_192.value;
                 return ((slop_result_u8_xsd_XsdError){ .is_ok = true, .data.ok = 0 });
-            } else if (!_mv_106.has_value) {
+            } else if (!_mv_192.has_value) {
                 return ((slop_result_u8_xsd_XsdError){ .is_ok = true, .data.ok = string_eq(a.value, b.value) });
             }
+            SLOP_UNREACHABLE();
         }
+        SLOP_UNREACHABLE();
     }
+    SLOP_UNREACHABLE();
 }
 
 xsd_XsdCompareResult xsd_float_cmp(double a, double b) {
@@ -493,33 +520,33 @@ xsd_XsdCompareResult xsd_float_cmp(double a, double b) {
 }
 
 xsd_XsdCompareResult xsd_values_compare(xsd_XsdValue a, xsd_XsdValue b) {
-    __auto_type _mv_107 = a;
-    switch (_mv_107.tag) {
+    __auto_type _mv_193 = a;
+    switch (_mv_193.tag) {
         case xsd_XsdValue_xsd_integer_val:
         {
-            __auto_type i1 = _mv_107.data.xsd_integer_val;
+            __auto_type i1 = _mv_193.data.xsd_integer_val;
             {
                 __auto_type d1 = ((double)(i1));
-                __auto_type _mv_108 = b;
-                switch (_mv_108.tag) {
+                __auto_type _mv_194 = b;
+                switch (_mv_194.tag) {
                     case xsd_XsdValue_xsd_integer_val:
                     {
-                        __auto_type i2 = _mv_108.data.xsd_integer_val;
+                        __auto_type i2 = _mv_194.data.xsd_integer_val;
                         return xsd_float_cmp(d1, ((double)(i2)));
                     }
                     case xsd_XsdValue_xsd_decimal_val:
                     {
-                        __auto_type d2 = _mv_108.data.xsd_decimal_val;
+                        __auto_type d2 = _mv_194.data.xsd_decimal_val;
                         return xsd_float_cmp(d1, d2);
                     }
                     case xsd_XsdValue_xsd_float_val:
                     {
-                        __auto_type f2 = _mv_108.data.xsd_float_val;
+                        __auto_type f2 = _mv_194.data.xsd_float_val;
                         return xsd_float_cmp(d1, ((double)(f2)));
                     }
                     case xsd_XsdValue_xsd_double_val:
                     {
-                        __auto_type d2 = _mv_108.data.xsd_double_val;
+                        __auto_type d2 = _mv_194.data.xsd_double_val;
                         return xsd_float_cmp(d1, d2);
                     }
                     default: {
@@ -530,27 +557,27 @@ xsd_XsdCompareResult xsd_values_compare(xsd_XsdValue a, xsd_XsdValue b) {
         }
         case xsd_XsdValue_xsd_decimal_val:
         {
-            __auto_type d1 = _mv_107.data.xsd_decimal_val;
-            __auto_type _mv_109 = b;
-            switch (_mv_109.tag) {
+            __auto_type d1 = _mv_193.data.xsd_decimal_val;
+            __auto_type _mv_195 = b;
+            switch (_mv_195.tag) {
                 case xsd_XsdValue_xsd_integer_val:
                 {
-                    __auto_type i2 = _mv_109.data.xsd_integer_val;
+                    __auto_type i2 = _mv_195.data.xsd_integer_val;
                     return xsd_float_cmp(d1, ((double)(i2)));
                 }
                 case xsd_XsdValue_xsd_decimal_val:
                 {
-                    __auto_type d2 = _mv_109.data.xsd_decimal_val;
+                    __auto_type d2 = _mv_195.data.xsd_decimal_val;
                     return xsd_float_cmp(d1, d2);
                 }
                 case xsd_XsdValue_xsd_float_val:
                 {
-                    __auto_type f2 = _mv_109.data.xsd_float_val;
+                    __auto_type f2 = _mv_195.data.xsd_float_val;
                     return xsd_float_cmp(d1, ((double)(f2)));
                 }
                 case xsd_XsdValue_xsd_double_val:
                 {
-                    __auto_type d2 = _mv_109.data.xsd_double_val;
+                    __auto_type d2 = _mv_195.data.xsd_double_val;
                     return xsd_float_cmp(d1, d2);
                 }
                 default: {
@@ -560,29 +587,29 @@ xsd_XsdCompareResult xsd_values_compare(xsd_XsdValue a, xsd_XsdValue b) {
         }
         case xsd_XsdValue_xsd_float_val:
         {
-            __auto_type f1 = _mv_107.data.xsd_float_val;
+            __auto_type f1 = _mv_193.data.xsd_float_val;
             {
                 __auto_type d1 = ((double)(f1));
-                __auto_type _mv_110 = b;
-                switch (_mv_110.tag) {
+                __auto_type _mv_196 = b;
+                switch (_mv_196.tag) {
                     case xsd_XsdValue_xsd_integer_val:
                     {
-                        __auto_type i2 = _mv_110.data.xsd_integer_val;
+                        __auto_type i2 = _mv_196.data.xsd_integer_val;
                         return xsd_float_cmp(d1, ((double)(i2)));
                     }
                     case xsd_XsdValue_xsd_decimal_val:
                     {
-                        __auto_type d2 = _mv_110.data.xsd_decimal_val;
+                        __auto_type d2 = _mv_196.data.xsd_decimal_val;
                         return xsd_float_cmp(d1, d2);
                     }
                     case xsd_XsdValue_xsd_float_val:
                     {
-                        __auto_type f2 = _mv_110.data.xsd_float_val;
+                        __auto_type f2 = _mv_196.data.xsd_float_val;
                         return xsd_float_cmp(d1, ((double)(f2)));
                     }
                     case xsd_XsdValue_xsd_double_val:
                     {
-                        __auto_type d2 = _mv_110.data.xsd_double_val;
+                        __auto_type d2 = _mv_196.data.xsd_double_val;
                         return xsd_float_cmp(d1, d2);
                     }
                     default: {
@@ -593,27 +620,27 @@ xsd_XsdCompareResult xsd_values_compare(xsd_XsdValue a, xsd_XsdValue b) {
         }
         case xsd_XsdValue_xsd_double_val:
         {
-            __auto_type d1 = _mv_107.data.xsd_double_val;
-            __auto_type _mv_111 = b;
-            switch (_mv_111.tag) {
+            __auto_type d1 = _mv_193.data.xsd_double_val;
+            __auto_type _mv_197 = b;
+            switch (_mv_197.tag) {
                 case xsd_XsdValue_xsd_integer_val:
                 {
-                    __auto_type i2 = _mv_111.data.xsd_integer_val;
+                    __auto_type i2 = _mv_197.data.xsd_integer_val;
                     return xsd_float_cmp(d1, ((double)(i2)));
                 }
                 case xsd_XsdValue_xsd_decimal_val:
                 {
-                    __auto_type d2 = _mv_111.data.xsd_decimal_val;
+                    __auto_type d2 = _mv_197.data.xsd_decimal_val;
                     return xsd_float_cmp(d1, d2);
                 }
                 case xsd_XsdValue_xsd_float_val:
                 {
-                    __auto_type f2 = _mv_111.data.xsd_float_val;
+                    __auto_type f2 = _mv_197.data.xsd_float_val;
                     return xsd_float_cmp(d1, ((double)(f2)));
                 }
                 case xsd_XsdValue_xsd_double_val:
                 {
-                    __auto_type d2 = _mv_111.data.xsd_double_val;
+                    __auto_type d2 = _mv_197.data.xsd_double_val;
                     return xsd_float_cmp(d1, d2);
                 }
                 default: {
@@ -623,12 +650,12 @@ xsd_XsdCompareResult xsd_values_compare(xsd_XsdValue a, xsd_XsdValue b) {
         }
         case xsd_XsdValue_xsd_string_val:
         {
-            __auto_type s1 = _mv_107.data.xsd_string_val;
-            __auto_type _mv_112 = b;
-            switch (_mv_112.tag) {
+            __auto_type s1 = _mv_193.data.xsd_string_val;
+            __auto_type _mv_198 = b;
+            switch (_mv_198.tag) {
                 case xsd_XsdValue_xsd_string_val:
                 {
-                    __auto_type s2 = _mv_112.data.xsd_string_val;
+                    __auto_type s2 = _mv_198.data.xsd_string_val;
                     if (string_eq(s1, s2)) {
                         return xsd_XsdCompareResult_xsd_compare_equal;
                     } else {
@@ -642,12 +669,12 @@ xsd_XsdCompareResult xsd_values_compare(xsd_XsdValue a, xsd_XsdValue b) {
         }
         case xsd_XsdValue_xsd_boolean_val:
         {
-            __auto_type b1 = _mv_107.data.xsd_boolean_val;
-            __auto_type _mv_113 = b;
-            switch (_mv_113.tag) {
+            __auto_type b1 = _mv_193.data.xsd_boolean_val;
+            __auto_type _mv_199 = b;
+            switch (_mv_199.tag) {
                 case xsd_XsdValue_xsd_boolean_val:
                 {
-                    __auto_type b2 = _mv_113.data.xsd_boolean_val;
+                    __auto_type b2 = _mv_199.data.xsd_boolean_val;
                     if (b1 == b2) {
                         return xsd_XsdCompareResult_xsd_compare_equal;
                     } else {
@@ -665,23 +692,24 @@ xsd_XsdCompareResult xsd_values_compare(xsd_XsdValue a, xsd_XsdValue b) {
         }
         case xsd_XsdValue_xsd_unknown_val:
         {
-            __auto_type _ = _mv_107.data.xsd_unknown_val;
+            __auto_type _ = _mv_193.data.xsd_unknown_val;
             return xsd_XsdCompareResult_xsd_compare_incomparable;
         }
     }
+    SLOP_UNREACHABLE();
 }
 
 xsd_XsdCompareResult xsd_compare(slop_arena* arena, rdf_Term a, rdf_Term b) {
-    __auto_type _mv_114 = a;
-    switch (_mv_114.tag) {
+    __auto_type _mv_200 = a;
+    switch (_mv_200.tag) {
         case rdf_Term_term_literal:
         {
-            __auto_type lit_a = _mv_114.data.term_literal;
-            __auto_type _mv_115 = b;
-            switch (_mv_115.tag) {
+            __auto_type lit_a = _mv_200.data.term_literal;
+            __auto_type _mv_201 = b;
+            switch (_mv_201.tag) {
                 case rdf_Term_term_literal:
                 {
-                    __auto_type lit_b = _mv_115.data.term_literal;
+                    __auto_type lit_b = _mv_201.data.term_literal;
                     {
                         __auto_type dt_a = ({ __auto_type _mv = lit_a.datatype; _mv.has_value ? ({ __auto_type d = _mv.value; d; }) : (vocab_XSD_STRING); });
                         __auto_type dt_b = ({ __auto_type _mv = lit_b.datatype; _mv.has_value ? ({ __auto_type d = _mv.value; d; }) : (vocab_XSD_STRING); });
@@ -691,21 +719,23 @@ xsd_XsdCompareResult xsd_compare(slop_arena* arena, rdf_Term a, rdf_Term b) {
                             if (!(xsd_types_compatible(type_a, type_b))) {
                                 return xsd_XsdCompareResult_xsd_compare_incomparable;
                             } else {
-                                __auto_type _mv_116 = xsd_parse_value(arena, lit_a.value, type_a);
-                                if (_mv_116.is_ok) {
-                                    __auto_type val_a = _mv_116.data.ok;
-                                    __auto_type _mv_117 = xsd_parse_value(arena, lit_b.value, type_b);
-                                    if (_mv_117.is_ok) {
-                                        __auto_type val_b = _mv_117.data.ok;
+                                __auto_type _mv_202 = xsd_parse_value(arena, lit_a.value, type_a);
+                                if (_mv_202.is_ok) {
+                                    __auto_type val_a = _mv_202.data.ok;
+                                    __auto_type _mv_203 = xsd_parse_value(arena, lit_b.value, type_b);
+                                    if (_mv_203.is_ok) {
+                                        __auto_type val_b = _mv_203.data.ok;
                                         return xsd_values_compare(val_a, val_b);
-                                    } else if (!_mv_117.is_ok) {
-                                        __auto_type _ = _mv_117.data.err;
+                                    } else if (!_mv_203.is_ok) {
+                                        __auto_type _ = _mv_203.data.err;
                                         return xsd_XsdCompareResult_xsd_compare_incomparable;
                                     }
-                                } else if (!_mv_116.is_ok) {
-                                    __auto_type _ = _mv_116.data.err;
+                                    SLOP_UNREACHABLE();
+                                } else if (!_mv_202.is_ok) {
+                                    __auto_type _ = _mv_202.data.err;
                                     return xsd_XsdCompareResult_xsd_compare_incomparable;
                                 }
+                                SLOP_UNREACHABLE();
                             }
                         }
                     }

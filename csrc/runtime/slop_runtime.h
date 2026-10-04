@@ -75,6 +75,23 @@ _Atomic size_t slop_global_allocated __attribute__((weak)) = 0;
     #define SLOP_ASSERT(cond, msg) ((void)0)
 #endif
 
+/* Reached when a match in return position matched none of its arms.
+ *
+ * Deliberately NOT gated on SLOP_DEBUG, unlike the contracts above. The checker
+ * warns about a non-exhaustive match but does not yet reject one, so this path is
+ * genuinely reachable -- and __builtin_unreachable() on a path that actually runs
+ * licenses the optimiser to do considerably worse than the fall-off-the-end this
+ * replaces. One cold branch at the tail of a match is the cheaper mistake.
+ *
+ * Emitted AFTER the closed if-chain or switch rather than as a final else/default,
+ * so -Wswitch still fires on a missing enum case. */
+#define SLOP_UNREACHABLE() \
+    do { \
+        fprintf(stderr, "SLOP: non-exhaustive match reached\n  at %s:%d\n", \
+                __FILE__, __LINE__); \
+        abort(); \
+    } while(0)
+
 /* Expression-form range check - returns value after checking bounds.
  * Unlike SLOP_PRE, this can be used in expression contexts like return statements. */
 #ifdef SLOP_DEBUG
@@ -531,6 +548,12 @@ static inline slop_bytes slop_bytes_from(slop_arena* arena, const uint8_t* src, 
     static inline T* Name##_get(Name* list, size_t i) { \
         SLOP_PRE(i < list->len, "list index in bounds"); \
         return &list->data[i]; \
+    } \
+    \
+    static inline bool Name##_set(Name* list, size_t i, T item) { \
+        if (i >= list->len) { return false; } \
+        list->data[i] = item; \
+        return true; \
     }
 
 /* SLOP_LIST_DEFINE: combined declare + impl (original convenience macro) */
@@ -756,16 +779,43 @@ static inline bool slop_map_has(slop_map* map, const void* key) {
 static inline bool slop_map_remove(slop_map* map, const void* key) {
     uint64_t hash = map->hash(key);
     size_t idx = hash % map->cap;
-    for (size_t i = 0; i < map->cap; i++) {
-        size_t probe = (idx + i) % map->cap;
+
+    /* Locate the entry. */
+    size_t hole = map->cap;                 /* cap == "not found" sentinel */
+    for (size_t n = 0; n < map->cap; n++) {
+        size_t probe = (idx + n) % map->cap;
         if (!map->entries[probe].occupied) return false;
-        if (map->eq(map->entries[probe].key, key)) {
-            map->entries[probe].occupied = false;
-            map->len--;
-            return true;
-        }
+        if (map->eq(map->entries[probe].key, key)) { hole = probe; break; }
     }
-    return false;
+    if (hole == map->cap) return false;
+
+    /* Backward-shift deletion (Knuth 6.4R, adapted to forward probing).
+     * Clearing `occupied` on its own would truncate every probe chain that
+     * ran through this slot, so slop_map_get would stop early and report
+     * still-present keys as missing, and slop_map_put would insert a
+     * duplicate into the gap. Shifting later entries back preserves the
+     * invariant both rely on: every chain is contiguous from its home slot.
+     * slop_map_put grows at a 75% load factor, so an unoccupied slot always
+     * exists and the scan below always terminates. */
+    size_t i = hole;
+    for (;;) {
+        map->entries[i].occupied = false;
+        size_t j = i;
+        for (;;) {
+            j = (j + 1) % map->cap;
+            if (!map->entries[j].occupied) {
+                map->len--;
+                return true;
+            }
+            size_t k = map->hash(map->entries[j].key) % map->cap;
+            /* Entry j may fill the hole at i only if its home slot k does
+             * not lie cyclically within (i, j]. */
+            if (i <= j ? (i < k && k <= j) : (i < k || k <= j)) continue;
+            break;
+        }
+        map->entries[i] = map->entries[j];
+        i = j;
+    }
 }
 
 /* Get all keys - returns generic list of pointers to keys */

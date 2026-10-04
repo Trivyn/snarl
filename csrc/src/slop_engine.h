@@ -30,11 +30,13 @@ SLOP_OPTION_DEFINE(slop_map*, slop_option_map_ptr)
 
 #ifndef SLOP_LIST_RDF_TERM_DEFINED
 #define SLOP_LIST_RDF_TERM_DEFINED
+#define SLOP_LIST_RDF_TERM_IMPL_DEFINED
 SLOP_LIST_DEFINE(rdf_Term, slop_list_rdf_Term)
 #endif
 
 #ifndef SLOP_LIST_TYPES_VALIDATIONRESULT_DEFINED
 #define SLOP_LIST_TYPES_VALIDATIONRESULT_DEFINED
+#define SLOP_LIST_TYPES_VALIDATIONRESULT_IMPL_DEFINED
 SLOP_LIST_DEFINE(types_ValidationResult, slop_list_types_ValidationResult)
 #endif
 
@@ -240,6 +242,12 @@ SLOP_OPTION_DEFINE(types_PropertyShape, slop_option_types_PropertyShape)
 #ifndef SLOP_OPTION_TYPES_NODESHAPE_DEFINED
 #define SLOP_OPTION_TYPES_NODESHAPE_DEFINED
 SLOP_OPTION_DEFINE(types_NodeShape, slop_option_types_NodeShape)
+#endif
+
+#ifndef SLOP_LIST_TYPES_SHACLPATH_DEFINED
+#define SLOP_LIST_TYPES_SHACLPATH_DEFINED
+#define SLOP_LIST_TYPES_SHACLPATH_IMPL_DEFINED
+SLOP_LIST_DEFINE(types_ShaclPath, slop_list_types_ShaclPath)
 #endif
 
 
