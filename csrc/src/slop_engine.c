@@ -31,7 +31,7 @@ slop_list_types_ValidationResult snarl_evaluate_constraint_for_property_cached(s
 slop_list_types_ValidationResult engine_evaluate_constraint_for_simple_predicate_cached(slop_arena* arena, data_graph_SnarlDataGraph data_graph, types_ShapesGraph shapes_graph, target_ClassIndex class_index, rdf_Term focus_node, rdf_Term pred, data_graph_IdSet value_set, int64_t value_count, types_Constraint constraint, slop_option_types_ShaclPath path, rdf_Term shape_id, types_Severity severity, slop_option_string message, engine_CycleGuard visited, slop_list_rdf_Term sibling_qvs_refs);
 
 int64_t engine_cycle_guard_max_recursion_depth(void) {
-    return 600;
+    return 400;
 }
 
 engine_CycleGuard engine_cycle_guard_new(slop_arena* arena) {
@@ -994,7 +994,7 @@ slop_list_types_ValidationResult snarl_evaluate_constraint_for_property_cached(s
             case types_Constraint_con_min_count:
             {
                 __auto_type min_c = _mv_393.data.con_min_count;
-                __auto_type _mv_394 = snarl_check_min_count(arena, focus_node, SLOP_RANGE(int64_t, value_count, 1, 0, 0, 0, "(Int 0 ..) at engine.slop:834:52"), min_c, path, shape_id, severity, message);
+                __auto_type _mv_394 = snarl_check_min_count(arena, focus_node, SLOP_RANGE(int64_t, value_count, 1, 0, 0, 0, "(Int 0 ..) at engine.slop:845:52"), min_c, path, shape_id, severity, message);
                 if (_mv_394.has_value) {
                     __auto_type r = _mv_394.value;
                     ({ __auto_type _lst_p = &(results); __auto_type _item = (r); if (_lst_p->len >= _lst_p->cap) { _lst_p->data = (__typeof__(_lst_p->data))slop_list_grow_raw(_lst_p->arena, _lst_p->data, &_lst_p->cap, _lst_p->len, sizeof(*_lst_p->data)); } _lst_p->data[_lst_p->len++] = _item; (void)0; });
@@ -1005,7 +1005,7 @@ slop_list_types_ValidationResult snarl_evaluate_constraint_for_property_cached(s
             case types_Constraint_con_max_count:
             {
                 __auto_type max_c = _mv_393.data.con_max_count;
-                __auto_type _mv_395 = snarl_check_max_count(arena, focus_node, SLOP_RANGE(int64_t, value_count, 1, 0, 0, 0, "(Int 0 ..) at engine.slop:838:52"), max_c, path, shape_id, severity, message);
+                __auto_type _mv_395 = snarl_check_max_count(arena, focus_node, SLOP_RANGE(int64_t, value_count, 1, 0, 0, 0, "(Int 0 ..) at engine.slop:849:52"), max_c, path, shape_id, severity, message);
                 if (_mv_395.has_value) {
                     __auto_type r = _mv_395.value;
                     ({ __auto_type _lst_p = &(results); __auto_type _item = (r); if (_lst_p->len >= _lst_p->cap) { _lst_p->data = (__typeof__(_lst_p->data))slop_list_grow_raw(_lst_p->arena, _lst_p->data, &_lst_p->cap, _lst_p->len, sizeof(*_lst_p->data)); } _lst_p->data[_lst_p->len++] = _item; (void)0; });
@@ -1242,7 +1242,7 @@ slop_list_types_ValidationResult engine_evaluate_constraint_for_simple_predicate
             case types_Constraint_con_min_count:
             {
                 __auto_type min_c = _mv_403.data.con_min_count;
-                __auto_type _mv_404 = snarl_check_min_count(arena, focus_node, SLOP_RANGE(int64_t, value_count, 1, 0, 0, 0, "(Int 0 ..) at engine.slop:941:52"), min_c, path, shape_id, severity, message);
+                __auto_type _mv_404 = snarl_check_min_count(arena, focus_node, SLOP_RANGE(int64_t, value_count, 1, 0, 0, 0, "(Int 0 ..) at engine.slop:952:52"), min_c, path, shape_id, severity, message);
                 if (_mv_404.has_value) {
                     __auto_type r = _mv_404.value;
                     ({ __auto_type _lst_p = &(results); __auto_type _item = (r); if (_lst_p->len >= _lst_p->cap) { _lst_p->data = (__typeof__(_lst_p->data))slop_list_grow_raw(_lst_p->arena, _lst_p->data, &_lst_p->cap, _lst_p->len, sizeof(*_lst_p->data)); } _lst_p->data[_lst_p->len++] = _item; (void)0; });
@@ -1253,7 +1253,7 @@ slop_list_types_ValidationResult engine_evaluate_constraint_for_simple_predicate
             case types_Constraint_con_max_count:
             {
                 __auto_type max_c = _mv_403.data.con_max_count;
-                __auto_type _mv_405 = snarl_check_max_count(arena, focus_node, SLOP_RANGE(int64_t, value_count, 1, 0, 0, 0, "(Int 0 ..) at engine.slop:945:52"), max_c, path, shape_id, severity, message);
+                __auto_type _mv_405 = snarl_check_max_count(arena, focus_node, SLOP_RANGE(int64_t, value_count, 1, 0, 0, 0, "(Int 0 ..) at engine.slop:956:52"), max_c, path, shape_id, severity, message);
                 if (_mv_405.has_value) {
                     __auto_type r = _mv_405.value;
                     ({ __auto_type _lst_p = &(results); __auto_type _item = (r); if (_lst_p->len >= _lst_p->cap) { _lst_p->data = (__typeof__(_lst_p->data))slop_list_grow_raw(_lst_p->arena, _lst_p->data, &_lst_p->cap, _lst_p->len, sizeof(*_lst_p->data)); } _lst_p->data[_lst_p->len++] = _item; (void)0; });

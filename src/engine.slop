@@ -138,11 +138,22 @@
   ;; finite N -- verified: raising it to 800 without re-measuring the
   ;; post-instrumentation boundary reproduced the SIGSEGV this budget
   ;; exists to prevent).
+  ;;
+  ;; Re-measured 2026-10-11 for SLOP 0.4 (Linux aarch64, gcc 13 -O2, 8 MB
+  ;; stack, a one-sh:node-per-level chain): main's SLOP 0.3 build already
+  ;; crashed at depth 526 -- under the old budget of 600, which x86-64 CI
+  ;; only cleared on its slightly smaller frames. The SLOP 0.4.2 runtime
+  ;; crashed at 170, because gcc inlined slop_list_grow_raw at every
+  ;; list-push and tripled these frames; SLOP 0.4.3 marks it noinline under
+  ;; gcc, which puts the crash back at 505 (-O2 and -O3). clang inlines it
+  ;; without the growth: Apple clang 21 -O2 on arm64 crashes at 685. 400
+  ;; leaves ~20% under gcc's 505.
+  ;; Windows links snarl's executables with the same 8 MB stack (Makefile).
   (fn cycle-guard-max-recursion-depth ()
     (@intent "Named ceiling on active (shape-ref, node) descents open at once on a single guard, see the depth-budget note above")
     (@spec (() -> Int))
     (@pure)
-    600)
+    400)
 
   (type CycleGuard (record
     (pairs (Map Term (Map Term Int)))
