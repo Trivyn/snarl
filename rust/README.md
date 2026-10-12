@@ -10,13 +10,15 @@ the C validator sources and compiles them during the Cargo build.
 
 ```toml
 [dependencies]
-snarl = "0.3.1"
+snarl-shacl = "0.6"
 ```
 
 ## Requirements
 
 - Rust 2021 toolchain
-- A C compiler available to Cargo
+- A C compiler available to Cargo. Windows support is preliminary; there it
+  needs clang-cl, since the bundled C uses GNU extensions that MSVC's cl.exe
+  rejects.
 
 The crate uses the `cc` build dependency to compile the bundled C sources under
 `csrc/`. No SLOP toolchain is required when building the crate.

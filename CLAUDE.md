@@ -31,6 +31,7 @@ src/                    Library source
 cli/
   main.slop             CLI entry point
   tests/                Integration tests + fixtures
+vendor/regex/           Vendored C regex engine for sh:pattern (musl's TRE; hand-written, NOT generated -- see its README)
 ```
 
 ## Build Commands
@@ -68,10 +69,21 @@ Three things that are easy to get wrong:
   had no effect.
 - `csrc/update_bootstrap.sh` enforces `SLOP_MIN_VERSION` and refuses to run
   against an older toolchain. Raise it whenever a SLOP codegen fix is
-  load-bearing for the committed C. Minimum today: **0.1.2** (map-put value
-  width — see the note in that script).
+  load-bearing for the committed C. Minimum today: **0.4.2** (Windows-portable
+  runtime header, matching slop-std-sys 0.4.2; 0.4.0 runtime header and
+  set-len; 0.3.0 read-only parameters; 0.1.2 map-put value width — see the
+  notes in that script).
 - `csrc/SLOP_VERSION` records which toolchain produced the current C. Commit it
   with the regenerated sources.
+
+`sh:pattern` matches through `vendor/regex` (`ffi "snarl_regex.h"` in
+`string.slop`), never the system `<regex.h>`, which Windows lacks. The
+Makefile, `make crate-vendor` and `rust/build.rs` all compile it in.
+
+Windows support is **preliminary**: build under MSYS2 MINGW64 with gcc (`make`
+appends `.exe`); the crate builds for MSVC with clang-cl. CI runs both
+(`.github/workflows/release.yml`) with `continue-on-error`, so a Windows
+failure never blocks a release, and its artifacts ship only when they built.
 
 W3C conformance cases are gitignored, so a fresh checkout has none — run
 `bash cli/tests/w3c/download.sh` before `make w3c-test`.

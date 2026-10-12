@@ -95,6 +95,8 @@ pub struct SlopListRdfTerm {
     pub len: usize,
     pub cap: usize,
     pub data: *mut RdfTerm,
+    /// Arena the list grows in on push (SLOP 0.4 runtime).
+    pub arena: *mut SlopArena,
 }
 
 #[repr(C)]
@@ -103,6 +105,8 @@ pub struct SlopListRdfTriple {
     pub len: usize,
     pub cap: usize,
     pub data: *mut RdfTriple,
+    /// Arena the list grows in on push (SLOP 0.4 runtime).
+    pub arena: *mut SlopArena,
 }
 
 #[repr(C)]
@@ -111,6 +115,8 @@ pub struct SlopListValidationResult {
     pub len: usize,
     pub cap: usize,
     pub data: *mut ValidationResultFfi,
+    /// Arena the list grows in on push (SLOP 0.4 runtime).
+    pub arena: *mut SlopArena,
 }
 
 #[repr(C)]
@@ -119,6 +125,8 @@ pub struct SlopListShaclPath {
     pub len: usize,
     pub cap: usize,
     pub data: *mut ShaclPath,
+    /// Arena the list grows in on push (SLOP 0.4 runtime).
+    pub arena: *mut SlopArena,
 }
 
 // ---------------------------------------------------------------------------
@@ -172,8 +180,13 @@ pub struct SnarlDataIndex {
 #[repr(C)]
 #[derive(Copy, Clone)]
 pub struct SnarlDataGraphFfi {
-    pub triples: SlopListRdfTriple,
+    /// Term -> dense Int id dictionary.
+    pub ids: *mut c_void,
+    /// Int id -> owned Term.
+    pub terms: *mut c_void,
     pub index: SnarlDataIndex,
+    /// Shared, never-filled id set returned for "no values".
+    pub no_ids: *mut c_void,
     pub size: i64,
 }
 
@@ -282,6 +295,7 @@ extern "C" {
     pub fn snarl_arena_new(capacity: usize) -> *mut SlopArena;
     pub fn snarl_arena_free(arena: *mut SlopArena);
     pub fn snarl_intern_string(data: *const c_char, len: usize) -> SlopString;
+    pub fn snarl_ffi_sizeof(which: i32) -> usize;
 
     // Term constructors
     pub fn rdf_make_iri(arena: *mut SlopArena, value: SlopString) -> RdfTerm;
@@ -400,4 +414,36 @@ extern "C" {
     pub fn snarl_report_to_string(arena: *mut SlopArena, report: ValidationReportFfi)
         -> SlopString;
     pub fn snarl_path_to_display_string(arena: *mut SlopArena, path: ShaclPath) -> SlopString;
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::mem::size_of;
+
+    /// Every struct mirrored here must match the C layout it stands for.
+    #[test]
+    fn struct_sizes_match_c() {
+        let rust_sizes = [
+            ("slop_string", size_of::<SlopString>()),
+            ("rdf_Term", size_of::<RdfTerm>()),
+            ("rdf_Triple", size_of::<RdfTriple>()),
+            ("slop_list_rdf_Term", size_of::<SlopListRdfTerm>()),
+            ("slop_list_rdf_Triple", size_of::<SlopListRdfTriple>()),
+            ("slop_list_types_ValidationResult", size_of::<SlopListValidationResult>()),
+            ("slop_list_types_ShaclPath", size_of::<SlopListShaclPath>()),
+            ("index_IndexedGraph", size_of::<IndexedGraphFfi>()),
+            ("data_graph_SnarlDataIndex", size_of::<SnarlDataIndex>()),
+            ("data_graph_SnarlDataGraph", size_of::<SnarlDataGraphFfi>()),
+            ("types_ShaclPath", size_of::<ShaclPath>()),
+            ("types_ValidatorConfig", size_of::<ValidatorConfigFfi>()),
+            ("types_ValidationReport", size_of::<ValidationReportFfi>()),
+            ("types_ValidationResult", size_of::<ValidationResultFfi>()),
+            ("types_ValidatorResult", size_of::<ValidatorResultFfi>()),
+        ];
+        for (i, (name, rust)) in rust_sizes.iter().enumerate() {
+            let c = unsafe { snarl_ffi_sizeof(i as i32) };
+            assert_eq!(*rust, c, "{name}: Rust mirror is {rust} bytes, C is {c}");
+        }
+    }
 }

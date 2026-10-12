@@ -1,0 +1,4 @@
+# Keep LF everywhere: Turtle fixtures, expected reports and shell scripts are
+# compared byte-for-byte or run by bash, and a Windows checkout would otherwise
+# turn them into CRLF.
+* text=auto eol=lf

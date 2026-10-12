@@ -13,8 +13,10 @@
   (import index (IndexedGraph indexed-graph-create indexed-graph-add indexed-graph-size indexed-graph-objects))
   (import vocab (SHACL_PATH))
   (import parse (path-node-eval-depth path-max-eval-depth))
-  (import ttl (parse-ttl-file))
-  (import snarl (validate validate-with-config conforms default-config
+  (import ttl (parse-ttl-file parse-ttl-file-for-each-triple))
+  (import data-graph (SnarlDataGraph snarl-data-graph-create snarl-data-graph-add
+                      snarl-data-graph-size))
+  (import snarl (validate validate-with-config validate-data-graph-with-config conforms default-config
                  ValidatorConfig ValidatorResult ValidationReport
                  get-violations get-warnings get-result-count
                  report-to-string))
@@ -258,6 +260,75 @@
     (@spec ((Arena) -> Bool))
     (assert-conforms arena "fixtures/valid-person.ttl"))
 
+  ;; ============================================================
+  ;; Streaming data-graph loading (the CLI's load-data-graph path)
+  ;;
+  ;; slop-rdf's streaming parser hands each Triple to the callback in a
+  ;; per-statement scratch arena it resets afterwards, so snarl-data-graph-add
+  ;; must own every term it keeps. These tests stream a fixture exactly as
+  ;; cli/main.slop does and require the same verdict and result count as the
+  ;; IndexedGraph path; a dangling term would crash or corrupt the index and
+  ;; fail the comparison.
+  ;; ============================================================
+
+  (fn load-streamed-data-graph ((arena Arena) (path String))
+    (@intent "Stream a TTL fixture into a SnarlDataGraph exactly as the CLI does")
+    (@spec ((Arena String) -> (Option SnarlDataGraph)))
+    (@alloc arena)
+    (let ((mut dg (snarl-data-graph-create arena)))
+      (match (parse-ttl-file-for-each-triple arena path
+               (fn ((t Triple))
+                 (set! dg (snarl-data-graph-add arena dg t))))
+        ((ok _) (some dg))
+        ((error _) (none)))))
+
+  (fn result-summary ((r ValidatorResult))
+    (@intent "A validator result as (conforms, result count); an engine error is (false, -1)")
+    (@spec ((ValidatorResult) -> Int))
+    ;; Encoded as one Int so two runs compare with a single ==:
+    ;; conforming -> count, non-conforming -> 1000000 + count, error -> -1.
+    (match r
+      ((validate-success report)
+        (if (report-conforms report)
+          (get-result-count report)
+          (+ 1000000 (get-result-count report))))
+      ((validate-error _) -1)))
+
+  (fn assert-streamed-matches-indexed ((arena Arena) (data-path String) (shapes-path String))
+    (@intent "Streamed and IndexedGraph loading of the same data must give the same triple count, verdict and result count")
+    (@spec ((Arena String String) -> Bool))
+    (@alloc arena)
+    (match (load-streamed-data-graph arena data-path)
+      ((none) (do (print "  FAIL: could not stream ") (println data-path) false))
+      ((some dg)
+        (match (load-test-graph arena data-path)
+          ((none) (do (print "  FAIL: could not load ") (println data-path) false))
+          ((some ig)
+            (match (load-test-graph arena shapes-path)
+              ((none) (do (print "  FAIL: could not load ") (println shapes-path) false))
+              ((some sg)
+                (let ((config (default-config))
+                      (streamed (result-summary (validate-data-graph-with-config arena dg sg config)))
+                      (indexed (result-summary (validate-with-config arena ig sg config))))
+                  (if (and (== (snarl-data-graph-size dg) (indexed-graph-size ig))
+                           (and (>= streamed 0) (== streamed indexed)))
+                    (do (print "  PASS: ") (print data-path) (println " streams to the same graph and report") true)
+                    (do (print "  FAIL: ") (print data-path) (print " streamed size/summary ")
+                        (print (int-to-string arena (snarl-data-graph-size dg))) (print "/")
+                        (print (int-to-string arena streamed)) (print " vs indexed ")
+                        (print (int-to-string arena (indexed-graph-size ig))) (print "/")
+                        (println (int-to-string arena indexed)) false))))))))))
+
+  (fn test-streamed-data-graph-employee ((arena Arena))
+    (@intent "Regression: the streaming loader keeps no pointer into the parser's scratch arena (data with violations)")
+    (@spec ((Arena) -> Bool))
+    (assert-streamed-matches-indexed arena "fixtures/employee-dir-data.ttl" "fixtures/employee-dir-shapes.ttl"))
+
+  (fn test-streamed-data-graph-rdf12 ((arena Arena))
+    (@intent "Regression: the streaming loader deep-copies RDF 1.2 triple terms")
+    (@spec ((Arena) -> Bool))
+    (assert-streamed-matches-indexed arena "fixtures/rdf12-annotation-valid.ttl" "fixtures/rdf12-annotation-valid.ttl"))
+
   (fn test-rdf12-annotation-block ((arena Arena))
     (@intent "Test RDF 1.2 {| |} annotation blocks parse and validate")
     (@spec ((Arena) -> Bool))
@@ -344,6 +415,11 @@
     (@intent "Test multiple shapes targeting different classes")
     (@spec ((Arena) -> Bool))
     (assert-violations-separate arena "fixtures/multi-shape-data.ttl" "fixtures/multi-shape-shapes.ttl" 3))
+
+  (fn test-pattern-unicode ((arena Arena))
+    (@intent "Test sh:pattern matches code points, not UTF-8 bytes, including non-ASCII ranges and characters above U+FFFF")
+    (@spec ((Arena) -> Bool))
+    (assert-violations arena "fixtures/pattern-unicode.ttl" 2))
 
   ;; ============================================================
   ;; Regression Tests
@@ -710,8 +786,11 @@
         (if (test-employee-directory arena) (set! passed (+ passed 1)) (set! failed (+ failed 1)))
         (if (test-product-catalog arena) (set! passed (+ passed 1)) (set! failed (+ failed 1)))
         (if (test-address-book arena) (set! passed (+ passed 1)) (set! failed (+ failed 1)))
+        (if (test-streamed-data-graph-employee arena) (set! passed (+ passed 1)) (set! failed (+ failed 1)))
+        (if (test-streamed-data-graph-rdf12 arena) (set! passed (+ passed 1)) (set! failed (+ failed 1)))
         (if (test-valid-library arena) (set! passed (+ passed 1)) (set! failed (+ failed 1)))
         (if (test-multi-shape arena) (set! passed (+ passed 1)) (set! failed (+ failed 1)))
+        (if (test-pattern-unicode arena) (set! passed (+ passed 1)) (set! failed (+ failed 1)))
 
         ;; Regression tests
         (if (test-subclass-class-conforms arena) (set! passed (+ passed 1)) (set! failed (+ failed 1)))

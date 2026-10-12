@@ -7,7 +7,7 @@
 #include "slop_rdf.h"
 #include "slop_vocab.h"
 #include "slop_types.h"
-#include <regex.h>
+#include <snarl_regex.h>
 
 #ifndef SLOP_LIST_RDF_TERM_DEFINED
 #define SLOP_LIST_RDF_TERM_DEFINED
@@ -39,7 +39,7 @@ SLOP_OPTION_DEFINE(rdf_Term, slop_option_rdf_Term)
 slop_string string_term_string_value(rdf_Term t);
 slop_string string_term_lang(rdf_Term t);
 uint8_t string_term_is_literal(rdf_Term t);
-uint8_t string_regex_match_ffi(slop_arena* arena, slop_string pattern, slop_string input);
+uint8_t string_regex_match_ffi(slop_string pattern, slop_string input);
 uint8_t string_min_length_satisfied(rdf_Term value_node, int64_t min_len);
 uint8_t string_max_length_satisfied(rdf_Term value_node, int64_t max_len);
 uint8_t string_pattern_satisfied(slop_arena* arena, rdf_Term value_node, slop_string pattern);

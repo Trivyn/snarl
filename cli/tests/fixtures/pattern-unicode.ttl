@@ -1,0 +1,27 @@
+@prefix ex: <http://example.org/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+
+# sh:pattern matches characters (Unicode code points), not UTF-8 bytes, and
+# the same on every platform: the vendored regex engine (vendor/regex)
+# decodes UTF-8 itself rather than through the C locale.
+
+ex:WordShape
+    a sh:NodeShape ;
+    sh:targetClass ex:Word ;
+    # exactly four characters: "José" is four (five bytes)
+    sh:property [ sh:path ex:name ; sh:pattern "^.{4}$" ] ;
+    # a range of non-ASCII characters
+    sh:property [ sh:path ex:greek ; sh:pattern "^[α-ω]+$" ] ;
+    # one character above U+FFFF, which a 16-bit wchar_t cannot hold
+    sh:property [ sh:path ex:symbol ; sh:pattern "^.$" ] .
+
+ex:w1 a ex:Word ;
+    ex:name "José" ;
+    ex:greek "αβγ" ;
+    ex:symbol "😀" .
+
+# Violations: "Zoë" is three characters, "abc" is not Greek
+ex:w2 a ex:Word ;
+    ex:name "Zoë" ;
+    ex:greek "abc" ;
+    ex:symbol "😀" .

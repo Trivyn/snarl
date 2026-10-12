@@ -26,3 +26,30 @@ void snarl_arena_free(slop_arena* arena) {
 slop_string snarl_intern_string(const char* data, size_t len) {
     return slop_intern_string(data, len);
 }
+
+/*
+ * C-side sizes of the structs ffi.rs mirrors, so a Rust test can catch the
+ * mirror drifting when the SLOP runtime or snarl's own types change layout.
+ */
+#include "slop_snarl.h"
+
+size_t snarl_ffi_sizeof(int which) {
+    switch (which) {
+        case 0: return sizeof(slop_string);
+        case 1: return sizeof(rdf_Term);
+        case 2: return sizeof(rdf_Triple);
+        case 3: return sizeof(slop_list_rdf_Term);
+        case 4: return sizeof(slop_list_rdf_Triple);
+        case 5: return sizeof(slop_list_types_ValidationResult);
+        case 6: return sizeof(slop_list_types_ShaclPath);
+        case 7: return sizeof(index_IndexedGraph);
+        case 8: return sizeof(data_graph_SnarlDataIndex);
+        case 9: return sizeof(data_graph_SnarlDataGraph);
+        case 10: return sizeof(types_ShaclPath);
+        case 11: return sizeof(types_ValidatorConfig);
+        case 12: return sizeof(types_ValidationReport);
+        case 13: return sizeof(types_ValidationResult);
+        case 14: return sizeof(types_ValidatorResult);
+        default: return 0;
+    }
+}

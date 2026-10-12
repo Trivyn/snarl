@@ -5,7 +5,6 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include "slop_rdf.h"
-#include "slop_index.h"
 #include "slop_strlib.h"
 #include "slop_data_graph.h"
 #include "slop_vocab.h"
@@ -43,11 +42,6 @@ SLOP_LIST_DEFINE(types_ValidationResult, slop_list_types_ValidationResult)
 #ifndef SLOP_OPTION_RDF_TERM_DEFINED
 #define SLOP_OPTION_RDF_TERM_DEFINED
 SLOP_OPTION_DEFINE(rdf_Term, slop_option_rdf_Term)
-#endif
-
-#ifndef SLOP_OPTION_INDEX_TERMSET_DEFINED
-#define SLOP_OPTION_INDEX_TERMSET_DEFINED
-SLOP_OPTION_DEFINE(index_TermSet, slop_option_index_TermSet)
 #endif
 
 #ifndef SLOP_OPTION_TYPES_VALIDATIONRESULT_DEFINED
@@ -88,7 +82,7 @@ static inline bool slop_eq_rdf_IRI(const void* a, const void* b) {
     const rdf_IRI* _a = (const rdf_IRI*)a;
     const rdf_IRI* _b = (const rdf_IRI*)b;
     return true
-        && slop_eq_string(&_a->value, &_b->value)
+        && (slop_eq_string(&_a->value, &_b->value))
     ;
 }
 #endif
@@ -97,14 +91,14 @@ static inline bool slop_eq_rdf_IRI(const void* a, const void* b) {
 static inline uint64_t slop_hash_rdf_BlankNode(const void* key) {
     const rdf_BlankNode* _k = (const rdf_BlankNode*)key;
     uint64_t hash = 14695981039346656037ULL;
-    { int64_t _tmp = (int64_t)_k->id; hash ^= slop_hash_int(&_tmp); hash *= 1099511628211ULL; }
+    hash ^= slop_hash_int(&(int64_t){ (int64_t)_k->id }); hash *= 1099511628211ULL;
     return hash;
 }
 static inline bool slop_eq_rdf_BlankNode(const void* a, const void* b) {
     const rdf_BlankNode* _a = (const rdf_BlankNode*)a;
     const rdf_BlankNode* _b = (const rdf_BlankNode*)b;
     return true
-        && _a->id == _b->id
+        && (_a->id == _b->id)
     ;
 }
 #endif
@@ -114,17 +108,17 @@ static inline uint64_t slop_hash_rdf_Literal(const void* key) {
     const rdf_Literal* _k = (const rdf_Literal*)key;
     uint64_t hash = 14695981039346656037ULL;
     hash ^= slop_hash_string(&_k->value); hash *= 1099511628211ULL;
-    { const uint8_t* _b = (const uint8_t*)&_k->datatype; for(size_t _i=0; _i<sizeof(_k->datatype); _i++) { hash ^= _b[_i]; hash *= 1099511628211ULL; } }
-    { const uint8_t* _b = (const uint8_t*)&_k->lang; for(size_t _i=0; _i<sizeof(_k->lang); _i++) { hash ^= _b[_i]; hash *= 1099511628211ULL; } }
+    hash ^= ((_k->datatype).has_value ? slop_hash_combine(1, slop_hash_string(&(_k->datatype).value)) : 0); hash *= 1099511628211ULL;
+    hash ^= ((_k->lang).has_value ? slop_hash_combine(1, slop_hash_string(&(_k->lang).value)) : 0); hash *= 1099511628211ULL;
     return hash;
 }
 static inline bool slop_eq_rdf_Literal(const void* a, const void* b) {
     const rdf_Literal* _a = (const rdf_Literal*)a;
     const rdf_Literal* _b = (const rdf_Literal*)b;
     return true
-        && slop_eq_string(&_a->value, &_b->value)
-        && memcmp(&_a->datatype, &_b->datatype, sizeof(_a->datatype)) == 0
-        && memcmp(&_a->lang, &_b->lang, sizeof(_a->lang)) == 0
+        && (slop_eq_string(&_a->value, &_b->value))
+        && ((_a->datatype).has_value == (_b->datatype).has_value && (!(_a->datatype).has_value || ((slop_eq_string(&(_a->datatype).value, &(_b->datatype).value)))))
+        && ((_a->lang).has_value == (_b->lang).has_value && (!(_a->lang).has_value || ((slop_eq_string(&(_a->lang).value, &(_b->lang).value)))))
     ;
 }
 #endif
@@ -170,8 +164,6 @@ void engine_cycle_guard_remove(slop_arena* arena, engine_CycleGuard guard, rdf_T
 void engine_cycle_guard_flag(slop_arena* arena, engine_CycleGuard guard, rdf_Term shape_ref, rdf_Term node);
 void engine_cycle_guard_flag_depth_budget(slop_arena* arena, engine_CycleGuard guard, rdf_Term shape_ref, rdf_Term node);
 void engine_cycle_guard_flag_recursion(slop_arena* arena, engine_CycleGuard guard, rdf_Term shape_ref, rdf_Term node);
-int64_t engine_optional_term_set_size(slop_option_index_TermSet values);
-slop_list_rdf_Term engine_optional_term_set_to_list(slop_arena* arena, slop_option_index_TermSet values);
 uint8_t snarl_evaluate_shape_against_node(slop_arena* arena, data_graph_SnarlDataGraph data_graph, types_ShapesGraph shapes_graph, rdf_Term node, types_NodeShape shape, engine_CycleGuard visited);
 uint8_t snarl_evaluate_shape_against_node_cached(slop_arena* arena, data_graph_SnarlDataGraph data_graph, types_ShapesGraph shapes_graph, target_ClassIndex class_index, rdf_Term node, types_NodeShape shape, engine_CycleGuard visited);
 uint8_t snarl_property_shape_conforms(slop_arena* arena, data_graph_SnarlDataGraph data_graph, types_ShapesGraph shapes_graph, rdf_Term node, types_PropertyShape ps);
@@ -187,7 +179,7 @@ slop_list_types_ValidationResult snarl_evaluate_constraint(slop_arena* arena, da
 slop_list_types_ValidationResult snarl_evaluate_constraint_cached(slop_arena* arena, data_graph_SnarlDataGraph data_graph, types_ShapesGraph shapes_graph, target_ClassIndex class_index, rdf_Term focus_node, rdf_Term value_node, types_Constraint constraint, slop_option_types_ShaclPath path, rdf_Term shape_id, types_Severity severity, slop_option_string message, engine_CycleGuard visited);
 slop_list_types_ValidationResult snarl_evaluate_constraint_for_property(slop_arena* arena, data_graph_SnarlDataGraph data_graph, types_ShapesGraph shapes_graph, rdf_Term focus_node, slop_list_rdf_Term value_nodes, int64_t value_count, types_Constraint constraint, slop_option_types_ShaclPath path, rdf_Term shape_id, types_Severity severity, slop_option_string message, engine_CycleGuard visited, slop_list_rdf_Term sibling_qvs_refs);
 slop_list_types_ValidationResult snarl_evaluate_constraint_for_property_cached(slop_arena* arena, data_graph_SnarlDataGraph data_graph, types_ShapesGraph shapes_graph, target_ClassIndex class_index, rdf_Term focus_node, slop_list_rdf_Term value_nodes, int64_t value_count, types_Constraint constraint, slop_option_types_ShaclPath path, rdf_Term shape_id, types_Severity severity, slop_option_string message, engine_CycleGuard visited, slop_list_rdf_Term sibling_qvs_refs);
-slop_list_types_ValidationResult engine_evaluate_constraint_for_simple_predicate_cached(slop_arena* arena, data_graph_SnarlDataGraph data_graph, types_ShapesGraph shapes_graph, target_ClassIndex class_index, rdf_Term focus_node, rdf_Term pred, slop_option_index_TermSet value_set, int64_t value_count, types_Constraint constraint, slop_option_types_ShaclPath path, rdf_Term shape_id, types_Severity severity, slop_option_string message, engine_CycleGuard visited, slop_list_rdf_Term sibling_qvs_refs);
+slop_list_types_ValidationResult engine_evaluate_constraint_for_simple_predicate_cached(slop_arena* arena, data_graph_SnarlDataGraph data_graph, types_ShapesGraph shapes_graph, target_ClassIndex class_index, rdf_Term focus_node, rdf_Term pred, data_graph_IdSet value_set, int64_t value_count, types_Constraint constraint, slop_option_types_ShaclPath path, rdf_Term shape_id, types_Severity severity, slop_option_string message, engine_CycleGuard visited, slop_list_rdf_Term sibling_qvs_refs);
 
 /* Function name aliases for C interop */
 #define engine_evaluate_shape_against_node snarl_evaluate_shape_against_node
@@ -217,11 +209,6 @@ SLOP_OPTION_DEFINE(slop_map*, slop_option_map_ptr)
 #ifndef SLOP_OPTION_ENGINE_CYCLEGUARD_DEFINED
 #define SLOP_OPTION_ENGINE_CYCLEGUARD_DEFINED
 SLOP_OPTION_DEFINE(engine_CycleGuard, slop_option_engine_CycleGuard)
-#endif
-
-#ifndef SLOP_OPTION_INDEX_TERMSET_DEFINED
-#define SLOP_OPTION_INDEX_TERMSET_DEFINED
-SLOP_OPTION_DEFINE(index_TermSet, slop_option_index_TermSet)
 #endif
 
 #ifndef SLOP_OPTION_TYPES_VALIDATIONRESULT_DEFINED
