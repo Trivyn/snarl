@@ -23,12 +23,33 @@ jobs:
           - os: ubuntu-latest
             platform: linux-x86_64
             cc: gcc
+            shell: bash
           - os: macos-14
             platform: macos-arm64
             cc: clang
+            shell: bash
+          # MinGW-w64 gcc under MSYS2, as SLOP's own Windows release builds.
+          # Preliminary: a Windows failure is reported but does not fail the
+          # workflow or hold up a release (see continue-on-error).
+          - os: windows-latest
+            platform: windows-x64
+            cc: gcc
+            exe: .exe
+            shell: msys2 {0}
+            preliminary: true
     runs-on: ${{ matrix.os }}
+    continue-on-error: ${{ matrix.preliminary == true }}
+    defaults:
+      run:
+        shell: ${{ matrix.shell }}
     steps:
       - uses: actions/checkout@v4
+
+      - uses: msys2/setup-msys2@v2
+        if: runner.os == 'Windows'
+        with:
+          msystem: MINGW64
+          install: mingw-w64-x86_64-gcc make zip curl
 
       - name: Run tests
         run: make test CC=${{ matrix.cc }}
@@ -49,7 +70,7 @@ jobs:
           make release CC=${{ matrix.cc }} SNARL_VERSION="$VERSION"
 
       - name: Rename CLI binary
-        run: mv build/snarl snarl-${{ matrix.platform }}
+        run: mv build/snarl${{ matrix.exe }} snarl-${{ matrix.platform }}${{ matrix.exe }}
 
       - name: Build release library
         run: |
@@ -63,7 +84,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: snarl-${{ matrix.platform }}
-          path: snarl-${{ matrix.platform }}
+          path: snarl-${{ matrix.platform }}${{ matrix.exe }}
 
       - name: Upload library archive
         uses: actions/upload-artifact@v4
@@ -75,16 +96,39 @@ jobs:
   # bindings are a real consumer of the same generated sources the CLI uses.
   # They were never exercised in CI before.
   crate:
-    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # windows-latest builds for x86_64-pc-windows-msvc, where cc-rs
+        # compiles the vendored C with clang-cl (see rust/build.rs).
+        # Preliminary, like the Windows CLI build: reported, not gating.
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    continue-on-error: ${{ matrix.os == 'windows-latest' }}
     steps:
       - uses: actions/checkout@v4
 
       - uses: dtolnay/rust-toolchain@stable
 
-      - name: Vendor csrc into the crate and test
-        run: |
-          make crate-vendor
-          cd rust && cargo test
+      # Only for make and cp in crate-vendor; cargo runs in the runner's shell
+      - uses: msys2/setup-msys2@v2
+        if: runner.os == 'Windows'
+        with:
+          msystem: MINGW64
+          install: make
+
+      - name: Vendor csrc into the crate
+        if: runner.os != 'Windows'
+        run: make crate-vendor
+
+      - name: Vendor csrc into the crate (MSYS2)
+        if: runner.os == 'Windows'
+        shell: msys2 {0}
+        run: make crate-vendor
+
+      - name: Test the crate
+        working-directory: rust
+        run: cargo test
 
   release:
     needs: [build, crate]
@@ -105,6 +149,15 @@ jobs:
           cp artifacts/snarl-macos-arm64/snarl-macos-arm64 release-files/
           cp artifacts/libsnarl-linux-x86_64/libsnarl-linux-x86_64.zip release-files/
           cp artifacts/libsnarl-macos-arm64/libsnarl-macos-arm64.zip release-files/
+          # Windows support is preliminary: attach its files only if they built
+          for f in artifacts/snarl-windows-x64/snarl-windows-x64.exe \
+                   artifacts/libsnarl-windows-x64/libsnarl-windows-x64.zip; do
+            if [ -f "$f" ]; then
+              cp "$f" release-files/
+            else
+              echo "::warning::preliminary Windows artifact missing: $f"
+            fi
+          done
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2

@@ -222,7 +222,10 @@
         ((some g) (>= (snarl-data-graph-size g) 0))
         ((none) true)))
     ;; The callback mutates dg as triples stream out of the Turtle parser, so the
-    ;; CLI avoids constructing a general RDF graph for large data files.
+    ;; CLI avoids constructing a general RDF graph for large data files. The
+    ;; parser's Triple is valid only during the callback (its strings live in a
+    ;; per-statement scratch arena); snarl-data-graph-add keeps owned copies of
+    ;; the terms it stores, so the Triple is passed straight through.
     (let ((mut dg (snarl-data-graph-create arena)))
       (match (parse-ttl-file-for-each-triple arena path
                (fn ((t Triple))

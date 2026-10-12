@@ -19,7 +19,24 @@ PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 # of every stored Int was uninitialised arena memory. That corrupted the path
 # depth memo (spurious "Path nesting depth budget exceeded" on flat paths) and
 # the CycleGuard reference counts (spurious "Shape recursion detected").
-SLOP_MIN_VERSION="0.1.2"
+#
+# 0.3.0: an unmarked parameter is read-only (slop #180); src/types.slop's
+# report-add-result declares (mut report ...) accordingly.
+#
+# 0.4.0: the committed C is built against the 0.4 runtime header (dense
+# Map/Set tables, #234; collections growing in their own arena, #276), and
+# src/data-graph.slop uses set-len, new in 0.4.
+#
+# 0.4.2: the runtime header is portable to Windows (Win32 threads and locks,
+# a COFF-safe shared global, the Microsoft CRT), and must be the same header
+# slop-std-sys 0.4.2 ships, which the Rust crate compiles against.
+#
+# 0.4.3: slop_list_grow_raw is noinline under gcc. gcc -O2 had inlined it at
+# every list-push, tripling the recursive shape evaluator's frames, so deep
+# sh:node chains overflowed the C stack before engine.slop's depth budget
+# could stop them (crash at depth 170 instead of 505). The header must again
+# match slop-std-sys's, now 0.4.3.
+SLOP_MIN_VERSION="0.4.3"
 
 version_lt() {
     # true when $1 < $2, comparing dot-separated numeric components

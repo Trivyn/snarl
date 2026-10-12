@@ -84,13 +84,18 @@ for category in "${CATEGORIES[@]}"; do
       "$SNARL" -q "$file" 2>/dev/null || actual_exit=$?
     fi
 
-    # Map exit code to conforms value
+    # Map exit code to conforms value. Any other exit -- 2 (parse/internal
+    # error) or 128+N (killed by signal N, e.g. 139 = SIGSEGV) -- is a FAIL,
+    # even for an xfail case: these cases are all valid input, so the validator
+    # must reach a verdict. Counting them as SKIP once hid a 96-case segfault
+    # behind "RESULT: OK".
     case "$actual_exit" in
       0) actual_val="true" ;;
       1) actual_val="false" ;;
       *)
-        printf "  %-50s SKIP (exit code %s)\n" "$testid" "$actual_exit"
-        skip=$((skip + 1))
+        printf "  %-50s FAIL (exit code %s)\n" "$testid" "$actual_exit"
+        fail=$((fail + 1))
+        FAILURES+=("$testid (exit code $actual_exit)")
         continue
         ;;
     esac

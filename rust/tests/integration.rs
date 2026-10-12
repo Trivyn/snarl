@@ -95,6 +95,54 @@ fn simple_violation() {
     }
 }
 
+/// sh:pattern runs through the vendored regex engine (vendor/regex) on every
+/// platform, matching code points rather than UTF-8 bytes.
+#[test]
+fn pattern_matches_code_points() {
+    let arena = Arena::new(4 * 1024 * 1024);
+    let mut data = IndexedGraph::new(&arena);
+    let mut shapes = IndexedGraph::new(&arena);
+
+    let rdf_type = arena.make_iri(&format!("{RDF}type"));
+    let word_shape = arena.make_iri(&format!("{EX}WordShape"));
+    let word = arena.make_iri(&format!("{EX}Word"));
+    let name = arena.make_iri(&format!("{EX}name"));
+    let prop = arena.make_blank(1);
+
+    shapes.add_triple(arena.make_triple(word_shape, rdf_type, arena.make_iri(&format!("{SH}NodeShape"))));
+    shapes.add_triple(arena.make_triple(word_shape, arena.make_iri(&format!("{SH}targetClass")), word));
+    shapes.add_triple(arena.make_triple(word_shape, arena.make_iri(&format!("{SH}property")), prop));
+    shapes.add_triple(arena.make_triple(prop, arena.make_iri(&format!("{SH}path")), name));
+    shapes.add_triple(arena.make_triple(
+        prop,
+        arena.make_iri(&format!("{SH}pattern")),
+        arena.make_literal("^.{4}$", None, None),
+    ));
+
+    // Four characters each (five and seven bytes): conform
+    for (node, value) in [("jose", "José"), ("smile", "ab😀c")] {
+        let n = arena.make_iri(&format!("{EX}{node}"));
+        data.add_triple(arena.make_triple(n, rdf_type, word));
+        data.add_triple(arena.make_triple(n, name, arena.make_literal(value, None, None)));
+    }
+    // Three characters, four bytes: violates
+    let zoe = arena.make_iri(&format!("{EX}zoe"));
+    data.add_triple(arena.make_triple(zoe, rdf_type, word));
+    data.add_triple(arena.make_triple(zoe, name, arena.make_literal("Zoë", None, None)));
+
+    match validate(&arena, &data, &shapes) {
+        ValidatorResult::Success(report) => {
+            assert_eq!(report.results.len(), 1, "only Zoë should violate");
+            assert!(
+                matches!(&report.results[0].focus_node, snarl::Term::Iri(v) if v.ends_with("zoe")),
+                "focus node should be zoe, got: {:?}",
+                report.results[0].focus_node
+            );
+        }
+        ValidatorResult::Error(msg) => panic!("unexpected error: {}", msg),
+    }
+}
+
 #[test]
 fn conforming_data() {
     let arena = Arena::new(4 * 1024 * 1024);

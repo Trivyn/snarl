@@ -9,6 +9,7 @@
 #include "slop_vocab.h"
 #include "slop_parse.h"
 #include "slop_ttl.h"
+#include "slop_data_graph.h"
 #include "slop_snarl.h"
 #include "slop_types.h"
 #include "slop_strlib.h"
@@ -16,6 +17,11 @@
 #ifndef SLOP_OPTION_INDEX_INDEXEDGRAPH_DEFINED
 #define SLOP_OPTION_INDEX_INDEXEDGRAPH_DEFINED
 SLOP_OPTION_DEFINE(index_IndexedGraph, slop_option_index_IndexedGraph)
+#endif
+
+#ifndef SLOP_OPTION_DATA_GRAPH_SNARLDATAGRAPH_DEFINED
+#define SLOP_OPTION_DATA_GRAPH_SNARLDATAGRAPH_DEFINED
+SLOP_OPTION_DEFINE(data_graph_SnarlDataGraph, slop_option_data_graph_SnarlDataGraph)
 #endif
 
 slop_option_index_IndexedGraph test_cli_load_test_graph(slop_arena* arena, slop_string path);
@@ -34,6 +40,11 @@ uint8_t test_cli_assert_depth(slop_arena* arena, slop_string path, slop_string s
 uint8_t test_cli_assert_violations_separate(slop_arena* arena, slop_string data_path, slop_string shapes_path, int64_t expected_count);
 uint8_t test_cli_test_empty_graph(slop_arena* arena);
 uint8_t test_cli_test_valid_person(slop_arena* arena);
+slop_option_data_graph_SnarlDataGraph test_cli_load_streamed_data_graph(slop_arena* arena, slop_string path);
+int64_t test_cli_result_summary(types_ValidatorResult r);
+uint8_t test_cli_assert_streamed_matches_indexed(slop_arena* arena, slop_string data_path, slop_string shapes_path);
+uint8_t test_cli_test_streamed_data_graph_employee(slop_arena* arena);
+uint8_t test_cli_test_streamed_data_graph_rdf12(slop_arena* arena);
 uint8_t test_cli_test_rdf12_annotation_block(slop_arena* arena);
 uint8_t test_cli_test_cardinality_violation(slop_arena* arena);
 uint8_t test_cli_test_datatype_violation(slop_arena* arena);
@@ -47,6 +58,7 @@ uint8_t test_cli_test_product_catalog(slop_arena* arena);
 uint8_t test_cli_test_address_book(slop_arena* arena);
 uint8_t test_cli_test_valid_library(slop_arena* arena);
 uint8_t test_cli_test_multi_shape(slop_arena* arena);
+uint8_t test_cli_test_pattern_unicode(slop_arena* arena);
 uint8_t test_cli_test_subclass_class_conforms(slop_arena* arena);
 uint8_t test_cli_test_subclass_class(slop_arena* arena);
 uint8_t test_cli_test_vacuous_or(slop_arena* arena);
@@ -92,6 +104,11 @@ int main(int argc, char** _c_argv);
 #ifndef SLOP_OPTION_INDEX_INDEXEDGRAPH_DEFINED
 #define SLOP_OPTION_INDEX_INDEXEDGRAPH_DEFINED
 SLOP_OPTION_DEFINE(index_IndexedGraph, slop_option_index_IndexedGraph)
+#endif
+
+#ifndef SLOP_OPTION_DATA_GRAPH_SNARLDATAGRAPH_DEFINED
+#define SLOP_OPTION_DATA_GRAPH_SNARLDATAGRAPH_DEFINED
+SLOP_OPTION_DEFINE(data_graph_SnarlDataGraph, slop_option_data_graph_SnarlDataGraph)
 #endif
 
 

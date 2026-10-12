@@ -44,6 +44,8 @@ make clean    # Remove build artifacts
 
 Pre-transpiled C sources are checked in under `csrc/`, so building requires only a C compiler — no SLOP toolchain needed.
 
+Linux and macOS are supported, with prebuilt binaries attached to each GitHub release. **Windows support is preliminary:** build from an MSYS2 MINGW64 shell with `mingw-w64-x86_64-gcc` and `make` installed (the executable is `build/snarl.exe`). Windows CI results are reported but do not gate releases, and a Windows binary is attached to a release only when its tests passed.
+
 ## CLI Usage
 
 ```

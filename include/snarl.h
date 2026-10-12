@@ -20,13 +20,26 @@ typedef struct { bool has_value; slop_string value; } slop_option_string;
 typedef struct { void* fn; void* env; } slop_closure_t;
 
 /* Type definitions */
+typedef slop_map* data_graph_IdSet;
+
+typedef slop_map* data_graph_IdSetMap;
+
 struct data_graph_SnarlDataIndex {
     slop_map* sp;
     slop_map* po;
-    slop_map* p_subjects;
-    slop_map* p_objects;
+    data_graph_IdSetMap p_subjects;
+    data_graph_IdSetMap p_objects;
 };
 typedef struct data_graph_SnarlDataIndex data_graph_SnarlDataIndex;
+
+struct data_graph_SnarlDataGraph {
+    slop_map* ids;
+    slop_map* terms;
+    data_graph_SnarlDataIndex index;
+    data_graph_IdSet no_ids;
+    int64_t size;
+};
+typedef struct data_graph_SnarlDataGraph data_graph_SnarlDataGraph;
 
 struct engine_CycleGuard {
     slop_map* pairs;
@@ -78,7 +91,7 @@ typedef enum {
     rdf_Term_term_triple
 } rdf_Term_tag;
 
-typedef struct { size_t len; size_t cap; types_Constraint* data; } slop_list_types_Constraint;
+typedef struct { size_t len; size_t cap; types_Constraint* data; slop_arena* arena; } slop_list_types_Constraint;
 
 typedef enum {
     types_NodeKind_node_kind_blank_node,
@@ -161,13 +174,6 @@ struct xsd_XsdValue {
 };
 typedef struct xsd_XsdValue xsd_XsdValue;
 
-struct data_graph_SnarlDataGraph {
-    slop_list_rdf_Triple triples;
-    data_graph_SnarlDataIndex index;
-    int64_t size;
-};
-typedef struct data_graph_SnarlDataGraph data_graph_SnarlDataGraph;
-
 struct index_IndexedGraph {
     slop_list_rdf_Triple triples;
     index_TripleIndex index;
@@ -199,19 +205,19 @@ struct rdf_Triple {
 };
 typedef struct rdf_Triple rdf_Triple;
 
-typedef struct { size_t len; size_t cap; rdf_Term* data; } slop_list_rdf_Term;
+typedef struct { size_t len; size_t cap; rdf_Term* data; slop_arena* arena; } slop_list_rdf_Term;
 
-typedef struct { size_t len; size_t cap; rdf_Triple* data; } slop_list_rdf_Triple;
+typedef struct { size_t len; size_t cap; rdf_Triple* data; slop_arena* arena; } slop_list_rdf_Triple;
 
-typedef struct { size_t len; size_t cap; target_ClassInstances* data; } slop_list_target_ClassInstances;
+typedef struct { size_t len; size_t cap; target_ClassInstances* data; slop_arena* arena; } slop_list_target_ClassInstances;
 
-typedef struct { size_t len; size_t cap; types_NodeShape* data; } slop_list_types_NodeShape;
+typedef struct { size_t len; size_t cap; types_NodeShape* data; slop_arena* arena; } slop_list_types_NodeShape;
 
-typedef struct { size_t len; size_t cap; types_PropertyShape* data; } slop_list_types_PropertyShape;
+typedef struct { size_t len; size_t cap; types_PropertyShape* data; slop_arena* arena; } slop_list_types_PropertyShape;
 
-typedef struct { size_t len; size_t cap; types_ShaclPath* data; } slop_list_types_ShaclPath;
+typedef struct { size_t len; size_t cap; types_ShaclPath* data; slop_arena* arena; } slop_list_types_ShaclPath;
 
-typedef struct { size_t len; size_t cap; types_ValidationResult* data; } slop_list_types_ValidationResult;
+typedef struct { size_t len; size_t cap; types_ValidationResult* data; slop_arena* arena; } slop_list_types_ValidationResult;
 
 typedef struct { bool has_value; rdf_Term value; } slop_option_rdf_Term;
 
@@ -379,6 +385,7 @@ slop_list_rdf_Term snarl_data_graph_objects_of(slop_arena* arena, data_graph_Sna
 int64_t snarl_data_graph_size(data_graph_SnarlDataGraph g);
 slop_list_rdf_Term snarl_data_graph_subjects(slop_arena* arena, data_graph_SnarlDataGraph g, rdf_Term pred, rdf_Term obj);
 slop_list_rdf_Term snarl_data_graph_subjects_of(slop_arena* arena, data_graph_SnarlDataGraph g, rdf_Term pred);
+rdf_Term snarl_data_graph_term_of(data_graph_SnarlDataGraph g, int64_t id);
 index_IndexedGraph snarl_data_graph_to_indexed(slop_arena* arena, data_graph_SnarlDataGraph g);
 slop_list_rdf_Triple snarl_data_graph_triples_for_subject(slop_arena* arena, data_graph_SnarlDataGraph g, rdf_Term subj);
 types_ValidatorConfig snarl_default_config(void);
@@ -446,6 +453,7 @@ uint8_t xsd_values_equal(xsd_XsdValue a, xsd_XsdValue b);
 #define data_graph_snarl_data_graph_size snarl_data_graph_size
 #define data_graph_snarl_data_graph_subjects snarl_data_graph_subjects
 #define data_graph_snarl_data_graph_subjects_of snarl_data_graph_subjects_of
+#define data_graph_snarl_data_graph_term_of snarl_data_graph_term_of
 #define data_graph_snarl_data_graph_to_indexed snarl_data_graph_to_indexed
 #define data_graph_snarl_data_graph_triples_for_subject snarl_data_graph_triples_for_subject
 #define engine_engine_validate snarl_engine_validate

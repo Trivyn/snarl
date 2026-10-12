@@ -1,19 +1,22 @@
 (module data-graph
   (@doc "Snarl-specific RDF data graph with only SHACL validation access paths")
 
-  (import rdf (Term Triple term-eq make-triple triple-subject triple-predicate triple-object))
-  (import index (IndexedGraph TermSet TermSetMap indexed-graph-create indexed-graph-add indexed-graph-size))
+  (import rdf (Term Triple IRI BlankNode term-eq make-iri make-literal make-triple make-triple-term
+               triple-subject triple-predicate triple-object))
+  (import index (IndexedGraph indexed-graph-create indexed-graph-add indexed-graph-size))
 
   (export
     SnarlDataIndex
     SnarlDataGraph
+    IdSet
     snarl-data-graph-create
     snarl-data-graph-add
     snarl-data-graph-size
     snarl-data-graph-contains
     snarl-data-graph-object-set
-    snarl-data-graph-term-set-size
-    snarl-data-graph-term-set-to-list
+    snarl-data-graph-id-set-size
+    snarl-data-graph-id-set-to-list
+    snarl-data-graph-term-of
     snarl-data-graph-has-object
     snarl-data-graph-objects
     snarl-data-graph-subjects
@@ -23,15 +26,34 @@
     snarl-data-graph-triples-for-subject
     snarl-data-graph-to-indexed
     snarl-data-graph-from-indexed)
+
+  ;; ============================================================
+  ;; Representation
+  ;;
+  ;; Every distinct term is stored once, as an owned copy, and numbered; the
+  ;; indexes hold only those Int ids. An id is 8 bytes and needs no stored
+  ;; hash, where a Term key is 72 bytes plus its hash, and each triple's terms
+  ;; appear in four indexes. No triple list is kept: every access path is an
+  ;; index, and the triples themselves are recoverable from sp.
+  ;;
+  ;; `terms` is a Map rather than a List so that it is shared by reference
+  ;; between copies of the SnarlDataGraph record, like the indexes.
+  ;; ============================================================
+
+  (type IdSet (Set Int))
+  (type IdSetMap (Map Int IdSet))
+
   (type SnarlDataIndex (record
-    (sp (Map Term TermSetMap))       ;; subject -> predicate -> Set[object]
-    (po (Map Term TermSetMap))       ;; predicate -> object -> Set[subject]
-    (p-subjects (Map Term TermSet))  ;; predicate -> Set[subject]
-    (p-objects (Map Term TermSet)))) ;; predicate -> Set[object]
+    (sp (Map Int IdSetMap))  ;; subject -> predicate -> Set[object]
+    (po (Map Int IdSetMap))  ;; predicate -> object -> Set[subject]
+    (p-subjects IdSetMap)    ;; predicate -> Set[subject]
+    (p-objects IdSetMap)))   ;; predicate -> Set[object]
 
   (type SnarlDataGraph (record
-    (triples (List Triple))
+    (ids (Map Term Int))     ;; owned term -> id
+    (terms (Map Int Term))   ;; id -> owned term
     (index SnarlDataIndex)
+    (no-ids IdSet)           ;; shared, never-filled set for "no values"
     (size (Int 0 ..))))
 
   (fn snarl-data-graph-create ((arena Arena))
@@ -39,28 +61,120 @@
     (@spec ((Arena) -> SnarlDataGraph))
     (@alloc arena)
     (@post (== (. $result size) 0))
-    (@post (== (list-len (. $result triples)) 0))
     (record-new SnarlDataGraph
-      (triples (list-new arena Triple))
+      (ids (map-new arena Term Int))
+      (terms (map-new arena Int Term))
       (index (record-new SnarlDataIndex
-               (sp (map-new arena Term TermSetMap))
-               (po (map-new arena Term TermSetMap))
-               (p-subjects (map-new arena Term TermSet))
-               (p-objects (map-new arena Term TermSet))))
+               (sp (map-new arena Int IdSetMap))
+               (po (map-new arena Int IdSetMap))
+               (p-subjects (map-new arena Int IdSet))
+               (p-objects (map-new arena Int IdSet))))
+      (no-ids (set-new arena Int))
       (size 0))
     :c-name "snarl_data_graph_create")
 
-  (fn make-term-set ((arena Arena) (value Term))
-    (@intent "Create a term set containing one value")
-    (@spec ((Arena Term) -> TermSet))
+  ;; ============================================================
+  ;; Owned copies and interning
+  ;;
+  ;; slop-rdf's streaming parser (parse-ttl-*-for-each-triple) builds each
+  ;; statement in a scratch arena and resets it once the callback returns: a
+  ;; Triple it hands over is valid only during that call. snarl-data-graph-add
+  ;; therefore copies a term the first time it sees it, and keeps only that
+  ;; copy - as the dictionary key too, since a map keeps the key it is given.
+  ;; A blank node is only an id, so it is kept as is. A triple term is keyed
+  ;; by its pointer (slop-rdf's Term equality), so each occurrence is its own
+  ;; entry, as it was before interning.
+  ;; ============================================================
+
+  (fn copy-string ((arena Arena) (s String))
+    (@intent "s's bytes, copied into arena")
+    (@spec ((Arena String) -> String))
     (@alloc arena)
-    (let ((values (set-new arena Term)))
+    (@post (string-eq $result s))
+    (string-concat arena s ""))
+
+  (fn copy-option-string ((arena Arena) (s (Option String)))
+    (@intent "An optional string, its bytes copied into arena")
+    (@spec ((Arena (Option String)) -> (Option String)))
+    (@alloc arena)
+    (match s
+      ((some v) (some (copy-string arena v)))
+      ((none) (none))))
+
+  (fn copy-term ((arena Arena) (t Term))
+    (@intent "t with every string it holds copied into arena")
+    (@spec ((Arena Term) -> Term))
+    (@alloc arena)
+    (match t
+      ((term-iri i) (union-new Term term-iri (record-new IRI (value (copy-string arena (. i value))))))
+      ((term-blank _) t)
+      ((term-literal l) (make-literal arena (copy-string arena (. l value))
+                          (copy-option-string arena (. l datatype))
+                          (copy-option-string arena (. l lang))))
+      ((term-triple tt)
+        (let ((inner (deref tt)))
+          (make-triple-term arena
+            (make-triple arena
+              (copy-term arena (triple-subject inner))
+              (copy-term arena (triple-predicate inner))
+              (copy-term arena (triple-object inner))))))))
+
+  (fn intern-term ((arena Arena) (g SnarlDataGraph) (t Term))
+    (@intent "t's id, minted the first time t is seen, keeping an owned copy of it")
+    (@spec ((Arena SnarlDataGraph Term) -> Int))
+    (@alloc arena)
+    (@post (>= $result 0))
+    (match (map-get (. g ids) t)
+      ((some id) id)
+      ((none)
+        (let ((id (map-len (. g terms)))
+              (owned (copy-term arena t)))
+          (map-put (. g ids) owned id)
+          (map-put (. g terms) id owned)
+          id))))
+
+  (fn lookup-term ((g SnarlDataGraph) (t Term))
+    (@intent "t's id if the graph has seen t, without adding it")
+    (@spec ((SnarlDataGraph Term) -> (Option Int)))
+    (@pure)
+    (map-get (. g ids) t))
+
+  (fn snarl-data-graph-term-of ((g SnarlDataGraph) (id Int))
+    (@intent "The term an id stands for")
+    (@spec ((SnarlDataGraph Int) -> Term))
+    (@pure)
+    ;; Every id in an index was minted by intern-term, so the fallback is
+    ;; unreachable for ids read from this graph.
+    (match (map-get (. g terms) id)
+      ((some t) t)
+      ((none) (union-new Term term-blank (record-new BlankNode (id 0)))))
+    :c-name "snarl_data_graph_term_of")
+
+  (fn ids-to-terms ((arena Arena) (g SnarlDataGraph) (ids IdSet))
+    (@intent "The terms an id set stands for, as a list")
+    (@spec ((Arena SnarlDataGraph IdSet) -> (List Term)))
+    (@alloc arena)
+    (@post (== (list-len $result) (set-len ids)))
+    (let ((mut result (list-new arena Term)))
+      (for-each (id ids)
+        (list-push result (snarl-data-graph-term-of g id)))
+      result))
+
+  ;; ============================================================
+  ;; Index maintenance
+  ;; ============================================================
+
+  (fn make-id-set ((arena Arena) (value Int))
+    (@intent "Create an id set containing one value")
+    (@spec ((Arena Int) -> IdSet))
+    (@alloc arena)
+    (let ((values (set-new arena Int)))
       (set-put values value)
       values))
 
-  (fn add-to-nested-set ((arena Arena) (outer (Map Term TermSetMap)) (first Term) (second Term) (value Term))
+  (fn add-to-nested-set ((arena Arena) (outer (Map Int IdSetMap)) (first Int) (second Int) (value Int))
     (@intent "Insert value into outer[first][second]")
-    (@spec ((Arena (Map Term TermSetMap) Term Term Term) -> Unit))
+    (@spec ((Arena (Map Int IdSetMap) Int Int Int) -> Unit))
     (@alloc arena)
     ;; Used for secondary indexes after the subject/predicate/object index has
     ;; already decided whether the triple is new.
@@ -69,80 +183,23 @@
         (match (map-get inner second)
           ((some values) (set-put values value))
           ((none)
-            (map-put inner second (make-term-set arena value)))))
+            (map-put inner second (make-id-set arena value)))))
       ((none)
-        (let ((inner-map (map-new arena Term TermSet)))
-          (map-put inner-map second (make-term-set arena value))
+        (let ((inner-map (map-new arena Int IdSet)))
+          (map-put inner-map second (make-id-set arena value))
           (map-put outer first inner-map)))))
 
-  (fn add-to-flat-set ((arena Arena) (outer (Map Term TermSet)) (key Term) (value Term))
+  (fn add-to-flat-set ((arena Arena) (outer IdSetMap) (key Int) (value Int))
     (@intent "Insert value into outer[key]")
-    (@spec ((Arena (Map Term TermSet) Term Term) -> Unit))
+    (@spec ((Arena IdSetMap Int Int) -> Unit))
     (@alloc arena)
     (match (map-get outer key)
       ((some values) (set-put values value))
-      ((none) (map-put outer key (make-term-set arena value)))))
+      ((none) (map-put outer key (make-id-set arena value)))))
 
-  (fn snarl-data-graph-contains ((g SnarlDataGraph) (t Triple))
-    (@intent "Check whether the graph contains an exact triple")
-    (@spec ((SnarlDataGraph Triple) -> Bool))
-    (@pure)
-    ;; Exact triple membership is represented by the canonical sp index.
-    (let ((s (triple-subject t))
-          (p (triple-predicate t))
-          (o (triple-object t)))
-      (match (map-get (. (. g index) sp) s)
-        ((some pred-map)
-          (match (map-get pred-map p)
-            ((some objs) (set-has objs o))
-            ((none) false)))
-        ((none) false)))
-    :c-name "snarl_data_graph_contains")
-
-  (fn snarl-data-graph-object-set ((g SnarlDataGraph) (subj Term) (pred Term))
-    (@intent "Return the indexed object set for a subject/predicate pair")
-    (@spec ((SnarlDataGraph Term Term) -> (Option TermSet)))
-    (@pure)
-    ;; This exposes the hot validation path without copying the set into a list.
-    ;; Callers that need list semantics must explicitly materialize it.
-    (match (map-get (. (. g index) sp) subj)
-      ((some pred-map)
-        (match (map-get pred-map pred)
-          ((some objs) (some objs))
-          ((none) (none))))
-      ((none) (none))))
-
-  (fn snarl-data-graph-term-set-size ((terms TermSet))
-    (@intent "Count terms in a term set")
-    (@spec ((TermSet) -> (Int 0 ..)))
-    (@pure)
-    (@post (>= $result 0))
-    (let ((mut n 0))
-      (for-each (_ terms)
-        (set! n (+ n 1)))
-      n))
-
-  (fn snarl-data-graph-term-set-to-list ((arena Arena) (terms TermSet))
-    (@intent "Copy a term set into a list")
-    (@spec ((Arena TermSet) -> (List Term)))
-    (@alloc arena)
-    (@post (>= (list-len $result) 0))
-    (let ((mut result (list-new arena Term)))
-      (for-each (t terms)
-        (list-push result t))
-      result))
-
-  (fn snarl-data-graph-has-object ((g SnarlDataGraph) (subj Term) (pred Term) (obj Term))
-    (@intent "Check whether a subject/predicate pair has an object")
-    (@spec ((SnarlDataGraph Term Term Term) -> Bool))
-    (@pure)
-    (match (snarl-data-graph-object-set g subj pred)
-      ((some objs) (set-has objs obj))
-      ((none) false)))
-
-  (fn add-to-sp-index-if-new ((arena Arena) (outer (Map Term TermSetMap)) (subj Term) (pred Term) (obj Term))
+  (fn add-to-sp-index-if-new ((arena Arena) (outer (Map Int IdSetMap)) (subj Int) (pred Int) (obj Int))
     (@intent "Insert into the subject/predicate index and report whether the triple was new")
-    (@spec ((Arena (Map Term TermSetMap) Term Term Term) -> Bool))
+    (@spec ((Arena (Map Int IdSetMap) Int Int Int) -> Bool))
     (@alloc arena)
     ;; The return value is the duplicate gate for all other indexes. If this
     ;; returns false, the triple was already present and no secondary index may
@@ -158,36 +215,49 @@
                 true)))
           ((none)
             (do
-              (map-put pred-map pred (make-term-set arena obj))
+              (map-put pred-map pred (make-id-set arena obj))
               true))))
       ((none)
-        (let ((pred-map (map-new arena Term TermSet)))
-          (map-put pred-map pred (make-term-set arena obj))
+        (let ((pred-map (map-new arena Int IdSet)))
+          (map-put pred-map pred (make-id-set arena obj))
           (map-put outer subj pred-map)
           true))))
 
-  (fn snarl-data-graph-add ((arena Arena) (mut g SnarlDataGraph) (t Triple))
-    (@intent "Add a triple to the Snarl data graph")
+  (fn snarl-data-graph-add ((arena Arena) (g SnarlDataGraph) (t Triple))
+    (@intent "Add a triple to the Snarl data graph, keeping owned copies of any terms it has not seen")
     (@spec ((Arena SnarlDataGraph Triple) -> SnarlDataGraph))
     (@alloc arena)
-    (@post (>= (. $result size) 0))
-    ;; Update the canonical sp index first so duplicate input pays only one
-    ;; subject/predicate/object lookup before the secondary indexes are skipped.
-    (let ((s (triple-subject t))
-          (p (triple-predicate t))
-          (o (triple-object t)))
+    (@post (>= (. $result size) (. g size)))
+    (@example
+      (arena (snarl-data-graph-create arena)
+             (make-triple arena (make-iri arena "http://example.org/s")
+                                (make-iri arena "http://example.org/p")
+                                (make-literal arena "o" (none) (some "en"))))
+      -> (SnarlDataGraph _ _ _ _ 1))
+    ;; t need not outlive the call: what the graph keeps is copied into arena
+    ;; by intern-term, so a streaming parser's callback Triple may be passed
+    ;; directly. Update the canonical sp index first so duplicate input pays
+    ;; only the sp lookup before the secondary indexes are skipped.
+    (let ((s (intern-term arena g (triple-subject t)))
+          (p (intern-term arena g (triple-predicate t)))
+          (o (intern-term arena g (triple-object t))))
       (if (add-to-sp-index-if-new arena (. (. g index) sp) s p o)
         (do
-          (list-push (. g triples) t)
           (add-to-nested-set arena (. (. g index) po) p o s)
           (add-to-flat-set arena (. (. g index) p-subjects) p s)
           (add-to-flat-set arena (. (. g index) p-objects) p o)
           (record-new SnarlDataGraph
-            (triples (. g triples))
+            (ids (. g ids))
+            (terms (. g terms))
             (index (. g index))
+            (no-ids (. g no-ids))
             (size (+ (. g size) 1))))
         g))
     :c-name "snarl_data_graph_add")
+
+  ;; ============================================================
+  ;; Queries
+  ;; ============================================================
 
   (fn snarl-data-graph-size ((g SnarlDataGraph))
     (@intent "Return the number of triples in the Snarl data graph")
@@ -197,14 +267,73 @@
     (. g size)
     :c-name "snarl_data_graph_size")
 
+  (fn object-id-set ((g SnarlDataGraph) (subj Int) (pred Int))
+    (@intent "The object ids for a subject/predicate id pair; the shared empty set when there are none")
+    (@spec ((SnarlDataGraph Int Int) -> IdSet))
+    (@pure)
+    (match (map-get (. (. g index) sp) subj)
+      ((some pred-map)
+        (match (map-get pred-map pred)
+          ((some objs) objs)
+          ((none) (. g no-ids))))
+      ((none) (. g no-ids))))
+
+  (fn snarl-data-graph-object-set ((g SnarlDataGraph) (subj Term) (pred Term))
+    (@intent "Return the indexed object id set for a subject/predicate pair, empty when there are none")
+    (@spec ((SnarlDataGraph Term Term) -> IdSet))
+    (@pure)
+    ;; This exposes the hot validation path without copying the set into a list.
+    ;; Callers that need list semantics must explicitly materialize it. The set
+    ;; is the index's own (or the graph's shared empty set): read it, never
+    ;; add to it.
+    ;;
+    ;; It returns IdSet rather than (Option IdSet): SLOP 0.3.0+main emits the
+    ;; Option of a module-local Set alias after the prototypes that use it.
+    (match (lookup-term g subj)
+      ((some s)
+        (match (lookup-term g pred)
+          ((some p) (object-id-set g s p))
+          ((none) (. g no-ids))))
+      ((none) (. g no-ids))))
+
+  (fn snarl-data-graph-id-set-size ((ids (Set Int)))
+    (@intent "Count the ids in an id set")
+    (@spec (((Set Int)) -> (Int 0 ..)))
+    (@pure)
+    (@post (>= $result 0))
+    ;; Typed (Set Int), not IdSet: the checker's set-len does not see through
+    ;; an alias (SLOP 0.3.0+main).
+    (set-len ids))
+
+  (fn snarl-data-graph-id-set-to-list ((arena Arena) (g SnarlDataGraph) (ids IdSet))
+    (@intent "The terms of an id set from this graph, as a list")
+    (@spec ((Arena SnarlDataGraph IdSet) -> (List Term)))
+    (@alloc arena)
+    (@post (== (list-len $result) (set-len ids)))
+    (ids-to-terms arena g ids))
+
+  (fn snarl-data-graph-has-object ((g SnarlDataGraph) (subj Term) (pred Term) (obj Term))
+    (@intent "Check whether a subject/predicate pair has an object")
+    (@spec ((SnarlDataGraph Term Term Term) -> Bool))
+    (@pure)
+    (match (lookup-term g obj)
+      ((some o) (set-has (snarl-data-graph-object-set g subj pred) o))
+      ((none) false)))
+
+  (fn snarl-data-graph-contains ((g SnarlDataGraph) (t Triple))
+    (@intent "Check whether the graph contains an exact triple")
+    (@spec ((SnarlDataGraph Triple) -> Bool))
+    (@pure)
+    ;; Exact triple membership is represented by the canonical sp index.
+    (snarl-data-graph-has-object g (triple-subject t) (triple-predicate t) (triple-object t))
+    :c-name "snarl_data_graph_contains")
+
   (fn snarl-data-graph-objects ((arena Arena) (g SnarlDataGraph) (subj Term) (pred Term))
     (@intent "Return objects for a subject/predicate pair")
     (@spec ((Arena SnarlDataGraph Term Term) -> (List Term)))
     (@alloc arena)
     (@post (>= (list-len $result) 0))
-    (match (snarl-data-graph-object-set g subj pred)
-      ((some objs) (snarl-data-graph-term-set-to-list arena objs))
-      ((none) (list-new arena Term)))
+    (ids-to-terms arena g (snarl-data-graph-object-set g subj pred))
     :c-name "snarl_data_graph_objects")
 
   (fn snarl-data-graph-subjects ((arena Arena) (g SnarlDataGraph) (pred Term) (obj Term))
@@ -212,22 +341,38 @@
     (@spec ((Arena SnarlDataGraph Term Term) -> (List Term)))
     (@alloc arena)
     (@post (>= (list-len $result) 0))
-    (match (map-get (. (. g index) po) pred)
-      ((some obj-map)
-        (match (map-get obj-map obj)
-          ((some subjects) (snarl-data-graph-term-set-to-list arena subjects))
+    (match (lookup-term g pred)
+      ((some p)
+        (match (lookup-term g obj)
+          ((some o)
+            (match (map-get (. (. g index) po) p)
+              ((some obj-map)
+                (match (map-get obj-map o)
+                  ((some subjects) (ids-to-terms arena g subjects))
+                  ((none) (list-new arena Term))))
+              ((none) (list-new arena Term))))
           ((none) (list-new arena Term))))
       ((none) (list-new arena Term)))
     :c-name "snarl_data_graph_subjects")
+
+  (fn flat-index-terms ((arena Arena) (g SnarlDataGraph) (index IdSetMap) (pred Term))
+    (@intent "The terms a flat predicate index holds for pred, as a list")
+    (@spec ((Arena SnarlDataGraph IdSetMap Term) -> (List Term)))
+    (@alloc arena)
+    (@post (>= (list-len $result) 0))
+    (match (lookup-term g pred)
+      ((some p)
+        (match (map-get index p)
+          ((some values) (ids-to-terms arena g values))
+          ((none) (list-new arena Term))))
+      ((none) (list-new arena Term))))
 
   (fn snarl-data-graph-subjects-of ((arena Arena) (g SnarlDataGraph) (pred Term))
     (@intent "Return subjects that use a predicate")
     (@spec ((Arena SnarlDataGraph Term) -> (List Term)))
     (@alloc arena)
     (@post (>= (list-len $result) 0))
-    (match (map-get (. (. g index) p-subjects) pred)
-      ((some subjects) (snarl-data-graph-term-set-to-list arena subjects))
-      ((none) (list-new arena Term)))
+    (flat-index-terms arena g (. (. g index) p-subjects) pred)
     :c-name "snarl_data_graph_subjects_of")
 
   (fn snarl-data-graph-objects-of ((arena Arena) (g SnarlDataGraph) (pred Term))
@@ -235,9 +380,7 @@
     (@spec ((Arena SnarlDataGraph Term) -> (List Term)))
     (@alloc arena)
     (@post (>= (list-len $result) 0))
-    (match (map-get (. (. g index) p-objects) pred)
-      ((some objects) (snarl-data-graph-term-set-to-list arena objects))
-      ((none) (list-new arena Term)))
+    (flat-index-terms arena g (. (. g index) p-objects) pred)
     :c-name "snarl_data_graph_objects_of")
 
   (fn snarl-data-graph-predicates-for-subject ((arena Arena) (g SnarlDataGraph) (subj Term))
@@ -246,10 +389,13 @@
     (@alloc arena)
     (@post (>= (list-len $result) 0))
     (let ((mut result (list-new arena Term)))
-      (match (map-get (. (. g index) sp) subj)
-        ((some pred-map)
-          (for-each ((p _) pred-map)
-            (list-push result p)))
+      (match (lookup-term g subj)
+        ((some s)
+          (match (map-get (. (. g index) sp) s)
+            ((some pred-map)
+              (for-each ((p _) pred-map)
+                (list-push result (snarl-data-graph-term-of g p))))
+            ((none) (do))))
         ((none) (do)))
       result))
 
@@ -259,11 +405,15 @@
     (@alloc arena)
     (@post (>= (list-len $result) 0))
     (let ((mut result (list-new arena Triple)))
-      (match (map-get (. (. g index) sp) subj)
-        ((some pred-map)
-          (for-each ((p objs) pred-map)
-            (for-each (o objs)
-              (list-push result (make-triple arena subj p o)))))
+      (match (lookup-term g subj)
+        ((some s)
+          (match (map-get (. (. g index) sp) s)
+            ((some pred-map)
+              (for-each ((p objs) pred-map)
+                (let ((pred (snarl-data-graph-term-of g p)))
+                  (for-each (o objs)
+                    (list-push result (make-triple arena subj pred (snarl-data-graph-term-of g o)))))))
+            ((none) (do))))
         ((none) (do)))
       result)
     :c-name "snarl_data_graph_triples_for_subject")
@@ -273,9 +423,16 @@
     (@spec ((Arena SnarlDataGraph) -> IndexedGraph))
     (@alloc arena)
     (@pre (>= (. g size) 0))
+    ;; Walks the sp index, so triples come out grouped by subject rather than
+    ;; in insertion order.
     (let ((mut out (indexed-graph-create arena)))
-      (for-each (t (. g triples))
-        (set! out (indexed-graph-add arena out t)))
+      (for-each ((s pred-map) (. (. g index) sp))
+        (let ((subj (snarl-data-graph-term-of g s)))
+          (for-each ((p objs) pred-map)
+            (let ((pred (snarl-data-graph-term-of g p)))
+              (for-each (o objs)
+                (set! out (indexed-graph-add arena out
+                            (make-triple arena subj pred (snarl-data-graph-term-of g o)))))))))
       out)
     :c-name "snarl_data_graph_to_indexed")
 

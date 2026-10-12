@@ -86,7 +86,7 @@ static inline bool slop_eq_rdf_IRI(const void* a, const void* b) {
     const rdf_IRI* _a = (const rdf_IRI*)a;
     const rdf_IRI* _b = (const rdf_IRI*)b;
     return true
-        && slop_eq_string(&_a->value, &_b->value)
+        && (slop_eq_string(&_a->value, &_b->value))
     ;
 }
 #endif
@@ -95,14 +95,14 @@ static inline bool slop_eq_rdf_IRI(const void* a, const void* b) {
 static inline uint64_t slop_hash_rdf_BlankNode(const void* key) {
     const rdf_BlankNode* _k = (const rdf_BlankNode*)key;
     uint64_t hash = 14695981039346656037ULL;
-    { int64_t _tmp = (int64_t)_k->id; hash ^= slop_hash_int(&_tmp); hash *= 1099511628211ULL; }
+    hash ^= slop_hash_int(&(int64_t){ (int64_t)_k->id }); hash *= 1099511628211ULL;
     return hash;
 }
 static inline bool slop_eq_rdf_BlankNode(const void* a, const void* b) {
     const rdf_BlankNode* _a = (const rdf_BlankNode*)a;
     const rdf_BlankNode* _b = (const rdf_BlankNode*)b;
     return true
-        && _a->id == _b->id
+        && (_a->id == _b->id)
     ;
 }
 #endif
@@ -112,17 +112,17 @@ static inline uint64_t slop_hash_rdf_Literal(const void* key) {
     const rdf_Literal* _k = (const rdf_Literal*)key;
     uint64_t hash = 14695981039346656037ULL;
     hash ^= slop_hash_string(&_k->value); hash *= 1099511628211ULL;
-    { const uint8_t* _b = (const uint8_t*)&_k->datatype; for(size_t _i=0; _i<sizeof(_k->datatype); _i++) { hash ^= _b[_i]; hash *= 1099511628211ULL; } }
-    { const uint8_t* _b = (const uint8_t*)&_k->lang; for(size_t _i=0; _i<sizeof(_k->lang); _i++) { hash ^= _b[_i]; hash *= 1099511628211ULL; } }
+    hash ^= ((_k->datatype).has_value ? slop_hash_combine(1, slop_hash_string(&(_k->datatype).value)) : 0); hash *= 1099511628211ULL;
+    hash ^= ((_k->lang).has_value ? slop_hash_combine(1, slop_hash_string(&(_k->lang).value)) : 0); hash *= 1099511628211ULL;
     return hash;
 }
 static inline bool slop_eq_rdf_Literal(const void* a, const void* b) {
     const rdf_Literal* _a = (const rdf_Literal*)a;
     const rdf_Literal* _b = (const rdf_Literal*)b;
     return true
-        && slop_eq_string(&_a->value, &_b->value)
-        && memcmp(&_a->datatype, &_b->datatype, sizeof(_a->datatype)) == 0
-        && memcmp(&_a->lang, &_b->lang, sizeof(_a->lang)) == 0
+        && (slop_eq_string(&_a->value, &_b->value))
+        && ((_a->datatype).has_value == (_b->datatype).has_value && (!(_a->datatype).has_value || ((slop_eq_string(&(_a->datatype).value, &(_b->datatype).value)))))
+        && ((_a->lang).has_value == (_b->lang).has_value && (!(_a->lang).has_value || ((slop_eq_string(&(_a->lang).value, &(_b->lang).value)))))
     ;
 }
 #endif
@@ -168,10 +168,6 @@ target_TargetCache target_target_cache_create(slop_arena* arena);
 target_TermList target_resolve_target_class_cached(slop_arena* arena, data_graph_SnarlDataGraph data_graph, target_TargetCache cache, rdf_Term class_term);
 slop_list_rdf_Term target_resolve_targets_cached(slop_arena* arena, data_graph_SnarlDataGraph data_graph, target_TargetCache cache, types_NodeShape shape);
 slop_list_rdf_Term snarl_resolve_target_node(slop_arena* arena, slop_list_rdf_Term nodes);
-void target_add_class_if_needed(slop_arena* arena, slop_list_rdf_Term classes, slop_map* seen, rdf_Term class_term);
-void target_collect_constraint_classes(slop_arena* arena, slop_list_rdf_Term classes, slop_map* seen, types_Constraint constraint);
-void target_collect_property_shape_classes(slop_arena* arena, slop_list_rdf_Term classes, slop_map* seen, types_PropertyShape ps);
-void target_collect_node_shape_classes(slop_arena* arena, slop_list_rdf_Term classes, slop_map* seen, types_NodeShape ns);
 slop_list_rdf_Term target_collect_class_constraints(slop_arena* arena, types_ShapesGraph shapes_graph);
 target_ClassIndex target_build_class_index(slop_arena* arena, data_graph_SnarlDataGraph data_graph, types_ShapesGraph shapes_graph);
 uint8_t target_class_index_has_class(target_ClassIndex index, rdf_Term class_term);
@@ -230,6 +226,11 @@ SLOP_OPTION_DEFINE(types_PropertyShape, slop_option_types_PropertyShape)
 #ifndef SLOP_OPTION_TYPES_CONSTRAINT_DEFINED
 #define SLOP_OPTION_TYPES_CONSTRAINT_DEFINED
 SLOP_OPTION_DEFINE(types_Constraint, slop_option_types_Constraint)
+#endif
+
+#ifndef SLOP_OPTION_MAP_PTR_DEFINED
+#define SLOP_OPTION_MAP_PTR_DEFINED
+SLOP_OPTION_DEFINE(slop_map*, slop_option_map_ptr)
 #endif
 
 #ifndef SLOP_LIST_TYPES_PROPERTYSHAPE_DEFINED
