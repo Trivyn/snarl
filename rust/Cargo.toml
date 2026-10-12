@@ -23,8 +23,8 @@ include = [
 name = "snarl"
 
 [dependencies]
-slop-std-sys = "0.4.2"
-slop-rdf-sys = "0.5.1"
+slop-std-sys = "0.4.3"
+slop-rdf-sys = "0.5.2"
 
 [build-dependencies]
 cc = "1.2.35"
