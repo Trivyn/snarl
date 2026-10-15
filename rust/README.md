@@ -10,7 +10,7 @@ the C validator sources and compiles them during the Cargo build.
 
 ```toml
 [dependencies]
-snarl-shacl = "0.6"
+snarl-shacl = "0.7"
 ```
 
 ## Requirements
@@ -22,6 +22,12 @@ snarl-shacl = "0.6"
 
 The crate uses the `cc` build dependency to compile the bundled C sources under
 `csrc/`. No SLOP toolchain is required when building the crate.
+
+The shared SLOP runtime, std and RDF modules come from the
+[`slop-std-sys`](https://crates.io/crates/slop-std-sys) and
+[`slop-rdf-sys`](https://crates.io/crates/slop-rdf-sys) crates. snarl-shacl 0.7
+builds on slop-std-sys 0.5 and slop-rdf-sys 0.6 (SLOP 0.5's package-qualified C
+names); a crate that also depends on them directly must use the same versions.
 
 ## Quick Start
 
