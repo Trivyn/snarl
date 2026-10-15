@@ -1,68 +1,68 @@
 #include "../runtime/slop_runtime.h"
 #include "slop_other.h"
 
-static const slop_string other_EX_FOCUS = SLOP_STR("http://example.org/focus");
-static const slop_string other_EX_SHAPE = SLOP_STR("http://example.org/Shape1");
-static const slop_string other_EX_A = SLOP_STR("http://example.org/a");
-static const slop_string other_EX_B = SLOP_STR("http://example.org/b");
-static const slop_string other_EX_C = SLOP_STR("http://example.org/c");
-static const slop_string other_EX_NAME = SLOP_STR("http://example.org/name");
+static const slop_string snarl_other_EX_FOCUS = SLOP_STR("http://example.org/focus");
+static const slop_string snarl_other_EX_SHAPE = SLOP_STR("http://example.org/Shape1");
+static const slop_string snarl_other_EX_A = SLOP_STR("http://example.org/a");
+static const slop_string snarl_other_EX_B = SLOP_STR("http://example.org/b");
+static const slop_string snarl_other_EX_C = SLOP_STR("http://example.org/c");
+static const slop_string snarl_other_EX_NAME = SLOP_STR("http://example.org/name");
 
-slop_list_rdf_Term other_fixture_term_list_ab(slop_arena* arena);
-slop_list_rdf_Term other_fixture_allowed_terms_abc(slop_arena* arena);
-slop_list_types_ShaclPath other_fixture_allowed_path_name(slop_arena* arena);
-data_graph_SnarlDataGraph other_fixture_g_focus_name(slop_arena* arena);
-data_graph_SnarlDataGraph other_fixture_g_focus_name_age(slop_arena* arena);
-uint8_t other_list_contains_term(slop_list_rdf_Term terms, rdf_Term target);
-slop_option_types_ValidationResult snarl_check_has_value(slop_arena* arena, rdf_Term focus_node, slop_list_rdf_Term value_nodes, rdf_Term required_value, slop_option_types_ShaclPath path, rdf_Term shape_id, types_Severity severity, slop_option_string message);
-slop_option_types_ValidationResult snarl_check_in(slop_arena* arena, rdf_Term focus_node, rdf_Term value_node, slop_list_rdf_Term allowed_values, slop_option_types_ShaclPath path, rdf_Term shape_id, types_Severity severity, slop_option_string message);
-slop_list_types_ValidationResult snarl_check_closed(slop_arena* arena, data_graph_SnarlDataGraph data_graph, rdf_Term focus_node, slop_list_types_ShaclPath allowed_paths, slop_option_types_ShaclPath path, rdf_Term shape_id, types_Severity severity, slop_option_string message);
+slop_list_slop_rdf_rdf_Term snarl_other_fixture_term_list_ab(slop_arena* arena);
+slop_list_slop_rdf_rdf_Term snarl_other_fixture_allowed_terms_abc(slop_arena* arena);
+slop_list_snarl_types_ShaclPath snarl_other_fixture_allowed_path_name(slop_arena* arena);
+snarl_data_graph_SnarlDataGraph snarl_other_fixture_g_focus_name(slop_arena* arena);
+snarl_data_graph_SnarlDataGraph snarl_other_fixture_g_focus_name_age(slop_arena* arena);
+uint8_t snarl_other_list_contains_term(slop_list_slop_rdf_rdf_Term terms, slop_rdf_rdf_Term target);
+slop_option_snarl_types_ValidationResult snarl_check_has_value(slop_arena* arena, slop_rdf_rdf_Term focus_node, slop_list_slop_rdf_rdf_Term value_nodes, slop_rdf_rdf_Term required_value, slop_option_snarl_types_ShaclPath path, slop_rdf_rdf_Term shape_id, snarl_types_Severity severity, slop_option_string message);
+slop_option_snarl_types_ValidationResult snarl_check_in(slop_arena* arena, slop_rdf_rdf_Term focus_node, slop_rdf_rdf_Term value_node, slop_list_slop_rdf_rdf_Term allowed_values, slop_option_snarl_types_ShaclPath path, slop_rdf_rdf_Term shape_id, snarl_types_Severity severity, slop_option_string message);
+slop_list_snarl_types_ValidationResult snarl_check_closed(slop_arena* arena, snarl_data_graph_SnarlDataGraph data_graph, slop_rdf_rdf_Term focus_node, slop_list_snarl_types_ShaclPath allowed_paths, slop_option_snarl_types_ShaclPath path, slop_rdf_rdf_Term shape_id, snarl_types_Severity severity, slop_option_string message);
 
-slop_list_rdf_Term other_fixture_term_list_ab(slop_arena* arena) {
+slop_list_slop_rdf_rdf_Term snarl_other_fixture_term_list_ab(slop_arena* arena) {
     {
-        __auto_type terms = ((slop_list_rdf_Term){ .data = NULL, .len = 0, .cap = 0, .arena = arena });
-        ({ __auto_type _lst_p = &(terms); __auto_type _item = (rdf_make_iri(arena, other_EX_A)); if (_lst_p->len >= _lst_p->cap) { _lst_p->data = (__typeof__(_lst_p->data))slop_list_grow_raw(_lst_p->arena, _lst_p->data, &_lst_p->cap, _lst_p->len, sizeof(*_lst_p->data)); } _lst_p->data[_lst_p->len++] = _item; (void)0; });
-        ({ __auto_type _lst_p = &(terms); __auto_type _item = (rdf_make_iri(arena, other_EX_B)); if (_lst_p->len >= _lst_p->cap) { _lst_p->data = (__typeof__(_lst_p->data))slop_list_grow_raw(_lst_p->arena, _lst_p->data, &_lst_p->cap, _lst_p->len, sizeof(*_lst_p->data)); } _lst_p->data[_lst_p->len++] = _item; (void)0; });
+        __auto_type terms = ((slop_list_slop_rdf_rdf_Term){ .data = NULL, .len = 0, .cap = 0, .arena = arena });
+        (void)(({ __auto_type _lst_p = &(terms); __auto_type _item = (rdf_make_iri(arena, snarl_other_EX_A)); if (_lst_p->len >= _lst_p->cap) { _lst_p->data = (__typeof__(_lst_p->data))slop_list_grow_raw(_lst_p->arena, _lst_p->data, &_lst_p->cap, _lst_p->len, sizeof(*_lst_p->data)); } _lst_p->data[_lst_p->len++] = _item; (void)0; }));
+        (void)(({ __auto_type _lst_p = &(terms); __auto_type _item = (rdf_make_iri(arena, snarl_other_EX_B)); if (_lst_p->len >= _lst_p->cap) { _lst_p->data = (__typeof__(_lst_p->data))slop_list_grow_raw(_lst_p->arena, _lst_p->data, &_lst_p->cap, _lst_p->len, sizeof(*_lst_p->data)); } _lst_p->data[_lst_p->len++] = _item; (void)0; }));
         return terms;
     }
 }
 
-slop_list_rdf_Term other_fixture_allowed_terms_abc(slop_arena* arena) {
+slop_list_slop_rdf_rdf_Term snarl_other_fixture_allowed_terms_abc(slop_arena* arena) {
     {
-        __auto_type terms = ((slop_list_rdf_Term){ .data = NULL, .len = 0, .cap = 0, .arena = arena });
-        ({ __auto_type _lst_p = &(terms); __auto_type _item = (rdf_make_iri(arena, other_EX_A)); if (_lst_p->len >= _lst_p->cap) { _lst_p->data = (__typeof__(_lst_p->data))slop_list_grow_raw(_lst_p->arena, _lst_p->data, &_lst_p->cap, _lst_p->len, sizeof(*_lst_p->data)); } _lst_p->data[_lst_p->len++] = _item; (void)0; });
-        ({ __auto_type _lst_p = &(terms); __auto_type _item = (rdf_make_iri(arena, other_EX_B)); if (_lst_p->len >= _lst_p->cap) { _lst_p->data = (__typeof__(_lst_p->data))slop_list_grow_raw(_lst_p->arena, _lst_p->data, &_lst_p->cap, _lst_p->len, sizeof(*_lst_p->data)); } _lst_p->data[_lst_p->len++] = _item; (void)0; });
-        ({ __auto_type _lst_p = &(terms); __auto_type _item = (rdf_make_iri(arena, other_EX_C)); if (_lst_p->len >= _lst_p->cap) { _lst_p->data = (__typeof__(_lst_p->data))slop_list_grow_raw(_lst_p->arena, _lst_p->data, &_lst_p->cap, _lst_p->len, sizeof(*_lst_p->data)); } _lst_p->data[_lst_p->len++] = _item; (void)0; });
+        __auto_type terms = ((slop_list_slop_rdf_rdf_Term){ .data = NULL, .len = 0, .cap = 0, .arena = arena });
+        (void)(({ __auto_type _lst_p = &(terms); __auto_type _item = (rdf_make_iri(arena, snarl_other_EX_A)); if (_lst_p->len >= _lst_p->cap) { _lst_p->data = (__typeof__(_lst_p->data))slop_list_grow_raw(_lst_p->arena, _lst_p->data, &_lst_p->cap, _lst_p->len, sizeof(*_lst_p->data)); } _lst_p->data[_lst_p->len++] = _item; (void)0; }));
+        (void)(({ __auto_type _lst_p = &(terms); __auto_type _item = (rdf_make_iri(arena, snarl_other_EX_B)); if (_lst_p->len >= _lst_p->cap) { _lst_p->data = (__typeof__(_lst_p->data))slop_list_grow_raw(_lst_p->arena, _lst_p->data, &_lst_p->cap, _lst_p->len, sizeof(*_lst_p->data)); } _lst_p->data[_lst_p->len++] = _item; (void)0; }));
+        (void)(({ __auto_type _lst_p = &(terms); __auto_type _item = (rdf_make_iri(arena, snarl_other_EX_C)); if (_lst_p->len >= _lst_p->cap) { _lst_p->data = (__typeof__(_lst_p->data))slop_list_grow_raw(_lst_p->arena, _lst_p->data, &_lst_p->cap, _lst_p->len, sizeof(*_lst_p->data)); } _lst_p->data[_lst_p->len++] = _item; (void)0; }));
         return terms;
     }
 }
 
-slop_list_types_ShaclPath other_fixture_allowed_path_name(slop_arena* arena) {
+slop_list_snarl_types_ShaclPath snarl_other_fixture_allowed_path_name(slop_arena* arena) {
     {
-        __auto_type paths = ((slop_list_types_ShaclPath){ .data = NULL, .len = 0, .cap = 0, .arena = arena });
-        ({ __auto_type _lst_p = &(paths); __auto_type _item = (((types_ShaclPath){ .tag = types_ShaclPath_path_predicate, .data.path_predicate = rdf_make_iri(arena, other_EX_NAME) })); if (_lst_p->len >= _lst_p->cap) { _lst_p->data = (__typeof__(_lst_p->data))slop_list_grow_raw(_lst_p->arena, _lst_p->data, &_lst_p->cap, _lst_p->len, sizeof(*_lst_p->data)); } _lst_p->data[_lst_p->len++] = _item; (void)0; });
+        __auto_type paths = ((slop_list_snarl_types_ShaclPath){ .data = NULL, .len = 0, .cap = 0, .arena = arena });
+        (void)(({ __auto_type _lst_p = &(paths); __auto_type _item = (((snarl_types_ShaclPath){ .tag = snarl_types_ShaclPath_path_predicate, .data.path_predicate = rdf_make_iri(arena, snarl_other_EX_NAME) })); if (_lst_p->len >= _lst_p->cap) { _lst_p->data = (__typeof__(_lst_p->data))slop_list_grow_raw(_lst_p->arena, _lst_p->data, &_lst_p->cap, _lst_p->len, sizeof(*_lst_p->data)); } _lst_p->data[_lst_p->len++] = _item; (void)0; }));
         return paths;
     }
 }
 
-data_graph_SnarlDataGraph other_fixture_g_focus_name(slop_arena* arena) {
+snarl_data_graph_SnarlDataGraph snarl_other_fixture_g_focus_name(slop_arena* arena) {
     {
         __auto_type g = snarl_data_graph_create(arena);
-        g = snarl_data_graph_add(arena, g, rdf_make_triple(arena, rdf_make_iri(arena, other_EX_FOCUS), rdf_make_iri(arena, other_EX_NAME), rdf_make_literal(arena, SLOP_STR("Alice"), ((slop_option_string){.has_value = false}), ((slop_option_string){.has_value = false}))));
+        g = snarl_data_graph_add(arena, g, rdf_make_triple(arena, rdf_make_iri(arena, snarl_other_EX_FOCUS), rdf_make_iri(arena, snarl_other_EX_NAME), rdf_make_literal(arena, SLOP_STR("Alice"), ((slop_option_string){.has_value = false}), ((slop_option_string){.has_value = false}))));
         return g;
     }
 }
 
-data_graph_SnarlDataGraph other_fixture_g_focus_name_age(slop_arena* arena) {
+snarl_data_graph_SnarlDataGraph snarl_other_fixture_g_focus_name_age(slop_arena* arena) {
     {
         __auto_type g = snarl_data_graph_create(arena);
-        g = snarl_data_graph_add(arena, g, rdf_make_triple(arena, rdf_make_iri(arena, other_EX_FOCUS), rdf_make_iri(arena, other_EX_NAME), rdf_make_literal(arena, SLOP_STR("Alice"), ((slop_option_string){.has_value = false}), ((slop_option_string){.has_value = false}))));
-        g = snarl_data_graph_add(arena, g, rdf_make_triple(arena, rdf_make_iri(arena, other_EX_FOCUS), rdf_make_iri(arena, SLOP_STR("http://example.org/age")), rdf_make_literal(arena, SLOP_STR("30"), ((slop_option_string){.has_value = false}), ((slop_option_string){.has_value = false}))));
+        g = snarl_data_graph_add(arena, g, rdf_make_triple(arena, rdf_make_iri(arena, snarl_other_EX_FOCUS), rdf_make_iri(arena, snarl_other_EX_NAME), rdf_make_literal(arena, SLOP_STR("Alice"), ((slop_option_string){.has_value = false}), ((slop_option_string){.has_value = false}))));
+        g = snarl_data_graph_add(arena, g, rdf_make_triple(arena, rdf_make_iri(arena, snarl_other_EX_FOCUS), rdf_make_iri(arena, SLOP_STR("http://example.org/age")), rdf_make_literal(arena, SLOP_STR("30"), ((slop_option_string){.has_value = false}), ((slop_option_string){.has_value = false}))));
         return g;
     }
 }
 
-uint8_t other_list_contains_term(slop_list_rdf_Term terms, rdf_Term target) {
+uint8_t snarl_other_list_contains_term(slop_list_slop_rdf_rdf_Term terms, slop_rdf_rdf_Term target) {
     {
         uint8_t found = 0;
         {
@@ -78,50 +78,50 @@ uint8_t other_list_contains_term(slop_list_rdf_Term terms, rdf_Term target) {
     }
 }
 
-slop_option_types_ValidationResult snarl_check_has_value(slop_arena* arena, rdf_Term focus_node, slop_list_rdf_Term value_nodes, rdf_Term required_value, slop_option_types_ShaclPath path, rdf_Term shape_id, types_Severity severity, slop_option_string message) {
+slop_option_snarl_types_ValidationResult snarl_check_has_value(slop_arena* arena, slop_rdf_rdf_Term focus_node, slop_list_slop_rdf_rdf_Term value_nodes, slop_rdf_rdf_Term required_value, slop_option_snarl_types_ShaclPath path, slop_rdf_rdf_Term shape_id, snarl_types_Severity severity, slop_option_string message) {
     SLOP_PRE(((((int64_t)((value_nodes).len)) >= 0)), "(>= (list-len value-nodes) 0)");
-    slop_option_types_ValidationResult _retval = {0};
-    if (other_list_contains_term(value_nodes, required_value)) {
-        _retval = (slop_option_types_ValidationResult){.has_value = false};
+    slop_option_snarl_types_ValidationResult _retval = {0};
+    if (snarl_other_list_contains_term(value_nodes, required_value)) {
+        _retval = (slop_option_snarl_types_ValidationResult){.has_value = false};
         goto _slop_post;
     } else {
-        _retval = (slop_option_types_ValidationResult){.has_value = 1, .value = ((types_ValidationResult){.focus_node = focus_node, .result_path = path, .value = (slop_option_rdf_Term){.has_value = false}, .source_shape = shape_id, .source_constraint_component = vocab_SHACL_HAS_VALUE, .severity = severity, .message = message})};
+        _retval = (slop_option_snarl_types_ValidationResult){.has_value = 1, .value = ((snarl_types_ValidationResult){.focus_node = focus_node, .result_path = path, .value = (slop_option_slop_rdf_rdf_Term){.has_value = false}, .source_shape = shape_id, .source_constraint_component = slop_rdf_vocab_SHACL_HAS_VALUE, .severity = severity, .message = message})};
         goto _slop_post;
     }
     _slop_post: ;
-    SLOP_POST((((!((_retval).has_value)) == other_list_contains_term(value_nodes, required_value))), "(== (is-none $result) (list-contains-term value-nodes required-value))");
+    SLOP_POST((((!((_retval).has_value)) == snarl_other_list_contains_term(value_nodes, required_value))), "(== (is-none $result) (list-contains-term value-nodes required-value))");
     return _retval;
 }
 
-slop_option_types_ValidationResult snarl_check_in(slop_arena* arena, rdf_Term focus_node, rdf_Term value_node, slop_list_rdf_Term allowed_values, slop_option_types_ShaclPath path, rdf_Term shape_id, types_Severity severity, slop_option_string message) {
+slop_option_snarl_types_ValidationResult snarl_check_in(slop_arena* arena, slop_rdf_rdf_Term focus_node, slop_rdf_rdf_Term value_node, slop_list_slop_rdf_rdf_Term allowed_values, slop_option_snarl_types_ShaclPath path, slop_rdf_rdf_Term shape_id, snarl_types_Severity severity, slop_option_string message) {
     SLOP_PRE(((((int64_t)((allowed_values).len)) > 0)), "(> (list-len allowed-values) 0)");
-    slop_option_types_ValidationResult _retval = {0};
-    if (other_list_contains_term(allowed_values, value_node)) {
-        _retval = (slop_option_types_ValidationResult){.has_value = false};
+    slop_option_snarl_types_ValidationResult _retval = {0};
+    if (snarl_other_list_contains_term(allowed_values, value_node)) {
+        _retval = (slop_option_snarl_types_ValidationResult){.has_value = false};
         goto _slop_post;
     } else {
-        _retval = (slop_option_types_ValidationResult){.has_value = 1, .value = ((types_ValidationResult){.focus_node = focus_node, .result_path = path, .value = (slop_option_rdf_Term){.has_value = 1, .value = value_node}, .source_shape = shape_id, .source_constraint_component = vocab_SHACL_IN, .severity = severity, .message = message})};
+        _retval = (slop_option_snarl_types_ValidationResult){.has_value = 1, .value = ((snarl_types_ValidationResult){.focus_node = focus_node, .result_path = path, .value = (slop_option_slop_rdf_rdf_Term){.has_value = 1, .value = value_node}, .source_shape = shape_id, .source_constraint_component = slop_rdf_vocab_SHACL_IN, .severity = severity, .message = message})};
         goto _slop_post;
     }
     _slop_post: ;
-    SLOP_POST((((!((_retval).has_value)) == other_list_contains_term(allowed_values, value_node))), "(== (is-none $result) (list-contains-term allowed-values value-node))");
+    SLOP_POST((((!((_retval).has_value)) == snarl_other_list_contains_term(allowed_values, value_node))), "(== (is-none $result) (list-contains-term allowed-values value-node))");
     return _retval;
 }
 
-slop_list_types_ValidationResult snarl_check_closed(slop_arena* arena, data_graph_SnarlDataGraph data_graph, rdf_Term focus_node, slop_list_types_ShaclPath allowed_paths, slop_option_types_ShaclPath path, rdf_Term shape_id, types_Severity severity, slop_option_string message) {
+slop_list_snarl_types_ValidationResult snarl_check_closed(slop_arena* arena, snarl_data_graph_SnarlDataGraph data_graph, slop_rdf_rdf_Term focus_node, slop_list_snarl_types_ShaclPath allowed_paths, slop_option_snarl_types_ShaclPath path, slop_rdf_rdf_Term shape_id, snarl_types_Severity severity, slop_option_string message) {
     SLOP_PRE(((((int64_t)((allowed_paths).len)) >= 0)), "(>= (list-len allowed-paths) 0)");
-    slop_list_types_ValidationResult _retval = {0};
+    slop_list_snarl_types_ValidationResult _retval = {0};
     {
-        __auto_type results = ((slop_list_types_ValidationResult){ .data = NULL, .len = 0, .cap = 0, .arena = arena });
-        __auto_type allowed_preds = ({ static const slop_map_desc _d = SLOP_SET_DESC(rdf_Term, slop_hash_rdf_Term, slop_eq_rdf_Term, SLOP_KEY_HASHED); slop_map_new_ptr(arena, 0, &_d); });
-        __auto_type predicates = data_graph_snarl_data_graph_predicates_for_subject(arena, data_graph, focus_node);
+        __auto_type results = ((slop_list_snarl_types_ValidationResult){ .data = NULL, .len = 0, .cap = 0, .arena = arena });
+        __auto_type allowed_preds = ({ static const slop_map_desc _d = SLOP_SET_DESC(slop_rdf_rdf_Term, slop_hash_slop_rdf_rdf_Term, slop_eq_slop_rdf_rdf_Term, SLOP_KEY_HASHED); slop_map_new_ptr(arena, 0, &_d); });
+        __auto_type predicates = snarl_data_graph_snarl_data_graph_predicates_for_subject(arena, data_graph, focus_node);
         {
             __auto_type _coll = allowed_paths;
             for (size_t _i = 0; _i < _coll.len; _i++) {
                 __auto_type ap = _coll.data[_i];
                 __auto_type _mv_275 = ap;
                 switch (_mv_275.tag) {
-                    case types_ShaclPath_path_predicate:
+                    case snarl_types_ShaclPath_path_predicate:
                     {
                         __auto_type p = _mv_275.data.path_predicate;
                         ({ slop_map_put(NULL, allowed_preds, &(p), NULL, 0); });
@@ -138,7 +138,7 @@ slop_list_types_ValidationResult snarl_check_closed(slop_arena* arena, data_grap
             for (size_t _i = 0; _i < _coll.len; _i++) {
                 __auto_type pred = _coll.data[_i];
                 if (!(slop_map_has(allowed_preds, &(pred)))) {
-                    ({ __auto_type _lst_p = &(results); __auto_type _item = (((types_ValidationResult){.focus_node = focus_node, .result_path = (slop_option_types_ShaclPath){.has_value = 1, .value = ((types_ShaclPath){ .tag = types_ShaclPath_path_predicate, .data.path_predicate = pred })}, .value = (slop_option_rdf_Term){.has_value = 1, .value = pred}, .source_shape = shape_id, .source_constraint_component = vocab_SHACL_CLOSED, .severity = severity, .message = message})); if (_lst_p->len >= _lst_p->cap) { _lst_p->data = (__typeof__(_lst_p->data))slop_list_grow_raw(_lst_p->arena, _lst_p->data, &_lst_p->cap, _lst_p->len, sizeof(*_lst_p->data)); } _lst_p->data[_lst_p->len++] = _item; (void)0; });
+                    (void)(({ __auto_type _lst_p = &(results); __auto_type _item = (((snarl_types_ValidationResult){.focus_node = focus_node, .result_path = (slop_option_snarl_types_ShaclPath){.has_value = 1, .value = ((snarl_types_ShaclPath){ .tag = snarl_types_ShaclPath_path_predicate, .data.path_predicate = pred })}, .value = (slop_option_slop_rdf_rdf_Term){.has_value = 1, .value = pred}, .source_shape = shape_id, .source_constraint_component = slop_rdf_vocab_SHACL_CLOSED, .severity = severity, .message = message})); if (_lst_p->len >= _lst_p->cap) { _lst_p->data = (__typeof__(_lst_p->data))slop_list_grow_raw(_lst_p->arena, _lst_p->data, &_lst_p->cap, _lst_p->len, sizeof(*_lst_p->data)); } _lst_p->data[_lst_p->len++] = _item; (void)0; }));
                 }
             }
         }

@@ -1,20 +1,20 @@
 #include "../runtime/slop_runtime.h"
 #include "slop_main.h"
 
-void main_print_elapsed(slop_arena* arena, int64_t elapsed);
-slop_string main_argv_to_string(uint8_t** argv, int64_t index);
-main_CliArgs main_parse_args(slop_arena* arena, int64_t argc, uint8_t** argv);
-void main_print_usage(void);
-void main_print_ttl_error(slop_arena* arena, slop_string path, ttl_TtlFileError e);
-slop_option_index_IndexedGraph main_load_graph(slop_arena* arena, slop_string path, uint8_t quiet);
-slop_option_data_graph_SnarlDataGraph main_load_data_graph(slop_arena* arena, slop_string path, uint8_t quiet);
+void snarl_cli_main_print_elapsed(slop_arena* arena, int64_t elapsed);
+slop_string snarl_cli_main_argv_to_string(uint8_t** argv, int64_t index);
+snarl_cli_main_CliArgs snarl_cli_main_parse_args(slop_arena* arena, int64_t argc, uint8_t** argv);
+void snarl_cli_main_print_usage(void);
+void snarl_cli_main_print_ttl_error(slop_arena* arena, slop_string path, slop_rdf_ttl_TtlFileError e);
+slop_option_slop_rdf_index_IndexedGraph snarl_cli_main_load_graph(slop_arena* arena, slop_string path, uint8_t quiet);
+slop_option_snarl_data_graph_SnarlDataGraph snarl_cli_main_load_data_graph(slop_arena* arena, slop_string path, uint8_t quiet);
 int main(int argc, char** _c_argv);
 
-typedef struct { data_graph_SnarlDataGraph* dg; slop_arena* arena; } main__lambda_534_env_t;
+typedef struct { snarl_data_graph_SnarlDataGraph* dg; slop_arena* arena; } snarl_cli_main__lambda_534_env_t;
 
-static void main__lambda_534(main__lambda_534_env_t* _env, rdf_Triple t) { ({ (*_env->dg) = snarl_data_graph_add(_env->arena, (*_env->dg), t); (void)0; }); }
+static void snarl_cli_main__lambda_534(snarl_cli_main__lambda_534_env_t* _env, slop_rdf_rdf_Triple t) { ({ (*_env->dg) = snarl_data_graph_add(_env->arena, (*_env->dg), t); (void)0; }); }
 
-void main_print_elapsed(slop_arena* arena, int64_t elapsed) {
+void snarl_cli_main_print_elapsed(slop_arena* arena, int64_t elapsed) {
     printf("%.*s", (int)(int_to_string(arena, (elapsed / 1000))).len, (int_to_string(arena, (elapsed / 1000))).data);
     printf("%s", ".");
     {
@@ -30,14 +30,14 @@ void main_print_elapsed(slop_arena* arena, int64_t elapsed) {
     printf("%s", "s");
 }
 
-slop_string main_argv_to_string(uint8_t** argv, int64_t index) {
+slop_string snarl_cli_main_argv_to_string(uint8_t** argv, int64_t index) {
     {
         __auto_type ptr = argv[index];
         return (slop_string){.len = strlen(ptr), .data = ptr};
     }
 }
 
-main_CliArgs main_parse_args(slop_arena* arena, int64_t argc, uint8_t** argv) {
+snarl_cli_main_CliArgs snarl_cli_main_parse_args(slop_arena* arena, int64_t argc, uint8_t** argv) {
     {
         slop_option_string data = (slop_option_string){.has_value = false};
         slop_option_string shapes = (slop_option_string){.has_value = false};
@@ -52,7 +52,7 @@ main_CliArgs main_parse_args(slop_arena* arena, int64_t argc, uint8_t** argv) {
         int64_t positional_count = 0;
         while (i < argc) {
             {
-                __auto_type arg = main_argv_to_string(argv, i);
+                __auto_type arg = snarl_cli_main_argv_to_string(argv, i);
                 if (string_eq(arg, SLOP_STR("--help")) || string_eq(arg, SLOP_STR("-h"))) {
                     help = 1;
                     i = (i + 1);
@@ -64,7 +64,7 @@ main_CliArgs main_parse_args(slop_arena* arena, int64_t argc, uint8_t** argv) {
                     i = (i + 1);
                 } else if (string_eq(arg, SLOP_STR("--shapes")) || string_eq(arg, SLOP_STR("-s"))) {
                     if ((i + 1) < argc) {
-                        shapes = (slop_option_string){.has_value = 1, .value = main_argv_to_string(argv, (i + 1))};
+                        shapes = (slop_option_string){.has_value = 1, .value = snarl_cli_main_argv_to_string(argv, (i + 1))};
                         i = (i + 2);
                     } else {
                         printf("%s\n", "Error: --shapes requires a file path");
@@ -73,7 +73,7 @@ main_CliArgs main_parse_args(slop_arena* arena, int64_t argc, uint8_t** argv) {
                     }
                 } else if (string_eq(arg, SLOP_STR("--emit")) || string_eq(arg, SLOP_STR("-o"))) {
                     if ((i + 1) < argc) {
-                        emit = (slop_option_string){.has_value = 1, .value = main_argv_to_string(argv, (i + 1))};
+                        emit = (slop_option_string){.has_value = 1, .value = snarl_cli_main_argv_to_string(argv, (i + 1))};
                         i = (i + 2);
                     } else {
                         printf("%s\n", "Error: --emit requires a file path");
@@ -83,8 +83,8 @@ main_CliArgs main_parse_args(slop_arena* arena, int64_t argc, uint8_t** argv) {
                 } else if (string_eq(arg, SLOP_STR("--max-errors")) || string_eq(arg, SLOP_STR("-m"))) {
                     if ((i + 1) < argc) {
                         {
-                            __auto_type val_str = main_argv_to_string(argv, (i + 1));
-                            __auto_type _mv_531 = strlib_parse_int(val_str);
+                            __auto_type val_str = snarl_cli_main_argv_to_string(argv, (i + 1));
+                            __auto_type _mv_531 = std_strlib_parse_int(val_str);
                             if (_mv_531.is_ok) {
                                 __auto_type n = _mv_531.data.ok;
                                 max_errors = n;
@@ -116,11 +116,11 @@ main_CliArgs main_parse_args(slop_arena* arena, int64_t argc, uint8_t** argv) {
                 }
             }
         }
-        return ((main_CliArgs){.data_file = data, .shapes_file = shapes, .emit_file = emit, .quiet = quiet, .max_errors = SLOP_RANGE(int64_t, max_errors, 1, 0, 0, 0, "(Int 0 ..) at main.slop:147:21"), .no_warnings = no_warnings, .no_infos = no_infos, .show_help = help, .show_version = version});
+        return ((snarl_cli_main_CliArgs){.data_file = data, .shapes_file = shapes, .emit_file = emit, .quiet = quiet, .max_errors = SLOP_RANGE(int64_t, max_errors, 1, 0, 0, 0, "(Int 0 ..) at main.slop:147:21"), .no_warnings = no_warnings, .no_infos = no_infos, .show_help = help, .show_version = version});
     }
 }
 
-void main_print_usage(void) {
+void snarl_cli_main_print_usage(void) {
     printf("%s\n", "snarl - SHACL Core Validator");
     printf("%s\n", "");
     printf("%s\n", "Usage: snarl [options] <data.ttl> [shapes.ttl]");
@@ -140,12 +140,12 @@ void main_print_usage(void) {
     printf("%s\n", "Exit codes: 0 = conforms, 1 = violations, 2 = parse/internal error");
 }
 
-void main_print_ttl_error(slop_arena* arena, slop_string path, ttl_TtlFileError e) {
+void snarl_cli_main_print_ttl_error(slop_arena* arena, slop_string path, slop_rdf_ttl_TtlFileError e) {
     printf("%s", "Error: failed to parse ");
     printf("%.*s\n", (int)(path).len, (path).data);
     __auto_type _mv_532 = e;
     switch (_mv_532.tag) {
-        case ttl_TtlFileError_parse_error:
+        case slop_rdf_ttl_TtlFileError_parse_error:
         {
             __auto_type pe = _mv_532.data.parse_error;
             printf("%s", "  at line ");
@@ -156,7 +156,7 @@ void main_print_ttl_error(slop_arena* arena, slop_string path, ttl_TtlFileError 
             printf("%.*s\n", (int)(pe.message).len, (pe.message).data);
             break;
         }
-        case ttl_TtlFileError_file_error:
+        case slop_rdf_ttl_TtlFileError_file_error:
         {
             __auto_type _ = _mv_532.data.file_error;
             printf("%s\n", "  (file not found or unreadable)");
@@ -165,12 +165,12 @@ void main_print_ttl_error(slop_arena* arena, slop_string path, ttl_TtlFileError 
     }
 }
 
-slop_option_index_IndexedGraph main_load_graph(slop_arena* arena, slop_string path, uint8_t quiet) {
-    __auto_type _mv_533 = ttl_parse_ttl_file(arena, path);
+slop_option_slop_rdf_index_IndexedGraph snarl_cli_main_load_graph(slop_arena* arena, slop_string path, uint8_t quiet) {
+    __auto_type _mv_533 = slop_rdf_ttl_parse_ttl_file(arena, path);
     if (!_mv_533.is_ok) {
         __auto_type e = _mv_533.data.err;
-        main_print_ttl_error(arena, path, e);
-        return (slop_option_index_IndexedGraph){.has_value = false};
+        snarl_cli_main_print_ttl_error(arena, path, e);
+        return (slop_option_slop_rdf_index_IndexedGraph){.has_value = false};
     } else if (_mv_533.is_ok) {
         __auto_type g = _mv_533.data.ok;
         {
@@ -188,22 +188,22 @@ slop_option_index_IndexedGraph main_load_graph(slop_arena* arena, slop_string pa
                 printf("%s", " triples from ");
                 printf("%.*s\n", (int)(path).len, (path).data);
             }
-            return (slop_option_index_IndexedGraph){.has_value = 1, .value = ig};
+            return (slop_option_slop_rdf_index_IndexedGraph){.has_value = 1, .value = ig};
         }
     }
     SLOP_UNREACHABLE();
 }
 
-slop_option_data_graph_SnarlDataGraph main_load_data_graph(slop_arena* arena, slop_string path, uint8_t quiet) {
+slop_option_snarl_data_graph_SnarlDataGraph snarl_cli_main_load_data_graph(slop_arena* arena, slop_string path, uint8_t quiet) {
     SLOP_PRE(((string_len(path) > 0)), "(> (string-len path) 0)");
-    slop_option_data_graph_SnarlDataGraph _retval = {0};
+    slop_option_snarl_data_graph_SnarlDataGraph _retval = {0};
     {
         __auto_type dg = snarl_data_graph_create(arena);
-        __auto_type _mv_535 = ttl_parse_ttl_file_for_each_triple(arena, path, ({ main__lambda_534_env_t* main__lambda_534_env = (main__lambda_534_env_t*)slop_arena_alloc(arena, sizeof(main__lambda_534_env_t)); *main__lambda_534_env = (main__lambda_534_env_t){ .dg = &(dg), .arena = arena }; (slop_closure_t){ (void*)main__lambda_534, (void*)main__lambda_534_env }; }));
+        __auto_type _mv_535 = slop_rdf_ttl_parse_ttl_file_for_each_triple(arena, path, ({ snarl_cli_main__lambda_534_env_t* snarl_cli_main__lambda_534_env = (snarl_cli_main__lambda_534_env_t*)slop_arena_alloc(arena, sizeof(snarl_cli_main__lambda_534_env_t)); *snarl_cli_main__lambda_534_env = (snarl_cli_main__lambda_534_env_t){ .dg = &(dg), .arena = arena }; (slop_closure_t){ (void*)snarl_cli_main__lambda_534, (void*)snarl_cli_main__lambda_534_env }; }));
         if (!_mv_535.is_ok) {
             __auto_type e = _mv_535.data.err;
-            main_print_ttl_error(arena, path, e);
-            _retval = (slop_option_data_graph_SnarlDataGraph){.has_value = false};
+            snarl_cli_main_print_ttl_error(arena, path, e);
+            _retval = (slop_option_snarl_data_graph_SnarlDataGraph){.has_value = false};
             goto _slop_post;
         } else if (_mv_535.is_ok) {
             __auto_type _ = _mv_535.data.ok;
@@ -213,7 +213,7 @@ slop_option_data_graph_SnarlDataGraph main_load_data_graph(slop_arena* arena, sl
                 printf("%s", " triples from ");
                 printf("%.*s\n", (int)(path).len, (path).data);
             }
-            _retval = (slop_option_data_graph_SnarlDataGraph){.has_value = 1, .value = dg};
+            _retval = (slop_option_snarl_data_graph_SnarlDataGraph){.has_value = 1, .value = dg};
             goto _slop_post;
         }
         SLOP_UNREACHABLE();
@@ -225,6 +225,7 @@ slop_option_data_graph_SnarlDataGraph main_load_data_graph(slop_arena* arena, sl
 
 int main(int argc, char** _c_argv) {
     uint8_t** argv = (uint8_t**)_c_argv;
+    (void)argc; (void)argv;
     {
         #ifdef SLOP_DEBUG
         SLOP_PRE((134217728) > 0, "with-arena size must be positive");
@@ -235,7 +236,7 @@ int main(int argc, char** _c_argv) {
         #endif
         slop_arena* arena = &_arena_3;
         {
-            __auto_type args = main_parse_args(arena, argc, argv);
+            __auto_type args = snarl_cli_main_parse_args(arena, argc, argv);
             if (args.show_version) {
                 printf("snarl %s\n", SNARL_VERSION);
                 {
@@ -246,7 +247,7 @@ int main(int argc, char** _c_argv) {
             } else {
                 __auto_type _mv_536 = args.data_file;
                 if (!_mv_536.has_value) {
-                    main_print_usage();
+                    snarl_cli_main_print_usage();
                     if (args.show_help) {
                         {
                             int _wa_ret = 0;
@@ -263,7 +264,7 @@ int main(int argc, char** _c_argv) {
                 } else if (_mv_536.has_value) {
                     __auto_type data_path = _mv_536.value;
                     if (args.show_help) {
-                        main_print_usage();
+                        snarl_cli_main_print_usage();
                         {
                             int _wa_ret = 0;
                             slop_arena_free(&_arena_3);
@@ -273,7 +274,7 @@ int main(int argc, char** _c_argv) {
                         {
                             __auto_type quiet = args.quiet;
                             __auto_type parse_start = slop_now_ms();
-                            __auto_type _mv_537 = main_load_data_graph(arena, data_path, quiet);
+                            __auto_type _mv_537 = snarl_cli_main_load_data_graph(arena, data_path, quiet);
                             if (!_mv_537.has_value) {
                                 {
                                     int _wa_ret = 2;
@@ -285,7 +286,7 @@ int main(int argc, char** _c_argv) {
                                 {
                                     __auto_type shapes_path = ({ __auto_type _mv = args.shapes_file; _mv.has_value ? ({ __auto_type sp = _mv.value; sp; }) : (data_path); });
                                     {
-                                        __auto_type shapes_result = main_load_graph(arena, shapes_path, quiet);
+                                        __auto_type shapes_result = snarl_cli_main_load_graph(arena, shapes_path, quiet);
                                         __auto_type _mv_538 = shapes_result;
                                         if (!_mv_538.has_value) {
                                             {
@@ -298,10 +299,10 @@ int main(int argc, char** _c_argv) {
                                             {
                                                 __auto_type parse_elapsed = (slop_now_ms() - parse_start);
                                                 __auto_type validate_start = slop_now_ms();
-                                                __auto_type config = ((types_ValidatorConfig){.verbose = !(quiet), .max_errors = args.max_errors, .include_warnings = !(args.no_warnings), .include_infos = !(args.no_infos)});
+                                                __auto_type config = ((snarl_types_ValidatorConfig){.verbose = !(quiet), .max_errors = args.max_errors, .include_warnings = !(args.no_warnings), .include_infos = !(args.no_infos)});
                                                 __auto_type _mv_539 = snarl_validate_data_graph_with_config(arena, data_graph, shapes_graph, config);
                                                 switch (_mv_539.tag) {
-                                                    case types_ValidatorResult_validate_success:
+                                                    case snarl_types_ValidatorResult_validate_success:
                                                     {
                                                         __auto_type report = _mv_539.data.validate_success;
                                                         {
@@ -319,7 +320,7 @@ int main(int argc, char** _c_argv) {
                                                             } else {
                                                                 snarl_print_report(arena, report);
                                                                 printf("%s", "\nValidation completed in ");
-                                                                main_print_elapsed(arena, validate_elapsed);
+                                                                snarl_cli_main_print_elapsed(arena, validate_elapsed);
                                                                 printf("%s\n", "");
                                                             }
                                                             __auto_type _mv_540 = args.emit_file;
@@ -346,7 +347,7 @@ int main(int argc, char** _c_argv) {
                                                             }
                                                         }
                                                     }
-                                                    case types_ValidatorResult_validate_error:
+                                                    case snarl_types_ValidatorResult_validate_error:
                                                     {
                                                         __auto_type msg = _mv_539.data.validate_error;
                                                         printf("%s", "Error: ");

@@ -1,20 +1,20 @@
 #include "../runtime/slop_runtime.h"
 #include "slop_types.h"
 
-static const slop_string types_EX_FOCUS = SLOP_STR("http://example.org/focus");
-static const slop_string types_EX_SHAPE = SLOP_STR("http://example.org/Shape1");
+static const slop_string snarl_types_EX_FOCUS = SLOP_STR("http://example.org/focus");
+static const slop_string snarl_types_EX_SHAPE = SLOP_STR("http://example.org/Shape1");
 
-slop_string types_term_display_label(rdf_Term t, slop_string fallback);
-types_ValidationResult types_fixture_violation(slop_arena* arena);
-types_ValidatorConfig types_default_validator_config(void);
-types_ValidationReport types_make_validation_report(slop_arena* arena);
-types_ValidationReport types_report_add_result(slop_arena* arena, types_ValidationReport report, types_ValidationResult result);
-uint8_t types_report_conforms(types_ValidationReport report);
+slop_string snarl_types_term_display_label(slop_rdf_rdf_Term t, slop_string fallback);
+snarl_types_ValidationResult snarl_types_fixture_violation(slop_arena* arena);
+snarl_types_ValidatorConfig snarl_types_default_validator_config(void);
+snarl_types_ValidationReport snarl_types_make_validation_report(slop_arena* arena);
+snarl_types_ValidationReport snarl_types_report_add_result(slop_arena* arena, snarl_types_ValidationReport report, snarl_types_ValidationResult result);
+uint8_t snarl_types_report_conforms(snarl_types_ValidationReport report);
 
-slop_string types_term_display_label(rdf_Term t, slop_string fallback) {
+slop_string snarl_types_term_display_label(slop_rdf_rdf_Term t, slop_string fallback) {
     __auto_type _mv_112 = t;
     switch (_mv_112.tag) {
-        case rdf_Term_term_iri:
+        case slop_rdf_rdf_Term_term_iri:
         {
             __auto_type iri = _mv_112.data.term_iri;
             return iri.value;
@@ -25,13 +25,13 @@ slop_string types_term_display_label(rdf_Term t, slop_string fallback) {
     }
 }
 
-types_ValidationResult types_fixture_violation(slop_arena* arena) {
-    return ((types_ValidationResult){.focus_node = rdf_make_iri(arena, types_EX_FOCUS), .result_path = (slop_option_types_ShaclPath){.has_value = false}, .value = (slop_option_rdf_Term){.has_value = false}, .source_shape = rdf_make_iri(arena, types_EX_SHAPE), .source_constraint_component = vocab_SHACL_CLASS, .severity = types_Severity_severity_violation, .message = (slop_option_string){.has_value = false}});
+snarl_types_ValidationResult snarl_types_fixture_violation(slop_arena* arena) {
+    return ((snarl_types_ValidationResult){.focus_node = rdf_make_iri(arena, snarl_types_EX_FOCUS), .result_path = (slop_option_snarl_types_ShaclPath){.has_value = false}, .value = (slop_option_slop_rdf_rdf_Term){.has_value = false}, .source_shape = rdf_make_iri(arena, snarl_types_EX_SHAPE), .source_constraint_component = slop_rdf_vocab_SHACL_CLASS, .severity = snarl_types_Severity_severity_violation, .message = (slop_option_string){.has_value = false}});
 }
 
-types_ValidatorConfig types_default_validator_config(void) {
-    types_ValidatorConfig _retval = {0};
-    _retval = ((types_ValidatorConfig){.verbose = 0, .max_errors = 0, .include_warnings = 1, .include_infos = 1});
+snarl_types_ValidatorConfig snarl_types_default_validator_config(void) {
+    snarl_types_ValidatorConfig _retval = {0};
+    _retval = ((snarl_types_ValidatorConfig){.verbose = 0, .max_errors = 0, .include_warnings = 1, .include_infos = 1});
     goto _slop_post;
     _slop_post: ;
     SLOP_POST(((_retval.verbose == 0)), "(== (. $result verbose) false)");
@@ -41,9 +41,9 @@ types_ValidatorConfig types_default_validator_config(void) {
     return _retval;
 }
 
-types_ValidationReport types_make_validation_report(slop_arena* arena) {
-    types_ValidationReport _retval = {0};
-    _retval = ((types_ValidationReport){.conforms = 1, .results = ((slop_list_types_ValidationResult){ .data = NULL, .len = 0, .cap = 0, .arena = arena })});
+snarl_types_ValidationReport snarl_types_make_validation_report(slop_arena* arena) {
+    snarl_types_ValidationReport _retval = {0};
+    _retval = ((snarl_types_ValidationReport){.conforms = 1, .results = ((slop_list_snarl_types_ValidationResult){ .data = NULL, .len = 0, .cap = 0, .arena = arena })});
     goto _slop_post;
     _slop_post: ;
     SLOP_POST(((_retval.conforms == 1)), "(== (. $result conforms) true)");
@@ -51,12 +51,12 @@ types_ValidationReport types_make_validation_report(slop_arena* arena) {
     return _retval;
 }
 
-types_ValidationReport types_report_add_result(slop_arena* arena, types_ValidationReport report, types_ValidationResult result) {
-    types_ValidationReport _retval = {0};
-    ({ __auto_type _lst_p = &(report.results); __auto_type _item = (result); if (_lst_p->len >= _lst_p->cap) { _lst_p->data = (__typeof__(_lst_p->data))slop_list_grow_raw(_lst_p->arena, _lst_p->data, &_lst_p->cap, _lst_p->len, sizeof(*_lst_p->data)); } _lst_p->data[_lst_p->len++] = _item; (void)0; });
+snarl_types_ValidationReport snarl_types_report_add_result(slop_arena* arena, snarl_types_ValidationReport report, snarl_types_ValidationResult result) {
+    snarl_types_ValidationReport _retval = {0};
+    (void)(({ __auto_type _lst_p = &(report.results); __auto_type _item = (result); if (_lst_p->len >= _lst_p->cap) { _lst_p->data = (__typeof__(_lst_p->data))slop_list_grow_raw(_lst_p->arena, _lst_p->data, &_lst_p->cap, _lst_p->len, sizeof(*_lst_p->data)); } _lst_p->data[_lst_p->len++] = _item; (void)0; }));
     {
         __auto_type still_conforms = 0;
-        _retval = ((types_ValidationReport){.conforms = still_conforms, .results = report.results});
+        _retval = ((snarl_types_ValidationReport){.conforms = still_conforms, .results = report.results});
         goto _slop_post;
     }
     _slop_post: ;
@@ -65,7 +65,7 @@ types_ValidationReport types_report_add_result(slop_arena* arena, types_Validati
     return _retval;
 }
 
-uint8_t types_report_conforms(types_ValidationReport report) {
+uint8_t snarl_types_report_conforms(snarl_types_ValidationReport report) {
     uint8_t _retval = {0};
     _retval = report.conforms;
     goto _slop_post;

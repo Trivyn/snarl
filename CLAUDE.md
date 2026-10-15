@@ -69,9 +69,14 @@ Three things that are easy to get wrong:
   had no effect.
 - `csrc/update_bootstrap.sh` enforces `SLOP_MIN_VERSION` and refuses to run
   against an older toolchain. Raise it whenever a SLOP codegen fix is
-  load-bearing for the committed C. Minimum today: **0.4.3** (gcc-only
+  load-bearing for the committed C. Minimum today: **0.5.1** (0.5.0
+  package-qualified C names — `snarl_<module>_*`, `std_*`, `slop_rdf_*` — and
+  the runtime ABI check, matching slop-std-sys 0.5.0 / slop-rdf-sys 0.6.0;
+  0.5.1 fixes struct emission in module `snarl`, named like its package.
+  `generate_c.py` must pass the resolver's `--package` flags or every module
+  comes out unqualified and the crate won't link. 0.4.3 gcc-only
   `noinline` list growth, without which deep `sh:node` chains overflow the
-  stack under gcc; header matches slop-std-sys 0.4.3. 0.4.2 Windows-portable
+  stack under gcc. 0.4.2 Windows-portable
   runtime; 0.4.0 runtime header and set-len; 0.3.0 read-only parameters;
   0.1.2 map-put value width — see the notes in that script).
 - `csrc/SLOP_VERSION` records which toolchain produced the current C. Commit it

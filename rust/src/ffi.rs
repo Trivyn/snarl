@@ -48,7 +48,7 @@ pub struct RdfLiteral {
     pub lang: SlopOptionString,
 }
 
-/// Tag for the `rdf_Term` tagged union.
+/// Tag for the `slop_rdf_rdf_Term` tagged union.
 #[repr(C)]
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub enum RdfTermTag {
@@ -58,7 +58,7 @@ pub enum RdfTermTag {
     Triple = 3,
 }
 
-/// Data payload for `rdf_Term` -- a C union.
+/// Data payload for `slop_rdf_rdf_Term` -- a C union.
 #[repr(C)]
 #[derive(Copy, Clone)]
 pub union RdfTermData {
@@ -426,20 +426,20 @@ mod tests {
     fn struct_sizes_match_c() {
         let rust_sizes = [
             ("slop_string", size_of::<SlopString>()),
-            ("rdf_Term", size_of::<RdfTerm>()),
-            ("rdf_Triple", size_of::<RdfTriple>()),
-            ("slop_list_rdf_Term", size_of::<SlopListRdfTerm>()),
-            ("slop_list_rdf_Triple", size_of::<SlopListRdfTriple>()),
-            ("slop_list_types_ValidationResult", size_of::<SlopListValidationResult>()),
-            ("slop_list_types_ShaclPath", size_of::<SlopListShaclPath>()),
-            ("index_IndexedGraph", size_of::<IndexedGraphFfi>()),
-            ("data_graph_SnarlDataIndex", size_of::<SnarlDataIndex>()),
-            ("data_graph_SnarlDataGraph", size_of::<SnarlDataGraphFfi>()),
-            ("types_ShaclPath", size_of::<ShaclPath>()),
-            ("types_ValidatorConfig", size_of::<ValidatorConfigFfi>()),
-            ("types_ValidationReport", size_of::<ValidationReportFfi>()),
-            ("types_ValidationResult", size_of::<ValidationResultFfi>()),
-            ("types_ValidatorResult", size_of::<ValidatorResultFfi>()),
+            ("slop_rdf_rdf_Term", size_of::<RdfTerm>()),
+            ("slop_rdf_rdf_Triple", size_of::<RdfTriple>()),
+            ("slop_list_slop_rdf_rdf_Term", size_of::<SlopListRdfTerm>()),
+            ("slop_list_slop_rdf_rdf_Triple", size_of::<SlopListRdfTriple>()),
+            ("slop_list_snarl_types_ValidationResult", size_of::<SlopListValidationResult>()),
+            ("slop_list_snarl_types_ShaclPath", size_of::<SlopListShaclPath>()),
+            ("slop_rdf_index_IndexedGraph", size_of::<IndexedGraphFfi>()),
+            ("snarl_data_graph_SnarlDataIndex", size_of::<SnarlDataIndex>()),
+            ("snarl_data_graph_SnarlDataGraph", size_of::<SnarlDataGraphFfi>()),
+            ("snarl_types_ShaclPath", size_of::<ShaclPath>()),
+            ("snarl_types_ValidatorConfig", size_of::<ValidatorConfigFfi>()),
+            ("snarl_types_ValidationReport", size_of::<ValidationReportFfi>()),
+            ("snarl_types_ValidationResult", size_of::<ValidationResultFfi>()),
+            ("snarl_types_ValidatorResult", size_of::<ValidatorResultFfi>()),
         ];
         for (i, (name, rust)) in rust_sizes.iter().enumerate() {
             let c = unsafe { snarl_ffi_sizeof(i as i32) };

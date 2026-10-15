@@ -36,7 +36,18 @@ PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 # sh:node chains overflowed the C stack before engine.slop's depth budget
 # could stop them (crash at depth 170 instead of 505). The header must again
 # match slop-std-sys's, now 0.4.3.
-SLOP_MIN_VERSION="0.4.3"
+#
+# 0.5.0: generated C names are package-qualified (slop #360): snarl's modules
+# come out as snarl_<module>_*, std's as std_*, slop-rdf's as slop_rdf_*, which
+# is how slop-std-sys 0.5.0 and slop-rdf-sys 0.6.0 export them. The runtime
+# header carries SLOP_RUNTIME_ABI (202601), and every generated header refuses
+# to compile against another ABI.
+#
+# 0.5.1: in a module named like its package -- src/snarl.slop is module snarl
+# in package snarl -- 0.5.0 mistook the sibling modules' snarl_* types for the
+# module's own when ordering structs and List/Option instantiations, and could
+# drop a struct body (slop #371).
+SLOP_MIN_VERSION="0.5.1"
 
 version_lt() {
     # true when $1 < $2, comparing dot-separated numeric components

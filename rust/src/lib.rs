@@ -269,7 +269,7 @@ impl<'a> Term<'a> {
                 }
                 ffi::RdfTermTag::Triple => {
                     let ptr = raw.data.term_triple;
-                    assert!(!ptr.is_null(), "rdf_Term_term_triple had null payload");
+                    assert!(!ptr.is_null(), "slop_rdf_rdf_Term_term_triple had null payload");
                     Term::Triple(Box::new(Triple::from_ffi(*ptr)))
                 }
             }
