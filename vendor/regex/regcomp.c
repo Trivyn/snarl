@@ -974,6 +974,11 @@ static reg_errcode_t tre_parse(tre_parse_ctx_t *ctx)
 			s++;
 			if (!ere)
 				s++;
+			/* snarl: XPath's non-capturing (?:...) is an ordinary group
+			 * here, since matching uses REG_NOSUB and ERE has no
+			 * backreferences. Before this, (? was REG_BADRPT. */
+			else if (s[0] == '?' && s[1] == ':')
+				s += 2;
 			depth++;
 			nbranch = nunion = 0;
 			ctx->start = s;

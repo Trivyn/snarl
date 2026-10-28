@@ -421,6 +421,11 @@
     (@spec ((Arena) -> Bool))
     (assert-violations arena "fixtures/pattern-unicode.ttl" 2))
 
+  (fn test-pattern-noncapturing ((arena Arena))
+    (@intent "Test sh:pattern accepts XPath non-capturing groups (?:...) -- alone, nested, optional, repeated and in the semver.org SemVer regex -- while a capturing group and an escaped or bracketed (?: keep their meaning")
+    (@spec ((Arena) -> Bool))
+    (assert-violations arena "fixtures/pattern-noncapturing.ttl" 8))
+
   ;; ============================================================
   ;; Regression Tests
   ;; ============================================================
@@ -791,6 +796,7 @@
         (if (test-valid-library arena) (set! passed (+ passed 1)) (set! failed (+ failed 1)))
         (if (test-multi-shape arena) (set! passed (+ passed 1)) (set! failed (+ failed 1)))
         (if (test-pattern-unicode arena) (set! passed (+ passed 1)) (set! failed (+ failed 1)))
+        (if (test-pattern-noncapturing arena) (set! passed (+ passed 1)) (set! failed (+ failed 1)))
 
         ;; Regression tests
         (if (test-subclass-class-conforms arena) (set! passed (+ passed 1)) (set! failed (+ failed 1)))
