@@ -1,0 +1,48 @@
+@prefix ex: <http://example.org/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+
+# sh:pattern accepts XPath's non-capturing groups (?:...), which POSIX ERE
+# lacks: vendor/regex's tre_parse treats (?: as an ordinary group (matching
+# uses REG_NOSUB, so capture numbering never shows). Before that, every one of
+# these patterns failed to compile and reported every value as a violation.
+
+ex:VersionShape
+    a sh:NodeShape ;
+    sh:targetClass ex:Version ;
+    # (?:...) alone
+    sh:property [ sh:path ex:grp ; sh:pattern "^(?:a|b)$" ] ;
+    # nested
+    sh:property [ sh:path ex:nested ; sh:pattern "^(?:x(?:y|z))+$" ] ;
+    # optional
+    sh:property [ sh:path ex:opt ; sh:pattern "^a(?:-b)?$" ] ;
+    # repeated
+    sh:property [ sh:path ex:rep ; sh:pattern "^(?:ab)*$" ] ;
+    # the semver.org SemVer 2.0 regex
+    sh:property [ sh:path ex:semver ; sh:pattern "^(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)(?:-((?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\\.(?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\\+([0-9a-zA-Z-]+(?:\\.[0-9a-zA-Z-]+)*))?$" ] ;
+    # control: a capturing group, unchanged
+    sh:property [ sh:path ex:plain ; sh:pattern "^(a|b)$" ] ;
+    # control: an escaped ( stays literal, so "?:" here is an optional "(" then ":"
+    sh:property [ sh:path ex:esc ; sh:pattern "^\\(?:$" ] ;
+    # control: inside a bracket expression, ( ? : are literal characters
+    sh:property [ sh:path ex:brk ; sh:pattern "^[(?:]+$" ] .
+
+ex:ok a ex:Version ;
+    ex:grp "a" , "b" ;
+    ex:nested "xy" , "xzxy" ;
+    ex:opt "a" , "a-b" ;
+    ex:rep "" , "abab" ;
+    ex:semver "3.0.1" , "0.0.0" , "1.2.3-alpha.1+build.5" , "1.2.3+x" , "1.2.3-0a" ;
+    ex:plain "a" ;
+    ex:esc ":" , "(:" ;
+    ex:brk "(?:" .
+
+# Violations: one each for grp, nested, opt, rep and plain, and three for
+# semver (a leading zero, a missing patch, a numeric pre-release with a
+# leading zero) -- 8 in all
+ex:bad a ex:Version ;
+    ex:grp "c" ;
+    ex:nested "xa" ;
+    ex:opt "a-c" ;
+    ex:rep "aba" ;
+    ex:semver "01.2.3" , "1.2" , "1.2.3-01" ;
+    ex:plain "c" .

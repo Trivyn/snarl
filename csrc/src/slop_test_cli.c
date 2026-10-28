@@ -36,6 +36,7 @@ uint8_t snarl_cli_tests_test_cli_test_address_book(slop_arena* arena);
 uint8_t snarl_cli_tests_test_cli_test_valid_library(slop_arena* arena);
 uint8_t snarl_cli_tests_test_cli_test_multi_shape(slop_arena* arena);
 uint8_t snarl_cli_tests_test_cli_test_pattern_unicode(slop_arena* arena);
+uint8_t snarl_cli_tests_test_cli_test_pattern_noncapturing(slop_arena* arena);
 uint8_t snarl_cli_tests_test_cli_test_subclass_class_conforms(slop_arena* arena);
 uint8_t snarl_cli_tests_test_cli_test_subclass_class(slop_arena* arena);
 uint8_t snarl_cli_tests_test_cli_test_vacuous_or(slop_arena* arena);
@@ -750,6 +751,10 @@ uint8_t snarl_cli_tests_test_cli_test_pattern_unicode(slop_arena* arena) {
     return snarl_cli_tests_test_cli_assert_violations(arena, SLOP_STR("fixtures/pattern-unicode.ttl"), 2);
 }
 
+uint8_t snarl_cli_tests_test_cli_test_pattern_noncapturing(slop_arena* arena) {
+    return snarl_cli_tests_test_cli_assert_violations(arena, SLOP_STR("fixtures/pattern-noncapturing.ttl"), 8);
+}
+
 uint8_t snarl_cli_tests_test_cli_test_subclass_class_conforms(slop_arena* arena) {
     return snarl_cli_tests_test_cli_assert_conforms_separate(arena, SLOP_STR("fixtures/subclass-class-conforms-data.ttl"), SLOP_STR("fixtures/subclass-class-conforms-shapes.ttl"));
 }
@@ -1223,6 +1228,11 @@ int main(int argc, char** _c_argv) {
                 failed = (failed + 1);
             }
             if (snarl_cli_tests_test_cli_test_pattern_unicode(arena)) {
+                passed = (passed + 1);
+            } else {
+                failed = (failed + 1);
+            }
+            if (snarl_cli_tests_test_cli_test_pattern_noncapturing(arena)) {
                 passed = (passed + 1);
             } else {
                 failed = (failed + 1);

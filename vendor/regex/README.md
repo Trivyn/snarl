@@ -50,6 +50,11 @@ Each is marked with a `snarl:` comment.
 - **`CHARCLASS_NAME_MAX` and `RE_DUP_MAX`** (POSIX `<limits.h>`, missing on
   MinGW and MSVC) are defined in `tre.h` at musl's values, 14 and 255, on
   every platform.
+- **Non-capturing groups.** `tre_parse` (`regcomp.c`) skips `?:` after an
+  ERE `(`, so XPath's `(?:...)`, which sh:pattern allows, compiles as an
+  ordinary group. Matching uses `REG_NOSUB` and ERE has no backreferences,
+  so the group's capture number is never seen. Before, `(?` was
+  `REG_BADRPT`, so no pattern that compiled changes meaning.
 - `regerror.c` is not vendored (snarl never formats regex errors).
 
 Character classes (`[[:alpha:]]` and so on) still come from the C library's
