@@ -65,6 +65,7 @@ uint8_t snarl_cli_tests_test_cli_test_valid_library(slop_arena* arena);
 uint8_t snarl_cli_tests_test_cli_test_multi_shape(slop_arena* arena);
 uint8_t snarl_cli_tests_test_cli_test_pattern_unicode(slop_arena* arena);
 uint8_t snarl_cli_tests_test_cli_test_pattern_noncapturing(slop_arena* arena);
+uint8_t snarl_cli_tests_test_cli_test_pattern_uncompilable(slop_arena* arena);
 uint8_t snarl_cli_tests_test_cli_test_subclass_class_conforms(slop_arena* arena);
 uint8_t snarl_cli_tests_test_cli_test_subclass_class(slop_arena* arena);
 uint8_t snarl_cli_tests_test_cli_test_vacuous_or(slop_arena* arena);

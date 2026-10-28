@@ -60,7 +60,9 @@ snarl [options] <data.ttl> [shapes.ttl]
   --no-infos         Suppress sh:Info results
 ```
 
-Exit codes: `0` = conforms, `1` = violations, `2` = parse/internal error.
+Exit codes: `0` = conforms, `1` = violations, `2` = parse/internal error
+(including a shapes graph snarl rejects, such as an `sh:pattern` its regex
+engine cannot compile).
 
 ## Library Usage (C)
 

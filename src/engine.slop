@@ -15,7 +15,7 @@
   (import value-range
     (check-min-inclusive check-max-inclusive check-min-exclusive check-max-exclusive))
   (import string
-    (check-min-length check-max-length check-pattern check-language-in check-unique-lang))
+    (check-min-length check-max-length check-pattern pattern-compile-error check-language-in check-unique-lang))
   (import other (check-has-value check-in check-closed))
   (import pair
     (check-equals check-disjoint check-less-than check-less-than-or-equals))
@@ -23,6 +23,7 @@
   (import shape (check-node check-qualified-value-shape))
   (export
     engine-validate
+    shapes-graph-pattern-error-message
     evaluate-node-shape
     evaluate-node-shape-cached
     evaluate-property-shape
@@ -329,6 +330,88 @@
     (let ((empty-siblings (list-new arena Term))
           (results (evaluate-property-shape-cached arena data-graph shapes-graph class-index ps node visited (default-validator-config) empty-siblings)))
       (== (list-len results) 0)))
+
+  ;; An sh:pattern the regex engine cannot compile is a fault in the shapes
+  ;; graph, not the data: matched anyway, it would report every value as a
+  ;; violation. So validation rejects it up front as an engine error, like a
+  ;; recursion hazard, naming the pattern and the regcomp error.
+
+  (fn constraints-pattern-error-message ((arena Arena) (shape-id Term) (constraints (List Constraint)))
+    (@intent "Error message for the first sh:pattern in a shape's constraints that the regex engine cannot compile, if any")
+    (@spec ((Arena Term (List Constraint)) -> (Option String)))
+    (@alloc arena)
+    (let ((mut result (Option String) (none)))
+      (for-each (c constraints)
+        (match result
+          ((none)
+            (match c
+              ((con-pattern pat)
+                (match (pattern-compile-error arena pat)
+                  ((some reason)
+                    (let ((mut parts (list-new arena String)))
+                      (list-push parts "sh:pattern \"")
+                      (list-push parts pat)
+                      (list-push parts "\" of shape ")
+                      (list-push parts (term-display-label shape-id "[anonymous shape]"))
+                      (list-push parts " does not compile as a regular expression (")
+                      (list-push parts reason)
+                      (list-push parts ")")
+                      (set! result (some (string-build arena parts)))))
+                  ((none) (do))))
+              (_ (do))))
+          ((some _) (do))))
+      result))
+
+  (fn property-shape-pattern-error-message ((arena Arena) (ps PropertyShape))
+    (@intent "Error message for an uncompilable sh:pattern in an active property shape, if any")
+    (@spec ((Arena PropertyShape) -> (Option String)))
+    (@alloc arena)
+    (if (. ps deactivated)
+      (none)
+      (constraints-pattern-error-message arena (. ps id) (. ps constraints))))
+
+  (fn node-shape-pattern-error-message ((arena Arena) (ns NodeShape))
+    (@intent "Error message for an uncompilable sh:pattern in an active node shape or its property shapes, if any")
+    (@spec ((Arena NodeShape) -> (Option String)))
+    (@alloc arena)
+    (if (. ns deactivated)
+      (none)
+      (let ((mut result (constraints-pattern-error-message arena (. ns id) (. ns constraints))))
+        (for-each (ps (. ns property-shapes))
+          (match result
+            ((none) (set! result (property-shape-pattern-error-message arena ps)))
+            ((some _) (do))))
+        result)))
+
+  (fn shapes-graph-pattern-error-message ((arena Arena) (shapes-graph ShapesGraph))
+    (@intent "Error message for the first sh:pattern in an active shape that the regex engine cannot compile, if any. Top-level shapes are checked in graph order, then inline shapes from the shape maps; deterministic for a given shapes graph.")
+    (@spec ((Arena ShapesGraph) -> (Option String)))
+    (@alloc arena)
+    (@example (arena (record-new ShapesGraph (node-shapes (list-new arena NodeShape)) (property-shapes (list-new arena PropertyShape)) (shape-map (map-new arena Term NodeShape)) (property-shape-map (map-new arena Term PropertyShape)))) -> (none))
+    (let ((mut result (Option String) (none)))
+      (for-each (ns (. shapes-graph node-shapes))
+        (match result
+          ((none) (set! result (node-shape-pattern-error-message arena ns)))
+          ((some _) (do))))
+      (for-each (ps (. shapes-graph property-shapes))
+        (match result
+          ((none) (set! result (property-shape-pattern-error-message arena ps)))
+          ((some _) (do))))
+      (for-each (k (map-keys (. shapes-graph shape-map)))
+        (match result
+          ((none)
+            (match (map-get (. shapes-graph shape-map) k)
+              ((some ns) (set! result (node-shape-pattern-error-message arena ns)))
+              ((none) (do))))
+          ((some _) (do))))
+      (for-each (k (map-keys (. shapes-graph property-shape-map)))
+        (match result
+          ((none)
+            (match (map-get (. shapes-graph property-shape-map) k)
+              ((some ps) (set! result (property-shape-pattern-error-message arena ps)))
+              ((none) (do))))
+          ((some _) (do))))
+      result))
 
   (fn engine-validate ((arena Arena) (data-graph SnarlDataGraph) (shapes-graph ShapesGraph) (config ValidatorConfig))
     (@intent

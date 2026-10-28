@@ -15,7 +15,7 @@ This is a stopgap until SLOP's std grows a regex module.
 
 | File | Origin |
 |------|--------|
-| `snarl_regex.h`, `snarl_regex.c` | snarl: `snarl_regex_match`, the one entry point |
+| `snarl_regex.h`, `snarl_regex.c` | snarl: `snarl_regex_match`, the one entry point; a pattern that does not compile returns its negated `REG_*` code |
 | `regcomp.c`, `regexec.c`, `tre-mem.c`, `tre.h` | musl v1.2.5 `src/regex/` (TRE) |
 | `tre_regex.h` | musl v1.2.5 `include/regex.h`, adapted |
 | `COPYRIGHT` | musl v1.2.5 `COPYRIGHT` |
@@ -55,7 +55,8 @@ Each is marked with a `snarl:` comment.
   ordinary group. Matching uses `REG_NOSUB` and ERE has no backreferences,
   so the group's capture number is never seen. Before, `(?` was
   `REG_BADRPT`, so no pattern that compiled changes meaning.
-- `regerror.c` is not vendored (snarl never formats regex errors).
+- `regerror.c` is not vendored: snarl names the `REG_*` code itself
+  (`regcomp-error-name` in `string.slop`) when it rejects a pattern.
 
 Character classes (`[[:alpha:]]` and so on) still come from the C library's
 `isw*` functions, so outside ASCII they follow the C locale.
