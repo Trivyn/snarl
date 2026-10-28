@@ -97,7 +97,8 @@ Validation produces either:
 - `OwnedValidatorResult::Success(OwnedValidationReport)` or
   `ValidatorResult::Success(ValidationReport)` with `conforms` and `results`.
 - `OwnedValidatorResult::Error(String)` or `ValidatorResult::Error(String)` if
-  validation fails internally.
+  validation fails internally or rejects the shapes graph, for example an
+  `sh:pattern` the regex engine cannot compile.
 
 Each validation result includes the focus node, optional result path, optional
 value, source shape, source constraint component, severity, and optional message.

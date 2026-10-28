@@ -45,6 +45,8 @@ slop_string snarl_string_term_string_value(slop_rdf_rdf_Term t);
 slop_string snarl_string_term_lang(slop_rdf_rdf_Term t);
 uint8_t snarl_string_term_is_literal(slop_rdf_rdf_Term t);
 uint8_t snarl_string_regex_match_ffi(slop_string pattern, slop_string input);
+slop_string snarl_string_regcomp_error_name(slop_arena* arena, int64_t code);
+slop_option_string snarl_string_pattern_compile_error(slop_arena* arena, slop_string pattern);
 uint8_t snarl_string_min_length_satisfied(slop_rdf_rdf_Term value_node, int64_t min_len);
 uint8_t snarl_string_max_length_satisfied(slop_rdf_rdf_Term value_node, int64_t max_len);
 uint8_t snarl_string_pattern_satisfied(slop_arena* arena, slop_rdf_rdf_Term value_node, slop_string pattern);

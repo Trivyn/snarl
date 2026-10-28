@@ -31,13 +31,13 @@ int64_t snarl_regex_match(const char *pattern, size_t pattern_len,
     if (!pat || !str) {
         free(pat);
         free(str);
-        return -1;
+        return -REG_ESPACE;
     }
     rc = regcomp(&re, pat, REG_EXTENDED | REG_NOSUB);
     free(pat);
     if (rc != REG_OK) {
         free(str);
-        return -1;
+        return -rc;
     }
     rc = regexec(&re, str, 0, NULL, 0);
     regfree(&re);

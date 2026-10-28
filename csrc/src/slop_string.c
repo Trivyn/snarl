@@ -8,6 +8,8 @@ slop_string snarl_string_term_string_value(slop_rdf_rdf_Term t);
 slop_string snarl_string_term_lang(slop_rdf_rdf_Term t);
 uint8_t snarl_string_term_is_literal(slop_rdf_rdf_Term t);
 uint8_t snarl_string_regex_match_ffi(slop_string pattern, slop_string input);
+slop_string snarl_string_regcomp_error_name(slop_arena* arena, int64_t code);
+slop_option_string snarl_string_pattern_compile_error(slop_arena* arena, slop_string pattern);
 uint8_t snarl_string_min_length_satisfied(slop_rdf_rdf_Term value_node, int64_t min_len);
 uint8_t snarl_string_max_length_satisfied(slop_rdf_rdf_Term value_node, int64_t max_len);
 uint8_t snarl_string_pattern_satisfied(slop_arena* arena, slop_rdf_rdf_Term value_node, slop_string pattern);
@@ -91,6 +93,47 @@ uint8_t snarl_string_term_is_literal(slop_rdf_rdf_Term t) {
 
 uint8_t snarl_string_regex_match_ffi(slop_string pattern, slop_string input) {
     return (snarl_regex_match(((char*)(pattern.data)), ((uint64_t)(pattern.len)), ((char*)(input.data)), ((uint64_t)(input.len))) == 1);
+}
+
+slop_string snarl_string_regcomp_error_name(slop_arena* arena, int64_t code) {
+    if (code == 2) {
+        return SLOP_STR("REG_BADPAT");
+    } else if (code == 3) {
+        return SLOP_STR("REG_ECOLLATE");
+    } else if (code == 4) {
+        return SLOP_STR("REG_ECTYPE");
+    } else if (code == 5) {
+        return SLOP_STR("REG_EESCAPE");
+    } else if (code == 6) {
+        return SLOP_STR("REG_ESUBREG");
+    } else if (code == 7) {
+        return SLOP_STR("REG_EBRACK");
+    } else if (code == 8) {
+        return SLOP_STR("REG_EPAREN");
+    } else if (code == 9) {
+        return SLOP_STR("REG_EBRACE");
+    } else if (code == 10) {
+        return SLOP_STR("REG_BADBR");
+    } else if (code == 11) {
+        return SLOP_STR("REG_ERANGE");
+    } else if (code == 12) {
+        return SLOP_STR("REG_ESPACE");
+    } else if (code == 13) {
+        return SLOP_STR("REG_BADRPT");
+    } else {
+        return string_concat(arena, SLOP_STR("REG_"), int_to_string(arena, code));
+    }
+}
+
+slop_option_string snarl_string_pattern_compile_error(slop_arena* arena, slop_string pattern) {
+    {
+        __auto_type rc = snarl_regex_match(((char*)(pattern.data)), ((uint64_t)(pattern.len)), ((char*)(pattern.data)), ((uint64_t)(0)));
+        if (rc < 0) {
+            return (slop_option_string){.has_value = 1, .value = snarl_string_regcomp_error_name(arena, (0 - rc))};
+        } else {
+            return (slop_option_string){.has_value = false};
+        }
+    }
 }
 
 uint8_t snarl_string_min_length_satisfied(slop_rdf_rdf_Term value_node, int64_t min_len) {

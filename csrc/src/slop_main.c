@@ -10,9 +10,9 @@ slop_option_slop_rdf_index_IndexedGraph snarl_cli_main_load_graph(slop_arena* ar
 slop_option_snarl_data_graph_SnarlDataGraph snarl_cli_main_load_data_graph(slop_arena* arena, slop_string path, uint8_t quiet);
 int main(int argc, char** _c_argv);
 
-typedef struct { snarl_data_graph_SnarlDataGraph* dg; slop_arena* arena; } snarl_cli_main__lambda_534_env_t;
+typedef struct { snarl_data_graph_SnarlDataGraph* dg; slop_arena* arena; } snarl_cli_main__lambda_547_env_t;
 
-static void snarl_cli_main__lambda_534(snarl_cli_main__lambda_534_env_t* _env, slop_rdf_rdf_Triple t) { ({ (*_env->dg) = snarl_data_graph_add(_env->arena, (*_env->dg), t); (void)0; }); }
+static void snarl_cli_main__lambda_547(snarl_cli_main__lambda_547_env_t* _env, slop_rdf_rdf_Triple t) { ({ (*_env->dg) = snarl_data_graph_add(_env->arena, (*_env->dg), t); (void)0; }); }
 
 void snarl_cli_main_print_elapsed(slop_arena* arena, int64_t elapsed) {
     printf("%.*s", (int)(int_to_string(arena, (elapsed / 1000))).len, (int_to_string(arena, (elapsed / 1000))).data);
@@ -84,12 +84,12 @@ snarl_cli_main_CliArgs snarl_cli_main_parse_args(slop_arena* arena, int64_t argc
                     if ((i + 1) < argc) {
                         {
                             __auto_type val_str = snarl_cli_main_argv_to_string(argv, (i + 1));
-                            __auto_type _mv_531 = std_strlib_parse_int(val_str);
-                            if (_mv_531.is_ok) {
-                                __auto_type n = _mv_531.data.ok;
+                            __auto_type _mv_544 = std_strlib_parse_int(val_str);
+                            if (_mv_544.is_ok) {
+                                __auto_type n = _mv_544.data.ok;
                                 max_errors = n;
-                            } else if (!_mv_531.is_ok) {
-                                __auto_type _ = _mv_531.data.err;
+                            } else if (!_mv_544.is_ok) {
+                                __auto_type _ = _mv_544.data.err;
                                 printf("%s\n", "Error: --max-errors requires a number");
                             }
                         }
@@ -143,11 +143,11 @@ void snarl_cli_main_print_usage(void) {
 void snarl_cli_main_print_ttl_error(slop_arena* arena, slop_string path, slop_rdf_ttl_TtlFileError e) {
     printf("%s", "Error: failed to parse ");
     printf("%.*s\n", (int)(path).len, (path).data);
-    __auto_type _mv_532 = e;
-    switch (_mv_532.tag) {
+    __auto_type _mv_545 = e;
+    switch (_mv_545.tag) {
         case slop_rdf_ttl_TtlFileError_parse_error:
         {
-            __auto_type pe = _mv_532.data.parse_error;
+            __auto_type pe = _mv_545.data.parse_error;
             printf("%s", "  at line ");
             printf("%.*s", (int)(int_to_string(arena, pe.position.line)).len, (int_to_string(arena, pe.position.line)).data);
             printf("%s", ", column ");
@@ -158,7 +158,7 @@ void snarl_cli_main_print_ttl_error(slop_arena* arena, slop_string path, slop_rd
         }
         case slop_rdf_ttl_TtlFileError_file_error:
         {
-            __auto_type _ = _mv_532.data.file_error;
+            __auto_type _ = _mv_545.data.file_error;
             printf("%s\n", "  (file not found or unreadable)");
             break;
         }
@@ -166,13 +166,13 @@ void snarl_cli_main_print_ttl_error(slop_arena* arena, slop_string path, slop_rd
 }
 
 slop_option_slop_rdf_index_IndexedGraph snarl_cli_main_load_graph(slop_arena* arena, slop_string path, uint8_t quiet) {
-    __auto_type _mv_533 = slop_rdf_ttl_parse_ttl_file(arena, path);
-    if (!_mv_533.is_ok) {
-        __auto_type e = _mv_533.data.err;
+    __auto_type _mv_546 = slop_rdf_ttl_parse_ttl_file(arena, path);
+    if (!_mv_546.is_ok) {
+        __auto_type e = _mv_546.data.err;
         snarl_cli_main_print_ttl_error(arena, path, e);
         return (slop_option_slop_rdf_index_IndexedGraph){.has_value = false};
-    } else if (_mv_533.is_ok) {
-        __auto_type g = _mv_533.data.ok;
+    } else if (_mv_546.is_ok) {
+        __auto_type g = _mv_546.data.ok;
         {
             __auto_type ig = rdf_indexed_graph_create(arena);
             {
@@ -199,14 +199,14 @@ slop_option_snarl_data_graph_SnarlDataGraph snarl_cli_main_load_data_graph(slop_
     slop_option_snarl_data_graph_SnarlDataGraph _retval = {0};
     {
         __auto_type dg = snarl_data_graph_create(arena);
-        __auto_type _mv_535 = slop_rdf_ttl_parse_ttl_file_for_each_triple(arena, path, ({ snarl_cli_main__lambda_534_env_t* snarl_cli_main__lambda_534_env = (snarl_cli_main__lambda_534_env_t*)slop_arena_alloc(arena, sizeof(snarl_cli_main__lambda_534_env_t)); *snarl_cli_main__lambda_534_env = (snarl_cli_main__lambda_534_env_t){ .dg = &(dg), .arena = arena }; (slop_closure_t){ (void*)snarl_cli_main__lambda_534, (void*)snarl_cli_main__lambda_534_env }; }));
-        if (!_mv_535.is_ok) {
-            __auto_type e = _mv_535.data.err;
+        __auto_type _mv_548 = slop_rdf_ttl_parse_ttl_file_for_each_triple(arena, path, ({ snarl_cli_main__lambda_547_env_t* snarl_cli_main__lambda_547_env = (snarl_cli_main__lambda_547_env_t*)slop_arena_alloc(arena, sizeof(snarl_cli_main__lambda_547_env_t)); *snarl_cli_main__lambda_547_env = (snarl_cli_main__lambda_547_env_t){ .dg = &(dg), .arena = arena }; (slop_closure_t){ (void*)snarl_cli_main__lambda_547, (void*)snarl_cli_main__lambda_547_env }; }));
+        if (!_mv_548.is_ok) {
+            __auto_type e = _mv_548.data.err;
             snarl_cli_main_print_ttl_error(arena, path, e);
             _retval = (slop_option_snarl_data_graph_SnarlDataGraph){.has_value = false};
             goto _slop_post;
-        } else if (_mv_535.is_ok) {
-            __auto_type _ = _mv_535.data.ok;
+        } else if (_mv_548.is_ok) {
+            __auto_type _ = _mv_548.data.ok;
             if (!(quiet)) {
                 printf("%s", "Parsed ");
                 printf("%.*s", (int)(int_to_string(arena, snarl_data_graph_size(dg))).len, (int_to_string(arena, snarl_data_graph_size(dg))).data);
@@ -245,8 +245,8 @@ int main(int argc, char** _c_argv) {
                     return _wa_ret;
                 }
             } else {
-                __auto_type _mv_536 = args.data_file;
-                if (!_mv_536.has_value) {
+                __auto_type _mv_549 = args.data_file;
+                if (!_mv_549.has_value) {
                     snarl_cli_main_print_usage();
                     if (args.show_help) {
                         {
@@ -261,8 +261,8 @@ int main(int argc, char** _c_argv) {
                             return _wa_ret;
                         }
                     }
-                } else if (_mv_536.has_value) {
-                    __auto_type data_path = _mv_536.value;
+                } else if (_mv_549.has_value) {
+                    __auto_type data_path = _mv_549.value;
                     if (args.show_help) {
                         snarl_cli_main_print_usage();
                         {
@@ -274,37 +274,37 @@ int main(int argc, char** _c_argv) {
                         {
                             __auto_type quiet = args.quiet;
                             __auto_type parse_start = slop_now_ms();
-                            __auto_type _mv_537 = snarl_cli_main_load_data_graph(arena, data_path, quiet);
-                            if (!_mv_537.has_value) {
+                            __auto_type _mv_550 = snarl_cli_main_load_data_graph(arena, data_path, quiet);
+                            if (!_mv_550.has_value) {
                                 {
                                     int _wa_ret = 2;
                                     slop_arena_free(&_arena_3);
                                     return _wa_ret;
                                 }
-                            } else if (_mv_537.has_value) {
-                                __auto_type data_graph = _mv_537.value;
+                            } else if (_mv_550.has_value) {
+                                __auto_type data_graph = _mv_550.value;
                                 {
                                     __auto_type shapes_path = ({ __auto_type _mv = args.shapes_file; _mv.has_value ? ({ __auto_type sp = _mv.value; sp; }) : (data_path); });
                                     {
                                         __auto_type shapes_result = snarl_cli_main_load_graph(arena, shapes_path, quiet);
-                                        __auto_type _mv_538 = shapes_result;
-                                        if (!_mv_538.has_value) {
+                                        __auto_type _mv_551 = shapes_result;
+                                        if (!_mv_551.has_value) {
                                             {
                                                 int _wa_ret = 2;
                                                 slop_arena_free(&_arena_3);
                                                 return _wa_ret;
                                             }
-                                        } else if (_mv_538.has_value) {
-                                            __auto_type shapes_graph = _mv_538.value;
+                                        } else if (_mv_551.has_value) {
+                                            __auto_type shapes_graph = _mv_551.value;
                                             {
                                                 __auto_type parse_elapsed = (slop_now_ms() - parse_start);
                                                 __auto_type validate_start = slop_now_ms();
                                                 __auto_type config = ((snarl_types_ValidatorConfig){.verbose = !(quiet), .max_errors = args.max_errors, .include_warnings = !(args.no_warnings), .include_infos = !(args.no_infos)});
-                                                __auto_type _mv_539 = snarl_validate_data_graph_with_config(arena, data_graph, shapes_graph, config);
-                                                switch (_mv_539.tag) {
+                                                __auto_type _mv_552 = snarl_validate_data_graph_with_config(arena, data_graph, shapes_graph, config);
+                                                switch (_mv_552.tag) {
                                                     case snarl_types_ValidatorResult_validate_success:
                                                     {
-                                                        __auto_type report = _mv_539.data.validate_success;
+                                                        __auto_type report = _mv_552.data.validate_success;
                                                         {
                                                             __auto_type validate_elapsed = (slop_now_ms() - validate_start);
                                                             __auto_type violations = snarl_get_violations(arena, report);
@@ -323,14 +323,14 @@ int main(int argc, char** _c_argv) {
                                                                 snarl_cli_main_print_elapsed(arena, validate_elapsed);
                                                                 printf("%s\n", "");
                                                             }
-                                                            __auto_type _mv_540 = args.emit_file;
-                                                            if (_mv_540.has_value) {
-                                                                __auto_type emit_path = _mv_540.value;
+                                                            __auto_type _mv_553 = args.emit_file;
+                                                            if (_mv_553.has_value) {
+                                                                __auto_type emit_path = _mv_553.value;
                                                                 if (!(quiet)) {
                                                                     printf("%s", "Report written to ");
                                                                     printf("%.*s\n", (int)(emit_path).len, (emit_path).data);
                                                                 }
-                                                            } else if (!_mv_540.has_value) {
+                                                            } else if (!_mv_553.has_value) {
                                                             }
                                                             if (report.conforms) {
                                                                 {
@@ -349,7 +349,7 @@ int main(int argc, char** _c_argv) {
                                                     }
                                                     case snarl_types_ValidatorResult_validate_error:
                                                     {
-                                                        __auto_type msg = _mv_539.data.validate_error;
+                                                        __auto_type msg = _mv_552.data.validate_error;
                                                         printf("%s", "Error: ");
                                                         printf("%.*s\n", (int)(msg).len, (msg).data);
                                                         {

@@ -38,6 +38,12 @@ SLOP_OPTION_DEFINE(slop_map*, slop_option_map_ptr)
 SLOP_LIST_DEFINE(slop_rdf_rdf_Term, slop_list_slop_rdf_rdf_Term)
 #endif
 
+#ifndef SLOP_LIST_SNARL_TYPES_CONSTRAINT_DEFINED
+#define SLOP_LIST_SNARL_TYPES_CONSTRAINT_DEFINED
+#define SLOP_LIST_SNARL_TYPES_CONSTRAINT_IMPL_DEFINED
+SLOP_LIST_DEFINE(snarl_types_Constraint, slop_list_snarl_types_Constraint)
+#endif
+
 #ifndef SLOP_LIST_SNARL_TYPES_VALIDATIONRESULT_DEFINED
 #define SLOP_LIST_SNARL_TYPES_VALIDATIONRESULT_DEFINED
 #define SLOP_LIST_SNARL_TYPES_VALIDATIONRESULT_IMPL_DEFINED
@@ -47,6 +53,11 @@ SLOP_LIST_DEFINE(snarl_types_ValidationResult, slop_list_snarl_types_ValidationR
 #ifndef SLOP_OPTION_SLOP_RDF_RDF_TERM_DEFINED
 #define SLOP_OPTION_SLOP_RDF_RDF_TERM_DEFINED
 SLOP_OPTION_DEFINE(slop_rdf_rdf_Term, slop_option_slop_rdf_rdf_Term)
+#endif
+
+#ifndef SLOP_OPTION_SNARL_TYPES_CONSTRAINT_DEFINED
+#define SLOP_OPTION_SNARL_TYPES_CONSTRAINT_DEFINED
+SLOP_OPTION_DEFINE(snarl_types_Constraint, slop_option_snarl_types_Constraint)
 #endif
 
 #ifndef SLOP_OPTION_SNARL_TYPES_VALIDATIONRESULT_DEFINED
@@ -174,6 +185,10 @@ uint8_t snarl_evaluate_shape_against_node_cached(slop_arena* arena, snarl_data_g
 uint8_t snarl_property_shape_conforms(slop_arena* arena, snarl_data_graph_SnarlDataGraph data_graph, snarl_types_ShapesGraph shapes_graph, slop_rdf_rdf_Term node, snarl_types_PropertyShape ps);
 uint8_t snarl_property_shape_conforms_cached(slop_arena* arena, snarl_data_graph_SnarlDataGraph data_graph, snarl_types_ShapesGraph shapes_graph, snarl_target_ClassIndex class_index, slop_rdf_rdf_Term node, snarl_types_PropertyShape ps);
 uint8_t snarl_engine_property_shape_conforms_with_guard(slop_arena* arena, snarl_data_graph_SnarlDataGraph data_graph, snarl_types_ShapesGraph shapes_graph, snarl_target_ClassIndex class_index, slop_rdf_rdf_Term node, snarl_types_PropertyShape ps, snarl_engine_CycleGuard visited);
+slop_option_string snarl_engine_constraints_pattern_error_message(slop_arena* arena, slop_rdf_rdf_Term shape_id, slop_list_snarl_types_Constraint constraints);
+slop_option_string snarl_engine_property_shape_pattern_error_message(slop_arena* arena, snarl_types_PropertyShape ps);
+slop_option_string snarl_engine_node_shape_pattern_error_message(slop_arena* arena, snarl_types_NodeShape ns);
+slop_option_string snarl_engine_shapes_graph_pattern_error_message(slop_arena* arena, snarl_types_ShapesGraph shapes_graph);
 snarl_types_ValidatorResult snarl_engine_validate(slop_arena* arena, snarl_data_graph_SnarlDataGraph data_graph, snarl_types_ShapesGraph shapes_graph, snarl_types_ValidatorConfig config);
 slop_list_snarl_types_ValidationResult snarl_evaluate_node_shape(slop_arena* arena, snarl_data_graph_SnarlDataGraph data_graph, snarl_types_ShapesGraph shapes_graph, snarl_types_NodeShape shape, slop_rdf_rdf_Term focus_node, snarl_engine_CycleGuard visited, snarl_types_ValidatorConfig config);
 slop_list_snarl_types_ValidationResult snarl_evaluate_node_shape_cached(slop_arena* arena, snarl_data_graph_SnarlDataGraph data_graph, snarl_types_ShapesGraph shapes_graph, snarl_target_ClassIndex class_index, snarl_types_NodeShape shape, slop_rdf_rdf_Term focus_node, snarl_engine_CycleGuard visited, snarl_types_ValidatorConfig config);
@@ -216,6 +231,11 @@ SLOP_OPTION_DEFINE(slop_map*, slop_option_map_ptr)
 SLOP_OPTION_DEFINE(snarl_engine_CycleGuard, slop_option_snarl_engine_CycleGuard)
 #endif
 
+#ifndef SLOP_OPTION_SNARL_TYPES_CONSTRAINT_DEFINED
+#define SLOP_OPTION_SNARL_TYPES_CONSTRAINT_DEFINED
+SLOP_OPTION_DEFINE(snarl_types_Constraint, slop_option_snarl_types_Constraint)
+#endif
+
 #ifndef SLOP_OPTION_SNARL_TYPES_VALIDATIONRESULT_DEFINED
 #define SLOP_OPTION_SNARL_TYPES_VALIDATIONRESULT_DEFINED
 SLOP_OPTION_DEFINE(snarl_types_ValidationResult, slop_option_snarl_types_ValidationResult)
@@ -226,14 +246,14 @@ SLOP_OPTION_DEFINE(snarl_types_ValidationResult, slop_option_snarl_types_Validat
 SLOP_OPTION_DEFINE(snarl_types_ShaclPath, slop_option_snarl_types_ShaclPath)
 #endif
 
-#ifndef SLOP_OPTION_SNARL_TYPES_PROPERTYSHAPE_DEFINED
-#define SLOP_OPTION_SNARL_TYPES_PROPERTYSHAPE_DEFINED
-SLOP_OPTION_DEFINE(snarl_types_PropertyShape, slop_option_snarl_types_PropertyShape)
-#endif
-
 #ifndef SLOP_OPTION_SNARL_TYPES_NODESHAPE_DEFINED
 #define SLOP_OPTION_SNARL_TYPES_NODESHAPE_DEFINED
 SLOP_OPTION_DEFINE(snarl_types_NodeShape, slop_option_snarl_types_NodeShape)
+#endif
+
+#ifndef SLOP_OPTION_SNARL_TYPES_PROPERTYSHAPE_DEFINED
+#define SLOP_OPTION_SNARL_TYPES_PROPERTYSHAPE_DEFINED
+SLOP_OPTION_DEFINE(snarl_types_PropertyShape, slop_option_snarl_types_PropertyShape)
 #endif
 
 #ifndef SLOP_LIST_SNARL_TYPES_SHACLPATH_DEFINED

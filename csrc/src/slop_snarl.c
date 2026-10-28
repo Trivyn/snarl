@@ -59,16 +59,24 @@ snarl_types_ValidatorResult snarl_validate_data_graph_with_config(slop_arena* ar
     SLOP_PRE(((snarl_data_graph_size(data_graph) >= 0)), "(>= (snarl-data-graph-size data-graph) 0)");
     SLOP_PRE(((rdf_indexed_graph_size(shapes_graph) >= 0)), "(>= (indexed-graph-size shapes-graph) 0)");
     snarl_types_ValidatorResult _retval = {0};
-    __auto_type _mv_510 = snarl_shapes_graph_recursion_hazard_message(arena, shapes_graph);
-    if (_mv_510.has_value) {
-        __auto_type msg = _mv_510.value;
+    __auto_type _mv_522 = snarl_shapes_graph_recursion_hazard_message(arena, shapes_graph);
+    if (_mv_522.has_value) {
+        __auto_type msg = _mv_522.value;
         _retval = ((snarl_types_ValidatorResult){ .tag = snarl_types_ValidatorResult_validate_error, .data.validate_error = msg });
         goto _slop_post;
-    } else if (!_mv_510.has_value) {
+    } else if (!_mv_522.has_value) {
         {
             __auto_type shapes = snarl_parse_shapes_graph(arena, shapes_graph);
-            _retval = snarl_engine_validate(arena, data_graph, shapes, config);
-            goto _slop_post;
+            __auto_type _mv_523 = snarl_engine_shapes_graph_pattern_error_message(arena, shapes);
+            if (_mv_523.has_value) {
+                __auto_type msg = _mv_523.value;
+                _retval = ((snarl_types_ValidatorResult){ .tag = snarl_types_ValidatorResult_validate_error, .data.validate_error = msg });
+                goto _slop_post;
+            } else if (!_mv_523.has_value) {
+                _retval = snarl_engine_validate(arena, data_graph, shapes, config);
+                goto _slop_post;
+            }
+            SLOP_UNREACHABLE();
         }
     }
     SLOP_UNREACHABLE();
@@ -80,16 +88,16 @@ snarl_types_ValidatorResult snarl_validate_data_graph_with_config(slop_arena* ar
 uint8_t snarl_conforms(slop_arena* arena, slop_rdf_index_IndexedGraph data_graph, slop_rdf_index_IndexedGraph shapes_graph) {
     SLOP_PRE(((rdf_indexed_graph_size(data_graph) >= 0)), "(>= (indexed-graph-size data-graph) 0)");
     SLOP_PRE(((rdf_indexed_graph_size(shapes_graph) >= 0)), "(>= (indexed-graph-size shapes-graph) 0)");
-    __auto_type _mv_511 = snarl_validate(arena, data_graph, shapes_graph);
-    switch (_mv_511.tag) {
+    __auto_type _mv_524 = snarl_validate(arena, data_graph, shapes_graph);
+    switch (_mv_524.tag) {
         case snarl_types_ValidatorResult_validate_success:
         {
-            __auto_type report = _mv_511.data.validate_success;
+            __auto_type report = _mv_524.data.validate_success;
             return snarl_types_report_conforms(report);
         }
         case snarl_types_ValidatorResult_validate_error:
         {
-            __auto_type _ = _mv_511.data.validate_error;
+            __auto_type _ = _mv_524.data.validate_error;
             return 0;
         }
     }
@@ -100,17 +108,17 @@ uint8_t snarl_conforms_data_graph(slop_arena* arena, snarl_data_graph_SnarlDataG
     SLOP_PRE(((snarl_data_graph_size(data_graph) >= 0)), "(>= (snarl-data-graph-size data-graph) 0)");
     SLOP_PRE(((rdf_indexed_graph_size(shapes_graph) >= 0)), "(>= (indexed-graph-size shapes-graph) 0)");
     uint8_t _retval = {0};
-    __auto_type _mv_512 = snarl_validate_data_graph(arena, data_graph, shapes_graph);
-    switch (_mv_512.tag) {
+    __auto_type _mv_525 = snarl_validate_data_graph(arena, data_graph, shapes_graph);
+    switch (_mv_525.tag) {
         case snarl_types_ValidatorResult_validate_success:
         {
-            __auto_type report = _mv_512.data.validate_success;
+            __auto_type report = _mv_525.data.validate_success;
             _retval = snarl_types_report_conforms(report);
             goto _slop_post;
         }
         case snarl_types_ValidatorResult_validate_error:
         {
-            __auto_type _ = _mv_512.data.validate_error;
+            __auto_type _ = _mv_525.data.validate_error;
             _retval = 0;
             goto _slop_post;
         }
@@ -129,8 +137,8 @@ slop_list_snarl_types_ValidationResult snarl_get_violations(slop_arena* arena, s
             __auto_type _coll = report.results;
             for (size_t _i = 0; _i < _coll.len; _i++) {
                 __auto_type r = _coll.data[_i];
-                __auto_type _mv_513 = r.severity;
-                switch (_mv_513) {
+                __auto_type _mv_526 = r.severity;
+                switch (_mv_526) {
                     case snarl_types_Severity_severity_violation: {
                         ({ __auto_type _lst_p = &(result); __auto_type _item = (r); if (_lst_p->len >= _lst_p->cap) { _lst_p->data = (__typeof__(_lst_p->data))slop_list_grow_raw(_lst_p->arena, _lst_p->data, &_lst_p->cap, _lst_p->len, sizeof(*_lst_p->data)); } _lst_p->data[_lst_p->len++] = _item; (void)0; });
                         break;
@@ -158,8 +166,8 @@ slop_list_snarl_types_ValidationResult snarl_get_warnings(slop_arena* arena, sna
             __auto_type _coll = report.results;
             for (size_t _i = 0; _i < _coll.len; _i++) {
                 __auto_type r = _coll.data[_i];
-                __auto_type _mv_514 = r.severity;
-                switch (_mv_514) {
+                __auto_type _mv_527 = r.severity;
+                switch (_mv_527) {
                     case snarl_types_Severity_severity_warning: {
                         ({ __auto_type _lst_p = &(result); __auto_type _item = (r); if (_lst_p->len >= _lst_p->cap) { _lst_p->data = (__typeof__(_lst_p->data))slop_list_grow_raw(_lst_p->arena, _lst_p->data, &_lst_p->cap, _lst_p->len, sizeof(*_lst_p->data)); } _lst_p->data[_lst_p->len++] = _item; (void)0; });
                         break;
@@ -181,7 +189,7 @@ slop_list_snarl_types_ValidationResult snarl_get_warnings(slop_arena* arena, sna
 
 int64_t snarl_get_result_count(snarl_types_ValidationReport report) {
     int64_t _retval = {0};
-    _retval = SLOP_RANGE(int64_t, ((int64_t)((report.results).len)), 1, 0, 0, 0, "(Int 0 ..) at snarl.slop:194:5");
+    _retval = SLOP_RANGE(int64_t, ((int64_t)((report.results).len)), 1, 0, 0, 0, "(Int 0 ..) at snarl.slop:198:5");
     goto _slop_post;
     _slop_post: ;
     SLOP_POST(((_retval >= 0)), "(>= $result 0)");

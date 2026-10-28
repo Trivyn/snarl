@@ -21,7 +21,8 @@
 
   ;; Portable POSIX ERE matcher (musl's TRE engine, vendored in vendor/regex)
   ;; rather than the system <regex.h>, which Windows does not have.
-  ;; 1 = match, 0 = no match, -1 = the pattern does not compile.
+  ;; 1 = match, 0 = no match, -REG_* (tre_regex.h) = the pattern does not
+  ;; compile.
   (ffi "snarl_regex.h"
     (snarl-regex-match ((pattern (Ptr Char)) (pattern-len U64)
                         (input (Ptr Char)) (input-len U64)) Int))
@@ -30,6 +31,7 @@
     check-min-length
     check-max-length
     check-pattern
+    pattern-compile-error
     check-language-in
     check-unique-lang)
 
@@ -88,10 +90,48 @@
     (@alloc none)
     ;; Strings go by length: snarl-regex-match makes its own NUL-terminated
     ;; copies, since a SLOP string need not be terminated. A pattern that does
-    ;; not compile (-1) matches nothing, as before.
+    ;; not compile (negative) matches nothing; validation never gets here with
+    ;; one, since the engine rejects it up front (pattern-compile-error).
     (== (snarl-regex-match (cast (Ptr Char) (. pattern data)) (cast U64 (. pattern len))
                            (cast (Ptr Char) (. input data)) (cast U64 (. input len)))
         1))
+
+  (fn regcomp-error-name ((arena Arena) (code Int))
+    (@intent "Name a regcomp error code (tre_regex.h REG_*), for error messages")
+    (@spec ((Arena Int) -> String))
+    (@alloc arena)
+    (@example (arena 8) -> "REG_EPAREN")
+    (@example (arena 13) -> "REG_BADRPT")
+    (@example (arena 99) -> "REG_99")
+    (cond
+      ((== code 2) "REG_BADPAT")
+      ((== code 3) "REG_ECOLLATE")
+      ((== code 4) "REG_ECTYPE")
+      ((== code 5) "REG_EESCAPE")
+      ((== code 6) "REG_ESUBREG")
+      ((== code 7) "REG_EBRACK")
+      ((== code 8) "REG_EPAREN")
+      ((== code 9) "REG_EBRACE")
+      ((== code 10) "REG_BADBR")
+      ((== code 11) "REG_ERANGE")
+      ((== code 12) "REG_ESPACE")
+      ((== code 13) "REG_BADRPT")
+      (else (string-concat arena "REG_" (int-to-string arena code)))))
+
+  (fn pattern-compile-error ((arena Arena) (pattern String))
+    (@intent "If the regex engine cannot compile an sh:pattern, the name of the regcomp error; none if it compiles")
+    (@spec ((Arena String) -> (Option String)))
+    (@alloc arena)
+    (@example (arena "^[a-z]+$") -> (none))
+    (@example (arena "^(?:a|b)$") -> (none))
+    (@example (arena "^(ab$") -> (some "REG_EPAREN"))
+    ;; Matching the empty input (any pointer, length 0) compiles the pattern
+    ;; first, and a compile failure is reported before any matching.
+    (let ((rc (snarl-regex-match (cast (Ptr Char) (. pattern data)) (cast U64 (. pattern len))
+                                 (cast (Ptr Char) (. pattern data)) (cast U64 0))))
+      (if (< rc 0)
+        (some (regcomp-error-name arena (- 0 rc)))
+        (none))))
 
   ;; ============================================================
   ;; Satisfaction predicates — extracted so each check's result <-> predicate

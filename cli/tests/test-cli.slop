@@ -426,6 +426,11 @@
     (@spec ((Arena) -> Bool))
     (assert-violations arena "fixtures/pattern-noncapturing.ttl" 8))
 
+  (fn test-pattern-uncompilable ((arena Arena))
+    (@intent "Test an sh:pattern the regex engine cannot compile is an engine error naming the pattern and the regcomp error, not a violation for every value")
+    (@spec ((Arena) -> Bool))
+    (assert-engine-error arena "fixtures/pattern-uncompilable.ttl" "sh:pattern \"^(ab$\" of shape [anonymous shape] does not compile as a regular expression (REG_EPAREN)"))
+
   ;; ============================================================
   ;; Regression Tests
   ;; ============================================================
@@ -797,6 +802,7 @@
         (if (test-multi-shape arena) (set! passed (+ passed 1)) (set! failed (+ failed 1)))
         (if (test-pattern-unicode arena) (set! passed (+ passed 1)) (set! failed (+ failed 1)))
         (if (test-pattern-noncapturing arena) (set! passed (+ passed 1)) (set! failed (+ failed 1)))
+        (if (test-pattern-uncompilable arena) (set! passed (+ passed 1)) (set! failed (+ failed 1)))
 
         ;; Regression tests
         (if (test-subclass-class-conforms arena) (set! passed (+ passed 1)) (set! failed (+ failed 1)))

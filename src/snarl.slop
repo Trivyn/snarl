@@ -6,7 +6,7 @@
   (import types
     (ShaclPath NodeKind Severity Constraint PropertyShape NodeShape ShapesGraph ValidationResult ValidationReport ValidatorConfig ValidatorResult default-validator-config make-validation-report report-conforms))
   (import parse (parse-shapes-graph shapes-graph-recursion-hazard-message))
-  (import engine (engine-validate))
+  (import engine (engine-validate shapes-graph-pattern-error-message))
   (import report
     (report-to-string report-to-graph severity-to-string term-to-display-string path-to-display-string))
   (export
@@ -119,7 +119,11 @@
       ((some msg) (union-new ValidatorResult validate-error msg))
       ((none)
         (let ((shapes (parse-shapes-graph arena shapes-graph)))
-          (engine-validate arena data-graph shapes config)))))
+          ;; An sh:pattern the regex engine cannot compile would otherwise
+          ;; report every value as a violation.
+          (match (shapes-graph-pattern-error-message arena shapes)
+            ((some msg) (union-new ValidatorResult validate-error msg))
+            ((none) (engine-validate arena data-graph shapes config)))))))
 
   (fn conforms ((arena Arena) (data-graph IndexedGraph) (shapes-graph IndexedGraph))
     (@intent "Quick boolean check: does the data graph conform to the shapes?")

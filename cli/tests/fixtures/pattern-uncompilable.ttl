@@ -1,0 +1,16 @@
+@prefix ex: <http://example.org/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+
+# An sh:pattern the regex engine cannot compile is an engine error naming the
+# pattern and the regcomp error, not an sh:pattern violation for every value.
+# "^(ab$" has an unbalanced parenthesis, invalid in every regex dialect.
+
+ex:CodeShape
+    a sh:NodeShape ;
+    sh:targetClass ex:Code ;
+    sh:property [ sh:path ex:ok ; sh:pattern "^[a-z]+$" ] ;
+    sh:property [ sh:path ex:code ; sh:pattern "^(ab$" ] .
+
+ex:c1 a ex:Code ;
+    ex:ok "abc" ;
+    ex:code "ab" .
