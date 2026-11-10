@@ -24,7 +24,7 @@ jobs:
             platform: linux-x86_64
             cc: gcc
             shell: bash
-          - os: macos-14
+          - os: macos-15
             platform: macos-arm64
             cc: clang
             shell: bash
