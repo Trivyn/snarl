@@ -1,0 +1,117 @@
+(module node-expr
+  (@doc "Node expression evaluation (SHACL-AF section 6, and the overlapping part of SHACL 1.2 Node Expressions)")
+
+  (import rdf (Term make-iri))
+  (import data-graph (SnarlDataGraph snarl-data-graph-create))
+  (import types (NodeExpr))
+  (import path (resolve-path))
+  (import strlib (string-build))
+  (export eval-node-expr distinct-terms)
+
+  ;; Evaluation needs shape conformance for filter shapes, which lives in
+  ;; engine.slop -- and engine.slop imports this module for sh:expression,
+  ;; so it cannot be imported back. The caller passes conformance in as
+  ;; `conforms` (node, shape ref) -> Bool instead, a closure over its data
+  ;; graph, shapes graph and cycle guard, so filter shapes get the engine's
+  ;; existing cycle detection.
+  ;;
+  ;; `errors` is an evaluation-failure sink in the CycleGuard style: the
+  ;; first failure is stored under key 0 and later ones are dropped. The
+  ;; only failure today is a SHACL 1.2 path values expression whose
+  ;; shnex:focusNode yields more than one node.
+
+  (const EX_A String "http://example.org/a")
+
+  (fn eval-node-expr ((arena Arena) (data-graph SnarlDataGraph) (expr NodeExpr) (focus Term) (conforms (Fn (Term Term) -> Bool)) (errors (Map Int String)))
+    (@intent
+      "Evaluate a node expression with `focus` as the focus node, giving its output nodes as an ordered list, duplicate-free except where a SHACL 1.2 list expression (or a filter of one) repeats a member. Recursion is one native frame per nesting level, bounded by parse.slop's node-expr-max-eval-depth pre-scan.")
+    (@spec ((Arena SnarlDataGraph NodeExpr Term (Fn (Term Term) -> Bool) (Map Int String)) -> (List Term)))
+    (@alloc arena)
+    (@example
+      (arena
+        (snarl-data-graph-create arena)
+        (NodeExpr nx-focus)
+        (make-iri arena EX_A)
+        (fn ((n Term) (s Term)) true)
+        (map-new arena Int String)))
+    (match expr
+      ((nx-focus)
+        (let ((mut out (list-new arena Term)))
+          (list-push out focus)
+          out))
+      ((nx-constant t)
+        (let ((mut out (list-new arena Term)))
+          (list-push out t)
+          out))
+      ;; A SHACL 1.2 list expression outputs its members as written,
+      ;; duplicates included (W3C test expression-003: ( true true ) is
+      ;; not exactly { true }).
+      ((nx-list ts) ts)
+      ((nx-path path input single-input)
+        (let ((inputs (eval-node-expr arena data-graph (deref input) focus conforms errors))
+              (mut out (list-new arena Term)))
+          ;; SHACL 1.2 path values: no focus node gives no values, more
+          ;; than one is an evaluation failure.
+          (if (and single-input (> (list-len inputs) 1))
+            (do
+              (when (not (map-has errors 0))
+                (map-put errors 0
+                  (string-build arena (list String "Node expression evaluation failure: shnex:focusNode produced " (int-to-string arena (list-len inputs)) " nodes, but a path values expression needs at most one"))))
+              out)
+            (do
+              (for-each (i inputs)
+                (for-each (v (resolve-path arena data-graph i path))
+                  (list-push out v)))
+              (distinct-terms arena out)))))
+      ((nx-filter shape-ref input)
+        (let ((inputs (eval-node-expr arena data-graph (deref input) focus conforms errors))
+              (mut out (list-new arena Term)))
+          (for-each (n inputs)
+            (when (conforms n shape-ref)
+              (list-push out n)))
+          out))
+      ((nx-intersection members)
+        (let ((mut out (list-new arena Term)))
+          (match (list-get members 0)
+            ((some first)
+              (let ((mut others (list-new arena (Set Term))))
+                (let ((mut i 1))
+                  (while (< i (list-len members))
+                    (match (list-get members i)
+                      ((some m)
+                        (let ((s (set-new arena Term)))
+                          (for-each (t (eval-node-expr arena data-graph m focus conforms errors))
+                            (set-put s t))
+                          (list-push others s)))
+                      ((none) (do)))
+                    (set! i (+ i 1))))
+                (for-each (t (eval-node-expr arena data-graph first focus conforms errors))
+                  (let ((mut in-all true))
+                    (for-each (s others)
+                      (when (not (set-has s t))
+                        (set! in-all false)))
+                    (when in-all
+                      (list-push out t))))))
+            ((none) (do)))
+          (distinct-terms arena out)))
+      ((nx-union members)
+        (let ((mut out (list-new arena Term)))
+          (for-each (m members)
+            (for-each (t (eval-node-expr arena data-graph m focus conforms errors))
+              (list-push out t)))
+          (distinct-terms arena out))))
+    :c-name
+    "snarl_eval_node_expr")
+
+  (fn distinct-terms ((arena Arena) (terms (List Term)))
+    (@intent "The terms in their first-occurrence order, without duplicates")
+    (@spec ((Arena (List Term)) -> (List Term)))
+    (@alloc arena)
+    (@post (<= (list-len $result) (list-len terms)))
+    (let ((seen (set-new arena Term))
+          (mut out (list-new arena Term)))
+      (for-each (t terms)
+        (when (not (set-has seen t))
+          (set-put seen t)
+          (list-push out t)))
+      out)))

@@ -1,6 +1,7 @@
 use snarl::{
-    conforms, get_result_count, get_violations, get_warnings, report_to_string, validate,
-    validate_data_graph, validate_with_config, Arena, IndexedGraph, OwnedValidationReport,
+    conforms, get_result_count, get_violations, get_warnings, infer, report_to_string, validate,
+    validate_data_graph, validate_data_graph_with_inference, validate_with_config, Arena,
+    IndexedGraph, InferResult, OwnedValidationReport,
     OwnedValidatorResult, Severity, SnarlDataGraph, Validator, ValidatorConfig, ValidatorResult,
 };
 
@@ -449,5 +450,131 @@ fn rdf12_triple_term_round_trip() {
             ));
         }
         other => panic!("expected triple term, got {other:?}"),
+    }
+}
+
+// ---------------------------------------------------------------------------
+// SHACL-AF (non-SPARQL subset)
+// ---------------------------------------------------------------------------
+
+/// Shapes: every ex:Person gets `ex:status ex:checked` from a TripleRule, and
+/// everything with an ex:status needs an ex:label. Data: alice, a Person
+/// with no label -- conforms without rules, one violation with them.
+fn build_rule_scenario(arena: &Arena, data: &mut SnarlDataGraph, shapes: &mut IndexedGraph) {
+    let iri = |s: &str| arena.make_iri(s);
+    let rdf_type = iri(&format!("{RDF}type"));
+    let person_shape = iri(&format!("{EX}PersonShape"));
+    let status_shape = iri(&format!("{EX}StatusShape"));
+    let rule = arena.make_blank(1);
+    let prop = arena.make_blank(2);
+    let status = iri(&format!("{EX}status"));
+
+    shapes.add_triple(arena.make_triple(person_shape, rdf_type, iri(&format!("{SH}NodeShape"))));
+    shapes.add_triple(arena.make_triple(person_shape, iri(&format!("{SH}targetClass")), iri(&format!("{EX}Person"))));
+    shapes.add_triple(arena.make_triple(person_shape, iri(&format!("{SH}rule")), rule));
+    shapes.add_triple(arena.make_triple(rule, rdf_type, iri(&format!("{SH}TripleRule"))));
+    shapes.add_triple(arena.make_triple(rule, iri(&format!("{SH}subject")), iri(&format!("{SH}this"))));
+    shapes.add_triple(arena.make_triple(rule, iri(&format!("{SH}predicate")), status));
+    shapes.add_triple(arena.make_triple(rule, iri(&format!("{SH}object")), iri(&format!("{EX}checked"))));
+
+    shapes.add_triple(arena.make_triple(status_shape, rdf_type, iri(&format!("{SH}NodeShape"))));
+    shapes.add_triple(arena.make_triple(status_shape, iri(&format!("{SH}targetSubjectsOf")), status));
+    shapes.add_triple(arena.make_triple(status_shape, iri(&format!("{SH}property")), prop));
+    shapes.add_triple(arena.make_triple(prop, iri(&format!("{SH}path")), iri(&format!("{EX}label"))));
+    let one = arena.make_literal("1", Some(&format!("{XSD}integer")), None);
+    shapes.add_triple(arena.make_triple(prop, iri(&format!("{SH}minCount")), one));
+
+    data.add_triple(arena.make_triple(iri(&format!("{EX}alice")), rdf_type, iri(&format!("{EX}Person"))));
+}
+
+#[test]
+fn rules_do_not_run_by_default() {
+    let arena = Arena::new(4 * 1024 * 1024);
+    let mut data = SnarlDataGraph::new(&arena);
+    let mut shapes = IndexedGraph::new(&arena);
+    build_rule_scenario(&arena, &mut data, &mut shapes);
+    let (result, inferred) =
+        validate_data_graph_with_inference(&arena, &mut data, &shapes, &ValidatorConfig::new());
+    assert!(inferred.is_empty());
+    match result {
+        ValidatorResult::Success(report) => assert!(report.conforms),
+        ValidatorResult::Error(msg) => panic!("unexpected error: {msg}"),
+    }
+}
+
+#[test]
+fn rules_infer_then_validate() {
+    let arena = Arena::new(4 * 1024 * 1024);
+    let mut data = SnarlDataGraph::new(&arena);
+    let mut shapes = IndexedGraph::new(&arena);
+    build_rule_scenario(&arena, &mut data, &mut shapes);
+    let before = data.size();
+    let config = ValidatorConfig::new().run_rules(true);
+    let (result, inferred) = validate_data_graph_with_inference(&arena, &mut data, &shapes, &config);
+    assert_eq!(inferred.len(), 1);
+    assert_eq!(inferred[0].to_string(), format!("<{EX}alice> <{EX}status> <{EX}checked> ."));
+    assert_eq!(data.size(), before + 1, "the caller's graph handle sees the inferred triple");
+    match result {
+        ValidatorResult::Success(report) => assert_eq!(report.results.len(), 1),
+        ValidatorResult::Error(msg) => panic!("unexpected error: {msg}"),
+    }
+}
+
+#[test]
+fn infer_without_validating() {
+    let arena = Arena::new(4 * 1024 * 1024);
+    let mut data = SnarlDataGraph::new(&arena);
+    let mut shapes = IndexedGraph::new(&arena);
+    build_rule_scenario(&arena, &mut data, &mut shapes);
+    match infer(&arena, &mut data, &shapes, &ValidatorConfig::new()) {
+        InferResult::Success(triples) => {
+            assert_eq!(triples.len(), 1);
+            assert_eq!(data.size(), 2);
+        }
+        InferResult::Error(msg) => panic!("unexpected error: {msg}"),
+    }
+}
+
+#[test]
+fn sparql_rule_is_an_error() {
+    let arena = Arena::new(4 * 1024 * 1024);
+    let mut data = SnarlDataGraph::new(&arena);
+    let mut shapes = IndexedGraph::new(&arena);
+    build_rule_scenario(&arena, &mut data, &mut shapes);
+    let rule = arena.make_blank(3);
+    shapes.add_triple(arena.make_triple(
+        arena.make_iri(&format!("{EX}PersonShape")),
+        arena.make_iri(&format!("{SH}rule")),
+        rule,
+    ));
+    shapes.add_triple(arena.make_triple(
+        rule,
+        arena.make_iri(&format!("{RDF}type")),
+        arena.make_iri(&format!("{SH}SPARQLRule")),
+    ));
+    match infer(&arena, &mut data, &shapes, &ValidatorConfig::new()) {
+        InferResult::Error(msg) => assert!(msg.contains("SPARQLRule"), "{msg}"),
+        InferResult::Success(_) => panic!("expected an error for sh:SPARQLRule"),
+    }
+}
+
+#[test]
+fn expression_result_carries_source_constraint() {
+    let mut v = Validator::new();
+    let expr = v.make_blank(1);
+    let shape = v.make_iri(&format!("{EX}S"));
+    let t = |v: &Validator, s, p: &str, o| v.make_triple(s, v.make_iri(p), o);
+    v.add_shapes_triple(t(&v, shape, &format!("{RDF}type"), v.make_iri(&format!("{SH}NodeShape"))));
+    v.add_shapes_triple(t(&v, shape, &format!("{SH}targetNode"), v.make_iri(&format!("{EX}a"))));
+    v.add_shapes_triple(t(&v, shape, &format!("{SH}expression"), expr));
+    v.add_shapes_triple(t(&v, expr, &format!("{SH}path"), v.make_iri(&format!("{EX}ok"))));
+    match v.validate() {
+        OwnedValidatorResult::Success(report) => {
+            assert_eq!(report.results.len(), 1);
+            let r = &report.results[0];
+            assert!(r.source_constraint_component.ends_with("ExpressionConstraintComponent"));
+            assert!(r.source_constraint.is_some());
+        }
+        OwnedValidatorResult::Error(msg) => panic!("unexpected error: {msg}"),
     }
 }

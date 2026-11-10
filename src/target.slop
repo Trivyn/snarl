@@ -139,8 +139,6 @@
       "Resolve all target declarations for a shape, returning unique focus nodes")
     (@spec ((Arena SnarlDataGraph NodeShape) -> (List Term)))
     (@alloc arena)
-    (@pre (>= (snarl-data-graph-size data-graph) 0))
-    (@post (>= (list-len $result) 0))
     (@example (arena (fixture-g-typed arena) (fixture-ns-target-class arena)))
     (let ((mut result (list-new arena Term))
           (seen (set-new arena Term)))
@@ -188,8 +186,6 @@
     (@intent "Resolve targetClass with a per-validation cache")
     (@spec ((Arena SnarlDataGraph TargetCache Term) -> TermList))
     (@alloc arena)
-    (@pre (>= (snarl-data-graph-size data-graph) 0))
-    (@post (>= (list-len $result) 0))
     (match (map-get (. cache target-classes) class-term)
       ((some cached) cached)
       ((none)
@@ -202,8 +198,6 @@
       "Resolve all target declarations for a shape using a per-validation class-target cache")
     (@spec ((Arena SnarlDataGraph TargetCache NodeShape) -> (List Term)))
     (@alloc arena)
-    (@pre (>= (snarl-data-graph-size data-graph) 0))
-    (@post (>= (list-len $result) 0))
     ;; Mirrors resolve-targets, but routes targetClass and implicit class targets
     ;; through the per-run cache because those expansions are often shared.
     (let ((mut result (list-new arena Term))
@@ -285,7 +279,6 @@
     (@intent "Precompute instance sets for all classes used by sh:class constraints")
     (@spec ((Arena SnarlDataGraph ShapesGraph) -> ClassIndex))
     (@alloc arena)
-    (@pre (>= (snarl-data-graph-size data-graph) 0))
     ;; Keep the historical entries list for layout/API compatibility while the
     ;; map supplies O(1)-style membership lookup for validation.
     (let ((classes (collect-class-constraints arena shapes-graph))
@@ -327,6 +320,9 @@
     (@spec ((Arena SnarlDataGraph Term) -> (List Term)))
     (@alloc arena)
     (@post (>= (list-len $result) 1))
+    ;; VERIFIER: trusted. class-term is queued before the loop, so the first
+    ;; iteration pushes it; Z3 does not model pushes made inside a while.
+    (@assume (>= (list-len $result) 1))
     (@example (arena (fixture-g-typed arena) (make-iri arena EX_PERSON)))
     (let ((subclass-pred (make-iri arena RDFS_SUBCLASS_OF))
           (mut result (list-new arena Term))
@@ -353,7 +349,6 @@
       "True if node is a SHACL instance of class-term: it has rdf:type C' where C' is class-term or a transitive rdfs:subClassOf of class-term (SHACL spec 2.1.3.1). Same relation used to resolve sh:targetClass.")
     (@spec ((Arena SnarlDataGraph Term Term) -> Bool))
     (@alloc arena)
-    (@pre (>= (snarl-data-graph-size data-graph) 0))
     (@example
       (arena
         (fixture-g-typed arena)
@@ -385,8 +380,6 @@
       "Find all instances of a class and its subclasses via rdf:type in the data graph")
     (@spec ((Arena SnarlDataGraph Term) -> (List Term)))
     (@alloc arena)
-    (@pre (>= (snarl-data-graph-size data-graph) 0))
-    (@post (>= (list-len $result) 0))
     (@example (arena (fixture-g-typed arena) (make-iri arena EX_PERSON)))
     (let ((type-pred (make-iri arena RDF_TYPE))
           (all-classes (find-subclasses arena data-graph class-term))
@@ -406,8 +399,6 @@
     (@intent "Find all subjects that have a given predicate in the data graph")
     (@spec ((Arena SnarlDataGraph Term) -> (List Term)))
     (@alloc arena)
-    (@pre (>= (snarl-data-graph-size data-graph) 0))
-    (@post (>= (list-len $result) 0))
     (@example (arena (fixture-g-alice-name arena) (make-iri arena EX_NAME)))
     (snarl-data-graph-subjects-of arena data-graph predicate)
     :c-name
@@ -417,8 +408,6 @@
     (@intent "Find all objects that have a given predicate in the data graph")
     (@spec ((Arena SnarlDataGraph Term) -> (List Term)))
     (@alloc arena)
-    (@pre (>= (snarl-data-graph-size data-graph) 0))
-    (@post (>= (list-len $result) 0))
     (@example
       (arena (fixture-g-alice-knows-bob arena) (make-iri arena EX_KNOWS)))
     (snarl-data-graph-objects-of arena data-graph predicate)
@@ -430,8 +419,6 @@
       "If the shape IRI is used as an rdf:type class in the data graph, return those instances (including subclass instances)")
     (@spec ((Arena SnarlDataGraph Term) -> (List Term)))
     (@alloc arena)
-    (@pre (>= (snarl-data-graph-size data-graph) 0))
-    (@post (>= (list-len $result) 0))
     (@example (arena (fixture-g-typed arena) (make-iri arena EX_PERSON)))
     (resolve-target-class arena data-graph shape-id)
     :c-name

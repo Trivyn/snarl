@@ -2,7 +2,7 @@
 # Build from transpiled C sources — no SLOP toolchain required.
 
 CC      ?= cc
-SNARL_VERSION ?= 0.7.1
+SNARL_VERSION ?= 0.8.0
 CFLAGS  ?= -O2 -Wall -Wno-unused-function -Wno-unused-variable \
            -Wno-return-type -Wno-pointer-sign \
            -DSLOP_ARENA_NO_CAP \
@@ -35,7 +35,7 @@ SHARED_SRCS := $(filter-out $(CSRC)/slop_main.c $(CSRC)/slop_test_cli.c, $(ALL_S
 SHARED_OBJS := $(patsubst $(CSRC)/%.c,$(OBJ)/%.o,$(filter $(CSRC)/%,$(SHARED_SRCS))) \
                $(patsubst $(REGEX)/%.c,$(OBJ)/regex_%.o,$(REGEX_SRCS))
 
-.PHONY: all cli lib test w3c-test bench clean release dist csrc slop-build \
+.PHONY: all cli lib test w3c-test w3c-results-test w3c12-test bench clean release dist csrc slop-build \
        crate-vendor crate-build crate-test crate-publish
 
 PLATFORM ?= unknown
@@ -75,6 +75,16 @@ w3c-test: cli
 	@echo "Running W3C SHACL conformance tests..."
 	cd cli/tests && bash w3c/run-w3c-tests.sh ../../$(BIN)/snarl$(EXE)
 
+# Experimental --shacl12 mode against the W3C SHACL 1.2 test cases
+# (download first: bash cli/tests/w3c12/download.sh). Needs uv, for rdflib.
+w3c-results-test: cli
+	@echo "Comparing validation results with the W3C SHACL Core suite..."
+	cd cli/tests && uv run --with rdflib python w3c/run-w3c-results.py ../../$(BIN)/snarl$(EXE)
+
+w3c12-test: cli
+	@echo "Running W3C SHACL 1.2 tests (experimental --shacl12 mode)..."
+	cd cli/tests && uv run --with rdflib python w3c12/run-w3c12-tests.py ../../$(BIN)/snarl$(EXE)
+
 bench: cli
 	@cd cli/tests && uv run benchmark_compare.py --generate 2>/dev/null; \
 	uv run python benchmark_compare.py
@@ -110,6 +120,7 @@ crate-vendor:
 	      rust/csrc/src/slop_rdf.c rust/csrc/src/slop_rdf.h \
 	      rust/csrc/src/slop_strlib.c rust/csrc/src/slop_strlib.h \
 	      rust/csrc/src/slop_ttl.c rust/csrc/src/slop_ttl.h \
+	      rust/csrc/src/slop_serialize_ttl.c rust/csrc/src/slop_serialize_ttl.h \
 	      rust/csrc/src/slop_vocab.c rust/csrc/src/slop_vocab.h \
 	      rust/csrc/src/slop_xsd.c rust/csrc/src/slop_xsd.h
 	cp csrc/runtime/slop_runtime.h rust/csrc/runtime/

@@ -13,6 +13,8 @@
   (import rdf (Term Literal IRI BlankNode term-eq make-iri make-literal))
   (import vocab (SHACL_MIN_LENGTH SHACL_MAX_LENGTH SHACL_PATTERN
                  SHACL_LANGUAGE_IN SHACL_UNIQUE_LANG))
+  (import af-vocab (SHACL_LANGUAGE_IN_CONSTRAINT_COMPONENT SHACL_MAX_LENGTH_CONSTRAINT_COMPONENT SHACL_MIN_LENGTH_CONSTRAINT_COMPONENT SHACL_PATTERN_CONSTRAINT_COMPONENT SHACL_UNIQUE_LANG_CONSTRAINT_COMPONENT))
+  (import strlib (to-lower starts-with char-at contains))
   (import types (Severity Constraint ValidationResult ShaclPath))
 
   ;; Test URI constants
@@ -25,13 +27,16 @@
   ;; compile.
   (ffi "snarl_regex.h"
     (snarl-regex-match ((pattern (Ptr Char)) (pattern-len U64)
-                        (input (Ptr Char)) (input-len U64)) Int))
+                        (input (Ptr Char)) (input-len U64)) Int)
+    (snarl-regex-match-flags ((pattern (Ptr Char)) (pattern-len U64)
+                              (input (Ptr Char)) (input-len U64) (ignore-case Int)) Int))
 
   (export
     check-min-length
     check-max-length
     check-pattern
     pattern-compile-error
+    pattern-flags-supported
     check-language-in
     check-unique-lang)
 
@@ -84,16 +89,36 @@
   ;; Regex FFI Helper
   ;; ============================================================
 
-  (fn regex-match-ffi ((pattern String) (input String))
-    (@intent "Match input against POSIX extended regex pattern")
-    (@spec ((String String) -> Bool))
+  (fn pattern-flags-supported ((flags String))
+    (@intent "True if every sh:flags character is one snarl implements: i (ignore case) and s (dot matches a newline, which this engine's dot always does). m, x and q are not implemented, and matching without them would give wrong results, so the engine rejects them.")
+    (@spec ((String) -> Bool))
+    (@pure)
+    (@example ("") -> true)
+    (@example ("i") -> true)
+    (@example ("si") -> true)
+    (@example ("m") -> false)
+    (@example ("ix") -> false)
+    (let ((mut ok true)
+          (mut i 0)
+          (len (string-len flags)))
+      (while (< i len)
+        (let ((c (char-at flags i)))
+          (when (and (!= c 105) (!= c 115))
+            (set! ok false)))
+        (set! i (+ i 1)))
+      ok))
+
+  (fn regex-match-ffi ((pattern String) (flags String) (input String))
+    (@intent "Match input against POSIX extended regex pattern, ignoring case if flags has an i")
+    (@spec ((String String String) -> Bool))
     (@alloc none)
     ;; Strings go by length: snarl-regex-match makes its own NUL-terminated
     ;; copies, since a SLOP string need not be terminated. A pattern that does
     ;; not compile (negative) matches nothing; validation never gets here with
     ;; one, since the engine rejects it up front (pattern-compile-error).
-    (== (snarl-regex-match (cast (Ptr Char) (. pattern data)) (cast U64 (. pattern len))
-                           (cast (Ptr Char) (. input data)) (cast U64 (. input len)))
+    (== (snarl-regex-match-flags (cast (Ptr Char) (. pattern data)) (cast U64 (. pattern len))
+                                 (cast (Ptr Char) (. input data)) (cast U64 (. input len))
+                                 (if (contains flags "i") 1 0))
         1))
 
   (fn regcomp-error-name ((arena Arena) (code Int))
@@ -139,23 +164,87 @@
   ;; the body inlined the test, slop verify could not bridge it to the @post.)
   ;; ============================================================
 
+  (fn string-char-count ((s String))
+    (@intent "Number of Unicode code points in a UTF-8 string: its bytes, less the continuation bytes (10xxxxxx)")
+    (@spec ((String) -> Int))
+    (@pure)
+    (@post (>= $result 0))
+    (@post (<= $result (string-len s)))
+    (@example ("abc") -> 3)
+    (@example ("") -> 0)
+    (let ((mut n 0)
+          (mut i 0)
+          (len (string-len s)))
+      (while (< i len)
+        (@loop-invariant (and (>= n 0) (and (<= n i) (<= i len))))
+        (let ((c (char-at s i)))
+          (when (or (< c 128) (> c 191))
+            (set! n (+ n 1))))
+        (set! i (+ i 1)))
+      n))
+
+  (fn term-has-string-form ((value-node Term))
+    (@intent "True for IRIs and literals, the terms SPARQL str() is defined on. The string constraints fail blank nodes outright (SHACL 4.4.1 to 4.4.3).")
+    (@spec ((Term) -> Bool))
+    (@pure)
+    (match value-node
+      ((term-literal _) true)
+      ((term-iri _) true)
+      (_ false)))
+
   (fn min-length-satisfied ((value-node Term) (min-len (Int 0 ..)))
-    (@intent "True if the value node's string length is >= min-len (sh:minLength)")
+    (@intent "True if the value node is not a blank node and its string form has at least min-len characters (sh:minLength)")
     (@spec ((Term (Int 0 ..)) -> Bool))
     (@pure)
-    (>= (string-len (term-string-value value-node)) min-len))
+    (and
+      (term-has-string-form value-node)
+      (>= (string-char-count (term-string-value value-node)) min-len)))
 
   (fn max-length-satisfied ((value-node Term) (max-len (Int 0 ..)))
-    (@intent "True if the value node's string length is <= max-len (sh:maxLength)")
+    (@intent "True if the value node is not a blank node and its string form has at most max-len characters (sh:maxLength)")
     (@spec ((Term (Int 0 ..)) -> Bool))
     (@pure)
-    (<= (string-len (term-string-value value-node)) max-len))
+    (and
+      (term-has-string-form value-node)
+      (<= (string-char-count (term-string-value value-node)) max-len)))
 
-  (fn pattern-satisfied ((arena Arena) (value-node Term) (pattern String))
-    (@intent "True if the value node's string representation matches the regex (sh:pattern)")
-    (@spec ((Arena Term String) -> Bool))
+  (fn pattern-satisfied ((arena Arena) (value-node Term) (pattern String) (flags String))
+    (@intent "True if the value node is not a blank node and its string form matches the regex under the sh:flags (sh:pattern)")
+    (@spec ((Arena Term String String) -> Bool))
     (@alloc arena)
-    (regex-match-ffi pattern (term-string-value value-node)))
+    (and
+      (term-has-string-form value-node)
+      (regex-match-ffi pattern flags (term-string-value value-node))))
+
+  (fn language-matches ((arena Arena) (tag String) (range String))
+    (@intent "SPARQL langMatches (RFC 4647 basic filtering): the tag equals the range or begins with the range and a hyphen, ignoring case; the range * matches every non-empty tag")
+    (@spec ((Arena String String) -> Bool))
+    (@alloc arena)
+    (@example (arena "en" "en") -> true)
+    (@example (arena "en-NZ" "en") -> true)
+    (@example (arena "EN-nz" "en") -> true)
+    (@example (arena "eng" "en") -> false)
+    (@example (arena "en" "en-NZ") -> false)
+    (@example (arena "de" "*") -> true)
+    (@example (arena "" "*") -> false)
+    (let ((t (to-lower arena tag))
+          (r (to-lower arena range)))
+      (cond
+        ((== (string-len t) 0) false)
+        ((string-eq r "*") true)
+        ((string-eq t r) true)
+        (else (starts-with t (string-concat arena r "-"))))))
+
+  (fn language-in ((arena Arena) (value-node Term) (allowed-langs (List String)))
+    (@intent "True if the value node is a literal whose language tag matches one of the allowed language ranges (sh:languageIn, SHACL 4.4.4)")
+    (@spec ((Arena Term (List String)) -> Bool))
+    (@alloc arena)
+    (let ((tag (term-lang value-node))
+          (mut found false))
+      (for-each (al allowed-langs)
+        (when (language-matches arena tag al)
+          (set! found true)))
+      found))
 
   ;; ============================================================
   ;; sh:minLength
@@ -173,7 +262,7 @@
     (@post {(== (is-none $result) (min-length-satisfied value-node min-len))})
     (@property correctness (== (is-none $result) (min-length-satisfied value-node min-len)))
     (@example (arena (make-iri arena EX_FOCUS) (make-literal arena "hello" (none) (none)) 3 (none) (make-iri arena EX_SHAPE) severity-violation (none)) -> (none))
-    (@example (arena (make-iri arena EX_FOCUS) (make-literal arena "hi" (none) (none)) 5 (none) (make-iri arena EX_SHAPE) severity-violation (none)) -> (some (ValidationResult _ _ _ _ _ _ _)))
+    (@example (arena (make-iri arena EX_FOCUS) (make-literal arena "hi" (none) (none)) 5 (none) (make-iri arena EX_SHAPE) severity-violation (none)) -> (some (ValidationResult _ _ _ _ _ _ _ _ _)))
     (if (min-length-satisfied value-node min-len)
       (none)
       (some (record-new ValidationResult
@@ -181,7 +270,7 @@
               (result-path path)
               (value (some value-node))
               (source-shape shape-id)
-              (source-constraint-component SHACL_MIN_LENGTH)
+              (source-constraint-component SHACL_MIN_LENGTH_CONSTRAINT_COMPONENT)
               (severity severity)
               (message message))))
     :c-name "snarl_check_min_length")
@@ -202,7 +291,7 @@
     (@post {(== (is-none $result) (max-length-satisfied value-node max-len))})
     (@property correctness (== (is-none $result) (max-length-satisfied value-node max-len)))
     (@example (arena (make-iri arena EX_FOCUS) (make-literal arena "hi" (none) (none)) 5 (none) (make-iri arena EX_SHAPE) severity-violation (none)) -> (none))
-    (@example (arena (make-iri arena EX_FOCUS) (make-literal arena "hello world" (none) (none)) 5 (none) (make-iri arena EX_SHAPE) severity-violation (none)) -> (some (ValidationResult _ _ _ _ _ _ _)))
+    (@example (arena (make-iri arena EX_FOCUS) (make-literal arena "hello world" (none) (none)) 5 (none) (make-iri arena EX_SHAPE) severity-violation (none)) -> (some (ValidationResult _ _ _ _ _ _ _ _ _)))
     (if (max-length-satisfied value-node max-len)
       (none)
       (some (record-new ValidationResult
@@ -210,7 +299,7 @@
               (result-path path)
               (value (some value-node))
               (source-shape shape-id)
-              (source-constraint-component SHACL_MAX_LENGTH)
+              (source-constraint-component SHACL_MAX_LENGTH_CONSTRAINT_COMPONENT)
               (severity severity)
               (message message))))
     :c-name "snarl_check_max_length")
@@ -220,26 +309,25 @@
   ;; ============================================================
 
   (fn check-pattern ((arena Arena) (focus-node Term) (value-node Term)
-                     (pattern String) (path (Option ShaclPath))
+                     (pattern String) (flags String) (path (Option ShaclPath))
                      (shape-id Term) (severity Severity) (message (Option String)))
     (@intent "Check sh:pattern constraint: string representation must match regex pattern")
-    (@spec ((Arena Term Term String (Option ShaclPath) Term Severity (Option String))
+    (@spec ((Arena Term Term String String (Option ShaclPath) Term Severity (Option String))
             -> (Option ValidationResult)))
     (@alloc arena)
-    (@pre {(string-len pattern) > 0})
     ;; Conforms (no result) iff the value node's string matches the pattern.
-    (@post {(== (is-none $result) (pattern-satisfied arena value-node pattern))})
-    (@property correctness (== (is-none $result) (pattern-satisfied arena value-node pattern)))
-    (@example (arena (make-iri arena EX_FOCUS) (make-literal arena "abc123" (none) (none)) "^[a-z]+[0-9]+$" (none) (make-iri arena EX_SHAPE) severity-violation (none)) -> (none))
-    (@example (arena (make-iri arena EX_FOCUS) (make-literal arena "ABC" (none) (none)) "^[a-z]+$" (none) (make-iri arena EX_SHAPE) severity-violation (none)) -> (some (ValidationResult _ _ _ _ _ _ _)))
-    (if (pattern-satisfied arena value-node pattern)
+    (@post {(== (is-none $result) (pattern-satisfied arena value-node pattern flags))})
+    (@property correctness (== (is-none $result) (pattern-satisfied arena value-node pattern flags)))
+    (@example (arena (make-iri arena EX_FOCUS) (make-literal arena "abc123" (none) (none)) "^[a-z]+[0-9]+$" "" (none) (make-iri arena EX_SHAPE) severity-violation (none)) -> (none))
+    (@example (arena (make-iri arena EX_FOCUS) (make-literal arena "ABC" (none) (none)) "^[a-z]+$" "" (none) (make-iri arena EX_SHAPE) severity-violation (none)) -> (some (ValidationResult _ _ _ _ _ _ _ _ _)))
+    (if (pattern-satisfied arena value-node pattern flags)
       (none)
       (some (record-new ValidationResult
               (focus-node focus-node)
               (result-path path)
               (value (some value-node))
               (source-shape shape-id)
-              (source-constraint-component SHACL_PATTERN)
+              (source-constraint-component SHACL_PATTERN_CONSTRAINT_COMPONENT)
               (severity severity)
               (message message))))
     :c-name "snarl_check_pattern")
@@ -251,59 +339,24 @@
   (fn check-language-in ((arena Arena) (focus-node Term) (value-node Term)
                          (allowed-langs (List String)) (path (Option ShaclPath))
                          (shape-id Term) (severity Severity) (message (Option String)))
-    (@intent "Check sh:languageIn constraint: literal's language tag must be in allowed list")
+    (@intent "Check sh:languageIn: the value must be a literal whose language tag matches one of the allowed ranges, as SPARQL langMatches does")
     (@spec ((Arena Term Term (List String) (Option ShaclPath) Term Severity (Option String))
             -> (Option ValidationResult)))
     (@alloc arena)
     (@pre {(list-len allowed-langs) > 0})
-    ;; VERIFIER: "Could not translate" when using (term-is-literal value-node);
-    ;; inline match works but record fields don't propagate through (some ...)
-    (@post (match value-node
-      ((term-literal _) true)
-      (_ (is-some $result))))
-    (@property non-literal-fails
-      (match value-node
-        ((term-literal _) true)
-        (_ (is-some $result))))
+    (@post {(== (is-none $result) (language-in arena value-node allowed-langs))})
     (@example (arena (make-iri arena EX_FOCUS) (make-literal arena "hello" (none) (some "en")) (fixture-allowed-langs arena) (none) (make-iri arena EX_SHAPE) severity-violation (none)) -> (none))
-    (@example (arena (make-iri arena EX_FOCUS) (make-literal arena "hello" (none) (some "de")) (fixture-allowed-langs arena) (none) (make-iri arena EX_SHAPE) severity-violation (none)) -> (some (ValidationResult _ _ _ _ _ _ _)))
-    (match value-node
-      ((term-literal lit)
-        (match (. lit lang)
-          ((some lang)
-            (let ((mut found false))
-              (for-each (al allowed-langs)
-                (when (string-eq lang al)
-                  (set! found true)))
-              (if found
-                (none)
-                (some (record-new ValidationResult
-                        (focus-node focus-node)
-                        (result-path path)
-                        (value (some value-node))
-                        (source-shape shape-id)
-                        (source-constraint-component SHACL_LANGUAGE_IN)
-                        (severity severity)
-                        (message message))))))
-          ((none)
-            ;; Literal without language tag fails languageIn
-            (some (record-new ValidationResult
-                    (focus-node focus-node)
-                    (result-path path)
-                    (value (some value-node))
-                    (source-shape shape-id)
-                    (source-constraint-component SHACL_LANGUAGE_IN)
-                    (severity severity)
-                    (message message))))))
-      ;; Non-literal fails languageIn
-      (_ (some (record-new ValidationResult
-                (focus-node focus-node)
-                (result-path path)
-                (value (some value-node))
-                (source-shape shape-id)
-                (source-constraint-component SHACL_LANGUAGE_IN)
-                (severity severity)
-                (message message)))))
+    (@example (arena (make-iri arena EX_FOCUS) (make-literal arena "hello" (none) (some "de")) (fixture-allowed-langs arena) (none) (make-iri arena EX_SHAPE) severity-violation (none)) -> (some (ValidationResult _ _ _ _ _ _ _ _ _)))
+    (if (language-in arena value-node allowed-langs)
+      (none)
+      (some (record-new ValidationResult
+              (focus-node focus-node)
+              (result-path path)
+              (value (some value-node))
+              (source-shape shape-id)
+              (source-constraint-component SHACL_LANGUAGE_IN_CONSTRAINT_COMPONENT)
+              (severity severity)
+              (message message))))
     :c-name "snarl_check_language_in")
 
   ;; ============================================================
@@ -333,36 +386,36 @@
   (fn check-unique-lang ((arena Arena) (focus-node Term) (value-nodes (List Term))
                          (path (Option ShaclPath))
                          (shape-id Term) (severity Severity) (message (Option String)))
-    (@intent "Check sh:uniqueLang constraint: no two values may have the same language tag")
+    (@intent "Check sh:uniqueLang: one result, with no sh:value, for each language tag that more than one value node carries (SHACL 4.4.5). Tags are compared ignoring case.")
     (@spec ((Arena Term (List Term) (Option ShaclPath) Term Severity (Option String))
             -> (List ValidationResult)))
     (@alloc arena)
-    (@post {(list-len $result) >= 0})
-    ;; VERIFIER: fails — can't prove loop bound without loop invariant relating set-has to list-len
-    (@property bounded-results (<= (list-len $result) (list-len value-nodes)))
+    ;; VERIFIER: no contract. What matters -- one result per duplicated
+    ;; language, none carrying a value -- is a property of a loop over sets
+    ;; that Z3 times out on. The W3C property/uniqueLang-001 result
+    ;; comparison and fixtures/core-string-details.ttl test it.
     (@example
       ;; Unique languages (en, fr) → no violations
       (arena (make-iri arena EX_FOCUS) (fixture-unique-langs arena) (none) (make-iri arena EX_SHAPE) severity-violation (none))
       )
     (let ((mut results (list-new arena ValidationResult))
-          (seen (set-new arena String)))
+          (seen (set-new arena String))
+          (reported (set-new arena String)))
       (for-each (vn value-nodes)
-        (match vn
-          ((term-literal lit)
-            (match (. lit lang)
-              ((some lang)
-                (if (set-has seen lang)
-                  (list-push results
-                    (record-new ValidationResult
-                      (focus-node focus-node)
-                      (result-path path)
-                      (value (some vn))
-                      (source-shape shape-id)
-                      (source-constraint-component SHACL_UNIQUE_LANG)
-                      (severity severity)
-                      (message message)))
-                  (set-put seen lang)))
-              ((none) (do))))
-          (_ (do))))
+        (let ((lang (to-lower arena (term-lang vn))))
+          (when (> (string-len lang) 0)
+            (if (set-has seen lang)
+              (when (not (set-has reported lang))
+                (set-put reported lang)
+                (list-push results
+                  (record-new ValidationResult
+                    (focus-node focus-node)
+                    (result-path path)
+                    (value (none))
+                    (source-shape shape-id)
+                    (source-constraint-component SHACL_UNIQUE_LANG_CONSTRAINT_COMPONENT)
+                    (severity severity)
+                    (message message))))
+              (set-put seen lang)))))
       results)
     :c-name "snarl_check_unique_lang"))

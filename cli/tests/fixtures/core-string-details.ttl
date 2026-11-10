@@ -1,0 +1,30 @@
+@prefix ex: <http://example.org/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+
+# String and datatype details. Expected: 6 violations, marked below.
+
+ex:S a sh:NodeShape ;
+    sh:targetClass ex:T ;
+    sh:property [ sh:path ex:name ; sh:maxLength 4 ] ;                 # characters, not bytes
+    sh:property [ sh:path ex:code ; sh:pattern "^ab+$" ; sh:flags "i" ] ;
+    sh:property [ sh:path ex:label ; sh:languageIn ( "en" "fr" ) ] ;
+    sh:property [ sh:path ex:label ; sh:uniqueLang true ] ;
+    sh:property [ sh:path ex:count ; sh:datatype xsd:integer ] ;
+    sh:property [ sh:path ex:tagged ; sh:datatype rdf:langString ] .
+
+ex:ok a ex:T ;
+    ex:name "éàüö" ;                       # 4 characters, 8 bytes
+    ex:code "ABB" , "abbb" ;
+    ex:label "colour"@en-GB , "couleur"@FR ;
+    ex:count 7 ;
+    ex:tagged "hi"@en .
+
+ex:bad a ex:T ;
+    ex:name "éàüöx" ;                      # violation: 5 characters
+    ex:code "ac" ;                         # violation
+    ex:label "Farbe"@de ;                  # violation: languageIn
+    ex:label "a"@en , "b"@EN ;             # violation: one uniqueLang result for en
+    ex:count "seven"^^xsd:integer ;        # violation: ill-formed
+    ex:tagged "plain" .                    # violation: not language-tagged

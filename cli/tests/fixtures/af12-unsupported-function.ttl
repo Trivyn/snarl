@@ -1,0 +1,7 @@
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix shnex: <http://www.w3.org/ns/shacl-node-expr#> .
+@prefix ex: <http://example.org/> .
+ex:n a ex:Thing ; ex:p 1, 2 .
+ex:Shape a sh:NodeShape ; sh:targetClass ex:Thing ;
+    sh:rule [ a sh:TripleRule ; sh:predicate ex:count ;
+              sh:object [ shnex:count [ shnex:pathValues ex:p ] ] ] .

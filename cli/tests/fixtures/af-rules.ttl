@@ -1,0 +1,29 @@
+# sh:TripleRule with sh:condition. Rect1 is square, so the rule infers
+# ex:Rect1 a ex:Square, which makes it a target of SquareShape, which it then
+# violates (no label). Without rules the data conforms. No sh:entailment
+# here: rules run only when asked (af-entailment.ttl declares it).
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix ex: <http://example.org/> .
+
+ex:Rect1 a ex:Rectangle ; ex:width 3 ; ex:height 3 .
+ex:Rect2 a ex:Rectangle ; ex:width 2 ; ex:height 4 .
+
+ex:SquareCondition
+    sh:property [ sh:path ex:width ; sh:equals ex:height ] .
+
+ex:RectangleShape
+    a sh:NodeShape ;
+    sh:targetClass ex:Rectangle ;
+    sh:rule [
+        a sh:TripleRule ;
+        sh:subject sh:this ;
+        sh:predicate rdf:type ;
+        sh:object ex:Square ;
+        sh:condition ex:SquareCondition ;
+    ] .
+
+ex:SquareShape
+    a sh:NodeShape ;
+    sh:targetClass ex:Square ;
+    sh:property [ sh:path ex:label ; sh:minCount 1 ] .

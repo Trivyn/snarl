@@ -50,6 +50,9 @@ size_t snarl_ffi_sizeof(int which) {
         case 12: return sizeof(snarl_types_ValidationReport);
         case 13: return sizeof(snarl_types_ValidationResult);
         case 14: return sizeof(snarl_types_ValidatorResult);
+        case 15: return sizeof(snarl_rules_InferOutput);
+        case 16: return sizeof(snarl_rules_InferResult);
+        case 17: return sizeof(snarl_ValidationOutcome);
         default: return 0;
     }
 }

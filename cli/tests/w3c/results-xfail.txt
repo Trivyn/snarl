@@ -1,0 +1,2 @@
+# W3C SHACL Core tests whose validation results are expected to differ.
+# One "category/file.ttl reason" per line. Lines starting with # are comments.

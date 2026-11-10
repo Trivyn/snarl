@@ -15,8 +15,9 @@ fn main() {
 
     // Only snarl's own modules; shared modules come from libslop_rdf.a / libslop_std.a.
     let sources = [
-        "slop_cardinality.c", "slop_data_graph.c", "slop_engine.c", "slop_logical.c",
-        "slop_other.c", "slop_pair.c", "slop_parse.c", "slop_path.c", "slop_report.c",
+        "slop_af_vocab.c", "slop_cardinality.c", "slop_data_graph.c", "slop_engine.c",
+        "slop_expression.c", "slop_literal_order.c", "slop_logical.c", "slop_node_expr.c", "slop_other.c",
+        "slop_pair.c", "slop_parse.c", "slop_path.c", "slop_report.c", "slop_rules.c",
         "slop_shape.c", "slop_snarl.c", "slop_string.c", "slop_target.c", "slop_types.c",
         "slop_value_range.c", "slop_value_type.c",
     ];

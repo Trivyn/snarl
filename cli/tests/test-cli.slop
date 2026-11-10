@@ -9,17 +9,17 @@
   (@doc "Integration tests for snarl SHACL validator")
 
   (import rdf (Term Triple Graph GraphSize make-graph graph-size make-iri
-               make-literal make-triple term-eq))
-  (import index (IndexedGraph indexed-graph-create indexed-graph-add indexed-graph-size indexed-graph-objects))
+               make-literal make-triple term-eq triple-object))
+  (import index (IndexedGraph indexed-graph-create indexed-graph-add indexed-graph-size indexed-graph-objects indexed-graph-match))
   (import vocab (SHACL_PATH))
   (import parse (path-node-eval-depth path-max-eval-depth))
   (import ttl (parse-ttl-file parse-ttl-file-for-each-triple))
   (import data-graph (SnarlDataGraph snarl-data-graph-create snarl-data-graph-add
                       snarl-data-graph-size))
-  (import snarl (validate validate-with-config validate-data-graph-with-config conforms default-config
-                 ValidatorConfig ValidatorResult ValidationReport
+  (import snarl (validate validate-with-config validate-data-graph-with-config validate-data-graph-with-inference conforms default-config
+                 ValidatorConfig ValidatorResult ValidationReport ValidationOutcome
                  get-violations get-warnings get-result-count
-                 report-to-string))
+                 report-to-string report-to-graph))
   (import types (make-validation-report report-conforms))
   (import strlib (contains))
 
@@ -426,6 +426,21 @@
     (@spec ((Arena) -> Bool))
     (assert-violations arena "fixtures/pattern-noncapturing.ttl" 8))
 
+  (fn test-core-value-range-types ((arena Arena))
+    (@intent "Value ranges order derived integer types, dates, dateTimes and strings as SPARQL does")
+    (@spec ((Arena) -> Bool))
+    (assert-violations arena "fixtures/core-value-range-types.ttl" 5))
+
+  (fn test-core-string-details ((arena Arena))
+    (@intent "Length in characters, sh:flags i, langMatches, one uniqueLang result per language, ill-formed and language-tagged literals under sh:datatype")
+    (@spec ((Arena) -> Bool))
+    (assert-violations arena "fixtures/core-string-details.ttl" 6))
+
+  (fn test-core-flags-unsupported ((arena Arena))
+    (@intent "An sh:flags value snarl does not implement is an engine error")
+    (@spec ((Arena) -> Bool))
+    (assert-engine-error arena "fixtures/core-flags-unsupported.ttl" "sh:flags \"x\" of shape [anonymous shape] is not supported"))
+
   (fn test-pattern-uncompilable ((arena Arena))
     (@intent "Test an sh:pattern the regex engine cannot compile is an engine error naming the pattern and the regcomp error, not a violation for every value")
     (@spec ((Arena) -> Bool))
@@ -768,6 +783,225 @@
   ;; Main Test Runner
   ;; ============================================================
 
+
+  ;; ============================================================
+  ;; SHACL-AF helpers
+  ;; ============================================================
+
+  (fn load-test-data-graph ((arena Arena) (path String))
+    (@intent "Load a TTL fixture file into a SnarlDataGraph, the graph the rules stage adds to")
+    (@spec ((Arena String) -> (Option SnarlDataGraph)))
+    (@alloc arena)
+    (match (parse-ttl-file arena path)
+      ((ok g)
+        (let ((mut dg (snarl-data-graph-create arena)))
+          (for-each (t (. g triples))
+            (set! dg (snarl-data-graph-add arena dg t)))
+          (some dg)))
+      ((error _) (none))))
+
+  (fn af-config ((run-rules Bool) (shacl12 Bool))
+    (@intent "Default validator config with the SHACL-AF switches set")
+    (@spec ((Bool Bool) -> ValidatorConfig))
+    (@pure)
+    (record-new ValidatorConfig (verbose false) (max-errors 0) (include-warnings true) (include-infos true)
+      (run-rules run-rules) (shacl12 shacl12)))
+
+  (fn assert-inference ((arena Arena) (path String) (config ValidatorConfig) (expected-inferred Int) (expected-violations Int))
+    (@intent "Assert that validating a fixture (data and shapes in one file) with the given config infers exactly expected-inferred triples and then reports exactly expected-violations violations")
+    (@spec ((Arena String ValidatorConfig Int Int) -> Bool))
+    (@alloc arena)
+    (match (load-test-data-graph arena path)
+      ((some dg)
+        (match (load-test-graph arena path)
+          ((some sg)
+            (let ((outcome (validate-data-graph-with-inference arena dg sg config))
+                  (inferred (list-len (. outcome inferred))))
+              (match (. outcome result)
+                ((validate-success report)
+                  (let ((violations (list-len (get-violations arena report))))
+                    (if (and (== inferred expected-inferred) (== violations expected-violations))
+                      (do (print "  PASS: ") (print path) (print " inferred ")
+                          (print (int-to-string arena inferred)) (print " triple(s), ")
+                          (print (int-to-string arena violations)) (println " violation(s)") true)
+                      (do (print "  FAIL: ") (print path) (print " expected ")
+                          (print (int-to-string arena expected-inferred)) (print " inferred / ")
+                          (print (int-to-string arena expected-violations)) (print " violation(s), got ")
+                          (print (int-to-string arena inferred)) (print " / ")
+                          (println (int-to-string arena violations)) false))))
+                ((validate-error msg)
+                  (print "  FAIL: ") (print path) (print " validation error: ") (println msg) false))))
+          ((none) (print "  FAIL: could not load ") (println path) false)))
+      ((none) (print "  FAIL: could not load ") (println path) false)))
+
+  (fn assert-af-error ((arena Arena) (path String) (config ValidatorConfig) (expected-substring String))
+    (@intent "Assert that validating a fixture with the given config fails with an engine error containing expected-substring")
+    (@spec ((Arena String ValidatorConfig String) -> Bool))
+    (@alloc arena)
+    (match (load-test-data-graph arena path)
+      ((some dg)
+        (match (load-test-graph arena path)
+          ((some sg)
+            (match (. (validate-data-graph-with-inference arena dg sg config) result)
+              ((validate-error msg)
+                (if (contains msg expected-substring)
+                  (do (print "  PASS: ") (print path) (print " engine error: ") (println msg) true)
+                  (do (print "  FAIL: ") (print path) (print " engine error message did not contain '") (print expected-substring) (print "': ") (println msg) false)))
+              ((validate-success _)
+                (do (print "  FAIL: ") (print path) (println " expected engine error but validation succeeded") false))))
+          ((none) (print "  FAIL: could not load ") (println path) false)))
+      ((none) (print "  FAIL: could not load ") (println path) false)))
+
+  ;; ============================================================
+  ;; SHACL-AF tests
+  ;; ============================================================
+
+  (fn test-af-node-exprs ((arena Arena))
+    (@intent "Every AF node-expression kind: path (sequence, with sh:nodes, as subject), filter shape, intersection, union -- 11 inferred triples (see the fixture's comments)")
+    (@spec ((Arena) -> Bool))
+    (assert-inference arena "fixtures/af-node-exprs.ttl" (af-config true false) 11 0))
+
+  (fn test-af-rules-off ((arena Arena))
+    (@intent "Rules do not run unless asked for or the entailment is declared: the fixture conforms")
+    (@spec ((Arena) -> Bool))
+    (assert-inference arena "fixtures/af-rules.ttl" (af-config false false) 0 0))
+
+  (fn test-af-rules-condition ((arena Arena))
+    (@intent "A TripleRule with sh:condition infers rdf:type for the one square rectangle, which makes it a target of SquareShape and a violation")
+    (@spec ((Arena) -> Bool))
+    (assert-inference arena "fixtures/af-rules.ttl" (af-config true false) 1 1))
+
+  (fn test-af-entailment ((arena Arena))
+    (@intent "sh:entailment sh:Rules makes plain validate run the rules (AF section 8.3)")
+    (@spec ((Arena) -> Bool))
+    (assert-violations arena "fixtures/af-entailment.ttl" 1))
+
+  (fn test-af-entailment-shacl12-name ((arena Arena))
+    (@intent "AF's sh:Rules entailment is still honored in SHACL 1.2 mode")
+    (@spec ((Arena) -> Bool))
+    (assert-inference arena "fixtures/af-entailment.ttl" (af-config false true) 1 1))
+
+  (fn test-af-order-visible ((arena Arena))
+    (@intent "A later sh:order level sees the triples of an earlier level")
+    (@spec ((Arena) -> Bool))
+    (assert-inference arena "fixtures/af-order-visible.ttl" (af-config true false) 2 0))
+
+  (fn test-af-order-same ((arena Arena))
+    (@intent "Rules with the same sh:order do not see each other's triples")
+    (@spec ((Arena) -> Bool))
+    (assert-inference arena "fixtures/af-order-same.ttl" (af-config true false) 1 0))
+
+  (fn test-af-deactivated ((arena Arena))
+    (@intent "Deactivated rules (even a SPARQL one) are ignored, and ill-formed combinations are skipped")
+    (@spec ((Arena) -> Bool))
+    (assert-inference arena "fixtures/af-deactivated.ttl" (af-config true false) 1 0))
+
+  (fn test-af-expression ((arena Arena))
+    (@intent "sh:expression on node and property shapes: 3 + 1 violations")
+    (@spec ((Arena) -> Bool))
+    (assert-violations arena "fixtures/af-expression.ttl" 4))
+
+  (fn test-af-expression-report ((arena Arena))
+    (@intent "An sh:expression violation carries sh:sourceConstraint, the expression's sh:message and the ExpressionConstraintComponent")
+    (@spec ((Arena) -> Bool))
+    (@alloc arena)
+    (match (load-test-graph arena "fixtures/af-expression.ttl")
+      ((some g)
+        (match (validate arena g g)
+          ((validate-success report)
+            (let ((text (report-to-string arena report)))
+              (if (and (contains text "Source constraint: ")
+                       (contains text "Person must be verified")
+                       (contains text "ExpressionConstraintComponent"))
+                (do (println "  PASS: sh:expression results carry sourceConstraint and message") true)
+                (do (print "  FAIL: sh:expression report is missing sourceConstraint or message:\n") (println text) false))))
+          ((validate-error msg) (print "  FAIL: validation error: ") (println msg) false)))
+      ((none) (println "  FAIL: could not load fixtures/af-expression.ttl") false)))
+
+  (fn test-af-report-blank-nodes ((arena Arena))
+    (@intent "Regression: report-to-graph numbered its own blank nodes from 0, so an inline sh:expression (shapes-graph blank node 0) emitted as sh:sourceConstraint came out as the report node itself. No sh:sourceConstraint may point at a node typed sh:ValidationReport or sh:ValidationResult.")
+    (@spec ((Arena) -> Bool))
+    (@alloc arena)
+    (match (load-test-graph arena "fixtures/af-expression.ttl")
+      ((some g)
+        (match (validate arena g g)
+          ((validate-success report)
+            (let ((rg (report-to-graph arena report))
+                  (no-term (Option Term) (none))
+                  (type-pred (make-iri arena "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"))
+                  (mut seen 0)
+                  (mut clashes 0))
+              (for-each (tr (indexed-graph-match arena rg no-term (some (make-iri arena "http://www.w3.org/ns/shacl#sourceConstraint")) no-term))
+                (set! seen (+ seen 1))
+                (when (> (list-len (indexed-graph-objects arena rg (triple-object tr) type-pred)) 0)
+                  (set! clashes (+ clashes 1))))
+              (if (and (== seen 4) (== clashes 0))
+                (do (println "  PASS: report blank nodes do not collide with sh:sourceConstraint nodes") true)
+                (do (print "  FAIL: ") (print (int-to-string arena clashes)) (print " of ")
+                    (print (int-to-string arena seen)) (println " sh:sourceConstraint values are report nodes") false))))
+          ((validate-error msg) (print "  FAIL: validation error: ") (println msg) false)))
+      ((none) (println "  FAIL: could not load fixtures/af-expression.ttl") false)))
+
+  (fn test-af-sparql-rule ((arena Arena))
+    (@intent "An active sh:SPARQLRule is an engine error, not silently skipped")
+    (@spec ((Arena) -> Bool))
+    (assert-af-error arena "fixtures/af-sparql-rule.ttl" (af-config true false) "sh:SPARQLRule"))
+
+  (fn test-af-function-expr ((arena Arena))
+    (@intent "A function expression is an engine error naming the function")
+    (@spec ((Arena) -> Bool))
+    (assert-af-error arena "fixtures/af-function-expr.ttl" (af-config false false) "isAdult"))
+
+  (fn test-af-unknown-entailment ((arena Arena))
+    (@intent "An unsupported sh:entailment is an engine error (SHACL section 1.5)")
+    (@spec ((Arena) -> Bool))
+    (assert-af-error arena "fixtures/af-unknown-entailment.ttl" (af-config false false) "entailment"))
+
+  (fn test-af-shnex-without-flag ((arena Arena))
+    (@intent "SHACL 1.2 node-expression syntax without --shacl12 is an engine error naming the flag")
+    (@spec ((Arena) -> Bool))
+    (assert-af-error arena "fixtures/af-shnex-without-flag.ttl" (af-config true false) "--shacl12"))
+
+  (fn test-af-expr-cycle ((arena Arena))
+    (@intent "A self-containing node expression is caught by the hazard pre-scan, not a crash")
+    (@spec ((Arena) -> Bool))
+    (assert-af-error arena "fixtures/af-expr-cycle.ttl" (af-config false false) "Cyclic node expression"))
+
+  (fn test-af-triplerule-missing-slot ((arena Arena))
+    (@intent "In AF mode a TripleRule needs exactly one sh:subject, sh:predicate and sh:object")
+    (@spec ((Arena) -> Bool))
+    (assert-af-error arena "fixtures/af-triplerule-missing-slot.ttl" (af-config true false) "sh:subject"))
+
+  (fn test-af-triplerule-default-slot-shacl12 ((arena Arena))
+    (@intent "In SHACL 1.2 mode a missing TripleRule slot defaults to the focus node")
+    (@spec ((Arena) -> Bool))
+    (assert-inference arena "fixtures/af-triplerule-missing-slot.ttl" (af-config true true) 1 0))
+
+  (fn test-af12-node-exprs ((arena Arena))
+    (@intent "SHACL 1.2 node expressions in --shacl12 mode: var focusNode, list, path values (with focusNode), filter shape, intersection, empty -- 8 inferred triples")
+    (@spec ((Arena) -> Bool))
+    (assert-inference arena "fixtures/af12-node-exprs.ttl" (af-config true true) 8 0))
+
+  (fn test-af12-list-duplicates ((arena Arena))
+    (@intent "A SHACL 1.2 list expression keeps duplicates, so sh:expression ( true true ) is violated")
+    (@spec ((Arena) -> Bool))
+    (assert-inference arena "fixtures/af12-list-duplicates.ttl" (af-config false true) 0 1))
+
+  (fn test-af12-unsupported-function ((arena Arena))
+    (@intent "A SHACL 1.2 node expression function snarl lacks is an engine error naming it, not a SPARQL complaint")
+    (@spec ((Arena) -> Bool))
+    (assert-af-error arena "fixtures/af12-unsupported-function.ttl" (af-config true true) "shacl-node-expr#count at"))
+
+  (fn test-af12-global-rule ((arena Arena))
+    (@intent "In --shacl12 mode a rule no shape attaches is an engine error, not silently skipped")
+    (@spec ((Arena) -> Bool))
+    (assert-af-error arena "fixtures/af12-global-rule.ttl" (af-config true true) "global rules"))
+
+  (fn test-af12-global-rule-af-mode ((arena Arena))
+    (@intent "In AF mode an unattached rule is ignored, as AF section 8 only executes rules reached through sh:rule")
+    (@spec ((Arena) -> Bool))
+    (assert-inference arena "fixtures/af12-global-rule.ttl" (af-config true false) 0 0))
+
   (fn main ((argc Int) (argv (Ptr (Ptr U8))))
     (@intent "Run all CLI integration tests")
     (@spec ((Int (Ptr (Ptr U8))) -> Int))
@@ -803,6 +1037,9 @@
         (if (test-pattern-unicode arena) (set! passed (+ passed 1)) (set! failed (+ failed 1)))
         (if (test-pattern-noncapturing arena) (set! passed (+ passed 1)) (set! failed (+ failed 1)))
         (if (test-pattern-uncompilable arena) (set! passed (+ passed 1)) (set! failed (+ failed 1)))
+        (if (test-core-value-range-types arena) (set! passed (+ passed 1)) (set! failed (+ failed 1)))
+        (if (test-core-string-details arena) (set! passed (+ passed 1)) (set! failed (+ failed 1)))
+        (if (test-core-flags-unsupported arena) (set! passed (+ passed 1)) (set! failed (+ failed 1)))
 
         ;; Regression tests
         (if (test-subclass-class-conforms arena) (set! passed (+ passed 1)) (set! failed (+ failed 1)))
@@ -857,6 +1094,31 @@
         (if (test-path-depth-over-budget arena) (set! passed (+ passed 1)) (set! failed (+ failed 1)))
         (if (test-path-depth-at-budget arena) (set! passed (+ passed 1)) (set! failed (+ failed 1)))
         (if (test-diverse-input-soak arena) (set! passed (+ passed 1)) (set! failed (+ failed 1)))
+
+        ;; SHACL-AF (non-SPARQL subset)
+        (if (test-af-node-exprs arena) (set! passed (+ passed 1)) (set! failed (+ failed 1)))
+        (if (test-af-rules-off arena) (set! passed (+ passed 1)) (set! failed (+ failed 1)))
+        (if (test-af-rules-condition arena) (set! passed (+ passed 1)) (set! failed (+ failed 1)))
+        (if (test-af-entailment arena) (set! passed (+ passed 1)) (set! failed (+ failed 1)))
+        (if (test-af-entailment-shacl12-name arena) (set! passed (+ passed 1)) (set! failed (+ failed 1)))
+        (if (test-af-order-visible arena) (set! passed (+ passed 1)) (set! failed (+ failed 1)))
+        (if (test-af-order-same arena) (set! passed (+ passed 1)) (set! failed (+ failed 1)))
+        (if (test-af-deactivated arena) (set! passed (+ passed 1)) (set! failed (+ failed 1)))
+        (if (test-af-expression arena) (set! passed (+ passed 1)) (set! failed (+ failed 1)))
+        (if (test-af-expression-report arena) (set! passed (+ passed 1)) (set! failed (+ failed 1)))
+        (if (test-af-report-blank-nodes arena) (set! passed (+ passed 1)) (set! failed (+ failed 1)))
+        (if (test-af-sparql-rule arena) (set! passed (+ passed 1)) (set! failed (+ failed 1)))
+        (if (test-af-function-expr arena) (set! passed (+ passed 1)) (set! failed (+ failed 1)))
+        (if (test-af-unknown-entailment arena) (set! passed (+ passed 1)) (set! failed (+ failed 1)))
+        (if (test-af-shnex-without-flag arena) (set! passed (+ passed 1)) (set! failed (+ failed 1)))
+        (if (test-af-expr-cycle arena) (set! passed (+ passed 1)) (set! failed (+ failed 1)))
+        (if (test-af-triplerule-missing-slot arena) (set! passed (+ passed 1)) (set! failed (+ failed 1)))
+        (if (test-af-triplerule-default-slot-shacl12 arena) (set! passed (+ passed 1)) (set! failed (+ failed 1)))
+        (if (test-af12-node-exprs arena) (set! passed (+ passed 1)) (set! failed (+ failed 1)))
+        (if (test-af12-list-duplicates arena) (set! passed (+ passed 1)) (set! failed (+ failed 1)))
+        (if (test-af12-unsupported-function arena) (set! passed (+ passed 1)) (set! failed (+ failed 1)))
+        (if (test-af12-global-rule arena) (set! passed (+ passed 1)) (set! failed (+ failed 1)))
+        (if (test-af12-global-rule-af-mode arena) (set! passed (+ passed 1)) (set! failed (+ failed 1)))
 
         ;; Summary
         (println "")

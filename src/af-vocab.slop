@@ -1,0 +1,198 @@
+(module af-vocab
+  (@doc "SHACL Advanced Features vocabulary (W3C Note 2017-06-08) that slop-rdf's vocab module does not define yet")
+
+  ;; Interim home: every other SHACL constant lives in slop-rdf's vocab
+  ;; module, and these belong there too. Keeping them here avoids a
+  ;; slop-rdf release while the AF support settles; move them upstream with
+  ;; the next slop-rdf release. Names must not collide with slop-rdf's vocab,
+  ;; since modules that import both see one flat set of constant names.
+
+  (export
+    SHACL_THIS
+    SHACL_FILTER_SHAPE
+    SHACL_NODES
+    SHACL_INTERSECTION
+    SHACL_UNION
+    SHACL_EXPRESSION
+    SHACL_EXPRESSION_CONSTRAINT_COMPONENT
+    SHACL_CLASS_CONSTRAINT_COMPONENT
+    SHACL_DATATYPE_CONSTRAINT_COMPONENT
+    SHACL_NODE_KIND_CONSTRAINT_COMPONENT
+    SHACL_MIN_COUNT_CONSTRAINT_COMPONENT
+    SHACL_MAX_COUNT_CONSTRAINT_COMPONENT
+    SHACL_MIN_INCLUSIVE_CONSTRAINT_COMPONENT
+    SHACL_MAX_INCLUSIVE_CONSTRAINT_COMPONENT
+    SHACL_MIN_EXCLUSIVE_CONSTRAINT_COMPONENT
+    SHACL_MAX_EXCLUSIVE_CONSTRAINT_COMPONENT
+    SHACL_MIN_LENGTH_CONSTRAINT_COMPONENT
+    SHACL_MAX_LENGTH_CONSTRAINT_COMPONENT
+    SHACL_PATTERN_CONSTRAINT_COMPONENT
+    SHACL_LANGUAGE_IN_CONSTRAINT_COMPONENT
+    SHACL_UNIQUE_LANG_CONSTRAINT_COMPONENT
+    SHACL_EQUALS_CONSTRAINT_COMPONENT
+    SHACL_DISJOINT_CONSTRAINT_COMPONENT
+    SHACL_LESS_THAN_CONSTRAINT_COMPONENT
+    SHACL_LESS_THAN_OR_EQUALS_CONSTRAINT_COMPONENT
+    SHACL_NOT_CONSTRAINT_COMPONENT
+    SHACL_AND_CONSTRAINT_COMPONENT
+    SHACL_OR_CONSTRAINT_COMPONENT
+    SHACL_XONE_CONSTRAINT_COMPONENT
+    SHACL_NODE_CONSTRAINT_COMPONENT
+    SHACL_PROPERTY_CONSTRAINT_COMPONENT
+    SHACL_QUALIFIED_MIN_COUNT_CONSTRAINT_COMPONENT
+    SHACL_QUALIFIED_MAX_COUNT_CONSTRAINT_COMPONENT
+    SHACL_HAS_VALUE_CONSTRAINT_COMPONENT
+    SHACL_IN_CONSTRAINT_COMPONENT
+    SHACL_CLOSED_CONSTRAINT_COMPONENT
+    SHACL_SOURCE_CONSTRAINT
+    SHACL_RULE
+    SHACL_TRIPLE_RULE
+    SHACL_SPARQL_RULE
+    SHACL_SUBJECT
+    SHACL_PREDICATE
+    SHACL_OBJECT
+    SHACL_CONDITION
+    SHACL_ORDER
+    SHACL_DEACTIVATED
+    SHACL_ENTAILMENT
+    SHACL_RULES
+    SHACL_RULES_ENTAILMENT
+    SHNEX_NS
+    SHNEX_VAR
+    SHNEX_PATH_VALUES
+    SHNEX_FOCUS_NODE
+    SHNEX_FILTER_SHAPE
+    SHNEX_NODES
+    SHNEX_INTERSECTION
+    SHNEX_FOCUS_NODE_VAR
+    shacl12-unsupported-properties
+    shacl12-unsupported-classes)
+
+  ;; SHACL Core constraint component IRIs (SHACL section 4), the values of
+  ;; sh:sourceConstraintComponent. slop-rdf's vocab has the parameter IRIs
+  ;; (sh:class) but not these.
+  (const SHACL_CLASS_CONSTRAINT_COMPONENT String "http://www.w3.org/ns/shacl#ClassConstraintComponent")
+
+  (const SHACL_DATATYPE_CONSTRAINT_COMPONENT String "http://www.w3.org/ns/shacl#DatatypeConstraintComponent")
+
+  (const SHACL_NODE_KIND_CONSTRAINT_COMPONENT String "http://www.w3.org/ns/shacl#NodeKindConstraintComponent")
+
+  (const SHACL_MIN_COUNT_CONSTRAINT_COMPONENT String "http://www.w3.org/ns/shacl#MinCountConstraintComponent")
+
+  (const SHACL_MAX_COUNT_CONSTRAINT_COMPONENT String "http://www.w3.org/ns/shacl#MaxCountConstraintComponent")
+
+  (const SHACL_MIN_INCLUSIVE_CONSTRAINT_COMPONENT String "http://www.w3.org/ns/shacl#MinInclusiveConstraintComponent")
+
+  (const SHACL_MAX_INCLUSIVE_CONSTRAINT_COMPONENT String "http://www.w3.org/ns/shacl#MaxInclusiveConstraintComponent")
+
+  (const SHACL_MIN_EXCLUSIVE_CONSTRAINT_COMPONENT String "http://www.w3.org/ns/shacl#MinExclusiveConstraintComponent")
+
+  (const SHACL_MAX_EXCLUSIVE_CONSTRAINT_COMPONENT String "http://www.w3.org/ns/shacl#MaxExclusiveConstraintComponent")
+
+  (const SHACL_MIN_LENGTH_CONSTRAINT_COMPONENT String "http://www.w3.org/ns/shacl#MinLengthConstraintComponent")
+
+  (const SHACL_MAX_LENGTH_CONSTRAINT_COMPONENT String "http://www.w3.org/ns/shacl#MaxLengthConstraintComponent")
+
+  (const SHACL_PATTERN_CONSTRAINT_COMPONENT String "http://www.w3.org/ns/shacl#PatternConstraintComponent")
+
+  (const SHACL_LANGUAGE_IN_CONSTRAINT_COMPONENT String "http://www.w3.org/ns/shacl#LanguageInConstraintComponent")
+
+  (const SHACL_UNIQUE_LANG_CONSTRAINT_COMPONENT String "http://www.w3.org/ns/shacl#UniqueLangConstraintComponent")
+
+  (const SHACL_EQUALS_CONSTRAINT_COMPONENT String "http://www.w3.org/ns/shacl#EqualsConstraintComponent")
+
+  (const SHACL_DISJOINT_CONSTRAINT_COMPONENT String "http://www.w3.org/ns/shacl#DisjointConstraintComponent")
+
+  (const SHACL_LESS_THAN_CONSTRAINT_COMPONENT String "http://www.w3.org/ns/shacl#LessThanConstraintComponent")
+
+  (const SHACL_LESS_THAN_OR_EQUALS_CONSTRAINT_COMPONENT String "http://www.w3.org/ns/shacl#LessThanOrEqualsConstraintComponent")
+
+  (const SHACL_NOT_CONSTRAINT_COMPONENT String "http://www.w3.org/ns/shacl#NotConstraintComponent")
+
+  (const SHACL_AND_CONSTRAINT_COMPONENT String "http://www.w3.org/ns/shacl#AndConstraintComponent")
+
+  (const SHACL_OR_CONSTRAINT_COMPONENT String "http://www.w3.org/ns/shacl#OrConstraintComponent")
+
+  (const SHACL_XONE_CONSTRAINT_COMPONENT String "http://www.w3.org/ns/shacl#XoneConstraintComponent")
+
+  (const SHACL_NODE_CONSTRAINT_COMPONENT String "http://www.w3.org/ns/shacl#NodeConstraintComponent")
+
+  (const SHACL_PROPERTY_CONSTRAINT_COMPONENT String "http://www.w3.org/ns/shacl#PropertyConstraintComponent")
+
+  (const SHACL_QUALIFIED_MIN_COUNT_CONSTRAINT_COMPONENT String "http://www.w3.org/ns/shacl#QualifiedMinCountConstraintComponent")
+
+  (const SHACL_QUALIFIED_MAX_COUNT_CONSTRAINT_COMPONENT String "http://www.w3.org/ns/shacl#QualifiedMaxCountConstraintComponent")
+
+  (const SHACL_HAS_VALUE_CONSTRAINT_COMPONENT String "http://www.w3.org/ns/shacl#HasValueConstraintComponent")
+
+  (const SHACL_IN_CONSTRAINT_COMPONENT String "http://www.w3.org/ns/shacl#InConstraintComponent")
+
+  (const SHACL_CLOSED_CONSTRAINT_COMPONENT String "http://www.w3.org/ns/shacl#ClosedConstraintComponent")
+
+  ;; Node expressions (AF section 6)
+  (const SHACL_THIS String "http://www.w3.org/ns/shacl#this")
+  (const SHACL_FILTER_SHAPE String "http://www.w3.org/ns/shacl#filterShape")
+  (const SHACL_NODES String "http://www.w3.org/ns/shacl#nodes")
+  (const SHACL_INTERSECTION String "http://www.w3.org/ns/shacl#intersection")
+  (const SHACL_UNION String "http://www.w3.org/ns/shacl#union")
+
+  ;; Expression constraints (AF section 7)
+  (const SHACL_EXPRESSION String "http://www.w3.org/ns/shacl#expression")
+  (const SHACL_EXPRESSION_CONSTRAINT_COMPONENT String "http://www.w3.org/ns/shacl#ExpressionConstraintComponent")
+  (const SHACL_SOURCE_CONSTRAINT String "http://www.w3.org/ns/shacl#sourceConstraint")
+
+  ;; Rules (AF section 8)
+  (const SHACL_RULE String "http://www.w3.org/ns/shacl#rule")
+  (const SHACL_TRIPLE_RULE String "http://www.w3.org/ns/shacl#TripleRule")
+  (const SHACL_SPARQL_RULE String "http://www.w3.org/ns/shacl#SPARQLRule")
+  (const SHACL_SUBJECT String "http://www.w3.org/ns/shacl#subject")
+  (const SHACL_PREDICATE String "http://www.w3.org/ns/shacl#predicate")
+  (const SHACL_OBJECT String "http://www.w3.org/ns/shacl#object")
+  (const SHACL_CONDITION String "http://www.w3.org/ns/shacl#condition")
+  (const SHACL_ORDER String "http://www.w3.org/ns/shacl#order")
+  (const SHACL_DEACTIVATED String "http://www.w3.org/ns/shacl#deactivated")
+  (const SHACL_ENTAILMENT String "http://www.w3.org/ns/shacl#entailment")
+  (const SHACL_RULES String "http://www.w3.org/ns/shacl#Rules")
+
+  ;; SHACL 1.2 (Working Drafts, experimental --shacl12 mode only).
+  ;; Inference Rules renames AF's entailment regime; Node Expressions moves
+  ;; the node-expression vocabulary into its own namespace.
+  (const SHACL_RULES_ENTAILMENT String "http://www.w3.org/ns/shacl#RulesEntailment")
+  (const SHNEX_NS String "http://www.w3.org/ns/shacl-node-expr#")
+  (const SHNEX_VAR String "http://www.w3.org/ns/shacl-node-expr#var")
+  (const SHNEX_PATH_VALUES String "http://www.w3.org/ns/shacl-node-expr#pathValues")
+  (const SHNEX_FOCUS_NODE String "http://www.w3.org/ns/shacl-node-expr#focusNode")
+  (const SHNEX_FILTER_SHAPE String "http://www.w3.org/ns/shacl-node-expr#filterShape")
+  (const SHNEX_NODES String "http://www.w3.org/ns/shacl-node-expr#nodes")
+  (const SHNEX_INTERSECTION String "http://www.w3.org/ns/shacl-node-expr#intersection")
+  ;; The shnex:var name that denotes the current focus node
+  (const SHNEX_FOCUS_NODE_VAR String "focusNode")
+
+  ;; SHACL 1.2 vocabulary snarl does not implement. SHACL 1.0 ignores
+  ;; unknown terms, and AF mode keeps doing so; SHACL 1.2 mode rejects these
+  ;; instead, so that 1.2 input never validates or infers silently wrong.
+
+  (fn shacl12-unsupported-properties ((arena Arena))
+    (@intent "SHACL 1.2 properties snarl does not implement. Inference Rules: layers, run-once rules, rule sets and rule processors, expected predicates, temporary triples. Core and Node Expressions: sh:nodeByExpression, sh:values, sh:defaultValue.")
+    (@spec ((Arena) -> (List String)))
+    (@alloc arena)
+    (list String
+      "http://www.w3.org/ns/shacl#layer"
+      "http://www.w3.org/ns/shacl#runOnce"
+      "http://www.w3.org/ns/shacl#hasRule"
+      "http://www.w3.org/ns/shacl#includesRuleSet"
+      "http://www.w3.org/ns/shacl#ruleProcessor"
+      "http://www.w3.org/ns/shacl#expectedPredicate"
+      "http://www.w3.org/ns/shacl#tempTriple"
+      "http://www.w3.org/ns/shacl#nodeByExpression"
+      "http://www.w3.org/ns/shacl#values"
+      "http://www.w3.org/ns/shacl#defaultValue"))
+
+  (fn shacl12-unsupported-classes ((arena Arena))
+    (@intent "SHACL 1.2 classes snarl does not implement: shape classes (implicit class targets), rule sets, SPARQL rule templates")
+    (@spec ((Arena) -> (List String)))
+    (@alloc arena)
+    (list String
+      "http://www.w3.org/ns/shacl#ShapeClass"
+      "http://www.w3.org/ns/shacl#RuleSet"
+      "http://www.w3.org/ns/shacl#SPARQLRuleTemplate")))

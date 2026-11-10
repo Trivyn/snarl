@@ -15,7 +15,9 @@
                       snarl-data-graph-create snarl-data-graph-add))
   (import vocab (RDF_TYPE
                  SHACL_CLASS SHACL_DATATYPE SHACL_NODE_KIND
-                 XSD_STRING XSD_INTEGER))
+                 RDF_LANG_STRING XSD_STRING XSD_INTEGER))
+  (import literal-order (lexical-form-is-valid))
+  (import af-vocab (SHACL_CLASS_CONSTRAINT_COMPONENT SHACL_DATATYPE_CONSTRAINT_COMPONENT SHACL_NODE_KIND_CONSTRAINT_COMPONENT))
   (import types (NodeKind Severity Constraint ValidationResult ShaclPath))
   (import target (ClassIndex is-shacl-instance-of-class class-index-has-class class-index-has-instance))
 
@@ -60,7 +62,6 @@
     (@spec ((Arena SnarlDataGraph Term Term Term (Option ShaclPath) Term Severity (Option String))
             -> (Option ValidationResult)))
     (@alloc arena)
-    (@pre {(snarl-data-graph-size data-graph) >= 0})
     ;; Conforms (no result) iff the value node is a SHACL instance of the required
     ;; class — i.e. rdf:type C' for C' = required-class or a transitive subclass.
     ;; Pins the semantics to that relation so the check cannot silently regress to a
@@ -68,7 +69,7 @@
     (@post {(== (is-none $result) (is-shacl-instance-of-class arena data-graph value-node required-class))})
     (@property sound-wrt-shacl-instance (== (is-none $result) (is-shacl-instance-of-class arena data-graph value-node required-class)))
     (@example (arena (fixture-g-focus-is-person arena) (make-iri arena EX_FOCUS) (make-iri arena EX_FOCUS) (make-iri arena EX_PERSON) (none) (make-iri arena EX_SHAPE) severity-violation (none)) -> (none))
-    (@example (arena (fixture-g-empty arena) (make-iri arena EX_FOCUS) (make-iri arena EX_FOCUS) (make-iri arena EX_PERSON) (none) (make-iri arena EX_SHAPE) severity-violation (none)) -> (some (ValidationResult _ _ _ _ _ _ _)))
+    (@example (arena (fixture-g-empty arena) (make-iri arena EX_FOCUS) (make-iri arena EX_FOCUS) (make-iri arena EX_PERSON) (none) (make-iri arena EX_SHAPE) severity-violation (none)) -> (some (ValidationResult _ _ _ _ _ _ _ _ _)))
     ;; Value node must be a SHACL instance of required-class: it has rdf:type C'
     ;; where C' is required-class or a transitive rdfs:subClassOf of it (SHACL 4.1).
     (if (is-shacl-instance-of-class arena data-graph value-node required-class)
@@ -78,7 +79,7 @@
               (result-path path)
               (value (some value-node))
               (source-shape shape-id)
-              (source-constraint-component SHACL_CLASS)
+              (source-constraint-component SHACL_CLASS_CONSTRAINT_COMPONENT)
               (severity severity)
               (message message))))
     :c-name "snarl_check_class")
@@ -96,7 +97,7 @@
       (result-path path)
       (value (some value-node))
       (source-shape shape-id)
-      (source-constraint-component SHACL_CLASS)
+      (source-constraint-component SHACL_CLASS_CONSTRAINT_COMPONENT)
       (severity severity)
       (message message)))
 
@@ -120,17 +121,27 @@
   ;; ============================================================
 
   (fn datatype-matches ((value-node Term) (required-datatype Term))
-    (@intent "True if value-node is a literal whose datatype IRI equals required-datatype; a literal with no explicit datatype counts as xsd:string (SHACL 4.2)")
+    (@intent "True if value-node is a literal of the required datatype (SHACL 4.1.2): a language-tagged literal has datatype rdf:langString, a literal with no explicit datatype xsd:string, and a literal whose lexical form is ill-formed for its datatype (\"aldi\"^^xsd:integer) does not match")
     (@spec ((Term Term) -> Bool))
     (@pure)
+    (@example ((make-literal arena "42" (some "http://www.w3.org/2001/XMLSchema#integer") (none)) (make-iri arena "http://www.w3.org/2001/XMLSchema#integer")) -> true)
+    (@example ((make-literal arena "aldi" (some "http://www.w3.org/2001/XMLSchema#integer") (none)) (make-iri arena "http://www.w3.org/2001/XMLSchema#integer")) -> false)
+    (@example ((make-literal arena "hi" (none) (some "en")) (make-iri arena "http://www.w3.org/1999/02/22-rdf-syntax-ns#langString")) -> true)
+    (@example ((make-literal arena "hi" (none) (some "en")) (make-iri arena "http://www.w3.org/2001/XMLSchema#string")) -> false)
     (match value-node
       ((term-literal lit)
         (let ((required-dt-str (match required-datatype
                                  ((term-iri iri) (. iri value))
                                  (_ ""))))
-          (match (. lit datatype)
-            ((some dt) (string-eq dt required-dt-str))
-            ((none) (string-eq required-dt-str XSD_STRING)))))
+          (match (. lit lang)
+            ((some _) (string-eq required-dt-str RDF_LANG_STRING))
+            ((none)
+              (let ((dt (match (. lit datatype)
+                          ((some d) d)
+                          ((none) XSD_STRING))))
+                (and
+                  (string-eq dt required-dt-str)
+                  (lexical-form-is-valid (. lit value) dt)))))))
       (_ false)))
 
   (fn check-datatype ((arena Arena) (focus-node Term) (value-node Term)
@@ -144,12 +155,12 @@
     (@post {(== (is-none $result) (datatype-matches value-node required-datatype))})
     (@property correctness (== (is-none $result) (datatype-matches value-node required-datatype)))
     (@example (arena (make-iri arena EX_FOCUS) (make-literal arena "42" (some "http://www.w3.org/2001/XMLSchema#integer") (none)) (make-iri arena "http://www.w3.org/2001/XMLSchema#integer") (none) (make-iri arena EX_SHAPE) severity-violation (none)) -> (none))
-    (@example (arena (make-iri arena EX_FOCUS) (make-literal arena "hello" (none) (none)) (make-iri arena "http://www.w3.org/2001/XMLSchema#integer") (none) (make-iri arena EX_SHAPE) severity-violation (none)) -> (some (ValidationResult _ _ _ _ _ _ _)))
-    (@example (arena (make-iri arena EX_FOCUS) (make-iri arena EX_VALUE) (make-iri arena "http://www.w3.org/2001/XMLSchema#integer") (none) (make-iri arena EX_SHAPE) severity-violation (none)) -> (some (ValidationResult _ _ _ _ _ _ _)))
+    (@example (arena (make-iri arena EX_FOCUS) (make-literal arena "hello" (none) (none)) (make-iri arena "http://www.w3.org/2001/XMLSchema#integer") (none) (make-iri arena EX_SHAPE) severity-violation (none)) -> (some (ValidationResult _ _ _ _ _ _ _ _ _)))
+    (@example (arena (make-iri arena EX_FOCUS) (make-iri arena EX_VALUE) (make-iri arena "http://www.w3.org/2001/XMLSchema#integer") (none) (make-iri arena EX_SHAPE) severity-violation (none)) -> (some (ValidationResult _ _ _ _ _ _ _ _ _)))
     (if (datatype-matches value-node required-datatype)
       (none)
       (some (make-vr arena focus-node path value-node shape-id
-              SHACL_DATATYPE severity message)))
+              SHACL_DATATYPE_CONSTRAINT_COMPONENT severity message)))
     :c-name "snarl_check_datatype")
 
   ;; ============================================================
@@ -179,12 +190,12 @@
     (@post {(== (is-none $result) (node-kind-matches required-kind (term-kind value-node)))})
     (@property correctness (== (is-none $result) (node-kind-matches required-kind (term-kind value-node))))
     (@example (arena (make-iri arena EX_FOCUS) (make-iri arena EX_VALUE) node-kind-iri (none) (make-iri arena EX_SHAPE) severity-violation (none)) -> (none))
-    (@example (arena (make-iri arena EX_FOCUS) (make-literal arena "hi" (none) (none)) node-kind-iri (none) (make-iri arena EX_SHAPE) severity-violation (none)) -> (some (ValidationResult _ _ _ _ _ _ _)))
+    (@example (arena (make-iri arena EX_FOCUS) (make-literal arena "hi" (none) (none)) node-kind-iri (none) (make-iri arena EX_SHAPE) severity-violation (none)) -> (some (ValidationResult _ _ _ _ _ _ _ _ _)))
     (@example (arena (make-iri arena EX_FOCUS) (make-iri arena EX_VALUE) node-kind-iri-or-literal (none) (make-iri arena EX_SHAPE) severity-violation (none)) -> (none))
     (if (node-kind-matches required-kind (term-kind value-node))
       (none)
       (some (make-vr arena focus-node path value-node shape-id
-              SHACL_NODE_KIND severity message)))
+              SHACL_NODE_KIND_CONSTRAINT_COMPONENT severity message)))
     :c-name "snarl_check_node_kind")
 
   ;; ============================================================
@@ -198,7 +209,7 @@
     (@spec ((Arena Term (Option ShaclPath) Term Term String Severity (Option String))
             -> ValidationResult))
     (@alloc arena)
-    (@example (arena (make-iri arena EX_FOCUS) (none) (make-iri arena EX_VALUE) (make-iri arena EX_SHAPE) SHACL_CLASS severity-violation (none))
+    (@example (arena (make-iri arena EX_FOCUS) (none) (make-iri arena EX_VALUE) (make-iri arena EX_SHAPE) SHACL_CLASS_CONSTRAINT_COMPONENT severity-violation (none))
       ;; Returns a ValidationResult with the given fields
       )
     (record-new ValidationResult

@@ -11,6 +11,7 @@
 #include <stdbool.h>
 #include "slop_rdf.h"
 #include "slop_vocab.h"
+#include "slop_af_vocab.h"
 #include "slop_types.h"
 
 #ifndef SLOP_OPTION_SNARL_TYPES_SHACLPATH_DEFINED
@@ -23,10 +24,10 @@ SLOP_OPTION_DEFINE(snarl_types_ShaclPath, slop_option_snarl_types_ShaclPath)
 SLOP_OPTION_DEFINE(snarl_types_ValidationResult, slop_option_snarl_types_ValidationResult)
 #endif
 
-slop_option_snarl_types_ValidationResult snarl_check_not(slop_arena* arena, slop_rdf_rdf_Term focus_node, uint8_t conforms_to_ref, slop_option_snarl_types_ShaclPath path, slop_rdf_rdf_Term shape_id, snarl_types_Severity severity, slop_option_string message);
-slop_option_snarl_types_ValidationResult snarl_check_and(slop_arena* arena, slop_rdf_rdf_Term focus_node, uint8_t all_pass, slop_option_snarl_types_ShaclPath path, slop_rdf_rdf_Term shape_id, snarl_types_Severity severity, slop_option_string message);
-slop_option_snarl_types_ValidationResult snarl_check_or(slop_arena* arena, slop_rdf_rdf_Term focus_node, uint8_t any_pass, slop_option_snarl_types_ShaclPath path, slop_rdf_rdf_Term shape_id, snarl_types_Severity severity, slop_option_string message);
-slop_option_snarl_types_ValidationResult snarl_check_xone(slop_arena* arena, slop_rdf_rdf_Term focus_node, int64_t pass_count, slop_option_snarl_types_ShaclPath path, slop_rdf_rdf_Term shape_id, snarl_types_Severity severity, slop_option_string message);
+slop_option_snarl_types_ValidationResult snarl_check_not(slop_arena* arena, slop_rdf_rdf_Term focus_node, slop_rdf_rdf_Term value_node, uint8_t conforms_to_ref, slop_option_snarl_types_ShaclPath path, slop_rdf_rdf_Term shape_id, snarl_types_Severity severity, slop_option_string message);
+slop_option_snarl_types_ValidationResult snarl_check_and(slop_arena* arena, slop_rdf_rdf_Term focus_node, slop_rdf_rdf_Term value_node, uint8_t all_pass, slop_option_snarl_types_ShaclPath path, slop_rdf_rdf_Term shape_id, snarl_types_Severity severity, slop_option_string message);
+slop_option_snarl_types_ValidationResult snarl_check_or(slop_arena* arena, slop_rdf_rdf_Term focus_node, slop_rdf_rdf_Term value_node, uint8_t any_pass, slop_option_snarl_types_ShaclPath path, slop_rdf_rdf_Term shape_id, snarl_types_Severity severity, slop_option_string message);
+slop_option_snarl_types_ValidationResult snarl_check_xone(slop_arena* arena, slop_rdf_rdf_Term focus_node, slop_rdf_rdf_Term value_node, int64_t pass_count, slop_option_snarl_types_ShaclPath path, slop_rdf_rdf_Term shape_id, snarl_types_Severity severity, slop_option_string message);
 
 /* Function name aliases for C interop */
 #define snarl_logical_check_not snarl_check_not

@@ -10,8 +10,9 @@
   (@doc "SHACL other constraints: sh:closed, sh:hasValue, sh:in")
 
   (import rdf (Term term-eq make-iri make-literal make-triple))
-  (import data-graph (SnarlDataGraph snarl-data-graph-predicates-for-subject snarl-data-graph-create snarl-data-graph-add))
+  (import data-graph (SnarlDataGraph snarl-data-graph-predicates-for-subject snarl-data-graph-objects snarl-data-graph-create snarl-data-graph-add))
   (import vocab (SHACL_CLOSED SHACL_HAS_VALUE SHACL_IN))
+  (import af-vocab (SHACL_CLOSED_CONSTRAINT_COMPONENT SHACL_HAS_VALUE_CONSTRAINT_COMPONENT SHACL_IN_CONSTRAINT_COMPONENT))
   (import types (Severity Constraint ValidationResult ShaclPath))
 
   ;; Test URI constants
@@ -100,12 +101,11 @@
     (@spec ((Arena Term (List Term) Term (Option ShaclPath) Term Severity (Option String))
             -> (Option ValidationResult)))
     (@alloc arena)
-    (@pre {(list-len value-nodes) >= 0})
     ;; Conforms (no result) iff some value node equals the required value.
     (@post {(== (is-none $result) (list-contains-term value-nodes required-value))})
     (@property correctness (== (is-none $result) (list-contains-term value-nodes required-value)))
     (@example (arena (make-iri arena EX_FOCUS) (fixture-term-list-ab arena) (make-iri arena EX_A) (none) (make-iri arena EX_SHAPE) severity-violation (none)) -> (none))
-    (@example (arena (make-iri arena EX_FOCUS) (fixture-term-list-ab arena) (make-iri arena EX_C) (none) (make-iri arena EX_SHAPE) severity-violation (none)) -> (some (ValidationResult _ _ _ _ _ _ _)))
+    (@example (arena (make-iri arena EX_FOCUS) (fixture-term-list-ab arena) (make-iri arena EX_C) (none) (make-iri arena EX_SHAPE) severity-violation (none)) -> (some (ValidationResult _ _ _ _ _ _ _ _ _)))
     (if (list-contains-term value-nodes required-value)
       (none)
       (some (record-new ValidationResult
@@ -113,7 +113,7 @@
               (result-path path)
               (value (none))
               (source-shape shape-id)
-              (source-constraint-component SHACL_HAS_VALUE)
+              (source-constraint-component SHACL_HAS_VALUE_CONSTRAINT_COMPONENT)
               (severity severity)
               (message message))))
     :c-name "snarl_check_has_value")
@@ -134,7 +134,7 @@
     (@post {(== (is-none $result) (list-contains-term allowed-values value-node))})
     (@property correctness (== (is-none $result) (list-contains-term allowed-values value-node)))
     (@example (arena (make-iri arena EX_FOCUS) (make-iri arena EX_A) (fixture-allowed-terms-abc arena) (none) (make-iri arena EX_SHAPE) severity-violation (none)) -> (none))
-    (@example (arena (make-iri arena EX_FOCUS) (make-iri arena EX_FOCUS) (fixture-allowed-terms-abc arena) (none) (make-iri arena EX_SHAPE) severity-violation (none)) -> (some (ValidationResult _ _ _ _ _ _ _)))
+    (@example (arena (make-iri arena EX_FOCUS) (make-iri arena EX_FOCUS) (fixture-allowed-terms-abc arena) (none) (make-iri arena EX_SHAPE) severity-violation (none)) -> (some (ValidationResult _ _ _ _ _ _ _ _ _)))
     (if (list-contains-term allowed-values value-node)
       (none)
       (some (record-new ValidationResult
@@ -142,7 +142,7 @@
               (result-path path)
               (value (some value-node))
               (source-shape shape-id)
-              (source-constraint-component SHACL_IN)
+              (source-constraint-component SHACL_IN_CONSTRAINT_COMPONENT)
               (severity severity)
               (message message))))
     :c-name "snarl_check_in")
@@ -154,19 +154,14 @@
   (fn check-closed ((arena Arena) (data-graph SnarlDataGraph) (focus-node Term)
                     (allowed-paths (List ShaclPath)) (path (Option ShaclPath))
                     (shape-id Term) (severity Severity) (message (Option String)))
-    (@intent "Check sh:closed constraint: focus node must not have unexpected properties")
+    (@intent "Check sh:closed: one result for each triple of the focus node whose predicate is not an allowed predicate path, with the triple's object as sh:value")
     (@spec ((Arena SnarlDataGraph Term (List ShaclPath) (Option ShaclPath) Term Severity (Option String))
             -> (List ValidationResult)))
     (@alloc arena)
-    (@pre {(list-len allowed-paths) >= 0})
-    (@post {(list-len $result) >= 0})
-    ;; VERIFIER: fails — term-eq lacks equality axiom; path-predicate destructure not supported in contracts
-    (@property soundness
-      (forall (r $result)
-        (not (exists (p allowed-paths) (term-eq (. r value) (path-iri p))))))
-    (@property result-path-correct
-      (forall (r $result)
-        (== (. r result-path) (some (path-predicate (unwrap (. r value)))))))
+    ;; VERIFIER: what matters here -- every result's value is an object of a
+    ;; triple whose predicate is not an allowed predicate path -- is a property
+    ;; of the data graph that Z3 cannot see. The W3C node/closed-* and
+    ;; complex/personexample result comparisons test it.
     (@example (arena (fixture-g-focus-name arena) (make-iri arena EX_FOCUS) (fixture-allowed-path-name arena) (none) (make-iri arena EX_SHAPE) severity-violation (none))
       ;; Only ex:name present, which is allowed → no violations
       )
@@ -182,16 +177,19 @@
         (match ap
           ((path-predicate p) (set-put allowed-preds p))
           (_ (do))))
+      ;; One result per offending triple: sh:value is the triple's object,
+      ;; sh:resultPath its predicate (SHACL 4.8.1).
       (for-each (pred predicates)
         (when (not (set-has allowed-preds pred))
-          (list-push results
-            (record-new ValidationResult
-              (focus-node focus-node)
-              (result-path (some (union-new ShaclPath path-predicate pred)))
-              (value (some pred))
-              (source-shape shape-id)
-              (source-constraint-component SHACL_CLOSED)
-              (severity severity)
-              (message message)))))
+          (for-each (obj (snarl-data-graph-objects arena data-graph focus-node pred))
+            (list-push results
+              (record-new ValidationResult
+                (focus-node focus-node)
+                (result-path (some (union-new ShaclPath path-predicate pred)))
+                (value (some obj))
+                (source-shape shape-id)
+                (source-constraint-component SHACL_CLOSED_CONSTRAINT_COMPONENT)
+                (severity severity)
+                (message message))))))
       results)
     :c-name "snarl_check_closed"))

@@ -46,6 +46,7 @@ slop_string snarl_data_graph_copy_string(slop_arena* arena, slop_string s) {
     goto _slop_post;
     _slop_post: ;
     SLOP_POST((string_eq(_retval, s)), "(string-eq $result s)");
+    SLOP_POST((string_eq(_retval, s)), "(string-eq $result s)");
     return _retval;
 }
 
@@ -110,6 +111,7 @@ int64_t snarl_data_graph_intern_term(slop_arena* arena, snarl_data_graph_SnarlDa
     SLOP_UNREACHABLE();
     _slop_post: ;
     SLOP_POST(((_retval >= 0)), "(>= $result 0)");
+    SLOP_POST(((_retval >= 0)), "(>= $result 0)");
     return _retval;
 }
 
@@ -145,6 +147,7 @@ slop_list_slop_rdf_rdf_Term snarl_data_graph_ids_to_terms(slop_arena* arena, sna
         goto _slop_post;
     }
     _slop_post: ;
+    SLOP_POST(((((int64_t)((_retval).len)) == ((int64_t)(ids)->len))), "(== (list-len $result) (set-len ids))");
     SLOP_POST(((((int64_t)((_retval).len)) == ((int64_t)(ids)->len))), "(== (list-len $result) (set-len ids))");
     return _retval;
 }
@@ -285,7 +288,7 @@ snarl_data_graph_IdSet snarl_data_graph_snarl_data_graph_object_set(snarl_data_g
 
 int64_t snarl_data_graph_snarl_data_graph_id_set_size(slop_map* ids) {
     int64_t _retval = {0};
-    _retval = SLOP_RANGE(int64_t, ((int64_t)(ids)->len), 1, 0, 0, 0, "(Int 0 ..) at data-graph.slop:306:5");
+    _retval = SLOP_RANGE(int64_t, ((int64_t)(ids)->len), 1, 0, 0, 0, "(Int 0 ..) at data-graph.slop:315:5");
     goto _slop_post;
     _slop_post: ;
     SLOP_POST(((_retval >= 0)), "(>= $result 0)");
@@ -297,6 +300,7 @@ slop_list_slop_rdf_rdf_Term snarl_data_graph_snarl_data_graph_id_set_to_list(slo
     _retval = snarl_data_graph_ids_to_terms(arena, g, ids);
     goto _slop_post;
     _slop_post: ;
+    SLOP_POST(((((int64_t)((_retval).len)) == ((int64_t)(ids)->len))), "(== (list-len $result) (set-len ids))");
     SLOP_POST(((((int64_t)((_retval).len)) == ((int64_t)(ids)->len))), "(== (list-len $result) (set-len ids))");
     return _retval;
 }
@@ -317,16 +321,10 @@ uint8_t snarl_data_graph_contains(snarl_data_graph_SnarlDataGraph g, slop_rdf_rd
 }
 
 slop_list_slop_rdf_rdf_Term snarl_data_graph_objects(slop_arena* arena, snarl_data_graph_SnarlDataGraph g, slop_rdf_rdf_Term subj, slop_rdf_rdf_Term pred) {
-    slop_list_slop_rdf_rdf_Term _retval = {0};
-    _retval = snarl_data_graph_ids_to_terms(arena, g, snarl_data_graph_snarl_data_graph_object_set(g, subj, pred));
-    goto _slop_post;
-    _slop_post: ;
-    SLOP_POST(((((int64_t)((_retval).len)) >= 0)), "(>= (list-len $result) 0)");
-    return _retval;
+    return snarl_data_graph_ids_to_terms(arena, g, snarl_data_graph_snarl_data_graph_object_set(g, subj, pred));
 }
 
 slop_list_slop_rdf_rdf_Term snarl_data_graph_subjects(slop_arena* arena, snarl_data_graph_SnarlDataGraph g, slop_rdf_rdf_Term pred, slop_rdf_rdf_Term obj) {
-    slop_list_slop_rdf_rdf_Term _retval = {0};
     __auto_type _mv_152 = snarl_data_graph_lookup_term(g, pred);
     if (_mv_152.has_value) {
         __auto_type p = _mv_152.value;
@@ -339,78 +337,52 @@ slop_list_slop_rdf_rdf_Term snarl_data_graph_subjects(slop_arena* arena, snarl_d
                 __auto_type _mv_157 = ({ void* _ptr = slop_map_get(obj_map, &(int64_t){o}); _ptr ? (slop_option_map_ptr){ .has_value = true, .value = *(slop_map**)_ptr } : (slop_option_map_ptr){ .has_value = false }; });
                 if (_mv_157.has_value) {
                     __auto_type subjects = _mv_157.value;
-                    _retval = snarl_data_graph_ids_to_terms(arena, g, subjects);
-                    goto _slop_post;
+                    return snarl_data_graph_ids_to_terms(arena, g, subjects);
                 } else if (!_mv_157.has_value) {
-                    _retval = ((slop_list_slop_rdf_rdf_Term){ .data = NULL, .len = 0, .cap = 0, .arena = arena });
-                    goto _slop_post;
+                    return ((slop_list_slop_rdf_rdf_Term){ .data = NULL, .len = 0, .cap = 0, .arena = arena });
                 }
                 SLOP_UNREACHABLE();
             } else if (!_mv_155.has_value) {
-                _retval = ((slop_list_slop_rdf_rdf_Term){ .data = NULL, .len = 0, .cap = 0, .arena = arena });
-                goto _slop_post;
+                return ((slop_list_slop_rdf_rdf_Term){ .data = NULL, .len = 0, .cap = 0, .arena = arena });
             }
             SLOP_UNREACHABLE();
         } else if (!_mv_153.has_value) {
-            _retval = ((slop_list_slop_rdf_rdf_Term){ .data = NULL, .len = 0, .cap = 0, .arena = arena });
-            goto _slop_post;
+            return ((slop_list_slop_rdf_rdf_Term){ .data = NULL, .len = 0, .cap = 0, .arena = arena });
         }
         SLOP_UNREACHABLE();
     } else if (!_mv_152.has_value) {
-        _retval = ((slop_list_slop_rdf_rdf_Term){ .data = NULL, .len = 0, .cap = 0, .arena = arena });
-        goto _slop_post;
+        return ((slop_list_slop_rdf_rdf_Term){ .data = NULL, .len = 0, .cap = 0, .arena = arena });
     }
     SLOP_UNREACHABLE();
-    _slop_post: ;
-    SLOP_POST(((((int64_t)((_retval).len)) >= 0)), "(>= (list-len $result) 0)");
-    return _retval;
 }
 
 slop_list_slop_rdf_rdf_Term snarl_data_graph_flat_index_terms(slop_arena* arena, snarl_data_graph_SnarlDataGraph g, snarl_data_graph_IdSetMap index, slop_rdf_rdf_Term pred) {
-    slop_list_slop_rdf_rdf_Term _retval = {0};
     __auto_type _mv_158 = snarl_data_graph_lookup_term(g, pred);
     if (_mv_158.has_value) {
         __auto_type p = _mv_158.value;
         __auto_type _mv_160 = ({ void* _ptr = slop_map_get(index, &(int64_t){p}); _ptr ? (slop_option_map_ptr){ .has_value = true, .value = *(slop_map**)_ptr } : (slop_option_map_ptr){ .has_value = false }; });
         if (_mv_160.has_value) {
             __auto_type values = _mv_160.value;
-            _retval = snarl_data_graph_ids_to_terms(arena, g, values);
-            goto _slop_post;
+            return snarl_data_graph_ids_to_terms(arena, g, values);
         } else if (!_mv_160.has_value) {
-            _retval = ((slop_list_slop_rdf_rdf_Term){ .data = NULL, .len = 0, .cap = 0, .arena = arena });
-            goto _slop_post;
+            return ((slop_list_slop_rdf_rdf_Term){ .data = NULL, .len = 0, .cap = 0, .arena = arena });
         }
         SLOP_UNREACHABLE();
     } else if (!_mv_158.has_value) {
-        _retval = ((slop_list_slop_rdf_rdf_Term){ .data = NULL, .len = 0, .cap = 0, .arena = arena });
-        goto _slop_post;
+        return ((slop_list_slop_rdf_rdf_Term){ .data = NULL, .len = 0, .cap = 0, .arena = arena });
     }
     SLOP_UNREACHABLE();
-    _slop_post: ;
-    SLOP_POST(((((int64_t)((_retval).len)) >= 0)), "(>= (list-len $result) 0)");
-    return _retval;
 }
 
 slop_list_slop_rdf_rdf_Term snarl_data_graph_subjects_of(slop_arena* arena, snarl_data_graph_SnarlDataGraph g, slop_rdf_rdf_Term pred) {
-    slop_list_slop_rdf_rdf_Term _retval = {0};
-    _retval = snarl_data_graph_flat_index_terms(arena, g, g.index.p_subjects, pred);
-    goto _slop_post;
-    _slop_post: ;
-    SLOP_POST(((((int64_t)((_retval).len)) >= 0)), "(>= (list-len $result) 0)");
-    return _retval;
+    return snarl_data_graph_flat_index_terms(arena, g, g.index.p_subjects, pred);
 }
 
 slop_list_slop_rdf_rdf_Term snarl_data_graph_objects_of(slop_arena* arena, snarl_data_graph_SnarlDataGraph g, slop_rdf_rdf_Term pred) {
-    slop_list_slop_rdf_rdf_Term _retval = {0};
-    _retval = snarl_data_graph_flat_index_terms(arena, g, g.index.p_objects, pred);
-    goto _slop_post;
-    _slop_post: ;
-    SLOP_POST(((((int64_t)((_retval).len)) >= 0)), "(>= (list-len $result) 0)");
-    return _retval;
+    return snarl_data_graph_flat_index_terms(arena, g, g.index.p_objects, pred);
 }
 
 slop_list_slop_rdf_rdf_Term snarl_data_graph_snarl_data_graph_predicates_for_subject(slop_arena* arena, snarl_data_graph_SnarlDataGraph g, slop_rdf_rdf_Term subj) {
-    slop_list_slop_rdf_rdf_Term _retval = {0};
     {
         __auto_type result = ((slop_list_slop_rdf_rdf_Term){ .data = NULL, .len = 0, .cap = 0, .arena = arena });
         __auto_type _mv_161 = snarl_data_graph_lookup_term(g, subj);
@@ -433,16 +405,11 @@ slop_list_slop_rdf_rdf_Term snarl_data_graph_snarl_data_graph_predicates_for_sub
             }
         } else if (!_mv_161.has_value) {
         }
-        _retval = result;
-        goto _slop_post;
+        return result;
     }
-    _slop_post: ;
-    SLOP_POST(((((int64_t)((_retval).len)) >= 0)), "(>= (list-len $result) 0)");
-    return _retval;
 }
 
 slop_list_slop_rdf_rdf_Triple snarl_data_graph_triples_for_subject(slop_arena* arena, snarl_data_graph_SnarlDataGraph g, slop_rdf_rdf_Term subj) {
-    slop_list_slop_rdf_rdf_Triple _retval = {0};
     {
         __auto_type result = ((slop_list_slop_rdf_rdf_Triple){ .data = NULL, .len = 0, .cap = 0, .arena = arena });
         __auto_type _mv_164 = snarl_data_graph_lookup_term(g, subj);
@@ -476,16 +443,11 @@ slop_list_slop_rdf_rdf_Triple snarl_data_graph_triples_for_subject(slop_arena* a
             }
         } else if (!_mv_164.has_value) {
         }
-        _retval = result;
-        goto _slop_post;
+        return result;
     }
-    _slop_post: ;
-    SLOP_POST(((((int64_t)((_retval).len)) >= 0)), "(>= (list-len $result) 0)");
-    return _retval;
 }
 
 slop_rdf_index_IndexedGraph snarl_data_graph_to_indexed(slop_arena* arena, snarl_data_graph_SnarlDataGraph g) {
-    SLOP_PRE(((g.size >= 0)), "(>= (. g size) 0)");
     {
         __auto_type out = rdf_indexed_graph_create(arena);
         {
@@ -526,8 +488,6 @@ slop_rdf_index_IndexedGraph snarl_data_graph_to_indexed(slop_arena* arena, snarl
 }
 
 snarl_data_graph_SnarlDataGraph snarl_data_graph_from_indexed(slop_arena* arena, slop_rdf_index_IndexedGraph g) {
-    SLOP_PRE(((rdf_indexed_graph_size(g) >= 0)), "(>= (indexed-graph-size g) 0)");
-    snarl_data_graph_SnarlDataGraph _retval = {0};
     {
         __auto_type out = snarl_data_graph_create(arena);
         {
@@ -537,11 +497,7 @@ snarl_data_graph_SnarlDataGraph snarl_data_graph_from_indexed(slop_arena* arena,
                 out = snarl_data_graph_add(arena, out, t);
             }
         }
-        _retval = out;
-        goto _slop_post;
+        return out;
     }
-    _slop_post: ;
-    SLOP_POST(((_retval.size >= 0)), "(>= (. $result size) 0)");
-    return _retval;
 }
 

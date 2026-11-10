@@ -10,6 +10,7 @@
 
   (import rdf (Term make-iri))
   (import vocab (SHACL_MIN_COUNT SHACL_MAX_COUNT))
+  (import af-vocab (SHACL_MAX_COUNT_CONSTRAINT_COMPONENT SHACL_MIN_COUNT_CONSTRAINT_COMPONENT))
   (import types (Severity Constraint ValidationResult ShaclPath))
 
   ;; Test URI constants
@@ -36,7 +37,7 @@
     (@post {(== (is-none $result) (>= value-count min-count))})
     (@property correctness (== (is-none $result) (>= value-count min-count)))
     (@example (arena (make-iri arena EX_FOCUS) 3 1 (none) (make-iri arena EX_SHAPE) severity-violation (none)) -> (none))
-    (@example (arena (make-iri arena EX_FOCUS) 0 1 (none) (make-iri arena EX_SHAPE) severity-violation (none)) -> (some (ValidationResult _ _ _ _ _ _ _)))
+    (@example (arena (make-iri arena EX_FOCUS) 0 1 (none) (make-iri arena EX_SHAPE) severity-violation (none)) -> (some (ValidationResult _ _ _ _ _ _ _ _ _)))
     (@example (arena (make-iri arena EX_FOCUS) 0 0 (none) (make-iri arena EX_SHAPE) severity-violation (none)) -> (none))
     (if (>= value-count min-count)
       (none)  ;; Passes
@@ -45,7 +46,7 @@
               (result-path path)
               (value (none))
               (source-shape shape-id)
-              (source-constraint-component SHACL_MIN_COUNT)
+              (source-constraint-component SHACL_MIN_COUNT_CONSTRAINT_COMPONENT)
               (severity severity)
               (message message))))
     :c-name "snarl_check_min_count")
@@ -66,7 +67,7 @@
     (@post {(== (is-none $result) (<= value-count max-count))})
     (@property correctness (== (is-none $result) (<= value-count max-count)))
     (@example (arena (make-iri arena EX_FOCUS) 2 3 (none) (make-iri arena EX_SHAPE) severity-violation (none)) -> (none))
-    (@example (arena (make-iri arena EX_FOCUS) 5 3 (none) (make-iri arena EX_SHAPE) severity-violation (none)) -> (some (ValidationResult _ _ _ _ _ _ _)))
+    (@example (arena (make-iri arena EX_FOCUS) 5 3 (none) (make-iri arena EX_SHAPE) severity-violation (none)) -> (some (ValidationResult _ _ _ _ _ _ _ _ _)))
     (@example (arena (make-iri arena EX_FOCUS) 1 1 (none) (make-iri arena EX_SHAPE) severity-violation (none)) -> (none))
     (if (<= value-count max-count)
       (none)  ;; Passes
@@ -75,7 +76,7 @@
               (result-path path)
               (value (none))
               (source-shape shape-id)
-              (source-constraint-component SHACL_MAX_COUNT)
+              (source-constraint-component SHACL_MAX_COUNT_CONSTRAINT_COMPONENT)
               (severity severity)
               (message message))))
     :c-name "snarl_check_max_count"))

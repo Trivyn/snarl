@@ -2,7 +2,7 @@
 
 SHACL Core constraint validator written in SLOP. Apache 2.0 licensed.
 
-Validates an RDF data graph against a SHACL shapes graph, producing a validation report per the W3C SHACL specification. SHACL Core only — no SHACL-SPARQL.
+Validates an RDF data graph against a SHACL shapes graph, producing a validation report per the W3C SHACL specification. SHACL Core, plus the non-SPARQL part of SHACL Advanced Features (node expressions, `sh:expression`, `sh:TripleRule` inference) — no SHACL-SPARQL. SHACL Core 1.0 behavior is unchanged for shapes graphs without AF terms. An experimental `--shacl12` mode (`ValidatorConfig.shacl12`) also accepts the SHACL 1.2 Working Draft syntax that overlaps AF, and rejects the 1.2 constructs snarl lacks.
 
 ## Dependencies
 
@@ -19,6 +19,10 @@ src/                    Library source
   path.slop             SHACL property path evaluation
   target.slop           Target resolution
   report.slop           Report construction + serialization
+  af-vocab.slop         SHACL-AF / SHACL 1.2 vocabulary and the Core constraint-component IRIs (interim; belongs in slop-rdf vocab)
+  literal-order.slop    Literal ordering and lexical validity: derived integer types, dateTime, date, strings (interim; belongs in slop-rdf xsd)
+  node-expr.slop        Node expression evaluation (AF section 6, 1.2 overlap)
+  rules.slop            sh:TripleRule inference stage, run before validation
   constraints/          One file per constraint group
     value-type.slop     sh:class, sh:datatype, sh:nodeKind
     cardinality.slop    sh:minCount, sh:maxCount
@@ -28,9 +32,11 @@ src/                    Library source
     logical.slop        sh:not, sh:and, sh:or, sh:xone
     shape.slop          sh:node, sh:property, sh:qualifiedValueShape
     other.slop          sh:closed, sh:ignoredProperties, sh:hasValue, sh:in
+    expression.slop     sh:expression (SHACL-AF)
 cli/
   main.slop             CLI entry point
-  tests/                Integration tests + fixtures
+  tests/                Integration tests + fixtures (af-*.ttl: SHACL-AF; af12-*.ttl: --shacl12)
+  tests/w3c12/          W3C SHACL 1.2 runner (Python/rdflib), download script, xfail list
 vendor/regex/           Vendored C regex engine for sh:pattern (musl's TRE; hand-written, NOT generated -- see its README)
 ```
 
@@ -41,6 +47,9 @@ make all        # Build CLI executable (default)
 make lib        # Build build/libsnarl.a static library
 make cli        # Build build/snarl executable
 make test       # Build + run CLI integration tests
+make w3c-test   # W3C SHACL Core suite, sh:conforms only (bash cli/tests/w3c/download.sh first)
+make w3c-results-test # W3C SHACL Core suite, every validation result compared (needs uv)
+make w3c12-test # W3C SHACL 1.2 suite in --shacl12 mode (bash cli/tests/w3c12/download.sh first; needs uv)
 make bench      # Build + run benchmark comparison (pySHACL, Rudof, Snarl)
 make release    # Optimized -O3 build
 make slop-build # Transpile SLOP sources, update include/snarl.h
@@ -100,6 +109,8 @@ W3C conformance cases are gitignored, so a fresh checkout has none — run
 |----------|--------|-----------|
 | `validate` | `snarl_validate` | `(Arena IndexedGraph IndexedGraph) -> ValidatorResult` |
 | `validate-with-config` | `snarl_validate_with_config` | `(Arena IndexedGraph IndexedGraph ValidatorConfig) -> ValidatorResult` |
+| `validate-data-graph-with-inference` | `snarl_validate_data_graph_with_inference` | `(Arena SnarlDataGraph IndexedGraph ValidatorConfig) -> ValidationOutcome` |
+| `infer` | `snarl_infer` | `(Arena SnarlDataGraph IndexedGraph ValidatorConfig) -> InferResult` |
 | `conforms` | `snarl_conforms` | `(Arena IndexedGraph IndexedGraph) -> Bool` |
 | `default-config` | `snarl_default_config` | `() -> ValidatorConfig` |
 | `get-violations` | `snarl_get_violations` | `(ValidationReport) -> (List ValidationResult)` |
@@ -109,6 +120,10 @@ W3C conformance cases are gitignored, so a fresh checkout has none — run
 | `report-to-string` | `snarl_report_to_string` | `(Arena ValidationReport) -> String` |
 
 Both `data-graph` and `shapes-graph` are `IndexedGraph` from slop-rdf. Caller handles Turtle parsing.
+
+`ValidatorConfig` is `(verbose max-errors include-warnings include-infos run-rules shacl12)`. Rules run when `run-rules` is set or the shapes graph declares `sh:entailment sh:Rules`. They add triples to the `SnarlDataGraph` (its maps are shared; its size is by value, so `ValidationOutcome`/`InferOutput` hand back the updated graph). The `IndexedGraph` entry points copy the data first, so the caller's graph is untouched. `ValidationResult` ends with `source-constraint (Option Term)` (the `sh:expression` node) and `severity-iri (Option Term)` (a shape's `sh:severity` that is not Violation/Warning/Info) — part of the C ABI mirrored in `rust/src/ffi.rs`. `source-constraint-component` is the component IRI (`sh:ClassConstraintComponent`), never the parameter (`sh:class`).
+
+**A change to validation results must pass `make w3c-results-test`**, not just `make w3c-test`: the latter compares only `sh:conforms`, and long hid wrong components, paths and values. A new `src/*.slop` module must be added to the file list in `rust/build.rs`.
 
 ## Constraint Module Map
 
@@ -122,6 +137,9 @@ Both `data-graph` and `shapes-graph` are `IndexedGraph` from slop-rdf. Caller ha
 | logical | sh:not, sh:and, sh:or, sh:xone | 4.9 |
 | shape | sh:node, sh:property, sh:qualifiedValueShape | 4.10 |
 | other | sh:closed, sh:ignoredProperties, sh:hasValue, sh:in | 4.11-4.12 |
+| expression | sh:expression | AF 7 |
+
+SHACL-AF input snarl cannot execute (function expressions, `sh:SPARQLRule`, unknown rule types or entailment regimes, ill-formed or cyclic node expressions) is rejected before parsing by `shapes-graph-unsupported-feature-message` / the node-expression hazard scan in `parse.slop`, never silently skipped. Node-expression evaluation takes shape conformance as a closure (`node-expr` cannot import `engine`).
 
 ## Implementation Status
 
@@ -142,6 +160,9 @@ snarl [options] <data.ttl> [shapes.ttl]
   -m, --max-errors N Stop after N violations
   --no-warnings      Suppress sh:Warning results
   --no-infos         Suppress sh:Info results
+  -r, --rules        Run SHACL rules (sh:TripleRule) before validating
+  --emit-inferred FILE  Run rules and write the inferred triples as Turtle
+  --shacl12          EXPERIMENTAL: also accept SHACL 1.2 Working Draft syntax
 ```
 
 Exit codes: 0 = conforms, 1 = violations, 2 = parse/internal error.

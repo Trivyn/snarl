@@ -6,6 +6,7 @@
      snarl-data-graph-id-set-to-list snarl-data-graph-term-of snarl-data-graph-has-object))
   (import vocab
     (SHACL_CLASS SHACL_DATATYPE SHACL_NODE_KIND SHACL_MIN_COUNT SHACL_MAX_COUNT SHACL_MIN_INCLUSIVE SHACL_MAX_INCLUSIVE SHACL_MIN_EXCLUSIVE SHACL_MAX_EXCLUSIVE SHACL_MIN_LENGTH SHACL_MAX_LENGTH SHACL_PATTERN SHACL_EQUALS SHACL_DISJOINT SHACL_LESS_THAN SHACL_LESS_THAN_OR_EQUALS SHACL_NOT SHACL_AND SHACL_OR SHACL_XONE SHACL_NODE SHACL_PROPERTY SHACL_QUALIFIED_VALUE_SHAPE SHACL_HAS_VALUE SHACL_IN SHACL_CLOSED))
+  (import af-vocab (SHACL_HAS_VALUE_CONSTRAINT_COMPONENT))
   (import types
     (ShaclPath NodeKind Severity Constraint PropertyShape NodeShape ShapesGraph ValidationResult ValidationReport ValidatorConfig ValidatorResult make-validation-report report-add-result report-conforms default-validator-config term-display-label))
   (import target (ClassIndex build-class-index target-cache-create resolve-targets resolve-targets-cached))
@@ -15,12 +16,14 @@
   (import value-range
     (check-min-inclusive check-max-inclusive check-min-exclusive check-max-exclusive))
   (import string
-    (check-min-length check-max-length check-pattern pattern-compile-error check-language-in check-unique-lang))
+    (check-min-length check-max-length check-pattern pattern-compile-error pattern-flags-supported check-language-in check-unique-lang))
   (import other (check-has-value check-in check-closed))
   (import pair
     (check-equals check-disjoint check-less-than check-less-than-or-equals))
   (import logical (check-not check-and check-or check-xone))
   (import shape (check-node check-qualified-value-shape))
+  (import expression (check-expression))
+  (import node-expr (eval-node-expr))
   (export
     engine-validate
     shapes-graph-pattern-error-message
@@ -33,7 +36,10 @@
     evaluate-constraint-for-property-cached
     evaluate-shape-against-node
     evaluate-shape-against-node-cached
-    property-shape-conforms-cached)
+    property-shape-conforms-cached
+    node-conforms-to-shape-ref
+    CycleGuard
+    cycle-guard-new)
 
   (@doc "SHACL validation engine: single-pass constraint evaluation")
 
@@ -336,6 +342,23 @@
   ;; violation. So validation rejects it up front as an engine error, like a
   ;; recursion hazard, naming the pattern and the regcomp error.
 
+  (fn with-shape-severity ((shapes-graph ShapesGraph) (r ValidationResult))
+    (@intent "The result, carrying its source shape's sh:severity IRI when that is not one of the three SHACL defines")
+    (@spec ((ShapesGraph ValidationResult) -> ValidationResult))
+    (match (map-get (. shapes-graph custom-severities) (. r source-shape))
+      ((some iri)
+        (record-new ValidationResult
+          (focus-node (. r focus-node))
+          (result-path (. r result-path))
+          (value (. r value))
+          (source-shape (. r source-shape))
+          (source-constraint-component (. r source-constraint-component))
+          (severity (. r severity))
+          (message (. r message))
+          (source-constraint (. r source-constraint))
+          (severity-iri (some iri))))
+      ((none) r)))
+
   (fn constraints-pattern-error-message ((arena Arena) (shape-id Term) (constraints (List Constraint)))
     (@intent "Error message for the first sh:pattern in a shape's constraints that the regex engine cannot compile, if any")
     (@spec ((Arena Term (List Constraint)) -> (Option String)))
@@ -345,7 +368,7 @@
         (match result
           ((none)
             (match c
-              ((con-pattern pat)
+              ((con-pattern pat flags)
                 (match (pattern-compile-error arena pat)
                   ((some reason)
                     (let ((mut parts (list-new arena String)))
@@ -357,7 +380,15 @@
                       (list-push parts reason)
                       (list-push parts ")")
                       (set! result (some (string-build arena parts)))))
-                  ((none) (do))))
+                  ((none)
+                    (when (not (pattern-flags-supported flags))
+                      (let ((mut parts (list-new arena String)))
+                        (list-push parts "sh:flags \"")
+                        (list-push parts flags)
+                        (list-push parts "\" of shape ")
+                        (list-push parts (term-display-label shape-id "[anonymous shape]"))
+                        (list-push parts " is not supported: snarl implements the flags i and s only")
+                        (set! result (some (string-build arena parts))))))))
               (_ (do))))
           ((some _) (do))))
       result))
@@ -387,7 +418,7 @@
     (@intent "Error message for the first sh:pattern in an active shape that the regex engine cannot compile, if any. Top-level shapes are checked in graph order, then inline shapes from the shape maps; deterministic for a given shapes graph.")
     (@spec ((Arena ShapesGraph) -> (Option String)))
     (@alloc arena)
-    (@example (arena (record-new ShapesGraph (node-shapes (list-new arena NodeShape)) (property-shapes (list-new arena PropertyShape)) (shape-map (map-new arena Term NodeShape)) (property-shape-map (map-new arena Term PropertyShape)))) -> (none))
+    (@example (arena (record-new ShapesGraph (node-shapes (list-new arena NodeShape)) (property-shapes (list-new arena PropertyShape)) (shape-map (map-new arena Term NodeShape)) (property-shape-map (map-new arena Term PropertyShape)) (custom-severities (map-new arena Term Term)))) -> (none))
     (let ((mut result (Option String) (none)))
       (for-each (ns (. shapes-graph node-shapes))
         (match result
@@ -419,7 +450,6 @@
     (@spec
       ((Arena SnarlDataGraph ShapesGraph ValidatorConfig) -> ValidatorResult))
     (@alloc arena)
-    (@pre (>= (snarl-data-graph-size data-graph) 0))
     (@example)
     ;; Target and class indexes are per validation run: they cache shape-derived
     ;; access patterns without becoming part of the data graph representation.
@@ -467,7 +497,7 @@
                       (let ((include (match (. r severity) (severity-violation true) (severity-warning (. config include-warnings)) (severity-info (. config include-infos)))))
                         (when include
                           (when (or (== max-errors 0) (< error-count max-errors))
-                            (set! report (report-add-result arena report r))
+                            (set! report (report-add-result arena report (with-shape-severity shapes-graph r)))
                             (match (. r severity)
                               (severity-violation
                                 (set! error-count (+ error-count 1)))
@@ -585,7 +615,6 @@
         ->
         (List ValidationResult)))
     (@alloc arena)
-    (@post (>= (list-len $result) 0))
     (let ((path (. shape path)))
       (match path
         ((path-predicate pred)
@@ -612,7 +641,6 @@
         ->
         (List ValidationResult)))
     (@alloc arena)
-    (@post (>= (list-len $result) 0))
     ;; Simple predicate paths dominate the benchmark fixtures. They can evaluate
     ;; directly against the object set and only allocate a value list for
     ;; constraints whose existing implementation requires list semantics.
@@ -649,7 +677,6 @@
         ->
         (List ValidationResult)))
     (@alloc arena)
-    (@post (>= (list-len $result) 0))
     (let ((mut results (list-new arena ValidationResult)))
       (match constraint
         ((con-class required-class)
@@ -690,8 +717,8 @@
           (match (check-max-length arena focus-node value-node max-len path shape-id severity message)
             ((some r) (list-push results r))
             ((none) (do))))
-        ((con-pattern pat)
-          (match (check-pattern arena focus-node value-node pat path shape-id severity message)
+        ((con-pattern pat flags)
+          (match (check-pattern arena focus-node value-node pat flags path shape-id severity message)
             ((some r) (list-push results r))
             ((none) (do))))
         ((con-language-in allowed-langs)
@@ -762,7 +789,7 @@
                                 (cycle-guard-remove arena visited shape-ref value-node)
                                 r))))
                         ((none) false))))))
-            (match (check-not arena focus-node conforms path shape-id severity message)
+            (match (check-not arena focus-node value-node conforms path shape-id severity message)
               ((some r) (list-push results r))
               ((none) (do)))))
         ((con-and shape-refs)
@@ -795,7 +822,7 @@
                             (cycle-guard-remove arena visited ref value-node)
                             (when (not ok) (set! all-pass false))))))
                     ((none) (do))))))
-            (match (check-and arena focus-node all-pass path shape-id severity message)
+            (match (check-and arena focus-node value-node all-pass path shape-id severity message)
               ((some r) (list-push results r))
               ((none) (do)))))
         ((con-or shape-refs)
@@ -824,7 +851,7 @@
                             (cycle-guard-remove arena visited ref value-node)
                             (when ok (set! any-pass true))))))
                     ((none) (do))))))
-            (match (check-or arena focus-node any-pass path shape-id severity message)
+            (match (check-or arena focus-node value-node any-pass path shape-id severity message)
               ((some r) (list-push results r))
               ((none) (do)))))
         ((con-xone shape-refs)
@@ -854,7 +881,7 @@
                             (cycle-guard-remove arena visited ref value-node)
                             (when ok (set! pass-count (+ pass-count 1)))))))
                     ((none) (do))))))
-            (match (check-xone arena focus-node pass-count path shape-id severity message)
+            (match (check-xone arena focus-node value-node pass-count path shape-id severity message)
               ((some r) (list-push results r))
               ((none) (do)))))
         ((con-node shape-ref)
@@ -892,11 +919,57 @@
             (match (check-node arena focus-node value-node value-conforms path shape-id severity message)
               ((some r) (list-push results r))
               ((none) (do)))))
+        ((con-expression expr expr-node expr-message)
+          ;; AF section 7: evaluated with the value node as the focus node.
+          ;; Filter shapes inside the expression thread the caller's guard,
+          ;; and an evaluation failure lands in the guard's error slot,
+          ;; which engine-validate turns into an engine error.
+          (let ((outputs
+                  (eval-node-expr arena data-graph expr value-node
+                    (fn ((n Term) (ref Term))
+                      (node-conforms-to-shape-ref arena data-graph shapes-graph class-index n ref visited))
+                    (. visited errors)))
+                (msg (match expr-message ((some m) (some m)) ((none) message))))
+            (match (check-expression arena focus-node value-node outputs expr-node path shape-id severity msg)
+              ((some r) (list-push results r))
+              ((none) (do)))))
         ((con-property _) (do))
         ((con-qualified-value-shape _ _ _ _) (do)))
       results)
     :c-name
     "snarl_evaluate_constraint_cached")
+
+  (fn node-conforms-to-shape-ref ((arena Arena) (data-graph SnarlDataGraph) (shapes-graph ShapesGraph) (class-index ClassIndex) (node Term) (shape-ref Term) (visited CycleGuard))
+    (@intent
+      "Does `node` conform to the shape `shape-ref` names (a property shape or a node shape)? The same guarded descent as the con-node arm of evaluate-constraint-cached: a refused descent (shape recursion, or the depth budget) flags the guard and answers false, fail-closed, and an unknown ref conforms vacuously. Used for node-expression filter shapes and rule conditions.")
+    (@spec ((Arena SnarlDataGraph ShapesGraph ClassIndex Term Term CycleGuard) -> Bool))
+    (@alloc arena)
+    (match (map-get (. shapes-graph property-shape-map) shape-ref)
+      ((some ref-ps)
+        (if (cycle-guard-has visited shape-ref node)
+          (do
+            (cycle-guard-flag arena visited shape-ref node)
+            false)
+          (do
+            (cycle-guard-add arena visited shape-ref node)
+            (let ((ok (property-shape-conforms-with-guard arena data-graph shapes-graph class-index node ref-ps visited)))
+              (cycle-guard-remove arena visited shape-ref node)
+              ok))))
+      ((none)
+        (match (map-get (. shapes-graph shape-map) shape-ref)
+          ((some ref-shape)
+            (if (cycle-guard-has visited shape-ref node)
+              (do
+                (cycle-guard-flag arena visited shape-ref node)
+                false)
+              (do
+                (cycle-guard-add arena visited shape-ref node)
+                (let ((ok (evaluate-shape-against-node-cached arena data-graph shapes-graph class-index node ref-shape visited)))
+                  (cycle-guard-remove arena visited shape-ref node)
+                  ok))))
+          ((none) true))))
+    :c-name
+    "snarl_node_conforms_to_shape_ref")
 
   (fn evaluate-constraint-for-property ((arena Arena) (data-graph SnarlDataGraph) (shapes-graph ShapesGraph) (focus-node Term) (value-nodes (List Term)) (value-count Int) (constraint Constraint) (path (Option ShaclPath)) (shape-id Term) (severity Severity) (message (Option String)) (visited CycleGuard) (sibling-qvs-refs (List Term)))
     (@intent
@@ -920,7 +993,6 @@
         ->
         (List ValidationResult)))
     (@alloc arena)
-    (@post (>= (list-len $result) 0))
     (@pre (>= value-count 0))
     (let ((mut results (list-new arena ValidationResult)))
       (match constraint
@@ -1028,7 +1100,6 @@
         (List ValidationResult)))
     (@alloc arena)
     (@pre (>= value-count 0))
-    (@post (>= (list-len $result) 0))
     (let ((mut results (list-new arena ValidationResult)))
       (match constraint
         ((con-min-count min-c)
@@ -1047,7 +1118,7 @@
                 (result-path path)
                 (value (none))
                 (source-shape shape-id)
-                (source-constraint-component SHACL_HAS_VALUE)
+                (source-constraint-component SHACL_HAS_VALUE_CONSTRAINT_COMPONENT)
                 (severity severity)
                 (message message)))))
         ((con-closed _ _) (do))

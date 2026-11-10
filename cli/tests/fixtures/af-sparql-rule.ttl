@@ -1,0 +1,5 @@
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix ex: <http://example.org/> .
+ex:n a ex:Node .
+ex:NodeShape a sh:NodeShape ; sh:targetClass ex:Node ;
+    sh:rule [ a sh:SPARQLRule ; sh:construct "CONSTRUCT { $this <http://example.org/p> true } WHERE { }" ] .

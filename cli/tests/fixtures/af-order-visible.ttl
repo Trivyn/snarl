@@ -1,0 +1,23 @@
+# Rule visibility across sh:order levels: the order-2 rule sees the triple
+# the order-1 rule inferred, so both fire (2 triples).
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix ex: <http://example.org/> .
+
+ex:n a ex:Node .
+
+ex:HasA sh:property [ sh:path ex:a ; sh:minCount 1 ] .
+
+ex:NodeShape
+    a sh:NodeShape ;
+    sh:targetClass ex:Node ;
+    sh:rule [
+        a sh:TripleRule ;
+        sh:order 1 ;
+        sh:subject sh:this ; sh:predicate ex:a ; sh:object true ;
+    ] ;
+    sh:rule [
+        a sh:TripleRule ;
+        sh:order 2 ;
+        sh:subject [ sh:filterShape ex:HasA ; sh:nodes sh:this ] ;
+        sh:predicate ex:b ; sh:object true ;
+    ] .

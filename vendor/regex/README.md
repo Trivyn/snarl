@@ -15,7 +15,7 @@ This is a stopgap until SLOP's std grows a regex module.
 
 | File | Origin |
 |------|--------|
-| `snarl_regex.h`, `snarl_regex.c` | snarl: `snarl_regex_match`, the one entry point; a pattern that does not compile returns its negated `REG_*` code |
+| `snarl_regex.h`, `snarl_regex.c` | snarl: `snarl_regex_match` and `snarl_regex_match_flags` (case-insensitive matching for `sh:flags "i"`), the entry points; a pattern that does not compile returns its negated `REG_*` code |
 | `regcomp.c`, `regexec.c`, `tre-mem.c`, `tre.h` | musl v1.2.5 `src/regex/` (TRE) |
 | `tre_regex.h` | musl v1.2.5 `include/regex.h`, adapted |
 | `COPYRIGHT` | musl v1.2.5 `COPYRIGHT` |

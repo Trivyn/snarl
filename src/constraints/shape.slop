@@ -14,6 +14,7 @@
 
   (import rdf (Term make-iri))
   (import vocab (SHACL_NODE SHACL_QUALIFIED_VALUE_SHAPE))
+  (import af-vocab (SHACL_NODE_CONSTRAINT_COMPONENT SHACL_QUALIFIED_MAX_COUNT_CONSTRAINT_COMPONENT SHACL_QUALIFIED_MIN_COUNT_CONSTRAINT_COMPONENT))
   (import types (Severity ValidationResult ShaclPath))
 
   ;; Test URI constants
@@ -37,14 +38,14 @@
             -> (Option ValidationResult)))
     (@alloc arena)
     (@example (arena (make-iri arena EX_FOCUS) (make-iri arena EX_VALUE) true (none) (make-iri arena EX_SHAPE) severity-violation (none)) -> (none))
-    (@example (arena (make-iri arena EX_FOCUS) (make-iri arena EX_VALUE) false (none) (make-iri arena EX_SHAPE) severity-violation (none)) -> (some (ValidationResult _ _ _ _ _ _ _)))
+    (@example (arena (make-iri arena EX_FOCUS) (make-iri arena EX_VALUE) false (none) (make-iri arena EX_SHAPE) severity-violation (none)) -> (some (ValidationResult _ _ _ _ _ _ _ _ _)))
     (@post {(== (is-none $result) value-conforms)})
     (@property correctness (== (is-none $result) value-conforms))
     (if value-conforms
       (none)
       (some (record-new ValidationResult
         (focus-node focus-node) (result-path path) (value (some value-node))
-        (source-shape shape-id) (source-constraint-component SHACL_NODE)
+        (source-shape shape-id) (source-constraint-component SHACL_NODE_CONSTRAINT_COMPONENT)
         (severity severity) (message message))))
     :c-name "snarl_check_node")
 
@@ -62,7 +63,6 @@
     (@alloc arena)
     (@pre {conforming-count >= 0})
     (@pre {q-min >= 0})
-    (@post {(list-len $result) >= 0})
     (@post {(list-len $result) <= 2})
     (@example
       ;; conforming-count=3 >= q-min=2, <= q-max=5 → no violations
@@ -73,7 +73,7 @@
         (list-push results (record-new ValidationResult
           (focus-node focus-node) (result-path path) (value (none))
           (source-shape shape-id)
-          (source-constraint-component SHACL_QUALIFIED_VALUE_SHAPE)
+          (source-constraint-component SHACL_QUALIFIED_MIN_COUNT_CONSTRAINT_COMPONENT)
           (severity severity) (message message))))
       (match q-max
         ((some max-val)
@@ -81,7 +81,7 @@
             (list-push results (record-new ValidationResult
               (focus-node focus-node) (result-path path) (value (none))
               (source-shape shape-id)
-              (source-constraint-component SHACL_QUALIFIED_VALUE_SHAPE)
+              (source-constraint-component SHACL_QUALIFIED_MAX_COUNT_CONSTRAINT_COMPONENT)
               (severity severity) (message message)))))
         ((none) (do)))
       results)

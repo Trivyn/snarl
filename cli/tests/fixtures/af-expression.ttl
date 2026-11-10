@@ -1,0 +1,32 @@
+# sh:expression (AF section 7): the expression, evaluated with each value
+# node as focus node, must produce exactly { true }.
+#   PersonShape: bob (false), carol (no value) and dave (true and false)
+#   violate; alice conforms -> 3 violations.
+#   OrderShape: item i2 (inStock false) violates -> 1 violation.
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix ex: <http://example.org/> .
+
+ex:alice a ex:Person ; ex:verified true .
+ex:bob a ex:Person ; ex:verified false .
+ex:carol a ex:Person .
+ex:dave a ex:Person ; ex:verified true, false .
+
+ex:order1 ex:item ex:i1, ex:i2 .
+ex:i1 ex:inStock true .
+ex:i2 ex:inStock false .
+
+ex:PersonShape
+    a sh:NodeShape ;
+    sh:targetClass ex:Person ;
+    sh:expression [
+        sh:path ex:verified ;
+        sh:message "Person must be verified" ;
+    ] .
+
+ex:OrderShape
+    a sh:NodeShape ;
+    sh:targetNode ex:order1 ;
+    sh:property [
+        sh:path ex:item ;
+        sh:expression [ sh:path ex:inStock ] ;
+    ] .

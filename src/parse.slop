@@ -6,9 +6,11 @@
   (import list (rdf-list-elements-indexed))
   (import vocab
     (RDF_TYPE SHACL_NODE_SHAPE SHACL_PROPERTY_SHAPE SHACL_TARGET_NODE SHACL_TARGET_CLASS SHACL_TARGET_SUBJECTS_OF SHACL_TARGET_OBJECTS_OF SHACL_PATH SHACL_INVERSE_PATH SHACL_ALTERNATIVE_PATH SHACL_ZERO_OR_MORE_PATH SHACL_ONE_OR_MORE_PATH SHACL_ZERO_OR_ONE_PATH SHACL_CLASS SHACL_DATATYPE SHACL_NODE_KIND SHACL_MIN_COUNT SHACL_MAX_COUNT SHACL_MIN_INCLUSIVE SHACL_MAX_INCLUSIVE SHACL_MIN_EXCLUSIVE SHACL_MAX_EXCLUSIVE SHACL_MIN_LENGTH SHACL_MAX_LENGTH SHACL_PATTERN SHACL_FLAGS SHACL_LANGUAGE_IN SHACL_UNIQUE_LANG SHACL_EQUALS SHACL_DISJOINT SHACL_LESS_THAN SHACL_LESS_THAN_OR_EQUALS SHACL_NOT SHACL_AND SHACL_OR SHACL_XONE SHACL_NODE SHACL_PROPERTY SHACL_QUALIFIED_VALUE_SHAPE SHACL_QUALIFIED_MIN_COUNT SHACL_QUALIFIED_MAX_COUNT SHACL_QUALIFIED_VALUE_SHAPES_DISJOINT SHACL_CLOSED SHACL_IGNORED_PROPERTIES SHACL_HAS_VALUE SHACL_IN SHACL_IRI SHACL_BLANK_NODE SHACL_LITERAL SHACL_BLANK_NODE_OR_IRI SHACL_BLANK_NODE_OR_LITERAL SHACL_IRI_OR_LITERAL SHACL_SEVERITY SHACL_VIOLATION SHACL_WARNING SHACL_INFO SHACL_SHAPE RDF_FIRST RDF_REST RDF_NIL XSD_INTEGER XSD_BOOLEAN))
-  (import strlib (parse-int string-build))
+  (import af-vocab
+    (SHACL_THIS SHACL_FILTER_SHAPE SHACL_NODES SHACL_INTERSECTION SHACL_UNION SHACL_EXPRESSION SHACL_RULE SHACL_TRIPLE_RULE SHACL_SPARQL_RULE SHACL_SUBJECT SHACL_PREDICATE SHACL_OBJECT SHACL_CONDITION SHACL_ORDER SHACL_ENTAILMENT SHACL_RULES SHACL_RULES_ENTAILMENT SHNEX_VAR SHNEX_PATH_VALUES SHNEX_FOCUS_NODE SHNEX_NS SHNEX_FILTER_SHAPE SHNEX_NODES SHNEX_INTERSECTION SHNEX_FOCUS_NODE_VAR shacl12-unsupported-properties shacl12-unsupported-classes))
+  (import strlib (parse-int parse-float string-build starts-with))
   (import types
-    (ShaclPath NodeKind Severity Constraint PropertyShape NodeShape ShapesGraph term-display-label))
+    (ShaclPath NodeExpr Rule NodeKind Severity Constraint PropertyShape NodeShape ShapesGraph term-display-label))
   (export
     parse-shapes-graph
     parse-node-shape
@@ -18,6 +20,10 @@
     parse-node-kind
     parse-severity
     shapes-graph-recursion-hazard-message
+    shapes-graph-unsupported-feature-message
+    shapes-graph-declares-rules-entailment
+    parse-node-expr
+    node-expr-shape-refs
     ;; Exported for tests: the depth budget's INPUT must be assertable directly
     ;; (exactly 1 for a flat predicate path), not only through the pass/fail of
     ;; the end-to-end budget comparison -- a corrupted depth whose garbage upper
@@ -240,6 +246,10 @@
     (@spec ((Arena IndexedGraph Term) -> Int))
     (@alloc arena)
     (@post (>= $result 0))
+    ;; VERIFIER: the result is read back out of `depths`, and Z3 cannot follow
+    ;; what the worklist loop stored there. Every value stored is (+ best 1)
+    ;; with best >= 0, so a memoized depth is >= 1, and a missing one reads 0.
+    (@assume (>= $result 0))
     (let ((depths (map-new arena Term Int))
           (mut work (path-scan-work-new arena)))
       (list-push work (record-new PathScanItem (is-exit false) (node root)))
@@ -266,7 +276,6 @@
       "Structural children of a path node for depth accounting, i.e. the sub-paths resolve-path would descend into from `n`. A sh:inversePath yields the base of its whole inversion chain (peeled iteratively here, mirroring resolve-inverse) rather than the next link, so an N-deep inversion chain contributes one level, not N.")
     (@spec ((Arena IndexedGraph Term) -> (List Term)))
     (@alloc arena)
-    (@post (>= (list-len $result) 0))
     (let ((mut kids (list-new arena Term))
           (first-objs (indexed-graph-objects arena g n (make-iri arena RDF_FIRST)))
           (inverse-objs (indexed-graph-objects arena g n (make-iri arena SHACL_INVERSE_PATH)))
@@ -337,7 +346,7 @@
 
   (fn shapes-graph-list-cycle-message ((arena Arena) (g IndexedGraph))
     (@intent
-      "Scan every sh:and/sh:or/sh:xone/sh:in/sh:ignoredProperties/sh:languageIn list head in the raw shapes graph for a malformed cyclic rdf:rest chain, before real parsing runs. Sequence-path and sh:alternativePath list heads are covered by shapes-graph-path-cycle-message instead, since they are only reachable by walking path structure. Returns the first offending list head, in a fixed predicate scan order, if any -- deterministic for a given input graph.")
+      "Scan every sh:and/sh:or/sh:xone/sh:in/sh:ignoredProperties/sh:languageIn/sh:intersection/sh:union/shnex:intersection list head in the raw shapes graph for a malformed cyclic rdf:rest chain, before real parsing runs. Sequence-path and sh:alternativePath list heads are covered by shapes-graph-path-cycle-message instead, since they are only reachable by walking path structure. Returns the first offending list head, in a fixed predicate scan order, if any -- deterministic for a given input graph.")
     (@spec ((Arena IndexedGraph) -> (Option Term)))
     (@alloc arena)
     (let ((no-term (Option Term) (none))
@@ -349,6 +358,9 @@
       (list-push list-preds (make-iri arena SHACL_IN))
       (list-push list-preds (make-iri arena SHACL_IGNORED_PROPERTIES))
       (list-push list-preds (make-iri arena SHACL_LANGUAGE_IN))
+      (list-push list-preds (make-iri arena SHACL_INTERSECTION))
+      (list-push list-preds (make-iri arena SHACL_UNION))
+      (list-push list-preds (make-iri arena SHNEX_INTERSECTION))
       (for-each (pred list-preds)
         (when (match result ((none) true) ((some _) false))
           (let ((triples (indexed-graph-match arena g no-term (some pred) no-term)))
@@ -363,7 +375,7 @@
 
   (fn shapes-graph-recursion-hazard-message ((arena Arena) (g IndexedGraph))
     (@intent
-      "Detect, before real parsing runs, whether the raw shapes graph contains a cyclic sh:path expression or a malformed cyclic RDF list reachable from sh:and/sh:or/sh:xone/sh:in/sh:ignoredProperties/sh:languageIn/a path expression -- both of which the underlying parser would otherwise recurse or loop over unboundedly. Returns a deterministic error message naming the offending node, if any.")
+      "Detect, before real parsing runs, whether the raw shapes graph contains a cyclic sh:path expression, a malformed cyclic RDF list reachable from sh:and/sh:or/sh:xone/sh:in/sh:ignoredProperties/sh:languageIn/a path expression/a node expression, or a node expression that contains itself or nests past the evaluator's depth budget -- all of which the parser or evaluator would otherwise recurse or loop over unboundedly. Returns a deterministic error message naming the offending node, if any.")
     (@spec ((Arena IndexedGraph) -> (Option String)))
     (@alloc arena)
     (match (shapes-graph-path-cycle-message arena g)
@@ -397,7 +409,7 @@
                   (list-push parts label)
                   (list-push parts " -- a path expression nested this deeply cannot be evaluated without risking a native stack overflow")
                   (some (string-build arena parts))))
-              ((none) (none)))))))
+              ((none) (shapes-graph-node-expr-hazard-message arena g)))))))
     :c-name
     "snarl_shapes_graph_recursion_hazard_message")
 
@@ -432,6 +444,8 @@
     (let ((mut ns-queue (list-new arena Term))
           (mut ps-queue (list-new arena Term)))
       (for-each (ns node-shapes)
+        (for-each (r (rule-shape-refs arena (. ns rules)))
+          (list-push ns-queue r))
         (for-each (c (. ns constraints))
           (match c
             ((con-not ref) (list-push ns-queue ref))
@@ -440,6 +454,8 @@
             ((con-xone refs) (for-each (r refs) (list-push ns-queue r)))
             ((con-node ref) (list-push ns-queue ref))
             ((con-qualified-value-shape ref _ _ _) (list-push ns-queue ref))
+            ((con-expression e _ _)
+              (for-each (r (node-expr-shape-refs arena e)) (list-push ns-queue r)))
             ((con-property ref) (list-push ps-queue ref))
             (_ (do))))
         (for-each (ps (. ns property-shapes))
@@ -451,6 +467,8 @@
               ((con-xone refs) (for-each (r refs) (list-push ns-queue r)))
               ((con-node ref) (list-push ns-queue ref))
               ((con-qualified-value-shape ref _ _ _) (list-push ns-queue ref))
+              ((con-expression e _ _)
+                (for-each (r (node-expr-shape-refs arena e)) (list-push ns-queue r)))
               ((con-property ref) (list-push ps-queue ref))
               (_ (do))))))
       (for-each (ps prop-shapes)
@@ -462,6 +480,8 @@
             ((con-xone refs) (for-each (r refs) (list-push ns-queue r)))
             ((con-node ref) (list-push ns-queue ref))
             ((con-qualified-value-shape ref _ _ _) (list-push ns-queue ref))
+            ((con-expression e _ _)
+              (for-each (r (node-expr-shape-refs arena e)) (list-push ns-queue r)))
             ((con-property ref) (list-push ps-queue ref))
             (_ (do)))))
       (let ((mut ns-i 0)
@@ -482,6 +502,8 @@
                         (set! changed true)
                         (let ((ns (parse-node-shape arena g ref)))
                           (map-put shape-map ref ns)
+                          (for-each (r (rule-shape-refs arena (. ns rules)))
+                            (list-push ns-queue r))
                           (for-each (c (. ns constraints))
                             (match c
                               ((con-not r) (list-push ns-queue r))
@@ -494,6 +516,8 @@
                               ((con-node r) (list-push ns-queue r))
                               ((con-qualified-value-shape r _ _ _)
                                 (list-push ns-queue r))
+                              ((con-expression e _ _)
+                                (for-each (r (node-expr-shape-refs arena e)) (list-push ns-queue r)))
                               ((con-property r) (list-push ps-queue r))
                               (_ (do))))
                           (for-each (ps (. ns property-shapes))
@@ -512,6 +536,8 @@
                                 ((con-node r) (list-push ns-queue r))
                                 ((con-qualified-value-shape r _ _ _)
                                   (list-push ns-queue r))
+                                ((con-expression e _ _)
+                                  (for-each (r (node-expr-shape-refs arena e)) (list-push ns-queue r)))
                                 ((con-property r) (list-push ps-queue r))
                                 (_ (do)))))))))
                   ((some _) (do))))
@@ -536,6 +562,8 @@
                           ((con-node r) (list-push ns-queue r))
                           ((con-qualified-value-shape r _ _ _)
                             (list-push ns-queue r))
+                          ((con-expression e _ _)
+                            (for-each (r (node-expr-shape-refs arena e)) (list-push ns-queue r)))
                           ((con-property r) (list-push ps-queue r))
                           (_ (do))))))
                   ((some _) (do))))
@@ -547,8 +575,6 @@
       "Extract all SHACL shapes from an RDF shapes graph into a structured ShapesGraph. CONTRACT (CLEANUP, fix-round finding): this function does NOT pre-scan for the recursion hazards documented at the top of this module (cyclic sh:path expressions, malformed cyclic rdf:lists) -- it calls parse-path and rdf-list-elements-indexed directly and will hang or crash on a hazardous shapes graph, exactly like the pre-fix parser did. The choke point lives one level up, in snarl.slop's validate-data-graph-with-config, which always calls shapes-graph-recursion-hazard-message first. Every caller of parse-shapes-graph directly (this includes any future internal caller, and any external C consumer via :c-name \"snarl_parse_shapes_graph\") MUST call shapes-graph-recursion-hazard-message on the same shapes-graph first and treat a (some msg) result as fatal, exactly as validate-data-graph-with-config does. Left as a documented caller obligation rather than wired in here: parse-shapes-graph's signature/ABI (Arena IndexedGraph) -> ShapesGraph has no error channel, and adding one would be a bigger, riskier change to a stable, :c-name-exported function than this fix round's scope justifies for a single already-safe call path (the only real caller, validate-data-graph-with-config, already gets this right).")
     (@spec ((Arena IndexedGraph) -> ShapesGraph))
     (@alloc arena)
-    (@pre (>= (indexed-graph-size shapes-graph) 0))
-    (@post (>= (list-len (. $result node-shapes)) 0))
     (@example (arena (indexed-graph-create arena)))
     (let ((type-pred (make-iri arena RDF_TYPE))
           (ns-type (make-iri arena SHACL_NODE_SHAPE))
@@ -580,7 +606,7 @@
                 (or (> (list-len t-subj) 0) (> (list-len t-obj) 0))))
             (let ((mut ps-list (list-new arena PropertyShape)))
               (list-push ps-list ps)
-              (let ((ns (record-new NodeShape (id ps-id) (target-nodes t-nodes) (target-classes t-classes) (target-subjects-of t-subj) (target-objects-of t-obj) (property-shapes ps-list) (constraints (list-new arena Constraint)) (severity 'severity-violation) (message (none)) (deactivated (. ps deactivated)))))
+              (let ((ns (record-new NodeShape (id ps-id) (target-nodes t-nodes) (target-classes t-classes) (target-subjects-of t-subj) (target-objects-of t-obj) (property-shapes ps-list) (constraints (list-new arena Constraint)) (severity 'severity-violation) (message (none)) (deactivated (. ps deactivated)) (rules (parse-shape-rules arena shapes-graph ps-id)) (order (parse-order arena shapes-graph ps-id)))))
                 (list-push node-shapes ns)
                 (map-put shape-map ps-id ns)))
             (list-push prop-shapes ps))))
@@ -611,7 +637,7 @@
                           (map-put property-shape-map subj ps)
                           (let ((mut ps-list (list-new arena PropertyShape)))
                             (list-push ps-list ps)
-                            (let ((ns (record-new NodeShape (id subj) (target-nodes t-nodes) (target-classes t-classes) (target-subjects-of t-subj) (target-objects-of t-obj) (property-shapes ps-list) (constraints (list-new arena Constraint)) (severity 'severity-violation) (message (none)) (deactivated (. ps deactivated)))))
+                            (let ((ns (record-new NodeShape (id subj) (target-nodes t-nodes) (target-classes t-classes) (target-subjects-of t-subj) (target-objects-of t-obj) (property-shapes ps-list) (constraints (list-new arena Constraint)) (severity 'severity-violation) (message (none)) (deactivated (. ps deactivated)) (rules (parse-shape-rules arena shapes-graph subj)) (order (parse-order arena shapes-graph subj)))))
                               (list-push node-shapes ns)
                               (map-put shape-map subj ns))))
                         (let ((ns (parse-node-shape arena shapes-graph subj)))
@@ -631,9 +657,28 @@
         (node-shapes node-shapes)
         (property-shapes prop-shapes)
         (shape-map shape-map)
-        (property-shape-map property-shape-map)))
+        (property-shape-map property-shape-map)
+        (custom-severities (parse-custom-severities arena shapes-graph))))
     :c-name
     "snarl_parse_shapes_graph")
+
+  (fn parse-custom-severities ((arena Arena) (g IndexedGraph))
+    (@intent "Map each shape whose sh:severity is an IRI other than sh:Violation, sh:Warning and sh:Info to that IRI. Such a severity is legal (SHACL 2.1.4) and is reported as sh:resultSeverity.")
+    (@spec ((Arena IndexedGraph) -> (Map Term Term)))
+    (@alloc arena)
+    (let ((custom (map-new arena Term Term))
+          (no-term (Option Term) (none)))
+      (for-each (t (indexed-graph-match arena g no-term (some (make-iri arena "http://www.w3.org/ns/shacl#severity")) no-term))
+        (match (triple-object t)
+          ((term-iri iri)
+            (when (and
+                    (not (string-eq (. iri value) SHACL_VIOLATION))
+                    (and
+                      (not (string-eq (. iri value) SHACL_WARNING))
+                      (not (string-eq (. iri value) SHACL_INFO))))
+              (map-put custom (triple-subject t) (triple-object t))))
+          (_ (do))))
+      custom))
 
   (fn parse-node-shape ((arena Arena) (g IndexedGraph) (shape-id Term))
     (@intent "Parse a single NodeShape from the shapes graph by its identifier")
@@ -652,7 +697,9 @@
           (constraints (parse-constraints arena g shape-id))
           (severity (parse-shape-severity arena g shape-id))
           (message (parse-shape-message arena g shape-id))
-          (deactivated (parse-shape-deactivated arena g shape-id)))
+          (deactivated (parse-shape-deactivated arena g shape-id))
+          (rules (parse-shape-rules arena g shape-id))
+          (order (parse-order arena g shape-id)))
       (for-each (ps-ref prop-refs)
         (list-push prop-shapes (parse-property-shape arena g ps-ref)))
       (record-new
@@ -666,7 +713,9 @@
         (constraints constraints)
         (severity severity)
         (message message)
-        (deactivated deactivated)))
+        (deactivated deactivated)
+        (rules rules)
+        (order order)))
     :c-name
     "snarl_parse_node_shape")
 
@@ -844,7 +893,6 @@
     (@intent "Parse all SHACL constraints declared on a shape node")
     (@spec ((Arena IndexedGraph Term) -> (List Constraint)))
     (@alloc arena)
-    (@post (>= (list-len $result) 0))
     (@example
       (arena
         (indexed-graph-create arena)
@@ -902,7 +950,14 @@
         (for-each (v vals)
           (match (term-to-string v)
             ((some s)
-              (list-push constraints (union-new Constraint con-pattern s)))
+              ;; sh:flags applies to the shape's sh:pattern (SHACL 4.4.3)
+              (let ((flags (match (list-get (indexed-graph-objects arena g shape-id (make-iri arena SHACL_FLAGS)) 0)
+                             ((some f)
+                               (match (term-to-string f)
+                                 ((some fs) fs)
+                                 ((none) "")))
+                             ((none) ""))))
+                (list-push constraints (union-new Constraint con-pattern s flags))))
             ((none) (do)))))
       (let ((vals (indexed-graph-objects arena g shape-id (make-iri arena SHACL_LANGUAGE_IN))))
         (for-each (v vals)
@@ -1011,6 +1066,13 @@
                     constraints
                     (union-new Constraint con-closed true ignored-paths)))))
             ((none) (do)))))
+      (let ((vals (indexed-graph-objects arena g shape-id (make-iri arena SHACL_EXPRESSION))))
+        (for-each (v vals)
+          ;; AF section 7: the expression's own sh:message values, if any,
+          ;; replace the shape's.
+          (list-push
+            constraints
+            (union-new Constraint con-expression (parse-node-expr arena g v) v (parse-shape-message arena g v)))))
       constraints)
     :c-name
     "snarl_parse_constraints")
@@ -1168,4 +1230,628 @@
         (match (term-to-string elem)
           ((some s) (list-push result s))
           ((none) (do))))
-      result)))
+      result))
+  ;; ============================================================
+  ;; SHACL-AF node expressions and rules
+  ;;
+  ;; Same split as paths. Before real parsing runs, two pre-scans check the
+  ;; RAW shapes graph:
+  ;;   - shapes-graph-recursion-hazard-message (above) ends with
+  ;;     shapes-graph-node-expr-hazard-message: a node expression that
+  ;;     contains itself, or nests deeper than eval-node-expr's native-stack
+  ;;     budget.
+  ;;   - shapes-graph-unsupported-feature-message: input snarl cannot
+  ;;     execute -- function expressions (SHACL functions need SPARQL),
+  ;;     sh:SPARQLRule and unknown rule types, unknown entailment regimes,
+  ;;     ill-formed expressions and rules, and SHACL 1.2 syntax outside the
+  ;;     experimental shacl12 mode. AF section 8.2 requires a failure for a
+  ;;     rule type the engine cannot execute; silently skipping any of these
+  ;;     would turn unsupported input into a wrong answer.
+  ;; The parser below then assumes well-formed, acyclic input. Deactivated
+  ;; rules are ignored throughout, as AF section 8.2.3 requires.
+  ;; ============================================================
+
+  (fn node-expr-max-eval-depth ()
+    (@intent "Named ceiling on node-expression nesting depth: eval-node-expr (and parse-node-expr) recurse natively once per level")
+    (@spec (() -> Int))
+    (@pure)
+    256)
+
+  (fn objects-of ((arena Arena) (g IndexedGraph) (n Term) (pred String))
+    (@intent "Objects of (n, pred) in the shapes graph, for a predicate given as an IRI string")
+    (@spec ((Arena IndexedGraph Term String) -> (List Term)))
+    (@alloc arena)
+    (indexed-graph-objects arena g n (make-iri arena pred)))
+
+  (fn term-is-blank ((t Term))
+    (@intent "True for a blank node")
+    (@spec ((Term) -> Bool))
+    (@pure)
+    (match t
+      ((term-blank _) true)
+      (_ false)))
+
+  (fn unsupported-shnex-predicate ((arena Arena) (g IndexedGraph) (n Term))
+    (@intent "The first predicate of n in the SHACL 1.2 node-expression namespace that snarl does not evaluate (shnex:count, shnex:if, ...), if any")
+    (@spec ((Arena IndexedGraph Term) -> (Option String)))
+    (@alloc arena)
+    (let ((no-term (Option Term) (none))
+          (supported (list String SHNEX_VAR SHNEX_PATH_VALUES SHNEX_FOCUS_NODE SHNEX_FILTER_SHAPE SHNEX_NODES SHNEX_INTERSECTION))
+          (mut found (Option String) (none)))
+      (for-each (tr (indexed-graph-match arena g (some n) no-term no-term))
+        (match (triple-predicate tr)
+          ((term-iri iri)
+            (when (and (is-none found) (starts-with (. iri value) SHNEX_NS))
+              (let ((mut known false))
+                (for-each (s supported)
+                  (when (string-eq s (. iri value)) (set! known true)))
+                (when (not known) (set! found (some (. iri value)))))))
+          (_ (do))))
+      found))
+
+  (fn shapes-graph-shacl12-unsupported-message ((arena Arena) (g IndexedGraph))
+    (@intent "In SHACL 1.2 mode, a message for the first SHACL 1.2 construct snarl does not implement: a property or class from af-vocab's unsupported lists, or a rule that no shape attaches through sh:rule (a 1.2 global rule). SHACL 1.0 and AF mode ignore these as unknown terms; 1.2 mode must not, or 1.2 input would validate or infer silently wrong.")
+    (@spec ((Arena IndexedGraph) -> (Option String)))
+    (@alloc arena)
+    (let ((no-term (Option Term) (none))
+          (type-pred (make-iri arena RDF_TYPE))
+          (mut result (Option String) (none)))
+      (for-each (p (shacl12-unsupported-properties arena))
+        (when (is-none result)
+          (match (list-get (indexed-graph-match arena g no-term (some (make-iri arena p)) no-term) 0)
+            ((some tr)
+              (set! result (some (string-build arena (list String "SHACL 1.2 property " p " (at " (term-display-label (triple-subject tr) "[anonymous node]") ") is not supported by snarl's experimental SHACL 1.2 mode")))))
+            ((none) (do)))))
+      (for-each (c (shacl12-unsupported-classes arena))
+        (when (is-none result)
+          (match (list-get (indexed-graph-match arena g no-term (some type-pred) (some (make-iri arena c))) 0)
+            ((some tr)
+              (set! result (some (string-build arena (list String "SHACL 1.2 class " c " (at " (term-display-label (triple-subject tr) "[anonymous node]") ") is not supported by snarl's experimental SHACL 1.2 mode")))))
+            ((none) (do)))))
+      (for-each (rule-type (list String SHACL_TRIPLE_RULE SHACL_SPARQL_RULE))
+        (for-each (tr (indexed-graph-match arena g no-term (some type-pred) (some (make-iri arena rule-type))))
+          (let ((rule (triple-subject tr)))
+            (when (and
+                    (is-none result)
+                    (== (list-len (indexed-graph-match arena g no-term (some (make-iri arena SHACL_RULE)) (some rule))) 0))
+              (set! result (some (string-build arena (list String "Rule " (term-display-label rule "[anonymous node]") " is not attached to a shape through sh:rule: SHACL 1.2 global rules are not supported"))))))))
+      result))
+
+  (fn node-has-no-properties ((arena Arena) (g IndexedGraph) (n Term))
+    (@intent "True when n is the subject of no triple in the shapes graph (a SHACL 1.2 empty expression, when n is a blank node)")
+    (@spec ((Arena IndexedGraph Term) -> Bool))
+    (@alloc arena)
+    ;; The typed binding matters: a bare (none) argument is emitted as
+    ;; Option String, which does not match indexed-graph-match's C signature.
+    (let ((no-term (Option Term) (none)))
+      (== (list-len (indexed-graph-match arena g (some n) no-term no-term)) 0)))
+
+  (fn literal-lexical ((t Term))
+    (@intent "The lexical form of a literal; none for any other term")
+    (@spec ((Term) -> (Option String)))
+    (@pure)
+    (match t
+      ((term-literal lit) (some (. lit value)))
+      (_ (none))))
+
+  (fn term-is-iri-value ((t Term) (iri-value String))
+    (@intent "True when t is the IRI iri-value")
+    (@spec ((Term String) -> Bool))
+    (@pure)
+    (match t
+      ((term-iri iri) (string-eq (. iri value) iri-value))
+      (_ false)))
+
+  (fn rule-is-active ((arena Arena) (g IndexedGraph) (rule Term))
+    (@intent "False for a rule marked sh:deactivated true, which the rules engine ignores (AF section 8.2.3)")
+    (@spec ((Arena IndexedGraph Term) -> Bool))
+    (@alloc arena)
+    (not (parse-shape-deactivated arena g rule)))
+
+  (fn node-expr-children ((arena Arena) (g IndexedGraph) (n Term))
+    (@intent "Sub-expressions of the node expression n, in either syntax: the input of a filter shape or path expression, and the members of an intersection or union. Constants and list expressions have none. The intersection and union lists are known acyclic: shapes-graph-list-cycle-message runs first.")
+    (@spec ((Arena IndexedGraph Term) -> (List Term)))
+    (@alloc arena)
+    (let ((mut kids (list-new arena Term)))
+      (when (term-is-blank n)
+        (for-each (pred (list String SHACL_NODES SHNEX_NODES SHNEX_FOCUS_NODE))
+          (for-each (k (objects-of arena g n pred))
+            (list-push kids k)))
+        (for-each (pred (list String SHACL_INTERSECTION SHACL_UNION SHNEX_INTERSECTION))
+          (for-each (head (objects-of arena g n pred))
+            (for-each (k (rdf-list-elements-indexed arena g head))
+              (list-push kids k)))))
+      kids))
+
+  (fn active-rule-nodes ((arena Arena) (g IndexedGraph))
+    (@intent "Every value of sh:rule that is not deactivated, in graph scan order")
+    (@spec ((Arena IndexedGraph) -> (List Term)))
+    (@alloc arena)
+    (let ((no-term (Option Term) (none))
+          (mut rules (list-new arena Term)))
+      (for-each (tr (indexed-graph-match arena g no-term (some (make-iri arena SHACL_RULE)) no-term))
+        (let ((rule (triple-object tr)))
+          (when (rule-is-active arena g rule)
+            (list-push rules rule))))
+      rules))
+
+  (fn node-expr-roots ((arena Arena) (g IndexedGraph))
+    (@intent "Every top-level node expression in the shapes graph: the values of sh:expression, and the sh:subject, sh:predicate and sh:object values of every active rule")
+    (@spec ((Arena IndexedGraph) -> (List Term)))
+    (@alloc arena)
+    (let ((no-term (Option Term) (none))
+          (mut roots (list-new arena Term)))
+      (for-each (tr (indexed-graph-match arena g no-term (some (make-iri arena SHACL_EXPRESSION)) no-term))
+        (list-push roots (triple-object tr)))
+      (for-each (rule (active-rule-nodes arena g))
+        (for-each (pred (list String SHACL_SUBJECT SHACL_PREDICATE SHACL_OBJECT))
+          (for-each (v (objects-of arena g rule pred))
+            (list-push roots v))))
+      roots))
+
+  (fn node-expr-depth ((arena Arena) (g IndexedGraph) (root Term) (depths (Map Term Int)))
+    (@intent
+      "Nesting depth of the node expression at root (1 for a constant), or -1 if it contains itself or reaches a malformed cyclic list expression. Iterative, with the explicit enter/exit worklist path-node-eval-depth uses, so a hostile nesting cannot overflow the C stack here. `depths` memoizes finished nodes across calls, so shared sub-expressions are walked once.")
+    (@spec ((Arena IndexedGraph Term (Map Term Int)) -> Int))
+    (@alloc arena)
+    (@post (>= $result -1))
+    ;; VERIFIER: as for path-node-eval-depth, the result is read back out of
+    ;; `depths`, which Z3 cannot follow through the worklist loop. Only this
+    ;; function stores into `depths`, always (+ best 1) with best >= 0.
+    (@assume (>= $result -1))
+    (let ((on-path (map-new arena Term Int))
+          (mut work (path-scan-work-new arena))
+          (mut cyclic false))
+      (list-push work (record-new PathScanItem (is-exit false) (node root)))
+      (while (and (> (list-len work) 0) (not cyclic))
+        (match (list-pop work)
+          ((some item)
+            (let ((n (. item node)))
+              (if (. item is-exit)
+                (let ((mut best 0))
+                  (for-each (c (node-expr-children arena g n))
+                    (let ((d (match (map-get depths c) ((some x) x) ((none) 0))))
+                      (when (> d best) (set! best d))))
+                  (map-put depths n (+ best 1))
+                  (map-put on-path n (- (match (map-get on-path n) ((some x) x) ((none) 0)) 1)))
+                (cond
+                  ((map-has depths n) (do))
+                  ((> (match (map-get on-path n) ((some x) x) ((none) 0)) 0)
+                    (set! cyclic true))
+                  ;; A SHACL 1.2 list expression is an rdf:List itself.
+                  ((and
+                      (term-is-blank n)
+                      (and
+                        (> (list-len (objects-of arena g n RDF_FIRST)) 0)
+                        (not (shapes-graph-list-is-acyclic arena g n))))
+                    (set! cyclic true))
+                  (true
+                    (do
+                      (map-put on-path n (+ (match (map-get on-path n) ((some x) x) ((none) 0)) 1))
+                      (list-push work (record-new PathScanItem (is-exit true) (node n)))
+                      (for-each (c (node-expr-children arena g n))
+                        (list-push work (record-new PathScanItem (is-exit false) (node c))))))))))
+          ((none) (do))))
+      (if cyclic
+        -1
+        (match (map-get depths root)
+          ((some d) d)
+          ((none) 0)))))
+
+  (fn shapes-graph-node-expr-hazard-message ((arena Arena) (g IndexedGraph))
+    (@intent
+      "Scan every top-level node expression for one that contains itself (AF Appendix A forbids it) or nests deeper than node-expr-max-eval-depth. Returns a deterministic message naming the top-level expression, if any. Runs after the path and list scans, so every path and list it reaches is known acyclic.")
+    (@spec ((Arena IndexedGraph) -> (Option String)))
+    (@alloc arena)
+    (let ((depths (map-new arena Term Int))
+          (mut result (Option String) (none)))
+      (for-each (root (node-expr-roots arena g))
+        (when (is-none result)
+          (let ((d (node-expr-depth arena g root depths))
+                (label (term-display-label root "[anonymous node]")))
+            (cond
+              ((< d 0)
+                (set! result
+                  (some (string-build arena (list String "Cyclic node expression detected at " label " (node expression contains itself)")))))
+              ((> d (node-expr-max-eval-depth))
+                (set! result
+                  (some (string-build arena (list String "Node expression nesting depth budget (" (int-to-string arena (node-expr-max-eval-depth)) ") exceeded at " label)))))
+              (true (do))))))
+      result))
+
+  (fn list-arity-message ((arena Arena) (g IndexedGraph) (n Term) (pred String) (label String))
+    (@intent "Message for an sh:intersection or sh:union that does not have exactly one value, a list with at least two members (AF sections 6.6-6.7)")
+    (@spec ((Arena IndexedGraph Term String String) -> (Option String)))
+    (@alloc arena)
+    (let ((heads (objects-of arena g n pred)))
+      (if (== (list-len heads) 1)
+        (match (list-get heads 0)
+          ((some head)
+            (if (>= (list-len (rdf-list-elements-indexed arena g head)) 2)
+              (none)
+              (some (string-build arena (list String "Ill-formed node expression at " label ": " pred " needs a list of at least two node expressions")))))
+          ((none) (none)))
+        (some (string-build arena (list String "Ill-formed node expression at " label ": it needs exactly one " pred))))))
+
+  (fn function-expression-message ((arena Arena) (g IndexedGraph) (n Term) (label String))
+    (@intent "Message for a blank node that is no supported node expression: a function expression (one triple whose object is a list, AF section 6.4), which needs SHACL functions and so SPARQL, or else an ill-formed expression")
+    (@spec ((Arena IndexedGraph Term String) -> String))
+    (@alloc arena)
+    (let ((no-term (Option Term) (none))
+          (triples (indexed-graph-match arena g (some n) no-term no-term)))
+      (match (list-get triples 0)
+        ((some tr)
+          (let ((obj (triple-object tr)))
+            (if (and
+                  (== (list-len triples) 1)
+                  (or
+                    (term-is-iri-value obj RDF_NIL)
+                    (> (list-len (objects-of arena g obj RDF_FIRST)) 0)))
+              (string-build arena (list String "SHACL function expression at " label " calls " (term-display-label (triple-predicate tr) "[anonymous node]") ": SHACL functions need SPARQL, which snarl does not implement"))
+              (string-build arena (list String "Ill-formed node expression at " label)))))
+        ((none) (string-build arena (list String "Ill-formed node expression at " label))))))
+
+  (fn node-expr-12-form-message ((arena Arena) (g IndexedGraph) (n Term) (label String))
+    (@intent "Message if the blank node n, which uses SHACL 1.2 node-expression syntax, is not one of the 1.2 forms snarl evaluates (SHACL 1.2 Node Expressions, Working Draft 2026-10-28): a var expression, path values expression, filter shape expression, intersection expression or list expression, each well-formed")
+    (@spec ((Arena IndexedGraph Term String) -> (Option String)))
+    (@alloc arena)
+    (let ((n-var (list-len (objects-of arena g n SHNEX_VAR)))
+          (n-path (list-len (objects-of arena g n SHNEX_PATH_VALUES)))
+          (n-focus (list-len (objects-of arena g n SHNEX_FOCUS_NODE)))
+          (n-filter (list-len (objects-of arena g n SHNEX_FILTER_SHAPE)))
+          (n-nodes (list-len (objects-of arena g n SHNEX_NODES)))
+          (n-inter (list-len (objects-of arena g n SHNEX_INTERSECTION)))
+          (n-first (list-len (objects-of arena g n RDF_FIRST)))
+          (mut kinds 0))
+      (for-each (k (list Int n-var n-path n-filter n-inter n-first))
+        (when (> k 0) (set! kinds (+ kinds 1))))
+      (cond
+        ((== kinds 0)
+          (some (string-build arena (list String "Ill-formed node expression at " label ": shnex:nodes and shnex:focusNode need a shnex:filterShape or shnex:pathValues"))))
+        ((> kinds 1)
+          (some (string-build arena (list String "Ill-formed node expression at " label ": it combines more than one kind of expression"))))
+        ((> n-var 0)
+          (let ((name (match (list-get (objects-of arena g n SHNEX_VAR) 0)
+                        ((some t) (literal-lexical t))
+                        ((none) (none)))))
+            (match name
+              ((some v)
+                (if (and (== n-var 1) (> (string-len v) 0) (== (+ n-focus n-nodes) 0))
+                  (none)
+                  (some (string-build arena (list String "Ill-formed var expression at " label ": it needs exactly one non-empty string shnex:var")))))
+              ((none)
+                (some (string-build arena (list String "Ill-formed var expression at " label ": it needs exactly one non-empty string shnex:var")))))))
+        ((> n-path 0)
+          (if (and (== n-path 1) (<= n-focus 1) (== n-nodes 0))
+            (none)
+            (some (string-build arena (list String "Ill-formed path values expression at " label ": it needs exactly one shnex:pathValues and at most one shnex:focusNode")))))
+        ((> n-filter 0)
+          (if (and (== n-filter 1) (== n-nodes 1) (== n-focus 0))
+            (none)
+            (some (string-build arena (list String "Ill-formed filter shape expression at " label ": it needs exactly one shnex:filterShape and one shnex:nodes")))))
+        ((> n-inter 0)
+          (let ((heads (objects-of arena g n SHNEX_INTERSECTION)))
+            (if (and
+                  (== n-inter 1)
+                  (match (list-get heads 0)
+                    ((some head) (> (list-len (rdf-list-elements-indexed arena g head)) 0))
+                    ((none) false)))
+              (none)
+              (some (string-build arena (list String "Ill-formed intersection expression at " label ": it needs exactly one shnex:intersection, a non-empty list of node expressions"))))))
+        (true
+          ;; A list expression: its members must be constants (IRIs,
+          ;; literals, triple terms), never blank nodes.
+          (let ((mut ok true))
+            (for-each (m (rdf-list-elements-indexed arena g n))
+              (when (term-is-blank m) (set! ok false)))
+            (if ok
+              (none)
+              (some (string-build arena (list String "Ill-formed list expression at " label ": its members must be constants (IRIs, literals or triple terms)")))))))))
+
+  (fn node-expr-form-message ((arena Arena) (g IndexedGraph) (n Term) (shacl12 Bool))
+    (@intent "Message if the single node expression n (not its sub-expressions) is not one snarl can evaluate: an ill-formed expression, a function expression, or SHACL 1.2 syntax. IRIs, literals and triple terms are constants (sh:this is the focus node) and always fine.")
+    (@spec ((Arena IndexedGraph Term Bool) -> (Option String)))
+    (@alloc arena)
+    (if (not (term-is-blank n))
+      (none)
+      (let ((label (term-display-label n "[anonymous node]"))
+            (n-filter (list-len (objects-of arena g n SHACL_FILTER_SHAPE)))
+            (n-path (list-len (objects-of arena g n SHACL_PATH)))
+            (n-inter (list-len (objects-of arena g n SHACL_INTERSECTION)))
+            (n-union (list-len (objects-of arena g n SHACL_UNION)))
+            (n-nodes (list-len (objects-of arena g n SHACL_NODES)))
+            (unknown-12 (unsupported-shnex-predicate arena g n))
+            (mut n-12 0)
+            (mut kinds 0))
+        (for-each (pred (list String SHNEX_VAR SHNEX_PATH_VALUES SHNEX_FOCUS_NODE SHNEX_FILTER_SHAPE SHNEX_NODES SHNEX_INTERSECTION RDF_FIRST))
+          (set! n-12 (+ n-12 (list-len (objects-of arena g n pred)))))
+        (when (> n-filter 0) (set! kinds (+ kinds 1)))
+        (when (> n-path 0) (set! kinds (+ kinds 1)))
+        (when (> n-inter 0) (set! kinds (+ kinds 1)))
+        (when (> n-union 0) (set! kinds (+ kinds 1)))
+        (cond
+          ((and (is-some unknown-12) (not shacl12))
+            (some (string-build arena (list String "Node expression at " label " uses SHACL 1.2 syntax, which needs the experimental SHACL 1.2 mode (--shacl12)"))))
+          ((is-some unknown-12)
+            (some (string-build arena (list String "SHACL 1.2 node expression " (match unknown-12 ((some p) p) ((none) "")) " at " label " is not supported by snarl"))))
+          ((and (> n-12 0) (not shacl12))
+            (some (string-build arena (list String "Node expression at " label " uses SHACL 1.2 syntax, which needs the experimental SHACL 1.2 mode (--shacl12)"))))
+          ((and (> n-12 0) (> kinds 0))
+            (some (string-build arena (list String "Ill-formed node expression at " label ": it combines SHACL-AF and SHACL 1.2 syntax"))))
+          ((> n-12 0) (node-expr-12-form-message arena g n label))
+          ;; SHACL 1.2's empty expression: a blank node with no properties.
+          ((and shacl12 (node-has-no-properties arena g n)) (none))
+          ((== kinds 0) (some (function-expression-message arena g n label)))
+          ((> kinds 1)
+            (some (string-build arena (list String "Ill-formed node expression at " label ": it combines more than one kind of expression"))))
+          ((> n-filter 0)
+            (if (and (== n-filter 1) (== n-nodes 1))
+              (none)
+              (some (string-build arena (list String "Ill-formed filter shape expression at " label ": it needs exactly one sh:filterShape and one sh:nodes")))))
+          ((> n-path 0)
+            (if (and (== n-path 1) (<= n-nodes 1))
+              (none)
+              (some (string-build arena (list String "Ill-formed path expression at " label ": it needs exactly one sh:path and at most one sh:nodes")))))
+          ((> n-inter 0) (list-arity-message arena g n SHACL_INTERSECTION label))
+          (true (list-arity-message arena g n SHACL_UNION label))))))
+
+  (fn rule-form-message ((arena Arena) (g IndexedGraph) (rule Term) (shacl12 Bool))
+    (@intent "Message if the active rule node `rule` is not one snarl can execute: sh:SPARQLRule, any other non-triple rule type (AF section 8.2 requires a failure), or an ill-formed sh:TripleRule. AF requires exactly one each of sh:subject, sh:predicate and sh:object; SHACL 1.2 allows at most one, defaulting to the focus node.")
+    (@spec ((Arena IndexedGraph Term Bool) -> (Option String)))
+    (@alloc arena)
+    (let ((label (term-display-label rule "[anonymous node]"))
+          (types (objects-of arena g rule RDF_TYPE))
+          (mut is-triple false)
+          (mut is-sparql false))
+      (for-each (t types)
+        (when (term-is-iri-value t SHACL_TRIPLE_RULE) (set! is-triple true))
+        (when (term-is-iri-value t SHACL_SPARQL_RULE) (set! is-sparql true)))
+      (cond
+        (is-triple
+          (let ((mut ok true))
+            (for-each (pred (list String SHACL_SUBJECT SHACL_PREDICATE SHACL_OBJECT))
+              (let ((n (list-len (objects-of arena g rule pred))))
+                (when (or (> n 1) (and (not shacl12) (== n 0)))
+                  (set! ok false))))
+            (if ok
+              (none)
+              (some (string-build arena (list String "Ill-formed sh:TripleRule at " label ": it needs exactly one each of sh:subject, sh:predicate and sh:object"))))))
+        (is-sparql
+          (some (string-build arena (list String "sh:SPARQLRule at " label " is not supported: snarl does not implement SPARQL"))))
+        (true
+          (some (string-build arena (list String "Unsupported SHACL rule type at " label " (snarl executes sh:TripleRule only)")))))))
+
+  (fn shapes-graph-declares-rules-entailment ((arena Arena) (g IndexedGraph) (shacl12 Bool))
+    (@intent "True when the shapes graph declares the rules entailment regime (sh:entailment sh:Rules; in SHACL 1.2 mode also sh:RulesEntailment), which means rules run before validation (AF section 8.3)")
+    (@spec ((Arena IndexedGraph Bool) -> Bool))
+    (@alloc arena)
+    (let ((no-term (Option Term) (none))
+          (mut declared false))
+      (for-each (tr (indexed-graph-match arena g no-term (some (make-iri arena SHACL_ENTAILMENT)) no-term))
+        (let ((e (triple-object tr)))
+          (when (or
+                  (term-is-iri-value e SHACL_RULES)
+                  (and shacl12 (term-is-iri-value e SHACL_RULES_ENTAILMENT)))
+            (set! declared true))))
+      declared))
+
+  (fn shapes-graph-unsupported-feature-message ((arena Arena) (g IndexedGraph) (shacl12 Bool))
+    (@intent
+      "Detect, before real parsing runs, SHACL-AF (or, in SHACL 1.2 mode, SHACL 1.2) input snarl cannot execute: an entailment regime other than rules (SHACL Core section 1.5 requires a failure), a rule that is not a well-formed sh:TripleRule, or a node expression that is ill-formed, a function expression, or 1.2 syntax outside SHACL 1.2 mode. Returns the first problem in a fixed scan order (entailment, unsupported SHACL 1.2 constructs in 1.2 mode, rules, expressions), if any -- deterministic for a given input graph. Runs after shapes-graph-recursion-hazard-message, so every expression it walks is acyclic.")
+    (@spec ((Arena IndexedGraph Bool) -> (Option String)))
+    (@alloc arena)
+    (let ((no-term (Option Term) (none))
+          (mut result (Option String) (none)))
+      (for-each (tr (indexed-graph-match arena g no-term (some (make-iri arena SHACL_ENTAILMENT)) no-term))
+        (let ((e (triple-object tr)))
+          (when (and
+                  (is-none result)
+                  (not
+                    (or
+                      (term-is-iri-value e SHACL_RULES)
+                      (and shacl12 (term-is-iri-value e SHACL_RULES_ENTAILMENT)))))
+            (set! result
+              (some
+                (if (term-is-iri-value e SHACL_RULES_ENTAILMENT)
+                  "Entailment regime sh:RulesEntailment is SHACL 1.2, which needs the experimental SHACL 1.2 mode (--shacl12)"
+                  (string-build arena (list String "Unsupported entailment regime " (term-display-label e "[anonymous node]")))))))))
+      (when (and shacl12 (is-none result))
+        (set! result (shapes-graph-shacl12-unsupported-message arena g)))
+      (for-each (rule (active-rule-nodes arena g))
+        (when (is-none result)
+          (set! result (rule-form-message arena g rule shacl12))))
+      (let ((seen (set-new arena Term))
+            (mut work (list-new arena Term)))
+        (for-each (root (node-expr-roots arena g))
+          (list-push work root))
+        (while (and (> (list-len work) 0) (is-none result))
+          (match (list-pop work)
+            ((some n)
+              (when (not (set-has seen n))
+                (set-put seen n)
+                (set! result (node-expr-form-message arena g n shacl12))
+                (for-each (c (node-expr-children arena g n))
+                  (list-push work c))))
+            ((none) (do)))))
+      result)
+    :c-name
+    "snarl_shapes_graph_unsupported_feature_message")
+
+  (fn node-expr-box ((arena Arena) (e NodeExpr))
+    (@intent "Copy a node expression into the arena, for a Ptr-valued NodeExpr field")
+    (@spec ((Arena NodeExpr) -> (Ptr NodeExpr)))
+    (@alloc arena)
+    (let ((ptr (cast (Ptr NodeExpr) (arena-alloc arena (sizeof NodeExpr)))))
+      (set! (deref ptr) e)
+      ptr))
+
+  (fn parse-node-expr-input ((arena Arena) (g IndexedGraph) (nodes-objs (List Term)))
+    (@intent "Parse the optional input (sh:nodes, or SHACL 1.2's shnex:focusNode / shnex:nodes) of a filter shape or path expression; absent, it is the focus node (AF section 6.5)")
+    (@spec ((Arena IndexedGraph (List Term)) -> NodeExpr))
+    (@alloc arena)
+    (match (list-get nodes-objs 0)
+      ((some n) (parse-node-expr arena g n))
+      ((none) (NodeExpr nx-focus))))
+
+  (fn parse-node-expr ((arena Arena) (g IndexedGraph) (n Term))
+    (@intent
+      "Parse the node expression at n (AF section 6; in SHACL 1.2 mode also the 1.2 var, path values, filter shape, intersection, list and empty expressions). Callers MUST run shapes-graph-recursion-hazard-message and shapes-graph-unsupported-feature-message on the same shapes graph first, as snarl.slop's validate-data-graph-with-config does: they guarantee n is acyclic, within the depth budget (this recursion is bounded by it), and well-formed. A blank node of no known form is kept as a constant, a defensive no-op the pre-scans make unreachable.")
+    (@spec ((Arena IndexedGraph Term) -> NodeExpr))
+    (@alloc arena)
+    (@example
+      (arena
+        (indexed-graph-create arena)
+        (make-iri arena "http://www.w3.org/ns/shacl#this")))
+    (match n
+      ((term-iri iri)
+        (if (string-eq (. iri value) SHACL_THIS)
+          (NodeExpr nx-focus)
+          (union-new NodeExpr nx-constant n)))
+      ((term-blank _)
+        (let ((filter-objs (objects-of arena g n SHACL_FILTER_SHAPE))
+              (path-objs (objects-of arena g n SHACL_PATH))
+              (inter-objs (objects-of arena g n SHACL_INTERSECTION))
+              (union-objs (objects-of arena g n SHACL_UNION))
+              (nodes-objs (objects-of arena g n SHACL_NODES)))
+          (cond
+            ((> (list-len (objects-of arena g n SHNEX_VAR)) 0)
+              ;; Only the focusNode variable is ever bound: snarl has no
+              ;; expressions that introduce variables, and an unbound
+              ;; variable evaluates to no nodes.
+              (match (match (list-get (objects-of arena g n SHNEX_VAR) 0)
+                       ((some t) (literal-lexical t))
+                       ((none) (none)))
+                ((some name)
+                  (if (string-eq name SHNEX_FOCUS_NODE_VAR)
+                    (NodeExpr nx-focus)
+                    (union-new NodeExpr nx-list (list-new arena Term))))
+                ((none) (union-new NodeExpr nx-list (list-new arena Term)))))
+            ((> (list-len (objects-of arena g n SHNEX_PATH_VALUES)) 0)
+              (match (list-get (objects-of arena g n SHNEX_PATH_VALUES) 0)
+                ((some path-node)
+                  (union-new NodeExpr nx-path (parse-path arena g path-node)
+                    (node-expr-box arena (parse-node-expr-input arena g (objects-of arena g n SHNEX_FOCUS_NODE)))
+                    true))
+                ((none) (union-new NodeExpr nx-constant n))))
+            ((> (list-len (objects-of arena g n SHNEX_FILTER_SHAPE)) 0)
+              (match (list-get (objects-of arena g n SHNEX_FILTER_SHAPE) 0)
+                ((some shape-ref)
+                  (union-new NodeExpr nx-filter shape-ref
+                    (node-expr-box arena (parse-node-expr-input arena g (objects-of arena g n SHNEX_NODES)))))
+                ((none) (union-new NodeExpr nx-constant n))))
+            ((> (list-len (objects-of arena g n SHNEX_INTERSECTION)) 0)
+              (union-new NodeExpr nx-intersection (parse-node-expr-list arena g (objects-of arena g n SHNEX_INTERSECTION))))
+            ((> (list-len (objects-of arena g n RDF_FIRST)) 0)
+              (union-new NodeExpr nx-list (rdf-list-elements-indexed arena g n)))
+            ;; SHACL 1.2's empty expression
+            ((node-has-no-properties arena g n)
+              (union-new NodeExpr nx-list (list-new arena Term)))
+            ((> (list-len filter-objs) 0)
+              (match (list-get filter-objs 0)
+                ((some shape-ref)
+                  (union-new NodeExpr nx-filter shape-ref (node-expr-box arena (parse-node-expr-input arena g nodes-objs))))
+                ((none) (union-new NodeExpr nx-constant n))))
+            ((> (list-len path-objs) 0)
+              (match (list-get path-objs 0)
+                ((some path-node)
+                  (union-new NodeExpr nx-path (parse-path arena g path-node) (node-expr-box arena (parse-node-expr-input arena g nodes-objs)) false))
+                ((none) (union-new NodeExpr nx-constant n))))
+            ((> (list-len inter-objs) 0)
+              (union-new NodeExpr nx-intersection (parse-node-expr-list arena g inter-objs)))
+            ((> (list-len union-objs) 0)
+              (union-new NodeExpr nx-union (parse-node-expr-list arena g union-objs)))
+            (true (union-new NodeExpr nx-constant n)))))
+      (_ (union-new NodeExpr nx-constant n)))
+    :c-name
+    "snarl_parse_node_expr")
+
+  (fn parse-node-expr-list ((arena Arena) (g IndexedGraph) (heads (List Term)))
+    (@intent "Parse the members of the RDF list at the first of `heads` (the value of sh:intersection or sh:union) as node expressions")
+    (@spec ((Arena IndexedGraph (List Term)) -> (List NodeExpr)))
+    (@alloc arena)
+    (let ((mut exprs (list-new arena NodeExpr)))
+      (match (list-get heads 0)
+        ((some head)
+          (for-each (m (rdf-list-elements-indexed arena g head))
+            (list-push exprs (parse-node-expr arena g m))))
+        ((none) (do)))
+      exprs))
+
+  (fn node-expr-shape-refs ((arena Arena) (e NodeExpr))
+    (@intent "Every shape a node expression refers to (filter shapes), so register-inline-shapes can make sure each one is in the shape maps")
+    (@spec ((Arena NodeExpr) -> (List Term)))
+    (@alloc arena)
+    (let ((mut refs (list-new arena Term)))
+      (match e
+        ((nx-filter ref input)
+          (list-push refs ref)
+          (for-each (r (node-expr-shape-refs arena (deref input)))
+            (list-push refs r)))
+        ((nx-path _ input _)
+          (for-each (r (node-expr-shape-refs arena (deref input)))
+            (list-push refs r)))
+        ((nx-intersection es)
+          (for-each (x es)
+            (for-each (r (node-expr-shape-refs arena x))
+              (list-push refs r))))
+        ((nx-union es)
+          (for-each (x es)
+            (for-each (r (node-expr-shape-refs arena x))
+              (list-push refs r))))
+        (_ (do)))
+      refs)
+    :c-name
+    "snarl_node_expr_shape_refs")
+
+  (fn rule-shape-refs ((arena Arena) (rules (List Rule)))
+    (@intent "Every shape the given rules refer to: their sh:condition shapes and the filter shapes inside their node expressions")
+    (@spec ((Arena (List Rule)) -> (List Term)))
+    (@alloc arena)
+    (let ((mut refs (list-new arena Term)))
+      (for-each (rule rules)
+        (for-each (c (. rule conditions))
+          (list-push refs c))
+        (for-each (e (list NodeExpr (. rule subject) (. rule predicate) (. rule object)))
+          (for-each (r (node-expr-shape-refs arena e))
+            (list-push refs r))))
+      refs))
+
+  (fn parse-order ((arena Arena) (g IndexedGraph) (n Term))
+    (@intent "The sh:order of a rule or shape: a numeric literal, default 0 (AF section 8.2.2)")
+    (@spec ((Arena IndexedGraph Term) -> Float))
+    (@alloc arena)
+    (match (list-get (objects-of arena g n SHACL_ORDER) 0)
+      ((some t)
+        (match (term-to-string t)
+          ((some s)
+            (match (parse-float s)
+              ((ok f) f)
+              ((error _) 0.0)))
+          ((none) 0.0)))
+      ((none) 0.0)))
+
+  (fn parse-rule-slot ((arena Arena) (g IndexedGraph) (rule Term) (pred String))
+    (@intent "Parse a triple rule's sh:subject, sh:predicate or sh:object node expression; absent (SHACL 1.2 only, AF requires all three), it is the focus node")
+    (@spec ((Arena IndexedGraph Term String) -> NodeExpr))
+    (@alloc arena)
+    (match (list-get (objects-of arena g rule pred) 0)
+      ((some n) (parse-node-expr arena g n))
+      ((none) (NodeExpr nx-focus))))
+
+  (fn parse-shape-rules ((arena Arena) (g IndexedGraph) (shape-id Term))
+    (@intent "Parse the active sh:rule values of a shape. Every active rule is a well-formed sh:TripleRule: shapes-graph-unsupported-feature-message rejects anything else before parsing.")
+    (@spec ((Arena IndexedGraph Term) -> (List Rule)))
+    (@alloc arena)
+    (let ((mut rules (list-new arena Rule)))
+      (for-each (r (objects-of arena g shape-id SHACL_RULE))
+        (when (rule-is-active arena g r)
+          (list-push
+            rules
+            (record-new Rule
+              (id r)
+              (subject (parse-rule-slot arena g r SHACL_SUBJECT))
+              (predicate (parse-rule-slot arena g r SHACL_PREDICATE))
+              (object (parse-rule-slot arena g r SHACL_OBJECT))
+              (conditions (objects-of arena g r SHACL_CONDITION))
+              (order (parse-order arena g r))))))
+      rules)))

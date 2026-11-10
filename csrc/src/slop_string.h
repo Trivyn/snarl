@@ -11,6 +11,8 @@
 #include <stdbool.h>
 #include "slop_rdf.h"
 #include "slop_vocab.h"
+#include "slop_af_vocab.h"
+#include "slop_strlib.h"
 #include "slop_types.h"
 #include <snarl_regex.h>
 
@@ -44,15 +46,20 @@ SLOP_OPTION_DEFINE(slop_rdf_rdf_Term, slop_option_slop_rdf_rdf_Term)
 slop_string snarl_string_term_string_value(slop_rdf_rdf_Term t);
 slop_string snarl_string_term_lang(slop_rdf_rdf_Term t);
 uint8_t snarl_string_term_is_literal(slop_rdf_rdf_Term t);
-uint8_t snarl_string_regex_match_ffi(slop_string pattern, slop_string input);
+uint8_t snarl_string_pattern_flags_supported(slop_string flags);
+uint8_t snarl_string_regex_match_ffi(slop_string pattern, slop_string flags, slop_string input);
 slop_string snarl_string_regcomp_error_name(slop_arena* arena, int64_t code);
 slop_option_string snarl_string_pattern_compile_error(slop_arena* arena, slop_string pattern);
+int64_t snarl_string_string_char_count(slop_string s);
+uint8_t snarl_string_term_has_string_form(slop_rdf_rdf_Term value_node);
 uint8_t snarl_string_min_length_satisfied(slop_rdf_rdf_Term value_node, int64_t min_len);
 uint8_t snarl_string_max_length_satisfied(slop_rdf_rdf_Term value_node, int64_t max_len);
-uint8_t snarl_string_pattern_satisfied(slop_arena* arena, slop_rdf_rdf_Term value_node, slop_string pattern);
+uint8_t snarl_string_pattern_satisfied(slop_arena* arena, slop_rdf_rdf_Term value_node, slop_string pattern, slop_string flags);
+uint8_t snarl_string_language_matches(slop_arena* arena, slop_string tag, slop_string range);
+uint8_t snarl_string_language_in(slop_arena* arena, slop_rdf_rdf_Term value_node, slop_list_string allowed_langs);
 slop_option_snarl_types_ValidationResult snarl_check_min_length(slop_arena* arena, slop_rdf_rdf_Term focus_node, slop_rdf_rdf_Term value_node, int64_t min_len, slop_option_snarl_types_ShaclPath path, slop_rdf_rdf_Term shape_id, snarl_types_Severity severity, slop_option_string message);
 slop_option_snarl_types_ValidationResult snarl_check_max_length(slop_arena* arena, slop_rdf_rdf_Term focus_node, slop_rdf_rdf_Term value_node, int64_t max_len, slop_option_snarl_types_ShaclPath path, slop_rdf_rdf_Term shape_id, snarl_types_Severity severity, slop_option_string message);
-slop_option_snarl_types_ValidationResult snarl_check_pattern(slop_arena* arena, slop_rdf_rdf_Term focus_node, slop_rdf_rdf_Term value_node, slop_string pattern, slop_option_snarl_types_ShaclPath path, slop_rdf_rdf_Term shape_id, snarl_types_Severity severity, slop_option_string message);
+slop_option_snarl_types_ValidationResult snarl_check_pattern(slop_arena* arena, slop_rdf_rdf_Term focus_node, slop_rdf_rdf_Term value_node, slop_string pattern, slop_string flags, slop_option_snarl_types_ShaclPath path, slop_rdf_rdf_Term shape_id, snarl_types_Severity severity, slop_option_string message);
 slop_option_snarl_types_ValidationResult snarl_check_language_in(slop_arena* arena, slop_rdf_rdf_Term focus_node, slop_rdf_rdf_Term value_node, slop_list_string allowed_langs, slop_option_snarl_types_ShaclPath path, slop_rdf_rdf_Term shape_id, snarl_types_Severity severity, slop_option_string message);
 slop_list_string snarl_string_fixture_allowed_langs(slop_arena* arena);
 slop_list_slop_rdf_rdf_Term snarl_string_fixture_unique_langs(slop_arena* arena);

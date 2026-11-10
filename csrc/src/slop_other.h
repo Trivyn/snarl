@@ -12,6 +12,7 @@
 #include "slop_rdf.h"
 #include "slop_data_graph.h"
 #include "slop_vocab.h"
+#include "slop_af_vocab.h"
 #include "slop_types.h"
 
 #ifndef SLOP_LIST_SLOP_RDF_RDF_TERM_DEFINED

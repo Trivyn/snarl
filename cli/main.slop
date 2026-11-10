@@ -10,21 +10,25 @@
 ;;   -m, --max-errors N Stop after N violations
 ;;   --no-warnings      Suppress sh:Warning results
 ;;   --no-infos         Suppress sh:Info results
+;;   -r, --rules        Run SHACL rules (sh:TripleRule) before validating
+;;   --emit-inferred FILE  Run rules and write the inferred triples as Turtle
+;;   --shacl12          Experimental: also accept SHACL 1.2 draft syntax
 ;; ============================================================
 
 (module main
   (@doc "CLI interface for snarl SHACL Core validator")
 
-  (import rdf (Term Triple Graph GraphSize make-graph graph-size make-iri))
-  (import index (IndexedGraph indexed-graph-create indexed-graph-add indexed-graph-size))
+  (import rdf (Term Triple Graph GraphSize make-graph graph-add graph-size make-iri))
+  (import index (IndexedGraph indexed-graph-create indexed-graph-add indexed-graph-size indexed-graph-match))
   (import data-graph (SnarlDataGraph snarl-data-graph-create snarl-data-graph-add snarl-data-graph-size))
-  (import ttl (parse-ttl-file parse-ttl-file-for-each-triple TtlFileError))
+  (import ttl (parse-ttl-file parse-ttl-file-for-each-triple TtlFileError make-prefix-map))
   (import common (ParseError Position))
-  (import snarl (validate validate-with-config validate-data-graph-with-config conforms default-config
-                 ValidatorConfig ValidatorResult ValidationReport
+  (import snarl (validate validate-with-config validate-data-graph-with-inference conforms default-config
+                 ValidatorConfig ValidatorResult ValidationReport ValidationOutcome
                  get-violations get-warnings get-result-count
                  report-to-string report-to-graph))
   (import report (print-report))
+  (import serialize-ttl (SerializeConfig serialize-ttl-file))
   (import strlib (parse-int))
 
   (ffi "string.h"
@@ -60,6 +64,9 @@
     (max-errors (Int 0 ..))
     (no-warnings Bool)
     (no-infos Bool)
+    (rules Bool)
+    (emit-inferred-file (Option String))
+    (shacl12 Bool)
     (show-help Bool)
     (show-version Bool)))
 
@@ -80,6 +87,9 @@
           (mut max-errors 0)
           (mut no-warnings false)
           (mut no-infos false)
+          (mut rules false)
+          (mut emit-inferred (Option String) (none))
+          (mut shacl12 false)
           (mut help false)
           (mut version false)
           (mut i 1)
@@ -132,6 +142,21 @@
             ((string-eq arg "--no-infos")
               (set! no-infos true)
               (set! i (+ i 1)))
+            ((or (string-eq arg "--rules") (string-eq arg "-r"))
+              (set! rules true)
+              (set! i (+ i 1)))
+            ((string-eq arg "--emit-inferred")
+              (if (< (+ i 1) argc)
+                (do
+                  (set! emit-inferred (some (argv-to-string argv (+ i 1))))
+                  (set! i (+ i 2)))
+                (do
+                  (println "Error: --emit-inferred requires a file path")
+                  (set! help true)
+                  (set! i (+ i 1)))))
+            ((string-eq arg "--shacl12")
+              (set! shacl12 true)
+              (set! i (+ i 1)))
             (true
               ;; Positional arguments: first is data, second is shapes
               (if (== positional-count 0)
@@ -147,6 +172,9 @@
         (max-errors max-errors)
         (no-warnings no-warnings)
         (no-infos no-infos)
+        (rules rules)
+        (emit-inferred-file emit-inferred)
+        (shacl12 shacl12)
         (show-help help)
         (show-version version))))
 
@@ -168,6 +196,14 @@
     (println "  -m, --max-errors N Stop after N violations")
     (println "  --no-warnings      Suppress sh:Warning results")
     (println "  --no-infos         Suppress sh:Info results")
+    (println "  -r, --rules        Run SHACL rules (sh:TripleRule) before validating;")
+    (println "                     they also run when the shapes graph declares")
+    (println "                     sh:entailment sh:Rules")
+    (println "  --emit-inferred FILE")
+    (println "                     Run rules and write the inferred triples as Turtle")
+    (println "  --shacl12          EXPERIMENTAL: also accept SHACL 1.2 Working Draft")
+    (println "                     syntax (node expressions in the shnex: namespace,")
+    (println "                     sh:RulesEntailment). The drafts are still changing.")
     (println "")
     (println "Exit codes: 0 = conforms, 1 = violations, 2 = parse/internal error"))
 
@@ -217,10 +253,6 @@
     (@spec ((Arena String Bool) -> (Option SnarlDataGraph)))
     (@alloc arena)
     (@pre (> (string-len path) 0))
-    (@post
-      (match $result
-        ((some g) (>= (snarl-data-graph-size g) 0))
-        ((none) true)))
     ;; The callback mutates dg as triples stream out of the Turtle parser, so the
     ;; CLI avoids constructing a general RDF graph for large data files. The
     ;; parser's Triple is valid only during the callback (its strings live in a
@@ -240,6 +272,45 @@
             (print " triples from ")
             (println path))
           (some dg)))))
+
+  (fn write-turtle ((arena Arena) (path String) (triples (List Triple)))
+    (@intent "Write triples to a Turtle file; false if the file cannot be written")
+    (@spec ((Arena String (List Triple)) -> Bool))
+    (@alloc arena)
+    (let ((mut g (make-graph arena)))
+      (for-each (t triples)
+        (set! g (graph-add arena g t)))
+      (match (serialize-ttl-file arena g (record-new SerializeConfig (prefixes (make-prefix-map arena)) (base-iri (none)) (indent-width 2)) path)
+        ((ok _) true)
+        ((error _) false))))
+
+  (fn write-inferred ((arena Arena) (path String) (inferred (List Triple)) (quiet Bool))
+    (@intent "Write the triples the rules inferred to a Turtle file")
+    (@spec ((Arena String (List Triple) Bool) -> Unit))
+    (@alloc arena)
+    (if (write-turtle arena path inferred)
+      (when (not quiet)
+        (print "Wrote ")
+        (print (int-to-string arena (list-len inferred)))
+        (print " inferred triple(s) to ")
+        (println path))
+      (do
+        (print "Error: could not write inferred triples to ")
+        (println path))))
+
+  (fn write-report ((arena Arena) (path String) (report ValidationReport) (quiet Bool))
+    (@intent "Write the validation report graph to a Turtle file")
+    (@spec ((Arena String ValidationReport Bool) -> Unit))
+    (@alloc arena)
+    (let ((no-term (Option Term) (none))
+          (triples (indexed-graph-match arena (report-to-graph arena report) no-term no-term no-term)))
+      (if (write-turtle arena path triples)
+        (when (not quiet)
+          (print "Report written to ")
+          (println path))
+        (do
+          (print "Error: could not write the report to ")
+          (println path)))))
 
   ;; ============================================================
   ;; Main
@@ -292,10 +363,23 @@
                                         (verbose (not quiet))
                                         (max-errors (. args max-errors))
                                         (include-warnings (not (. args no-warnings)))
-                                        (include-infos (not (. args no-infos))))))
+                                        (include-infos (not (. args no-infos)))
+                                        (run-rules (or (. args rules) (is-some (. args emit-inferred-file))))
+                                        (shacl12 (. args shacl12))))
+                              (outcome (validate-data-graph-with-inference arena data-graph shapes-graph config)))
+
+                          ;; Write the inferred triples if requested; a write
+                          ;; failure is reported but does not change the exit
+                          ;; status, which reflects validation.
+                          (match (. args emit-inferred-file)
+                            ((some path)
+                              (match (. outcome result)
+                                ((validate-success _) (write-inferred arena path (. outcome inferred) quiet))
+                                ((validate-error _) (do))))
+                            ((none) (do)))
 
                           ;; Run validation
-                          (match (validate-data-graph-with-config arena data-graph shapes-graph config)
+                          (match (. outcome result)
                             ((validate-success report)
                               (let ((validate-elapsed (- (slop_now_ms) validate-start))
                                     (violations (get-violations arena report))
@@ -321,10 +405,7 @@
                                 ;; Emit report as Turtle if requested
                                 (match (. args emit-file)
                                   ((some emit-path)
-                                    ;; TODO: serialize report graph to file
-                                    (when (not quiet)
-                                      (print "Report written to ")
-                                      (println emit-path)))
+                                    (write-report arena emit-path report quiet))
                                   ((none) (do)))
 
                                 ;; Exit code: conforms=0, not-conforms=1

@@ -7,6 +7,8 @@ cli/tests/w3c/path/
 cli/tests/w3c/misc/
 cli/tests/w3c/complex/
 cli/tests/w3c/validation-reports/
+cli/tests/w3c12/inference-rules/
+cli/tests/w3c12/node-expr/
 .venv/
 __pycache__
 rust/target
@@ -21,3 +23,4 @@ rust/csrc
 .claude/
 .codex/
 .mcp.json
+/.env

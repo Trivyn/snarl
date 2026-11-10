@@ -244,6 +244,10 @@ pub struct ValidatorConfigFfi {
     pub max_errors: i64,
     pub include_warnings: u8,
     pub include_infos: u8,
+    /// Run the shapes graph's SHACL-AF rules before validating.
+    pub run_rules: u8,
+    /// Experimental: accept SHACL 1.2 Working Draft syntax.
+    pub shacl12: u8,
 }
 
 #[repr(C)]
@@ -263,6 +267,10 @@ pub struct ValidationResultFfi {
     pub source_constraint_component: SlopString,
     pub severity: Severity,
     pub message: SlopOptionString,
+    /// The sh:expression node, for sh:ExpressionConstraintComponent results.
+    pub source_constraint: SlopOptionRdfTerm,
+    /// The shape's sh:severity, when it is not sh:Violation, sh:Warning or sh:Info.
+    pub severity_iri: SlopOptionRdfTerm,
 }
 
 #[repr(C)]
@@ -284,6 +292,44 @@ pub union ValidatorResultData {
 pub struct ValidatorResultFfi {
     pub tag: ValidatorResultTag,
     pub data: ValidatorResultData,
+}
+
+// SHACL-AF rules
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct InferOutputFfi {
+    pub graph: SnarlDataGraphFfi,
+    pub inferred: SlopListRdfTriple,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
+pub enum InferResultTag {
+    Success = 0,
+    Error = 1,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub union InferResultData {
+    pub infer_success: InferOutputFfi,
+    pub infer_error: SlopString,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct InferResultFfi {
+    pub tag: InferResultTag,
+    pub data: InferResultData,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct ValidationOutcomeFfi {
+    pub result: ValidatorResultFfi,
+    pub graph: SnarlDataGraphFfi,
+    pub inferred: SlopListRdfTriple,
 }
 
 // ---------------------------------------------------------------------------
@@ -392,6 +438,18 @@ extern "C" {
         shapes_graph: IndexedGraphFfi,
         config: ValidatorConfigFfi,
     ) -> ValidatorResultFfi;
+    pub fn snarl_validate_data_graph_with_inference(
+        arena: *mut SlopArena,
+        data_graph: SnarlDataGraphFfi,
+        shapes_graph: IndexedGraphFfi,
+        config: ValidatorConfigFfi,
+    ) -> ValidationOutcomeFfi;
+    pub fn snarl_infer(
+        arena: *mut SlopArena,
+        data_graph: SnarlDataGraphFfi,
+        shapes_graph: IndexedGraphFfi,
+        config: ValidatorConfigFfi,
+    ) -> InferResultFfi;
     pub fn snarl_conforms_data_graph(
         arena: *mut SlopArena,
         data_graph: SnarlDataGraphFfi,
@@ -440,6 +498,9 @@ mod tests {
             ("snarl_types_ValidationReport", size_of::<ValidationReportFfi>()),
             ("snarl_types_ValidationResult", size_of::<ValidationResultFfi>()),
             ("snarl_types_ValidatorResult", size_of::<ValidatorResultFfi>()),
+            ("snarl_rules_InferOutput", size_of::<InferOutputFfi>()),
+            ("snarl_rules_InferResult", size_of::<InferResultFfi>()),
+            ("snarl_ValidationOutcome", size_of::<ValidationOutcomeFfi>()),
         ];
         for (i, (name, rust)) in rust_sizes.iter().enumerate() {
             let c = unsafe { snarl_ffi_sizeof(i as i32) };

@@ -1,0 +1,698 @@
+#include "../runtime/slop_runtime.h"
+#include "slop_serialize_ttl.h"
+
+slop_string slop_rdf_serialize_ttl_escape_string_char(slop_arena* arena, uint8_t c);
+uint8_t slop_rdf_serialize_ttl_needs_escaping(slop_string s);
+slop_string slop_rdf_serialize_ttl_escape_string(slop_arena* arena, slop_string s);
+uint8_t slop_rdf_serialize_ttl_string_contains_newline(slop_string s);
+uint8_t slop_rdf_serialize_ttl_valid_pn_local(slop_string s);
+slop_string slop_rdf_serialize_ttl_serialize_iri(slop_arena* arena, slop_rdf_rdf_IRI iri, slop_rdf_ttl_PrefixMap prefixes);
+int64_t slop_rdf_serialize_ttl_turtle_number_kind(slop_string s);
+slop_string slop_rdf_serialize_ttl_serialize_literal(slop_arena* arena, slop_rdf_rdf_Literal lit);
+slop_string slop_rdf_serialize_ttl_serialize_blank(slop_arena* arena, slop_rdf_rdf_BlankNode node);
+slop_string slop_rdf_serialize_ttl_serialize_term(slop_arena* arena, slop_rdf_rdf_Term t, slop_rdf_ttl_PrefixMap prefixes);
+slop_string slop_rdf_serialize_ttl_serialize_triple_term(slop_arena* arena, slop_rdf_rdf_Triple* tt, slop_rdf_ttl_PrefixMap prefixes);
+slop_string slop_rdf_serialize_ttl_serialize_prefixes(slop_arena* arena, slop_rdf_ttl_PrefixMap prefixes);
+slop_string slop_rdf_serialize_ttl_serialize_base(slop_arena* arena, slop_option_string base);
+slop_string slop_rdf_serialize_ttl_make_indent(slop_arena* arena, int64_t width);
+slop_option_int slop_rdf_serialize_ttl_find_subject_group(slop_list_slop_rdf_serialize_ttl_SubjectGroup groups, slop_rdf_rdf_Term subj);
+slop_option_int slop_rdf_serialize_ttl_find_pred_group(slop_list_slop_rdf_serialize_ttl_ObjectGroup groups, slop_rdf_rdf_Term pred);
+slop_list_slop_rdf_serialize_ttl_SubjectGroup slop_rdf_serialize_ttl_build_groups(slop_arena* arena, slop_rdf_rdf_Graph g);
+slop_string slop_rdf_serialize_ttl_serialize_ttl_string(slop_arena* arena, slop_rdf_rdf_Graph g, slop_rdf_serialize_ttl_SerializeConfig config);
+slop_result_u8_slop_rdf_serialize_ttl_TtlFileError slop_rdf_serialize_ttl_serialize_ttl_file(slop_arena* arena, slop_rdf_rdf_Graph g, slop_rdf_serialize_ttl_SerializeConfig config, slop_string path);
+void slop_rdf_serialize_ttl_emit_str(void* handle, slop_string s);
+slop_result_u8_slop_rdf_serialize_ttl_TtlFileError slop_rdf_serialize_ttl_serialize_ttl_stream(slop_arena* arena, slop_rdf_rdf_Graph g, slop_rdf_serialize_ttl_SerializeConfig config, slop_string path);
+
+slop_string slop_rdf_serialize_ttl_escape_string_char(slop_arena* arena, uint8_t c) {
+    if (c == 10) {
+        return SLOP_STR("\\n");
+    } else if (c == 13) {
+        return SLOP_STR("\\r");
+    } else if (c == 9) {
+        return SLOP_STR("\\t");
+    } else if (c == 92) {
+        return SLOP_STR("\\\\");
+    } else if (c == 34) {
+        return SLOP_STR("\\\"");
+    } else {
+        return slop_string_push_char(arena, SLOP_STR(""), c);
+    }
+}
+
+uint8_t slop_rdf_serialize_ttl_needs_escaping(slop_string s) {
+    {
+        __auto_type len = string_len(s);
+        uint8_t found = 0;
+        int64_t i = 0;
+        while ((i < len) && !(found)) {
+            {
+                __auto_type c = std_strlib_char_at(s, SLOP_RANGE(int64_t, i, 1, 0, 0, 0, "(Int 0 ..) at serialize-ttl.slop:80:29"));
+                if ((c == 10) || ((c == 13) || ((c == 9) || ((c == 92) || (c == 34))))) {
+                    found = 1;
+                }
+                i = (i + 1);
+            }
+        }
+        return found;
+    }
+}
+
+slop_string slop_rdf_serialize_ttl_escape_string(slop_arena* arena, slop_string s) {
+    slop_string _retval = {0};
+    if (!(slop_rdf_serialize_ttl_needs_escaping(s))) {
+        _retval = s;
+        goto _slop_post;
+    } else {
+        {
+            __auto_type len = string_len(s);
+            __auto_type result = SLOP_STR("");
+            {
+                int64_t i = 0;
+                while (i < len) {
+                    {
+                        __auto_type c = std_strlib_char_at(s, SLOP_RANGE(int64_t, i, 1, 0, 0, 0, "(Int 0 ..) at serialize-ttl.slop:97:33"));
+                        result = string_concat(arena, result, slop_rdf_serialize_ttl_escape_string_char(arena, c));
+                        i = (i + 1);
+                    }
+                }
+            }
+            _retval = result;
+            goto _slop_post;
+        }
+    }
+    _slop_post: ;
+    SLOP_POST(((string_len(_retval) >= 0)), "(>= (string-len $result) 0)");
+    return _retval;
+}
+
+uint8_t slop_rdf_serialize_ttl_string_contains_newline(slop_string s) {
+    {
+        __auto_type len = string_len(s);
+        uint8_t found = 0;
+        int64_t i = 0;
+        while ((i < len) && !(found)) {
+            {
+                __auto_type c = std_strlib_char_at(s, SLOP_RANGE(int64_t, i, 1, 0, 0, 0, "(Int 0 ..) at serialize-ttl.slop:110:29"));
+                if ((c == 10) || (c == 13)) {
+                    found = 1;
+                }
+                i = (i + 1);
+            }
+        }
+        return found;
+    }
+}
+
+uint8_t slop_rdf_serialize_ttl_valid_pn_local(slop_string s) {
+    {
+        __auto_type len = string_len(s);
+        uint8_t ok = 1;
+        int64_t i = 0;
+        while ((i < len) && ok) {
+            {
+                __auto_type c = std_strlib_char_at(s, SLOP_RANGE(int64_t, i, 1, 0, 0, 0, "(Int 0 ..) at serialize-ttl.slop:140:29"));
+                if (slop_rdf_ttl_is_pn_local_mid(c)) {
+                    if ((i == 0) && !(slop_rdf_ttl_is_pn_local_first(c))) {
+                        ok = 0;
+                    } else {
+                        i = (i + 1);
+                    }
+                } else if (c == 46) {
+                    if ((i == 0) || ((i + 1) == len)) {
+                        ok = 0;
+                    } else {
+                        i = (i + 1);
+                    }
+                } else if ((c == 37) && (((i + 2) < len) && (slop_rdf_ttl_is_hex_digit(std_strlib_char_at(s, SLOP_RANGE(int64_t, (i + 1), 1, 0, 0, 0, "(Int 0 ..) at serialize-ttl.slop:152:54"))) && slop_rdf_ttl_is_hex_digit(std_strlib_char_at(s, SLOP_RANGE(int64_t, (i + 2), 1, 0, 0, 0, "(Int 0 ..) at serialize-ttl.slop:152:89")))))) {
+                    i = (i + 3);
+                } else {
+                    ok = 0;
+                }
+            }
+        }
+        return ok;
+    }
+}
+
+slop_string slop_rdf_serialize_ttl_serialize_iri(slop_arena* arena, slop_rdf_rdf_IRI iri, slop_rdf_ttl_PrefixMap prefixes) {
+    SLOP_PRE(((string_len(iri.value) > 0)), "(> (string-len iri.value) 0)");
+    slop_string _retval = {0};
+    {
+        __auto_type iri_val = iri.value;
+        slop_option_string compressed = (slop_option_string){.has_value = false};
+        {
+            __auto_type _coll = prefixes.bindings;
+            for (size_t _i = 0; _i < _coll.len; _i++) {
+                __auto_type b = _coll.data[_i];
+                __auto_type _mv_633 = compressed;
+                if (_mv_633.has_value) {
+                    __auto_type _ = _mv_633.value;
+                } else if (!_mv_633.has_value) {
+                    {
+                        __auto_type prefix_iri = b.iri;
+                        if (std_strlib_starts_with(iri_val, prefix_iri)) {
+                            {
+                                __auto_type local = std_strlib_substring(arena, iri_val, SLOP_RANGE(int64_t, string_len(prefix_iri), 1, 0, 0, 0, "(Int 0 ..) at serialize-ttl.slop:181:55"), SLOP_RANGE(int64_t, (string_len(iri_val) - string_len(prefix_iri)), 1, 0, 0, 0, "(Int 0 ..) at serialize-ttl.slop:182:32"));
+                                if (slop_rdf_serialize_ttl_valid_pn_local(local)) {
+                                    compressed = (slop_option_string){.has_value = 1, .value = string_concat(arena, string_concat(arena, b.prefix, SLOP_STR(":")), local)};
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        __auto_type _mv_634 = compressed;
+        if (_mv_634.has_value) {
+            __auto_type s = _mv_634.value;
+            _retval = s;
+            goto _slop_post;
+        } else if (!_mv_634.has_value) {
+            _retval = string_concat(arena, string_concat(arena, SLOP_STR("<"), iri_val), SLOP_STR(">"));
+            goto _slop_post;
+        }
+        SLOP_UNREACHABLE();
+    }
+    _slop_post: ;
+    SLOP_POST(((string_len(_retval) > 0)), "(> (string-len $result) 0)");
+    return _retval;
+}
+
+int64_t slop_rdf_serialize_ttl_turtle_number_kind(slop_string s) {
+    int64_t _retval = {0};
+    {
+        __auto_type len = string_len(s);
+        int64_t i = 0;
+        int64_t int_digits = 0;
+        int64_t frac_digits = 0;
+        int64_t exp_digits = 0;
+        uint8_t dot = 0;
+        uint8_t exp = 0;
+        if ((std_strlib_char_at(s, 0) == 43) || (std_strlib_char_at(s, 0) == 45)) {
+            i = 1;
+        }
+        while (std_strlib_is_digit(std_strlib_char_at(s, SLOP_RANGE(int64_t, i, 1, 0, 0, 0, "(Int 0 ..) at serialize-ttl.slop:219:35")))) {
+            int_digits = (int_digits + 1);
+            i = (i + 1);
+        }
+        if (std_strlib_char_at(s, SLOP_RANGE(int64_t, i, 1, 0, 0, 0, "(Int 0 ..) at serialize-ttl.slop:222:28")) == 46) {
+            dot = 1;
+            i = (i + 1);
+            while (std_strlib_is_digit(std_strlib_char_at(s, SLOP_RANGE(int64_t, i, 1, 0, 0, 0, "(Int 0 ..) at serialize-ttl.slop:225:37")))) {
+                frac_digits = (frac_digits + 1);
+                i = (i + 1);
+            }
+        }
+        if ((std_strlib_char_at(s, SLOP_RANGE(int64_t, i, 1, 0, 0, 0, "(Int 0 ..) at serialize-ttl.slop:228:32")) == 101) || (std_strlib_char_at(s, SLOP_RANGE(int64_t, i, 1, 0, 0, 0, "(Int 0 ..) at serialize-ttl.slop:228:55")) == 69)) {
+            exp = 1;
+            i = (i + 1);
+            if ((std_strlib_char_at(s, SLOP_RANGE(int64_t, i, 1, 0, 0, 0, "(Int 0 ..) at serialize-ttl.slop:231:34")) == 43) || (std_strlib_char_at(s, SLOP_RANGE(int64_t, i, 1, 0, 0, 0, "(Int 0 ..) at serialize-ttl.slop:231:56")) == 45)) {
+                i = (i + 1);
+            }
+            while (std_strlib_is_digit(std_strlib_char_at(s, SLOP_RANGE(int64_t, i, 1, 0, 0, 0, "(Int 0 ..) at serialize-ttl.slop:233:37")))) {
+                exp_digits = (exp_digits + 1);
+                i = (i + 1);
+            }
+        }
+        if (i != len) {
+            _retval = 0;
+            goto _slop_post;
+        } else if (exp) {
+            if ((exp_digits > 0) && ((int_digits + frac_digits) > 0)) {
+                _retval = 3;
+                goto _slop_post;
+            } else {
+                _retval = 0;
+                goto _slop_post;
+            }
+        } else if (dot) {
+            if (frac_digits > 0) {
+                _retval = 2;
+                goto _slop_post;
+            } else {
+                _retval = 0;
+                goto _slop_post;
+            }
+        } else if (int_digits > 0) {
+            _retval = 1;
+            goto _slop_post;
+        } else {
+            _retval = 0;
+            goto _slop_post;
+        }
+    }
+    _slop_post: ;
+    SLOP_POST((((_retval >= 0) && (_retval <= 3))), "(and (>= $result 0) (<= $result 3))");
+    return _retval;
+}
+
+slop_string slop_rdf_serialize_ttl_serialize_literal(slop_arena* arena, slop_rdf_rdf_Literal lit) {
+    slop_string _retval = {0};
+    {
+        __auto_type val = lit.value;
+        __auto_type dt = lit.datatype;
+        __auto_type lang = lit.lang;
+        __auto_type _mv_635 = lang;
+        if (_mv_635.has_value) {
+            __auto_type l = _mv_635.value;
+            _retval = string_concat(arena, string_concat(arena, string_concat(arena, SLOP_STR("\""), slop_rdf_serialize_ttl_escape_string(arena, val)), SLOP_STR("\"@")), l);
+            goto _slop_post;
+        } else if (!_mv_635.has_value) {
+            __auto_type _mv_636 = dt;
+            if (_mv_636.has_value) {
+                __auto_type dt_iri = _mv_636.value;
+                if (string_eq(dt_iri, slop_rdf_vocab_XSD_INTEGER) && (slop_rdf_serialize_ttl_turtle_number_kind(val) == 1)) {
+                    _retval = val;
+                    goto _slop_post;
+                } else if (string_eq(dt_iri, slop_rdf_vocab_XSD_DECIMAL) && (slop_rdf_serialize_ttl_turtle_number_kind(val) == 2)) {
+                    _retval = val;
+                    goto _slop_post;
+                } else if (string_eq(dt_iri, slop_rdf_vocab_XSD_DOUBLE) && (slop_rdf_serialize_ttl_turtle_number_kind(val) == 3)) {
+                    _retval = val;
+                    goto _slop_post;
+                } else if (string_eq(dt_iri, slop_rdf_vocab_XSD_BOOLEAN) && (string_eq(val, SLOP_STR("true")) || string_eq(val, SLOP_STR("false")))) {
+                    _retval = val;
+                    goto _slop_post;
+                } else if (string_eq(dt_iri, slop_rdf_vocab_XSD_STRING)) {
+                    if (slop_rdf_serialize_ttl_string_contains_newline(val)) {
+                        _retval = string_concat(arena, string_concat(arena, SLOP_STR("\"\"\""), slop_rdf_serialize_ttl_escape_string(arena, val)), SLOP_STR("\"\"\""));
+                        goto _slop_post;
+                    } else {
+                        _retval = string_concat(arena, string_concat(arena, SLOP_STR("\""), slop_rdf_serialize_ttl_escape_string(arena, val)), SLOP_STR("\""));
+                        goto _slop_post;
+                    }
+                } else {
+                    _retval = string_concat(arena, string_concat(arena, string_concat(arena, string_concat(arena, SLOP_STR("\""), slop_rdf_serialize_ttl_escape_string(arena, val)), SLOP_STR("\"^^<")), dt_iri), SLOP_STR(">"));
+                    goto _slop_post;
+                }
+            } else if (!_mv_636.has_value) {
+                if (slop_rdf_serialize_ttl_string_contains_newline(val)) {
+                    _retval = string_concat(arena, string_concat(arena, SLOP_STR("\"\"\""), slop_rdf_serialize_ttl_escape_string(arena, val)), SLOP_STR("\"\"\""));
+                    goto _slop_post;
+                } else {
+                    _retval = string_concat(arena, string_concat(arena, SLOP_STR("\""), slop_rdf_serialize_ttl_escape_string(arena, val)), SLOP_STR("\""));
+                    goto _slop_post;
+                }
+            }
+            SLOP_UNREACHABLE();
+        }
+        SLOP_UNREACHABLE();
+    }
+    _slop_post: ;
+    SLOP_POST(((string_len(_retval) > 0)), "(> (string-len $result) 0)");
+    SLOP_POST(((string_len(_retval) > 0)), "(> (string-len $result) 0)");
+    return _retval;
+}
+
+slop_string slop_rdf_serialize_ttl_serialize_blank(slop_arena* arena, slop_rdf_rdf_BlankNode node) {
+    SLOP_PRE(((node.id >= 0)), "(>= node.id 0)");
+    slop_string _retval = {0};
+    _retval = string_concat(arena, SLOP_STR("_:b"), int_to_string(arena, node.id));
+    goto _slop_post;
+    _slop_post: ;
+    SLOP_POST((std_strlib_starts_with(_retval, SLOP_STR("_:"))), "(starts-with $result \"_:\")");
+    return _retval;
+}
+
+slop_string slop_rdf_serialize_ttl_serialize_term(slop_arena* arena, slop_rdf_rdf_Term t, slop_rdf_ttl_PrefixMap prefixes) {
+    slop_string _retval = {0};
+    __auto_type _mv_637 = t;
+    switch (_mv_637.tag) {
+        case slop_rdf_rdf_Term_term_iri:
+        {
+            __auto_type iri = _mv_637.data.term_iri;
+            _retval = slop_rdf_serialize_ttl_serialize_iri(arena, iri, prefixes);
+            goto _slop_post;
+        }
+        case slop_rdf_rdf_Term_term_blank:
+        {
+            __auto_type node = _mv_637.data.term_blank;
+            _retval = slop_rdf_serialize_ttl_serialize_blank(arena, node);
+            goto _slop_post;
+        }
+        case slop_rdf_rdf_Term_term_literal:
+        {
+            __auto_type lit = _mv_637.data.term_literal;
+            _retval = slop_rdf_serialize_ttl_serialize_literal(arena, lit);
+            goto _slop_post;
+        }
+        case slop_rdf_rdf_Term_term_triple:
+        {
+            __auto_type tt = _mv_637.data.term_triple;
+            _retval = slop_rdf_serialize_ttl_serialize_triple_term(arena, tt, prefixes);
+            goto _slop_post;
+        }
+    }
+    SLOP_UNREACHABLE();
+    _slop_post: ;
+    SLOP_POST(((string_len(_retval) > 0)), "(> (string-len $result) 0)");
+    return _retval;
+}
+
+slop_string slop_rdf_serialize_ttl_serialize_triple_term(slop_arena* arena, slop_rdf_rdf_Triple* tt, slop_rdf_ttl_PrefixMap prefixes) {
+    slop_string _retval = {0};
+    {
+        __auto_type s = slop_rdf_serialize_ttl_serialize_term(arena, (*tt).subject, prefixes);
+        __auto_type p = slop_rdf_serialize_ttl_serialize_term(arena, (*tt).predicate, prefixes);
+        __auto_type o = slop_rdf_serialize_ttl_serialize_term(arena, (*tt).object, prefixes);
+        _retval = string_concat(arena, SLOP_STR("<<( "), string_concat(arena, s, string_concat(arena, SLOP_STR(" "), string_concat(arena, p, string_concat(arena, SLOP_STR(" "), string_concat(arena, o, SLOP_STR(" )>>")))))));
+        goto _slop_post;
+    }
+    _slop_post: ;
+    SLOP_POST(((string_len(_retval) > 0)), "(> (string-len $result) 0)");
+    return _retval;
+}
+
+slop_string slop_rdf_serialize_ttl_serialize_prefixes(slop_arena* arena, slop_rdf_ttl_PrefixMap prefixes) {
+    slop_string _retval = {0};
+    {
+        __auto_type result = SLOP_STR("");
+        {
+            __auto_type _coll = prefixes.bindings;
+            for (size_t _i = 0; _i < _coll.len; _i++) {
+                __auto_type b = _coll.data[_i];
+                result = string_concat(arena, result, string_concat(arena, string_concat(arena, string_concat(arena, SLOP_STR("@prefix "), b.prefix), SLOP_STR(": <")), string_concat(arena, b.iri, SLOP_STR("> .\n"))));
+            }
+        }
+        _retval = result;
+        goto _slop_post;
+    }
+    _slop_post: ;
+    SLOP_POST(((string_len(_retval) >= 0)), "(>= (string-len $result) 0)");
+    return _retval;
+}
+
+slop_string slop_rdf_serialize_ttl_serialize_base(slop_arena* arena, slop_option_string base) {
+    __auto_type _mv_638 = base;
+    if (_mv_638.has_value) {
+        __auto_type iri = _mv_638.value;
+        return string_concat(arena, string_concat(arena, SLOP_STR("@base <"), iri), SLOP_STR("> .\n"));
+    } else if (!_mv_638.has_value) {
+        return SLOP_STR("");
+    }
+    SLOP_UNREACHABLE();
+}
+
+slop_string slop_rdf_serialize_ttl_make_indent(slop_arena* arena, int64_t width) {
+    {
+        __auto_type result = SLOP_STR("");
+        int64_t i = 0;
+        while (i < width) {
+            result = string_concat(arena, result, SLOP_STR(" "));
+            i = (i + 1);
+        }
+        return result;
+    }
+}
+
+slop_option_int slop_rdf_serialize_ttl_find_subject_group(slop_list_slop_rdf_serialize_ttl_SubjectGroup groups, slop_rdf_rdf_Term subj) {
+    {
+        slop_option_int found = (slop_option_int){.has_value = false};
+        int64_t i = 0;
+        {
+            __auto_type _coll = groups;
+            for (size_t _i = 0; _i < _coll.len; _i++) {
+                __auto_type sg = _coll.data[_i];
+                __auto_type _mv_639 = found;
+                if (_mv_639.has_value) {
+                    __auto_type _ = _mv_639.value;
+                } else if (!_mv_639.has_value) {
+                    if (rdf_term_eq(sg.subject, subj)) {
+                        found = (slop_option_int){.has_value = 1, .value = i};
+                    }
+                }
+                i = (i + 1);
+            }
+        }
+        return found;
+    }
+}
+
+slop_option_int slop_rdf_serialize_ttl_find_pred_group(slop_list_slop_rdf_serialize_ttl_ObjectGroup groups, slop_rdf_rdf_Term pred) {
+    {
+        slop_option_int found = (slop_option_int){.has_value = false};
+        int64_t i = 0;
+        {
+            __auto_type _coll = groups;
+            for (size_t _i = 0; _i < _coll.len; _i++) {
+                __auto_type og = _coll.data[_i];
+                __auto_type _mv_640 = found;
+                if (_mv_640.has_value) {
+                    __auto_type _ = _mv_640.value;
+                } else if (!_mv_640.has_value) {
+                    if (rdf_term_eq(og.predicate, pred)) {
+                        found = (slop_option_int){.has_value = 1, .value = i};
+                    }
+                }
+                i = (i + 1);
+            }
+        }
+        return found;
+    }
+}
+
+slop_list_slop_rdf_serialize_ttl_SubjectGroup slop_rdf_serialize_ttl_build_groups(slop_arena* arena, slop_rdf_rdf_Graph g) {
+    {
+        __auto_type groups = ((slop_list_slop_rdf_serialize_ttl_SubjectGroup){ .data = NULL, .len = 0, .cap = 0, .arena = arena });
+        {
+            __auto_type _coll = g.triples;
+            for (size_t _i = 0; _i < _coll.len; _i++) {
+                __auto_type triple = _coll.data[_i];
+                {
+                    __auto_type subj = triple.subject;
+                    __auto_type pred = triple.predicate;
+                    __auto_type obj = triple.object;
+                    {
+                        __auto_type sg_idx = slop_rdf_serialize_ttl_find_subject_group(groups, subj);
+                        __auto_type _mv_641 = sg_idx;
+                        if (_mv_641.has_value) {
+                            __auto_type idx = _mv_641.value;
+                            __auto_type _mv_642 = ({ __auto_type _lst = groups; size_t _idx = (size_t)idx; slop_option_slop_rdf_serialize_ttl_SubjectGroup _r = {0}; if (_idx < _lst.len) { _r.has_value = true; _r.value = _lst.data[_idx]; } else { _r.has_value = false; } _r; });
+                            if (_mv_642.has_value) {
+                                __auto_type sg = _mv_642.value;
+                                {
+                                    __auto_type pg_idx = slop_rdf_serialize_ttl_find_pred_group(sg.pred_groups, pred);
+                                    __auto_type _mv_643 = pg_idx;
+                                    if (_mv_643.has_value) {
+                                        __auto_type pidx = _mv_643.value;
+                                        __auto_type _mv_644 = ({ __auto_type _lst = sg.pred_groups; size_t _idx = (size_t)pidx; slop_option_slop_rdf_serialize_ttl_ObjectGroup _r = {0}; if (_idx < _lst.len) { _r.has_value = true; _r.value = _lst.data[_idx]; } else { _r.has_value = false; } _r; });
+                                        if (_mv_644.has_value) {
+                                            __auto_type pg = _mv_644.value;
+                                            {
+                                                __auto_type grown = pg;
+                                                ({ __auto_type _lst_p = &(grown.objects); __auto_type _item = (obj); if (_lst_p->len >= _lst_p->cap) { _lst_p->data = (__typeof__(_lst_p->data))slop_list_grow_raw(_lst_p->arena, _lst_p->data, &_lst_p->cap, _lst_p->len, sizeof(*_lst_p->data)); } _lst_p->data[_lst_p->len++] = _item; (void)0; });
+                                                ({ __auto_type _set_lst = &(sg.pred_groups); size_t _set_idx = (size_t)(pidx); __auto_type _set_val = (grown); bool _set_ok = _set_idx < _set_lst->len; if (_set_ok) { _set_lst->data[_set_idx] = _set_val; } _set_ok; });
+                                            }
+                                        } else if (!_mv_644.has_value) {
+                                        }
+                                    } else if (!_mv_643.has_value) {
+                                        {
+                                            __auto_type new_pg = ((slop_rdf_serialize_ttl_ObjectGroup){.predicate = pred, .objects = ({ ({ __auto_type ol = ((slop_list_slop_rdf_rdf_Term){ .data = NULL, .len = 0, .cap = 0, .arena = arena }); ({ __auto_type _lst_p = &(ol); __auto_type _item = (obj); if (_lst_p->len >= _lst_p->cap) { _lst_p->data = (__typeof__(_lst_p->data))slop_list_grow_raw(_lst_p->arena, _lst_p->data, &_lst_p->cap, _lst_p->len, sizeof(*_lst_p->data)); } _lst_p->data[_lst_p->len++] = _item; (void)0; }); ol; }); })});
+                                            {
+                                                __auto_type grown = sg;
+                                                ({ __auto_type _lst_p = &(grown.pred_groups); __auto_type _item = (new_pg); if (_lst_p->len >= _lst_p->cap) { _lst_p->data = (__typeof__(_lst_p->data))slop_list_grow_raw(_lst_p->arena, _lst_p->data, &_lst_p->cap, _lst_p->len, sizeof(*_lst_p->data)); } _lst_p->data[_lst_p->len++] = _item; (void)0; });
+                                                ({ __auto_type _set_lst = &(groups); size_t _set_idx = (size_t)(idx); __auto_type _set_val = (grown); bool _set_ok = _set_idx < _set_lst->len; if (_set_ok) { _set_lst->data[_set_idx] = _set_val; } _set_ok; });
+                                            }
+                                        }
+                                    }
+                                }
+                            } else if (!_mv_642.has_value) {
+                            }
+                        } else if (!_mv_641.has_value) {
+                            {
+                                __auto_type new_pg = ((slop_rdf_serialize_ttl_ObjectGroup){.predicate = pred, .objects = ({ ({ __auto_type ol = ((slop_list_slop_rdf_rdf_Term){ .data = NULL, .len = 0, .cap = 0, .arena = arena }); ({ __auto_type _lst_p = &(ol); __auto_type _item = (obj); if (_lst_p->len >= _lst_p->cap) { _lst_p->data = (__typeof__(_lst_p->data))slop_list_grow_raw(_lst_p->arena, _lst_p->data, &_lst_p->cap, _lst_p->len, sizeof(*_lst_p->data)); } _lst_p->data[_lst_p->len++] = _item; (void)0; }); ol; }); })});
+                                {
+                                    __auto_type new_sg = ((slop_rdf_serialize_ttl_SubjectGroup){.subject = subj, .pred_groups = ({ ({ __auto_type pl = ((slop_list_slop_rdf_serialize_ttl_ObjectGroup){ .data = NULL, .len = 0, .cap = 0, .arena = arena }); ({ __auto_type _lst_p = &(pl); __auto_type _item = (new_pg); if (_lst_p->len >= _lst_p->cap) { _lst_p->data = (__typeof__(_lst_p->data))slop_list_grow_raw(_lst_p->arena, _lst_p->data, &_lst_p->cap, _lst_p->len, sizeof(*_lst_p->data)); } _lst_p->data[_lst_p->len++] = _item; (void)0; }); pl; }); })});
+                                    ({ __auto_type _lst_p = &(groups); __auto_type _item = (new_sg); if (_lst_p->len >= _lst_p->cap) { _lst_p->data = (__typeof__(_lst_p->data))slop_list_grow_raw(_lst_p->arena, _lst_p->data, &_lst_p->cap, _lst_p->len, sizeof(*_lst_p->data)); } _lst_p->data[_lst_p->len++] = _item; (void)0; });
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return groups;
+    }
+}
+
+slop_string slop_rdf_serialize_ttl_serialize_ttl_string(slop_arena* arena, slop_rdf_rdf_Graph g, slop_rdf_serialize_ttl_SerializeConfig config) {
+    slop_string _retval = {0};
+    {
+        __auto_type prefixes = config.prefixes;
+        __auto_type base = config.base_iri;
+        __auto_type indent = slop_rdf_serialize_ttl_make_indent(arena, config.indent_width);
+        {
+            __auto_type result = SLOP_STR("");
+            result = string_concat(arena, result, slop_rdf_serialize_ttl_serialize_base(arena, base));
+            {
+                __auto_type prefix_str = slop_rdf_serialize_ttl_serialize_prefixes(arena, prefixes);
+                if (string_len(prefix_str) > 0) {
+                    result = string_concat(arena, result, prefix_str);
+                    result = string_concat(arena, result, SLOP_STR("\n"));
+                }
+            }
+            {
+                __auto_type prev_subj = SLOP_STR("");
+                __auto_type prev_pred = SLOP_STR("");
+                uint8_t first_triple = 1;
+                {
+                    __auto_type _coll = g.triples;
+                    for (size_t _i = 0; _i < _coll.len; _i++) {
+                        __auto_type triple = _coll.data[_i];
+                        {
+                            __auto_type subj_str = slop_rdf_serialize_ttl_serialize_term(arena, triple.subject, prefixes);
+                            __auto_type pred_str = slop_rdf_serialize_ttl_serialize_term(arena, triple.predicate, prefixes);
+                            __auto_type obj_str = slop_rdf_serialize_ttl_serialize_term(arena, triple.object, prefixes);
+                            if (first_triple) {
+                                result = string_concat(arena, result, subj_str);
+                                result = string_concat(arena, result, SLOP_STR(" "));
+                                result = string_concat(arena, result, pred_str);
+                                result = string_concat(arena, result, SLOP_STR(" "));
+                                result = string_concat(arena, result, obj_str);
+                                first_triple = 0;
+                            } else if (string_eq(subj_str, prev_subj) && string_eq(pred_str, prev_pred)) {
+                                result = string_concat(arena, result, SLOP_STR(", "));
+                                result = string_concat(arena, result, obj_str);
+                            } else if (string_eq(subj_str, prev_subj)) {
+                                result = string_concat(arena, result, SLOP_STR(" ;\n"));
+                                result = string_concat(arena, result, indent);
+                                result = string_concat(arena, result, pred_str);
+                                result = string_concat(arena, result, SLOP_STR(" "));
+                                result = string_concat(arena, result, obj_str);
+                            } else {
+                                result = string_concat(arena, result, SLOP_STR(" .\n"));
+                                result = string_concat(arena, result, subj_str);
+                                result = string_concat(arena, result, SLOP_STR(" "));
+                                result = string_concat(arena, result, pred_str);
+                                result = string_concat(arena, result, SLOP_STR(" "));
+                                result = string_concat(arena, result, obj_str);
+                            }
+                            prev_subj = subj_str;
+                            prev_pred = pred_str;
+                        }
+                    }
+                }
+                if (!(first_triple)) {
+                    result = string_concat(arena, result, SLOP_STR(" .\n"));
+                }
+            }
+            _retval = result;
+            goto _slop_post;
+        }
+    }
+    _slop_post: ;
+    SLOP_POST(((string_len(_retval) >= 0)), "(>= (string-len $result) 0)");
+    return _retval;
+}
+
+slop_result_u8_slop_rdf_serialize_ttl_TtlFileError slop_rdf_serialize_ttl_serialize_ttl_file(slop_arena* arena, slop_rdf_rdf_Graph g, slop_rdf_serialize_ttl_SerializeConfig config, slop_string path) {
+    SLOP_PRE(((string_len(path) > 0)), "(> (string-len path) 0)");
+    {
+        __auto_type content = slop_rdf_serialize_ttl_serialize_ttl_string(arena, g, config);
+        {
+            __auto_type f = std_file_file_open(path, std_file_FileMode_write);
+            __auto_type _mv_645 = f;
+            if (_mv_645.is_ok) {
+                __auto_type handle = _mv_645.data.ok;
+                std_file_file_write_line((&handle), content);
+                std_file_file_close((&handle));
+                return ((slop_result_u8_slop_rdf_serialize_ttl_TtlFileError){ .is_ok = true, .data.ok = 1 });
+            } else if (!_mv_645.is_ok) {
+                __auto_type e = _mv_645.data.err;
+                return ((slop_result_u8_slop_rdf_serialize_ttl_TtlFileError){ .is_ok = false, .data.err = ((slop_rdf_serialize_ttl_TtlFileError){ .tag = slop_rdf_serialize_ttl_TtlFileError_file_error, .data.file_error = e }) });
+            }
+            SLOP_UNREACHABLE();
+        }
+    }
+}
+
+void slop_rdf_serialize_ttl_emit_str(void* handle, slop_string s) {
+    fwrite(((void*)(s.data)), ((uint64_t)(1)), ((uint64_t)(s.len)), handle);
+}
+
+slop_result_u8_slop_rdf_serialize_ttl_TtlFileError slop_rdf_serialize_ttl_serialize_ttl_stream(slop_arena* arena, slop_rdf_rdf_Graph g, slop_rdf_serialize_ttl_SerializeConfig config, slop_string path) {
+    SLOP_PRE(((string_len(path) > 0)), "(> (string-len path) 0)");
+    {
+        __auto_type f = std_file_file_open(path, std_file_FileMode_write);
+        __auto_type _mv_646 = f;
+        if (_mv_646.is_ok) {
+            __auto_type handle = _mv_646.data.ok;
+            {
+                __auto_type fp = ((void*)(handle.handle));
+                __auto_type prefixes = config.prefixes;
+                __auto_type base = config.base_iri;
+                __auto_type indent = slop_rdf_serialize_ttl_make_indent(arena, config.indent_width);
+                {
+                    __auto_type base_str = slop_rdf_serialize_ttl_serialize_base(arena, base);
+                    if (string_len(base_str) > 0) {
+                        slop_rdf_serialize_ttl_emit_str(fp, base_str);
+                    }
+                }
+                {
+                    __auto_type prefix_str = slop_rdf_serialize_ttl_serialize_prefixes(arena, prefixes);
+                    if (string_len(prefix_str) > 0) {
+                        slop_rdf_serialize_ttl_emit_str(fp, prefix_str);
+                        slop_rdf_serialize_ttl_emit_str(fp, SLOP_STR("\n"));
+                    }
+                }
+                {
+                    slop_rdf_rdf_Term prev_subj = rdf_make_blank(arena, 2147483647);
+                    slop_rdf_rdf_Term prev_pred = rdf_make_blank(arena, 2147483647);
+                    uint8_t first_triple = 1;
+                    {
+                        __auto_type _coll = g.triples;
+                        for (size_t _i = 0; _i < _coll.len; _i++) {
+                            __auto_type triple = _coll.data[_i];
+                            {
+                                slop_arena _arena_3 = slop_arena_new(4096);
+                                slop_arena* arena = &_arena_3;
+                                {
+                                    __auto_type subj_str = slop_rdf_serialize_ttl_serialize_term(arena, triple.subject, prefixes);
+                                    __auto_type pred_str = slop_rdf_serialize_ttl_serialize_term(arena, triple.predicate, prefixes);
+                                    __auto_type obj_str = slop_rdf_serialize_ttl_serialize_term(arena, triple.object, prefixes);
+                                    if (first_triple) {
+                                        slop_rdf_serialize_ttl_emit_str(fp, subj_str);
+                                        slop_rdf_serialize_ttl_emit_str(fp, SLOP_STR(" "));
+                                        slop_rdf_serialize_ttl_emit_str(fp, pred_str);
+                                        slop_rdf_serialize_ttl_emit_str(fp, SLOP_STR(" "));
+                                        slop_rdf_serialize_ttl_emit_str(fp, obj_str);
+                                        first_triple = 0;
+                                    } else if (rdf_term_eq(triple.subject, prev_subj) && rdf_term_eq(triple.predicate, prev_pred)) {
+                                        slop_rdf_serialize_ttl_emit_str(fp, SLOP_STR(", "));
+                                        slop_rdf_serialize_ttl_emit_str(fp, obj_str);
+                                    } else if (rdf_term_eq(triple.subject, prev_subj)) {
+                                        slop_rdf_serialize_ttl_emit_str(fp, SLOP_STR(" ;\n"));
+                                        slop_rdf_serialize_ttl_emit_str(fp, indent);
+                                        slop_rdf_serialize_ttl_emit_str(fp, pred_str);
+                                        slop_rdf_serialize_ttl_emit_str(fp, SLOP_STR(" "));
+                                        slop_rdf_serialize_ttl_emit_str(fp, obj_str);
+                                    } else {
+                                        slop_rdf_serialize_ttl_emit_str(fp, SLOP_STR(" .\n"));
+                                        slop_rdf_serialize_ttl_emit_str(fp, subj_str);
+                                        slop_rdf_serialize_ttl_emit_str(fp, SLOP_STR(" "));
+                                        slop_rdf_serialize_ttl_emit_str(fp, pred_str);
+                                        slop_rdf_serialize_ttl_emit_str(fp, SLOP_STR(" "));
+                                        slop_rdf_serialize_ttl_emit_str(fp, obj_str);
+                                    }
+                                }
+                                slop_arena_free(arena);
+                            }
+                            prev_subj = triple.subject;
+                            prev_pred = triple.predicate;
+                        }
+                    }
+                    if (!(first_triple)) {
+                        slop_rdf_serialize_ttl_emit_str(fp, SLOP_STR(" .\n"));
+                    }
+                }
+                std_file_file_close((&handle));
+                return ((slop_result_u8_slop_rdf_serialize_ttl_TtlFileError){ .is_ok = true, .data.ok = 1 });
+            }
+        } else if (!_mv_646.is_ok) {
+            __auto_type e = _mv_646.data.err;
+            return ((slop_result_u8_slop_rdf_serialize_ttl_TtlFileError){ .is_ok = false, .data.err = ((slop_rdf_serialize_ttl_TtlFileError){ .tag = slop_rdf_serialize_ttl_TtlFileError_file_error, .data.file_error = e }) });
+        }
+        SLOP_UNREACHABLE();
+    }
+}
+

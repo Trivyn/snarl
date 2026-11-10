@@ -1,0 +1,4 @@
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix ex: <http://example.org/> .
+ex:shapes sh:entailment <http://www.w3.org/ns/entailment/RDFS> .
+ex:NodeShape a sh:NodeShape ; sh:targetNode ex:n ; sh:property [ sh:path ex:p ; sh:minCount 0 ] .

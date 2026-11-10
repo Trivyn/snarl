@@ -1,0 +1,21 @@
+# Rules with the same sh:order run concurrently and do not see each other's
+# triples (SHACL 1.2 test same-order): only the first rule fires (1 triple).
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix ex: <http://example.org/> .
+
+ex:n a ex:Node .
+
+ex:HasA sh:property [ sh:path ex:a ; sh:minCount 1 ] .
+
+ex:NodeShape
+    a sh:NodeShape ;
+    sh:targetClass ex:Node ;
+    sh:rule [
+        a sh:TripleRule ;
+        sh:subject sh:this ; sh:predicate ex:a ; sh:object true ;
+    ] ;
+    sh:rule [
+        a sh:TripleRule ;
+        sh:subject [ sh:filterShape ex:HasA ; sh:nodes sh:this ] ;
+        sh:predicate ex:b ; sh:object true ;
+    ] .

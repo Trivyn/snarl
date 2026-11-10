@@ -14,8 +14,8 @@ slop_option_snarl_types_ValidationResult snarl_check_min_exclusive(slop_arena* a
 slop_option_snarl_types_ValidationResult snarl_check_max_exclusive(slop_arena* arena, slop_rdf_rdf_Term focus_node, slop_rdf_rdf_Term value_node, slop_rdf_rdf_Term limit, slop_option_snarl_types_ShaclPath path, slop_rdf_rdf_Term shape_id, snarl_types_Severity severity, slop_option_string message);
 
 uint8_t snarl_value_range_min_inclusive_satisfied(slop_arena* arena, slop_rdf_rdf_Term value_node, slop_rdf_rdf_Term limit) {
-    __auto_type _mv_288 = xsd_compare(arena, value_node, limit);
-    switch (_mv_288) {
+    __auto_type _mv_311 = snarl_literal_compare(arena, value_node, limit);
+    switch (_mv_311) {
         case slop_rdf_xsd_XsdCompareResult_xsd_compare_equal: {
             return 1;
             break;
@@ -32,8 +32,8 @@ uint8_t snarl_value_range_min_inclusive_satisfied(slop_arena* arena, slop_rdf_rd
 }
 
 uint8_t snarl_value_range_max_inclusive_satisfied(slop_arena* arena, slop_rdf_rdf_Term value_node, slop_rdf_rdf_Term limit) {
-    __auto_type _mv_289 = xsd_compare(arena, value_node, limit);
-    switch (_mv_289) {
+    __auto_type _mv_312 = snarl_literal_compare(arena, value_node, limit);
+    switch (_mv_312) {
         case slop_rdf_xsd_XsdCompareResult_xsd_compare_equal: {
             return 1;
             break;
@@ -50,8 +50,8 @@ uint8_t snarl_value_range_max_inclusive_satisfied(slop_arena* arena, slop_rdf_rd
 }
 
 uint8_t snarl_value_range_min_exclusive_satisfied(slop_arena* arena, slop_rdf_rdf_Term value_node, slop_rdf_rdf_Term limit) {
-    __auto_type _mv_290 = xsd_compare(arena, value_node, limit);
-    switch (_mv_290) {
+    __auto_type _mv_313 = snarl_literal_compare(arena, value_node, limit);
+    switch (_mv_313) {
         case slop_rdf_xsd_XsdCompareResult_xsd_compare_greater: {
             return 1;
             break;
@@ -64,8 +64,8 @@ uint8_t snarl_value_range_min_exclusive_satisfied(slop_arena* arena, slop_rdf_rd
 }
 
 uint8_t snarl_value_range_max_exclusive_satisfied(slop_arena* arena, slop_rdf_rdf_Term value_node, slop_rdf_rdf_Term limit) {
-    __auto_type _mv_291 = xsd_compare(arena, value_node, limit);
-    switch (_mv_291) {
+    __auto_type _mv_314 = snarl_literal_compare(arena, value_node, limit);
+    switch (_mv_314) {
         case slop_rdf_xsd_XsdCompareResult_xsd_compare_less: {
             return 1;
             break;
@@ -83,7 +83,7 @@ slop_option_snarl_types_ValidationResult snarl_check_min_inclusive(slop_arena* a
         _retval = (slop_option_snarl_types_ValidationResult){.has_value = false};
         goto _slop_post;
     } else {
-        _retval = (slop_option_snarl_types_ValidationResult){.has_value = 1, .value = ((snarl_types_ValidationResult){.focus_node = focus_node, .result_path = path, .value = (slop_option_slop_rdf_rdf_Term){.has_value = 1, .value = value_node}, .source_shape = shape_id, .source_constraint_component = slop_rdf_vocab_SHACL_MIN_INCLUSIVE, .severity = severity, .message = message})};
+        _retval = (slop_option_snarl_types_ValidationResult){.has_value = 1, .value = ((snarl_types_ValidationResult){.focus_node = focus_node, .result_path = path, .value = (slop_option_slop_rdf_rdf_Term){.has_value = 1, .value = value_node}, .source_shape = shape_id, .source_constraint_component = snarl_af_vocab_SHACL_MIN_INCLUSIVE_CONSTRAINT_COMPONENT, .severity = severity, .message = message})};
         goto _slop_post;
     }
     _slop_post: ;
@@ -97,7 +97,7 @@ slop_option_snarl_types_ValidationResult snarl_check_max_inclusive(slop_arena* a
         _retval = (slop_option_snarl_types_ValidationResult){.has_value = false};
         goto _slop_post;
     } else {
-        _retval = (slop_option_snarl_types_ValidationResult){.has_value = 1, .value = ((snarl_types_ValidationResult){.focus_node = focus_node, .result_path = path, .value = (slop_option_slop_rdf_rdf_Term){.has_value = 1, .value = value_node}, .source_shape = shape_id, .source_constraint_component = slop_rdf_vocab_SHACL_MAX_INCLUSIVE, .severity = severity, .message = message})};
+        _retval = (slop_option_snarl_types_ValidationResult){.has_value = 1, .value = ((snarl_types_ValidationResult){.focus_node = focus_node, .result_path = path, .value = (slop_option_slop_rdf_rdf_Term){.has_value = 1, .value = value_node}, .source_shape = shape_id, .source_constraint_component = snarl_af_vocab_SHACL_MAX_INCLUSIVE_CONSTRAINT_COMPONENT, .severity = severity, .message = message})};
         goto _slop_post;
     }
     _slop_post: ;
@@ -111,7 +111,7 @@ slop_option_snarl_types_ValidationResult snarl_check_min_exclusive(slop_arena* a
         _retval = (slop_option_snarl_types_ValidationResult){.has_value = false};
         goto _slop_post;
     } else {
-        _retval = (slop_option_snarl_types_ValidationResult){.has_value = 1, .value = ((snarl_types_ValidationResult){.focus_node = focus_node, .result_path = path, .value = (slop_option_slop_rdf_rdf_Term){.has_value = 1, .value = value_node}, .source_shape = shape_id, .source_constraint_component = slop_rdf_vocab_SHACL_MIN_EXCLUSIVE, .severity = severity, .message = message})};
+        _retval = (slop_option_snarl_types_ValidationResult){.has_value = 1, .value = ((snarl_types_ValidationResult){.focus_node = focus_node, .result_path = path, .value = (slop_option_slop_rdf_rdf_Term){.has_value = 1, .value = value_node}, .source_shape = shape_id, .source_constraint_component = snarl_af_vocab_SHACL_MIN_EXCLUSIVE_CONSTRAINT_COMPONENT, .severity = severity, .message = message})};
         goto _slop_post;
     }
     _slop_post: ;
@@ -125,7 +125,7 @@ slop_option_snarl_types_ValidationResult snarl_check_max_exclusive(slop_arena* a
         _retval = (slop_option_snarl_types_ValidationResult){.has_value = false};
         goto _slop_post;
     } else {
-        _retval = (slop_option_snarl_types_ValidationResult){.has_value = 1, .value = ((snarl_types_ValidationResult){.focus_node = focus_node, .result_path = path, .value = (slop_option_slop_rdf_rdf_Term){.has_value = 1, .value = value_node}, .source_shape = shape_id, .source_constraint_component = slop_rdf_vocab_SHACL_MAX_EXCLUSIVE, .severity = severity, .message = message})};
+        _retval = (slop_option_snarl_types_ValidationResult){.has_value = 1, .value = ((snarl_types_ValidationResult){.focus_node = focus_node, .result_path = path, .value = (slop_option_slop_rdf_rdf_Term){.has_value = 1, .value = value_node}, .source_shape = shape_id, .source_constraint_component = snarl_af_vocab_SHACL_MAX_EXCLUSIVE_CONSTRAINT_COMPONENT, .severity = severity, .message = message})};
         goto _slop_post;
     }
     _slop_post: ;
