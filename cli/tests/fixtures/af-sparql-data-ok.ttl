@@ -1,0 +1,3 @@
+# Data for the validate-only SPARQL-rule tests: conforms to PersonShape.
+@prefix ex: <http://example.org/> .
+ex:alice a ex:Person ; ex:name "Alice" .

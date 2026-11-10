@@ -16,14 +16,16 @@
 #include "slop_engine.h"
 #include "slop_node_expr.h"
 
+typedef struct snarl_rules_InferredTriple snarl_rules_InferredTriple;
+typedef struct snarl_rules_DeferredRule snarl_rules_DeferredRule;
 typedef struct snarl_rules_InferOutput snarl_rules_InferOutput;
 typedef struct snarl_rules_InferResult snarl_rules_InferResult;
 typedef struct snarl_rules_RuleTask snarl_rules_RuleTask;
 
-#ifndef SLOP_LIST_SLOP_RDF_RDF_TRIPLE_DEFINED
-#define SLOP_LIST_SLOP_RDF_RDF_TRIPLE_DEFINED
-#define SLOP_LIST_SLOP_RDF_RDF_TRIPLE_IMPL_DEFINED
-SLOP_LIST_DEFINE(slop_rdf_rdf_Triple, slop_list_slop_rdf_rdf_Triple)
+#ifndef SLOP_LIST_SNARL_TYPES_RULEORDER_DEFINED
+#define SLOP_LIST_SNARL_TYPES_RULEORDER_DEFINED
+#define SLOP_LIST_SNARL_TYPES_RULEORDER_IMPL_DEFINED
+SLOP_LIST_DEFINE(snarl_types_RuleOrder, slop_list_snarl_types_RuleOrder)
 #endif
 
 #ifndef SLOP_LIST_SLOP_RDF_RDF_TERM_DEFINED
@@ -32,9 +34,9 @@ SLOP_LIST_DEFINE(slop_rdf_rdf_Triple, slop_list_slop_rdf_rdf_Triple)
 SLOP_LIST_DEFINE(slop_rdf_rdf_Term, slop_list_slop_rdf_rdf_Term)
 #endif
 
-#ifndef SLOP_OPTION_SLOP_RDF_RDF_TRIPLE_DEFINED
-#define SLOP_OPTION_SLOP_RDF_RDF_TRIPLE_DEFINED
-SLOP_OPTION_DEFINE(slop_rdf_rdf_Triple, slop_option_slop_rdf_rdf_Triple)
+#ifndef SLOP_OPTION_SNARL_TYPES_RULEORDER_DEFINED
+#define SLOP_OPTION_SNARL_TYPES_RULEORDER_DEFINED
+SLOP_OPTION_DEFINE(snarl_types_RuleOrder, slop_option_snarl_types_RuleOrder)
 #endif
 
 #ifndef SLOP_OPTION_SLOP_RDF_RDF_TERM_DEFINED
@@ -42,9 +44,46 @@ SLOP_OPTION_DEFINE(slop_rdf_rdf_Triple, slop_option_slop_rdf_rdf_Triple)
 SLOP_OPTION_DEFINE(slop_rdf_rdf_Term, slop_option_slop_rdf_rdf_Term)
 #endif
 
+struct snarl_rules_InferredTriple {
+    slop_rdf_rdf_Triple triple;
+    slop_rdf_rdf_Term rule;
+    slop_rdf_rdf_Term focus_node;
+};
+typedef struct snarl_rules_InferredTriple snarl_rules_InferredTriple;
+
+#ifndef SLOP_OPTION_SNARL_RULES_INFERREDTRIPLE_DEFINED
+#define SLOP_OPTION_SNARL_RULES_INFERREDTRIPLE_DEFINED
+SLOP_OPTION_DEFINE(snarl_rules_InferredTriple, slop_option_snarl_rules_InferredTriple)
+#endif
+
+#ifndef SLOP_LIST_SNARL_RULES_INFERREDTRIPLE_DEFINED
+#define SLOP_LIST_SNARL_RULES_INFERREDTRIPLE_DEFINED
+#define SLOP_LIST_SNARL_RULES_INFERREDTRIPLE_IMPL_DEFINED
+SLOP_LIST_DEFINE(snarl_rules_InferredTriple, slop_list_snarl_rules_InferredTriple)
+#endif
+
+struct snarl_rules_DeferredRule {
+    slop_rdf_rdf_Term rule;
+    slop_rdf_rdf_Term shape;
+    snarl_types_RuleOrder order;
+};
+typedef struct snarl_rules_DeferredRule snarl_rules_DeferredRule;
+
+#ifndef SLOP_OPTION_SNARL_RULES_DEFERREDRULE_DEFINED
+#define SLOP_OPTION_SNARL_RULES_DEFERREDRULE_DEFINED
+SLOP_OPTION_DEFINE(snarl_rules_DeferredRule, slop_option_snarl_rules_DeferredRule)
+#endif
+
+#ifndef SLOP_LIST_SNARL_RULES_DEFERREDRULE_DEFINED
+#define SLOP_LIST_SNARL_RULES_DEFERREDRULE_DEFINED
+#define SLOP_LIST_SNARL_RULES_DEFERREDRULE_IMPL_DEFINED
+SLOP_LIST_DEFINE(snarl_rules_DeferredRule, slop_list_snarl_rules_DeferredRule)
+#endif
+
 struct snarl_rules_InferOutput {
     snarl_data_graph_SnarlDataGraph graph;
-    slop_list_slop_rdf_rdf_Triple inferred;
+    slop_list_snarl_rules_InferredTriple inferred;
+    slop_list_snarl_rules_DeferredRule deferred;
 };
 typedef struct snarl_rules_InferOutput snarl_rules_InferOutput;
 
@@ -75,8 +114,7 @@ SLOP_OPTION_DEFINE(snarl_rules_InferResult, slop_option_snarl_rules_InferResult)
 struct snarl_rules_RuleTask {
     snarl_types_NodeShape shape;
     snarl_types_Rule rule;
-    double shape_order;
-    double rule_order;
+    snarl_types_RuleOrder key;
 };
 typedef struct snarl_rules_RuleTask snarl_rules_RuleTask;
 
@@ -367,11 +405,20 @@ static inline bool slop_eq_slop_rdf_rdf_Triple(const void* a, const void* b) {
         && (slop_eq_slop_rdf_rdf_Term(&_a->object, &_b->object))
     ;
 }
+#ifndef SLOP_LIST_SLOP_RDF_RDF_TRIPLE_DEFINED
+#define SLOP_LIST_SLOP_RDF_RDF_TRIPLE_DEFINED
+#define SLOP_LIST_SLOP_RDF_RDF_TRIPLE_IMPL_DEFINED
+SLOP_LIST_DEFINE(slop_rdf_rdf_Triple, slop_list_slop_rdf_rdf_Triple)
+#endif
 #endif
 
-uint8_t snarl_rules_task_before(snarl_rules_RuleTask a, snarl_rules_RuleTask b);
-uint8_t snarl_rules_task_same_level(snarl_rules_RuleTask a, snarl_rules_RuleTask b);
-slop_list_snarl_rules_RuleTask snarl_rules_collect_rule_tasks(slop_arena* arena, snarl_types_ShapesGraph shapes_graph, uint8_t shacl12);
+uint8_t snarl_rules_order_before(snarl_types_RuleOrder a, snarl_types_RuleOrder b);
+uint8_t snarl_rules_order_same(snarl_types_RuleOrder a, snarl_types_RuleOrder b);
+uint8_t snarl_rules_order_in_range(snarl_types_RuleOrder key, slop_option_snarl_types_RuleOrder lo, slop_option_snarl_types_RuleOrder hi);
+snarl_types_RuleOrder snarl_rules_effective_order(uint8_t shacl12, double shape_order, double rule_order);
+slop_list_int snarl_rules_sorted_by_order(slop_arena* arena, slop_list_snarl_types_RuleOrder keys);
+slop_list_snarl_rules_RuleTask snarl_rules_collect_rule_tasks(slop_arena* arena, snarl_types_ShapesGraph shapes_graph, snarl_types_ValidatorConfig config);
+slop_list_snarl_rules_DeferredRule snarl_rules_collect_deferred_rules(slop_arena* arena, snarl_types_ShapesGraph shapes_graph, snarl_types_ValidatorConfig config);
 uint8_t snarl_rules_triple_is_well_formed(slop_rdf_rdf_Term s, slop_rdf_rdf_Term p);
 uint8_t snarl_rules_conforms_to_all(slop_arena* arena, snarl_data_graph_SnarlDataGraph data_graph, snarl_types_ShapesGraph shapes_graph, snarl_target_ClassIndex class_index, slop_rdf_rdf_Term node, slop_list_slop_rdf_rdf_Term shape_refs, snarl_engine_CycleGuard guard);
 snarl_rules_InferResult snarl_infer_rules(slop_arena* arena, snarl_data_graph_SnarlDataGraph data_graph, snarl_types_ShapesGraph shapes_graph, snarl_types_ValidatorConfig config);
@@ -379,9 +426,14 @@ snarl_rules_InferResult snarl_infer_rules(slop_arena* arena, snarl_data_graph_Sn
 /* Function name aliases for C interop */
 #define snarl_rules_infer_rules snarl_infer_rules
 
-#ifndef SLOP_OPTION_SLOP_RDF_RDF_TRIPLE_DEFINED
-#define SLOP_OPTION_SLOP_RDF_RDF_TRIPLE_DEFINED
-SLOP_OPTION_DEFINE(slop_rdf_rdf_Triple, slop_option_slop_rdf_rdf_Triple)
+#ifndef SLOP_OPTION_SNARL_RULES_INFERREDTRIPLE_DEFINED
+#define SLOP_OPTION_SNARL_RULES_INFERREDTRIPLE_DEFINED
+SLOP_OPTION_DEFINE(snarl_rules_InferredTriple, slop_option_snarl_rules_InferredTriple)
+#endif
+
+#ifndef SLOP_OPTION_SNARL_RULES_DEFERREDRULE_DEFINED
+#define SLOP_OPTION_SNARL_RULES_DEFERREDRULE_DEFINED
+SLOP_OPTION_DEFINE(snarl_rules_DeferredRule, slop_option_snarl_rules_DeferredRule)
 #endif
 
 #ifndef SLOP_OPTION_SNARL_RULES_INFEROUTPUT_DEFINED
@@ -397,6 +449,11 @@ SLOP_OPTION_DEFINE(snarl_rules_InferResult, slop_option_snarl_rules_InferResult)
 #ifndef SLOP_OPTION_SNARL_RULES_RULETASK_DEFINED
 #define SLOP_OPTION_SNARL_RULES_RULETASK_DEFINED
 SLOP_OPTION_DEFINE(snarl_rules_RuleTask, slop_option_snarl_rules_RuleTask)
+#endif
+
+#ifndef SLOP_OPTION_SNARL_TYPES_RULEORDER_DEFINED
+#define SLOP_OPTION_SNARL_TYPES_RULEORDER_DEFINED
+SLOP_OPTION_DEFINE(snarl_types_RuleOrder, slop_option_snarl_types_RuleOrder)
 #endif
 
 #ifndef SLOP_OPTION_SLOP_RDF_RDF_TERM_DEFINED

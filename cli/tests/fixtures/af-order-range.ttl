@@ -1,0 +1,36 @@
+# Order levels for the order-min / order-max tests. Keys are (shape order,
+# rule order):
+#   (0,1)  L1   this ex:a true
+#   (0,2)  L2a  this ex:b true   if this has ex:a
+#   (0,2)  L2b  this ex:c true   if this has ex:b  (same level as L2a: does
+#                                not see L2a's triple in the same pass)
+#   (0,3)  L3   this ex:d true   if this has ex:b
+#   (1,0)  E    this ex:e true   (LateShape, sh:order 1)
+# One full pass infers a, b, d, e. In SHACL 1.2 mode shape order is ignored,
+# so E's key is (0,0) and it runs first.
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix ex: <http://example.org/> .
+
+ex:n a ex:Node .
+
+ex:HasA sh:property [ sh:path ex:a ; sh:minCount 1 ] .
+ex:HasB sh:property [ sh:path ex:b ; sh:minCount 1 ] .
+
+ex:NodeShape
+    a sh:NodeShape ;
+    sh:targetClass ex:Node ;
+    sh:rule [ a sh:TripleRule ; sh:order 1 ;
+        sh:subject sh:this ; sh:predicate ex:a ; sh:object true ] ;
+    sh:rule [ a sh:TripleRule ; sh:order 2 ;
+        sh:subject [ sh:filterShape ex:HasA ; sh:nodes sh:this ] ; sh:predicate ex:b ; sh:object true ] ;
+    sh:rule [ a sh:TripleRule ; sh:order 2 ;
+        sh:subject [ sh:filterShape ex:HasB ; sh:nodes sh:this ] ; sh:predicate ex:c ; sh:object true ] ;
+    sh:rule [ a sh:TripleRule ; sh:order 3 ;
+        sh:subject [ sh:filterShape ex:HasB ; sh:nodes sh:this ] ; sh:predicate ex:d ; sh:object true ] .
+
+ex:LateShape
+    a sh:NodeShape ;
+    sh:targetClass ex:Node ;
+    sh:order 1 ;
+    sh:rule [ a sh:TripleRule ;
+        sh:subject sh:this ; sh:predicate ex:e ; sh:object true ] .

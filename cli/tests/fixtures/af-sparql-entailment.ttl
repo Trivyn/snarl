@@ -1,0 +1,19 @@
+# An sh:SPARQLRule in a shapes graph that declares the rules entailment:
+# plain validation runs the rules, so the SPARQL rule is an error unless the
+# caller defers it. Deferred, the triple rule infers 1 triple.
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix ex: <http://example.org/> .
+
+ex:Shapes sh:entailment sh:Rules .
+
+ex:n a ex:Node .
+
+ex:NodeShape
+    a sh:NodeShape ;
+    sh:targetClass ex:Node ;
+    sh:rule [ a sh:TripleRule ; sh:subject sh:this ; sh:predicate ex:a ; sh:object true ] ;
+    sh:rule ex:SparqlRule .
+
+ex:SparqlRule
+    a sh:SPARQLRule ;
+    sh:construct "CONSTRUCT { $this <http://example.org/b> true } WHERE { }" .

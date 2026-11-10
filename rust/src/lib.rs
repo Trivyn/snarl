@@ -132,6 +132,58 @@ unsafe fn ffi_triple_list_to_vec(list: ffi::SlopListRdfTriple) -> Vec<Triple<'st
     v
 }
 
+/// Convert the two lists of an inference output to an [`Inference`].
+unsafe fn ffi_inference(
+    inferred: ffi::SlopListInferredTriple,
+    deferred: ffi::SlopListDeferredRule,
+) -> Inference<'static> {
+    let mut triples = Vec::with_capacity(inferred.len);
+    for i in 0..inferred.len {
+        let raw = *inferred.data.add(i);
+        triples.push(InferredTriple {
+            triple: Triple::from_ffi(raw.triple),
+            rule: Term::from_ffi(raw.rule),
+            focus_node: Term::from_ffi(raw.focus_node),
+        });
+    }
+    let mut rules = Vec::with_capacity(deferred.len);
+    for i in 0..deferred.len {
+        let raw = *deferred.data.add(i);
+        rules.push(DeferredRule {
+            rule: Term::from_ffi(raw.rule),
+            shape: Term::from_ffi(raw.shape),
+            order: RuleOrder {
+                shape_order: raw.order.shape_order,
+                rule_order: raw.order.rule_order,
+            },
+        });
+    }
+    Inference {
+        inferred: triples,
+        deferred: rules,
+    }
+}
+
+/// Build the FFI form of an optional order bound.
+fn ffi_order_bound(bound: Option<RuleOrder>) -> ffi::SlopOptionRuleOrder {
+    match bound {
+        Some(o) => ffi::SlopOptionRuleOrder {
+            has_value: true,
+            value: ffi::RuleOrderFfi {
+                shape_order: o.shape_order,
+                rule_order: o.rule_order,
+            },
+        },
+        None => ffi::SlopOptionRuleOrder {
+            has_value: false,
+            value: ffi::RuleOrderFfi {
+                shape_order: 0.0,
+                rule_order: 0.0,
+            },
+        },
+    }
+}
+
 /// Convert a `SlopListValidationResult` to `Vec<ValidationResult>`.
 unsafe fn ffi_validation_result_list_to_vec<'a>(
     list: ffi::SlopListValidationResult,
@@ -559,6 +611,55 @@ impl ValidatorConfig {
         self.raw.shacl12 = v as u8;
         self
     }
+
+    /// When rules run, skip `sh:SPARQLRule` nodes instead of failing on them,
+    /// and report them in [`Inference::deferred`] so the caller can execute
+    /// them on its own SPARQL engine. Only rules typed `sh:SPARQLRule` are
+    /// deferred: any other rule type snarl cannot execute is still an error.
+    /// Off by default.
+    pub fn defer_sparql_rules(mut self, v: bool) -> Self {
+        self.raw.defer_sparql_rules = v as u8;
+        self
+    }
+
+    /// Run only the rules whose order key is at least `bound` (inclusive).
+    /// `None`, the default, leaves the range open below. See [`RuleOrder`].
+    pub fn order_min(mut self, bound: Option<RuleOrder>) -> Self {
+        self.raw.order_min = ffi_order_bound(bound);
+        self
+    }
+
+    /// Run only the rules whose order key is at most `bound` (inclusive).
+    /// `None`, the default, leaves the range open above. With both bounds set
+    /// to the same key, exactly one order level runs. Deferred SPARQL rules
+    /// are reported for the same range.
+    pub fn order_max(mut self, bound: Option<RuleOrder>) -> Self {
+        self.raw.order_max = ffi_order_bound(bound);
+        self
+    }
+}
+
+/// The key rules are ordered by: the `sh:order` of the rule's shape, then the
+/// rule's own `sh:order` (both default to 0). Keys compare `shape_order`
+/// first. Rules with equal keys form one level: they run together and do not
+/// see each other's triples.
+///
+/// In SHACL 1.2 mode ([`ValidatorConfig::shacl12`]), which ignores `sh:order`
+/// on shapes, `shape_order` is always 0.
+#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
+pub struct RuleOrder {
+    pub shape_order: f64,
+    pub rule_order: f64,
+}
+
+impl RuleOrder {
+    /// A key with the given shape and rule order.
+    pub fn new(shape_order: f64, rule_order: f64) -> Self {
+        RuleOrder {
+            shape_order,
+            rule_order,
+        }
+    }
 }
 
 impl Default for ValidatorConfig {
@@ -750,16 +851,67 @@ pub fn validate_data_graph_with_config<'a>(
     }
 }
 
+/// A triple a rule added to the data graph, with where it came from.
+///
+/// `rule` is the rule node (the value of `sh:rule`) and `focus_node` the
+/// focus node the rule was executed for. Rule nodes are often blank nodes;
+/// a [`Term::Blank`] id here is the id that node has in the shapes graph the
+/// caller passed in.
+///
+/// When several rules or focus nodes produce the same triple in one pass,
+/// only the first is reported: rules in execution order (order key, then the
+/// order they appear in the shapes graph), then focus nodes in target order.
+/// A triple the data graph already held is not reported at all.
+#[derive(Debug, Clone)]
+pub struct InferredTriple<'a> {
+    pub triple: Triple<'a>,
+    pub rule: Term<'a>,
+    pub focus_node: Term<'a>,
+}
+
+/// An `sh:SPARQLRule` that was skipped because the config defers SPARQL rules
+/// ([`ValidatorConfig::defer_sparql_rules`]): the rule node, the shape that
+/// attaches it through `sh:rule`, and the order key it would have run at.
+#[derive(Debug, Clone)]
+pub struct DeferredRule<'a> {
+    pub rule: Term<'a>,
+    pub shape: Term<'a>,
+    pub order: RuleOrder,
+}
+
+/// What a rules pass produced.
+#[derive(Debug, Clone, Default)]
+pub struct Inference<'a> {
+    /// The triples the rules added, in inference order, each with the rule
+    /// and focus node that produced it.
+    pub inferred: Vec<InferredTriple<'a>>,
+    /// The SPARQL rules the pass skipped, in order-key order. Empty unless
+    /// the config defers SPARQL rules. Deactivated rules, and rules of
+    /// deactivated shapes, are not listed; with an order range set, only
+    /// rules inside it are.
+    pub deferred: Vec<DeferredRule<'a>>,
+}
+
+impl<'a> Inference<'a> {
+    /// The inferred triples alone, in inference order.
+    pub fn triples(&self) -> Vec<Triple<'a>> {
+        self.inferred.iter().map(|t| t.triple.clone()).collect()
+    }
+}
+
 /// Validate a Snarl-optimized data graph, running the shapes graph's rules
 /// first when `config` asks for them or the shapes graph declares
 /// `sh:entailment sh:Rules`. The inferred triples are added to `data_graph`,
-/// and also returned.
+/// and also returned, with the SPARQL rules deferred to the caller.
+///
+/// When the rules do not run, they are not examined: a rule snarl could not
+/// execute, such as an `sh:SPARQLRule`, does not affect the result.
 pub fn validate_data_graph_with_inference<'a>(
     arena: &'a Arena,
     data_graph: &mut SnarlDataGraph<'a>,
     shapes_graph: &IndexedGraph,
     config: &ValidatorConfig,
-) -> (ValidatorResult<'a>, Vec<Triple<'a>>) {
+) -> (ValidatorResult<'a>, Inference<'a>) {
     unsafe {
         let raw = ffi::snarl_validate_data_graph_with_inference(
             arena.as_ptr(),
@@ -770,17 +922,18 @@ pub fn validate_data_graph_with_inference<'a>(
         data_graph.raw = raw.graph;
         (
             ValidatorResult::from_ffi(raw.result, arena),
-            ffi_triple_list_to_vec(raw.inferred),
+            ffi_inference(raw.inferred, raw.deferred),
         )
     }
 }
 
 /// The result of running SHACL rules with [`infer`].
 pub enum InferResult<'a> {
-    /// The rules ran; these are the triples they added, in inference order.
-    Success(Vec<Triple<'a>>),
-    /// The shapes graph has input snarl cannot execute (e.g. `sh:SPARQLRule`),
-    /// or evaluating a rule failed.
+    /// The rules ran; the triples they added and the rules left to the caller.
+    Success(Inference<'a>),
+    /// The shapes graph has input snarl cannot execute (e.g. `sh:SPARQLRule`
+    /// without [`ValidatorConfig::defer_sparql_rules`]), or evaluating a rule
+    /// failed.
     Error(String),
 }
 
@@ -788,6 +941,12 @@ pub enum InferResult<'a> {
 /// without validating, adding the inferred triples to it. AF executes the
 /// rules once (section 8.4): running them again over the result can infer
 /// more, because earlier rules then see later rules' triples.
+///
+/// [`ValidatorConfig::order_min`] and [`ValidatorConfig::order_max`] limit the
+/// pass to a range of order levels, and
+/// [`ValidatorConfig::defer_sparql_rules`] makes it skip and report
+/// `sh:SPARQLRule`s, so a caller can interleave snarl's triple rules with
+/// rules it runs on another engine.
 pub fn infer<'a>(
     arena: &'a Arena,
     data_graph: &mut SnarlDataGraph<'a>,
@@ -800,7 +959,7 @@ pub fn infer<'a>(
             ffi::InferResultTag::Success => {
                 let out = raw.data.infer_success;
                 data_graph.raw = out.graph;
-                InferResult::Success(ffi_triple_list_to_vec(out.inferred))
+                InferResult::Success(ffi_inference(out.inferred, out.deferred))
             }
             ffi::InferResultTag::Error => {
                 InferResult::Error(slop_string_to_str(raw.data.infer_error).to_string())

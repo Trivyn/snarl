@@ -24,7 +24,7 @@
   (import ttl (parse-ttl-file parse-ttl-file-for-each-triple TtlFileError make-prefix-map))
   (import common (ParseError Position))
   (import snarl (validate validate-with-config validate-data-graph-with-inference conforms default-config
-                 ValidatorConfig ValidatorResult ValidationReport ValidationOutcome
+                 ValidatorConfig ValidatorResult ValidationReport ValidationOutcome InferredTriple
                  get-violations get-warnings get-result-count
                  report-to-string report-to-graph))
   (import report (print-report))
@@ -284,11 +284,21 @@
         ((ok _) true)
         ((error _) false))))
 
-  (fn write-inferred ((arena Arena) (path String) (inferred (List Triple)) (quiet Bool))
-    (@intent "Write the triples the rules inferred to a Turtle file")
-    (@spec ((Arena String (List Triple) Bool) -> Unit))
+  (fn inferred-triples ((arena Arena) (inferred (List InferredTriple)))
+    (@intent "The triples of a list of inferred triples, in the same order")
+    (@spec ((Arena (List InferredTriple)) -> (List Triple)))
     (@alloc arena)
-    (if (write-turtle arena path inferred)
+    (@post (== (list-len $result) (list-len inferred)))
+    (let ((mut triples (list-new arena Triple)))
+      (for-each (it inferred)
+        (list-push triples (. it triple)))
+      triples))
+
+  (fn write-inferred ((arena Arena) (path String) (inferred (List InferredTriple)) (quiet Bool))
+    (@intent "Write the triples the rules inferred to a Turtle file (the triples alone, without the rule and focus node each came from)")
+    (@spec ((Arena String (List InferredTriple) Bool) -> Unit))
+    (@alloc arena)
+    (if (write-turtle arena path (inferred-triples arena inferred))
       (when (not quiet)
         (print "Wrote ")
         (print (int-to-string arena (list-len inferred)))

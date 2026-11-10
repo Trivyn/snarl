@@ -86,11 +86,24 @@ Snarl implements the part of [SHACL Advanced Features](https://www.w3.org/TR/sha
 | §7 | `sh:expression` (`sh:ExpressionConstraintComponent`, with `sh:sourceConstraint` in results) | ✅ |
 | §8 | `sh:rule` / `sh:TripleRule`, `sh:condition`, `sh:order`, `sh:deactivated` | ✅ |
 | §8.3 | `sh:entailment sh:Rules` (rules run automatically before validation) | ✅ |
-| §3–5, §8.6 | SPARQL targets, annotations and functions; `sh:SPARQLRule` | ❌ rejected with an error |
+| §3–5 | SPARQL targets, annotations and functions | ❌ rejected with an error |
+| §8.6 | `sh:SPARQLRule` | ❌ not executed: an error when rules run, unless deferred to the caller (below) |
 
 **Rules** run as a separate stage before validation, once (AF §8.4 specifies a single iteration). They run when you pass `-r`/`--rules` (or `--emit-inferred`), or when the shapes graph declares `sh:entailment sh:Rules`. Rules are ordered by `sh:order`: by the shape's order, then the rule's. Rules with the same order key run together: none sees another's triples, and a later order level sees everything the earlier levels inferred. Combinations that cannot form an RDF triple (a literal subject, a non-IRI predicate) are skipped. Inferred triples are added to the data graph before validation, so an inferred `rdf:type` creates new `sh:targetClass` focus nodes.
 
-**Unsupported input fails loudly.** A function expression, an `sh:SPARQLRule` or other non-triple rule type, an `sh:entailment` other than `sh:Rules`, an ill-formed node expression or rule, and a cyclic or over-deep node expression all exit with code 2 and a message naming the problem — never a silently skipped rule.
+**Unsupported input fails loudly.** A function expression, an `sh:entailment` other than `sh:Rules`, an ill-formed node expression, and a cyclic or over-deep node expression all exit with code 2 and a message naming the problem. So does a rule snarl cannot execute — an `sh:SPARQLRule`, any other non-triple rule type, an ill-formed `sh:TripleRule` — whenever rules run. A rule is never silently skipped.
+
+**Validation that runs no rules ignores them.** Without `--rules` and without `sh:entailment sh:Rules`, the rules in the shapes graph are not examined, so a shapes graph that keeps `sh:SPARQLRule`s beside its shapes validates exactly as it would without them. The one exception is a cyclic or over-deep node expression inside a rule, which is still an error.
+
+### SPARQL rules beside triple rules
+
+A shapes graph can keep `sh:TripleRule`s, which snarl runs, beside `sh:SPARQLRule`s, which it does not. Three library options (C `ValidatorConfig` fields, Rust builder methods; there are no CLI flags for them) let a caller with its own SPARQL engine run the two together:
+
+- **`defer_sparql_rules`** — when rules run, an `sh:SPARQLRule` is skipped and reported, not an error. Each deferred rule comes back with the shape that attaches it and its order key. Only `rdf:type sh:SPARQLRule` is deferred; any other rule type snarl cannot execute still fails. Deactivated rules, and the rules of deactivated shapes, are not reported.
+- **`order_min` / `order_max`** — run only the rules whose order key lies in this range. Both bounds are inclusive and optional. A key is the pair *(shape `sh:order`, rule `sh:order`)*, compared shape order first, which is how snarl orders rules; with both bounds set to one key, exactly one level runs. In `--shacl12` mode the shape part is always 0. Deferred rules are reported for the same range.
+- **Attribution** — every inferred triple names the rule node and the focus node that produced it, in inference order. A triple produced more than once in a pass is attributed to the first producer (rules in execution order, then focus nodes in target order); a triple already in the data graph is not reported.
+
+Each call is still a single pass. A caller that wants a fixpoint calls again: stepping one level at a time, a later call sees what earlier calls (and the caller's own engine) added.
 
 ```bash
 # Infer, validate the result, and keep the inferred triples
@@ -149,13 +162,32 @@ let shapes_graph = IndexedGraph::new(&arena);
 let result = validate_data_graph(&arena, &data_graph, &shapes_graph);
 ```
 
-SHACL-AF rules: `ValidatorConfig::new().run_rules(true)` with `validate_data_graph_with_inference` (validates, and returns the inferred triples), or `infer` to run the rules alone. Both add the inferred triples to the `SnarlDataGraph`. Results of `sh:expression` constraints carry `source_constraint`.
+SHACL-AF rules: `ValidatorConfig::new().run_rules(true)` with `validate_data_graph_with_inference` (validates, and returns the inference), or `infer` to run the rules alone. Both add the inferred triples to the `SnarlDataGraph` and return an `Inference`: the inferred triples, each with its `rule` and `focus_node`, and the SPARQL rules deferred to the caller. Results of `sh:expression` constraints carry `source_constraint`.
+
+```rust
+use snarl::{infer, InferResult, RuleOrder, ValidatorConfig};
+
+// Run order level (0, 1) only, leaving sh:SPARQLRules to the caller.
+let level = Some(RuleOrder::new(0.0, 1.0));
+let config = ValidatorConfig::new()
+    .defer_sparql_rules(true)
+    .order_min(level)
+    .order_max(level);
+if let InferResult::Success(inference) = infer(&arena, &mut data_graph, &shapes_graph, &config) {
+    for t in &inference.inferred {
+        println!("{} from rule {} for {}", t.triple, t.rule, t.focus_node);
+    }
+    for r in &inference.deferred {
+        println!("run {} of {} yourself, at {:?}", r.rule, r.shape, r.order);
+    }
+}
+```
 
 ## Testing
 
 Snarl includes three test suites:
 
-**Integration tests** (`make test`) — CLI-level tests covering basic validation scenarios with purpose-built fixtures, and SHACL-AF: every node-expression kind, `sh:expression`, rules (conditions, order levels, deactivation, entailment) and each rejected input.
+**Integration tests** (`make test`) — CLI-level tests covering basic validation scenarios with purpose-built fixtures, and SHACL-AF: every node-expression kind, `sh:expression`, rules (conditions, order levels, deactivation, entailment), each rejected input, and SPARQL rules beside triple rules (validation that runs no rules, deferral, order ranges, per-triple attribution).
 
 **W3C SHACL Core conformance tests** — 98 test cases derived from the W3C SHACL test suite, covering property constraints, node constraints, target resolution, property paths, complex shapes, and validation report structure. All 98 pass with no expected failures, in two runners:
 

@@ -1,0 +1,38 @@
+# Two triple rules and one SPARQL rule on a shape with sh:order 3. With
+# defer-sparql-rules the triple rules infer 2 triples and ex:SparqlRule is
+# reported with its shape and order key: (3, 2) in AF mode, (0, 2) in SHACL
+# 1.2 mode. Not reported: a deactivated SPARQL rule, and the SPARQL rule of a
+# deactivated shape.
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix ex: <http://example.org/> .
+
+ex:n a ex:Node .
+
+ex:NodeShape
+    a sh:NodeShape ;
+    sh:targetClass ex:Node ;
+    sh:order 3 ;
+    sh:rule [ a sh:TripleRule ; sh:order 1 ; sh:subject sh:this ; sh:predicate ex:a ; sh:object true ] ;
+    sh:rule ex:SparqlRule ;
+    sh:rule [ a sh:TripleRule ; sh:order 3 ; sh:subject sh:this ; sh:predicate ex:b ; sh:object true ] ;
+    sh:rule ex:OffSparqlRule .
+
+ex:SparqlRule
+    a sh:SPARQLRule ;
+    sh:order 2 ;
+    sh:construct "CONSTRUCT { $this <http://example.org/c> true } WHERE { }" .
+
+ex:OffSparqlRule
+    a sh:SPARQLRule ;
+    sh:deactivated true ;
+    sh:construct "CONSTRUCT { $this <http://example.org/d> true } WHERE { }" .
+
+ex:OffShape
+    a sh:NodeShape ;
+    sh:targetClass ex:Node ;
+    sh:deactivated true ;
+    sh:rule ex:OffShapeSparqlRule .
+
+ex:OffShapeSparqlRule
+    a sh:SPARQLRule ;
+    sh:construct "CONSTRUCT { $this <http://example.org/e> true } WHERE { }" .

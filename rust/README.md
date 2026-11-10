@@ -90,6 +90,46 @@ match validate_data_graph(&arena, &data, &shapes) {
 Values returned from this lower-level API borrow from the arena. Convert reports
 or terms into the corresponding owned types when data must outlive the arena.
 
+## SHACL Rules
+
+`sh:TripleRule` inference runs before validation when the config asks
+(`ValidatorConfig::new().run_rules(true)`) or the shapes graph declares
+`sh:entailment sh:Rules`. `validate_data_graph_with_inference` validates and
+returns the inference; `infer` runs the rules alone. Both add the inferred
+triples to the `SnarlDataGraph` and return an `Inference`:
+
+- `inferred`: the new triples in inference order, each an `InferredTriple`
+  with the `rule` node and `focus_node` that produced it.
+- `deferred`: the `sh:SPARQLRule`s skipped for the caller to run, each a
+  `DeferredRule` with its `rule`, `shape` and `order`.
+
+Snarl does not execute `sh:SPARQLRule`. Validation that runs no rules ignores
+them. When rules run they are an error unless
+`ValidatorConfig::defer_sparql_rules(true)` is set, which skips and reports
+them. `order_min` / `order_max` limit a pass to a range of order levels; a
+`RuleOrder` is the pair (shape `sh:order`, rule `sh:order`).
+
+```rust
+use snarl::{infer, InferResult, RuleOrder, ValidatorConfig};
+
+let level = Some(RuleOrder::new(0.0, 1.0));
+let config = ValidatorConfig::new()
+    .defer_sparql_rules(true)
+    .order_min(level)
+    .order_max(level);
+match infer(&arena, &mut data, &shapes, &config) {
+    InferResult::Success(inference) => {
+        for t in &inference.inferred {
+            println!("{} from {} for {}", t.triple, t.rule, t.focus_node);
+        }
+        for r in &inference.deferred {
+            println!("deferred: {} of {} at {:?}", r.rule, r.shape, r.order);
+        }
+    }
+    InferResult::Error(message) => eprintln!("inference error: {message}"),
+}
+```
+
 ## Validation Results
 
 Validation produces either:
