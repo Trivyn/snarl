@@ -255,38 +255,38 @@ slop_rdf_xsd_XsdCompareResult snarl_literal_order_order_instants(snarl_literal_o
 
 slop_rdf_xsd_XsdCompareResult snarl_literal_order_order_numerics(slop_string lex_a, slop_string dt_a, slop_string lex_b, slop_string dt_b) {
     if (snarl_literal_order_datatype_is_integer(dt_a) && snarl_literal_order_datatype_is_integer(dt_b)) {
-        __auto_type _mv_231 = std_strlib_parse_int(lex_a);
-        if (_mv_231.is_ok) {
-            __auto_type a = _mv_231.data.ok;
-            __auto_type _mv_232 = std_strlib_parse_int(lex_b);
-            if (_mv_232.is_ok) {
-                __auto_type b = _mv_232.data.ok;
+        __auto_type _mv_244 = std_strlib_parse_int(lex_a);
+        if (_mv_244.is_ok) {
+            __auto_type a = _mv_244.data.ok;
+            __auto_type _mv_245 = std_strlib_parse_int(lex_b);
+            if (_mv_245.is_ok) {
+                __auto_type b = _mv_245.data.ok;
                 return snarl_literal_order_order_ints(a, b);
-            } else if (!_mv_232.is_ok) {
-                __auto_type _ = _mv_232.data.err;
+            } else if (!_mv_245.is_ok) {
+                __auto_type _ = _mv_245.data.err;
                 return slop_rdf_xsd_XsdCompareResult_xsd_compare_incomparable;
             }
             SLOP_UNREACHABLE();
-        } else if (!_mv_231.is_ok) {
-            __auto_type _ = _mv_231.data.err;
+        } else if (!_mv_244.is_ok) {
+            __auto_type _ = _mv_244.data.err;
             return slop_rdf_xsd_XsdCompareResult_xsd_compare_incomparable;
         }
         SLOP_UNREACHABLE();
     } else {
-        __auto_type _mv_233 = std_strlib_parse_float(lex_a);
-        if (_mv_233.is_ok) {
-            __auto_type a = _mv_233.data.ok;
-            __auto_type _mv_234 = std_strlib_parse_float(lex_b);
-            if (_mv_234.is_ok) {
-                __auto_type b = _mv_234.data.ok;
+        __auto_type _mv_246 = std_strlib_parse_float(lex_a);
+        if (_mv_246.is_ok) {
+            __auto_type a = _mv_246.data.ok;
+            __auto_type _mv_247 = std_strlib_parse_float(lex_b);
+            if (_mv_247.is_ok) {
+                __auto_type b = _mv_247.data.ok;
                 return snarl_literal_order_order_floats(a, b);
-            } else if (!_mv_234.is_ok) {
-                __auto_type _ = _mv_234.data.err;
+            } else if (!_mv_247.is_ok) {
+                __auto_type _ = _mv_247.data.err;
                 return slop_rdf_xsd_XsdCompareResult_xsd_compare_incomparable;
             }
             SLOP_UNREACHABLE();
-        } else if (!_mv_233.is_ok) {
-            __auto_type _ = _mv_233.data.err;
+        } else if (!_mv_246.is_ok) {
+            __auto_type _ = _mv_246.data.err;
             return slop_rdf_xsd_XsdCompareResult_xsd_compare_incomparable;
         }
         SLOP_UNREACHABLE();
@@ -294,16 +294,16 @@ slop_rdf_xsd_XsdCompareResult snarl_literal_order_order_numerics(slop_string lex
 }
 
 slop_string snarl_literal_order_literal_datatype(slop_rdf_rdf_Literal lit) {
-    __auto_type _mv_235 = lit.lang;
-    if (_mv_235.has_value) {
-        __auto_type _ = _mv_235.value;
+    __auto_type _mv_248 = lit.lang;
+    if (_mv_248.has_value) {
+        __auto_type _ = _mv_248.value;
         return SLOP_STR("");
-    } else if (!_mv_235.has_value) {
-        __auto_type _mv_236 = lit.datatype;
-        if (_mv_236.has_value) {
-            __auto_type d = _mv_236.value;
+    } else if (!_mv_248.has_value) {
+        __auto_type _mv_249 = lit.datatype;
+        if (_mv_249.has_value) {
+            __auto_type d = _mv_249.value;
             return d;
-        } else if (!_mv_236.has_value) {
+        } else if (!_mv_249.has_value) {
             return slop_rdf_vocab_XSD_STRING;
         }
         SLOP_UNREACHABLE();
@@ -312,16 +312,16 @@ slop_string snarl_literal_order_literal_datatype(slop_rdf_rdf_Literal lit) {
 }
 
 slop_rdf_xsd_XsdCompareResult snarl_literal_compare(slop_arena* arena, slop_rdf_rdf_Term a, slop_rdf_rdf_Term b) {
-    __auto_type _mv_237 = a;
-    switch (_mv_237.tag) {
+    __auto_type _mv_250 = a;
+    switch (_mv_250.tag) {
         case slop_rdf_rdf_Term_term_literal:
         {
-            __auto_type lit_a = _mv_237.data.term_literal;
-            __auto_type _mv_238 = b;
-            switch (_mv_238.tag) {
+            __auto_type lit_a = _mv_250.data.term_literal;
+            __auto_type _mv_251 = b;
+            switch (_mv_251.tag) {
                 case slop_rdf_rdf_Term_term_literal:
                 {
-                    __auto_type lit_b = _mv_238.data.term_literal;
+                    __auto_type lit_b = _mv_251.data.term_literal;
                     {
                         __auto_type dt_a = snarl_literal_order_literal_datatype(lit_a);
                         __auto_type dt_b = snarl_literal_order_literal_datatype(lit_b);

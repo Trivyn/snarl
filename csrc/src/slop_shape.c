@@ -31,13 +31,13 @@ slop_list_snarl_types_ValidationResult snarl_check_qualified_value_shape(slop_ar
         if (conforming_count < q_min) {
             (void)(({ __auto_type _lst_p = &(results); __auto_type _item = (((snarl_types_ValidationResult){.focus_node = focus_node, .result_path = path, .value = (slop_option_slop_rdf_rdf_Term){.has_value = false}, .source_shape = shape_id, .source_constraint_component = snarl_af_vocab_SHACL_QUALIFIED_MIN_COUNT_CONSTRAINT_COMPONENT, .severity = severity, .message = message})); if (_lst_p->len >= _lst_p->cap) { _lst_p->data = (__typeof__(_lst_p->data))slop_list_grow_raw(_lst_p->arena, _lst_p->data, &_lst_p->cap, _lst_p->len, sizeof(*_lst_p->data)); } _lst_p->data[_lst_p->len++] = _item; (void)0; }));
         }
-        __auto_type _mv_296 = q_max;
-        if (_mv_296.has_value) {
-            __auto_type max_val = _mv_296.value;
+        __auto_type _mv_309 = q_max;
+        if (_mv_309.has_value) {
+            __auto_type max_val = _mv_309.value;
             if (conforming_count > max_val) {
                 ({ __auto_type _lst_p = &(results); __auto_type _item = (((snarl_types_ValidationResult){.focus_node = focus_node, .result_path = path, .value = (slop_option_slop_rdf_rdf_Term){.has_value = false}, .source_shape = shape_id, .source_constraint_component = snarl_af_vocab_SHACL_QUALIFIED_MAX_COUNT_CONSTRAINT_COMPONENT, .severity = severity, .message = message})); if (_lst_p->len >= _lst_p->cap) { _lst_p->data = (__typeof__(_lst_p->data))slop_list_grow_raw(_lst_p->arena, _lst_p->data, &_lst_p->cap, _lst_p->len, sizeof(*_lst_p->data)); } _lst_p->data[_lst_p->len++] = _item; (void)0; });
             }
-        } else if (!_mv_296.has_value) {
+        } else if (!_mv_309.has_value) {
         }
         _retval = results;
         goto _slop_post;

@@ -121,6 +121,7 @@ typedef struct snarl_data_graph_SnarlDataIndex snarl_data_graph_SnarlDataIndex;
 struct snarl_data_graph_SnarlDataGraph {
     slop_map* ids;
     slop_map* terms;
+    slop_map* triple_ids;
     snarl_data_graph_SnarlDataIndex index;
     snarl_data_graph_IdSet no_ids;
     int64_t size;

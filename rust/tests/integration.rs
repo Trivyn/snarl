@@ -852,3 +852,65 @@ fn inferred_triples_name_their_rule_and_focus_node() {
         ]
     );
 }
+
+// ---------------------------------------------------------------------------
+// Triple terms compare by value (#19)
+// ---------------------------------------------------------------------------
+
+#[test]
+fn equal_triple_terms_are_one_value() {
+    let arena = Arena::new(4 * 1024 * 1024);
+    let iri = |s: &str| arena.make_iri(&format!("{EX}{s}"));
+    let sh = |s: &str| arena.make_iri(&format!("{SH}{s}"));
+    let rdf = |s: &str| arena.make_iri(&format!("{RDF}{s}"));
+    // A fresh allocation each time, so no two share a pointer.
+    let abc = || arena.make_triple_term(arena.make_triple(iri("a"), iri("b"), iri("c")));
+
+    // :x :p <<( :a :b :c )>> (twice) ; :q <<( :a :b :c )>>
+    let mut data = SnarlDataGraph::new(&arena);
+    data.add_triple(arena.make_triple(iri("x"), iri("p"), abc()));
+    data.add_triple(arena.make_triple(iri("x"), iri("p"), abc()));
+    data.add_triple(arena.make_triple(iri("x"), iri("q"), abc()));
+    assert_eq!(data.size(), 2, "a repeated statement is one triple");
+
+    // :S sh:targetNode :x ; sh:rule [ a sh:TripleRule ; sh:subject sh:this ;
+    //   sh:predicate :r ; sh:object [ sh:intersection ( [sh:path :p] [sh:path :q] ) ] ]
+    let mut shapes = IndexedGraph::new(&arena);
+    let (rule, obj, l1, l2, pp, pq) = (
+        arena.make_blank(1), arena.make_blank(2), arena.make_blank(3),
+        arena.make_blank(4), arena.make_blank(5), arena.make_blank(6),
+    );
+    for (s, p, o) in [
+        (iri("S"), rdf("type"), sh("NodeShape")),
+        (iri("S"), sh("targetNode"), iri("x")),
+        (iri("S"), sh("rule"), rule),
+        (rule, rdf("type"), sh("TripleRule")),
+        (rule, sh("subject"), sh("this")),
+        (rule, sh("predicate"), iri("r")),
+        (rule, sh("object"), obj),
+        (obj, sh("intersection"), l1),
+        (l1, rdf("first"), pp),
+        (l1, rdf("rest"), l2),
+        (l2, rdf("first"), pq),
+        (l2, rdf("rest"), rdf("nil")),
+        (pp, sh("path"), iri("p")),
+        (pq, sh("path"), iri("q")),
+    ] {
+        shapes.add_triple(arena.make_triple(s, p, o));
+    }
+
+    let config = ValidatorConfig::new();
+    let first = expect_inference(infer(&arena, &mut data, &shapes, &config));
+    assert_eq!(first.inferred.len(), 1, "the intersection holds the triple term");
+    match &first.inferred[0].triple.object {
+        snarl::Term::Triple(t) => {
+            assert!(matches!(t.subject, snarl::Term::Iri(v) if v.ends_with("a")));
+            assert!(matches!(t.object, snarl::Term::Iri(v) if v.ends_with("c")));
+        }
+        other => panic!("expected a triple term, got {other:?}"),
+    }
+
+    // A caller running a level to its fixpoint settles.
+    let second = expect_inference(infer(&arena, &mut data, &shapes, &config));
+    assert!(second.inferred.is_empty(), "the graph already holds the conclusion");
+}

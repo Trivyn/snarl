@@ -184,6 +184,8 @@ pub struct SnarlDataGraphFfi {
     pub ids: *mut c_void,
     /// Int id -> owned Term.
     pub terms: *mut c_void,
+    /// Triple term, keyed by its components' ids -> id (structural, #19).
+    pub triple_ids: *mut c_void,
     pub index: SnarlDataIndex,
     /// Shared, never-filled id set returned for "no values".
     pub no_ids: *mut c_void,

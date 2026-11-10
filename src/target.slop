@@ -3,7 +3,7 @@
     (Term Triple term-eq term-kind make-iri make-triple triple-subject triple-predicate triple-object))
   (import index (TermSet))
   (import data-graph
-    (SnarlDataGraph snarl-data-graph-subjects snarl-data-graph-subjects-of snarl-data-graph-objects-of snarl-data-graph-size snarl-data-graph-create snarl-data-graph-add snarl-data-graph-contains))
+    (SnarlDataGraph snarl-data-graph-subjects snarl-data-graph-subjects-of snarl-data-graph-objects-of snarl-data-graph-size snarl-data-graph-create snarl-data-graph-add snarl-data-graph-contains snarl-data-graph-canonical-term))
   (import vocab (RDF_TYPE RDFS_SUBCLASS_OF))
   (import types (NodeShape PropertyShape ShaclPath Severity Constraint ShapesGraph))
   (export
@@ -142,10 +142,13 @@
     (@example (arena (fixture-g-typed arena) (fixture-ns-target-class arena)))
     (let ((mut result (list-new arena Term))
           (seen (set-new arena Term)))
-      (for-each (node (. shape target-nodes))
-        (when (not (set-has seen node))
-          (set-put seen node)
-          (list-push result node)))
+      ;; An sh:targetNode triple term becomes the data graph's copy, so it
+      ;; de-duplicates against the other targets by value (issue #19).
+      (for-each (target-node (. shape target-nodes))
+        (let ((node (snarl-data-graph-canonical-term data-graph target-node)))
+          (when (not (set-has seen node))
+            (set-put seen node)
+            (list-push result node))))
       (for-each (cls (. shape target-classes))
         (let ((instances (resolve-target-class arena data-graph cls)))
           (for-each (inst instances)
@@ -202,10 +205,13 @@
     ;; through the per-run cache because those expansions are often shared.
     (let ((mut result (list-new arena Term))
           (seen (set-new arena Term)))
-      (for-each (node (. shape target-nodes))
-        (when (not (set-has seen node))
-          (set-put seen node)
-          (list-push result node)))
+      ;; An sh:targetNode triple term becomes the data graph's copy, so it
+      ;; de-duplicates against the other targets by value (issue #19).
+      (for-each (target-node (. shape target-nodes))
+        (let ((node (snarl-data-graph-canonical-term data-graph target-node)))
+          (when (not (set-has seen node))
+            (set-put seen node)
+            (list-push result node))))
       (for-each (cls (. shape target-classes))
         (let ((instances (resolve-target-class-cached arena data-graph cache cls)))
           (for-each (inst instances)

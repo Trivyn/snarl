@@ -25,7 +25,9 @@
     snarl-data-graph-predicates-for-subject
     snarl-data-graph-triples-for-subject
     snarl-data-graph-to-indexed
-    snarl-data-graph-from-indexed)
+    snarl-data-graph-from-indexed
+    snarl-data-graph-canonical-term
+    canonicalize-triple-terms)
 
   ;; ============================================================
   ;; Representation
@@ -38,6 +40,9 @@
   ;;
   ;; `terms` is a Map rather than a List so that it is shared by reference
   ;; between copies of the SnarlDataGraph record, like the indexes.
+  ;;
+  ;; Triple terms are numbered by value, through `triple-ids`, not through
+  ;; `ids`: see the interning note below.
   ;; ============================================================
 
   (type IdSet (Set Int))
@@ -49,9 +54,16 @@
     (p-subjects IdSetMap)    ;; predicate -> Set[subject]
     (p-objects IdSetMap)))   ;; predicate -> Set[object]
 
+  ;; A triple term's identity: the ids of its subject, predicate and object.
+  (type TripleKey (record
+    (s Int)
+    (p Int)
+    (o Int)))
+
   (type SnarlDataGraph (record
-    (ids (Map Term Int))     ;; owned term -> id
+    (ids (Map Term Int))     ;; owned term -> id; never a triple term
     (terms (Map Int Term))   ;; id -> owned term
+    (triple-ids (Map TripleKey Int)) ;; triple term, by its components' ids -> id
     (index SnarlDataIndex)
     (no-ids IdSet)           ;; shared, never-filled set for "no values"
     (size (Int 0 ..))))
@@ -64,6 +76,7 @@
     (record-new SnarlDataGraph
       (ids (map-new arena Term Int))
       (terms (map-new arena Int Term))
+      (triple-ids (map-new arena TripleKey Int))
       (index (record-new SnarlDataIndex
                (sp (map-new arena Int IdSetMap))
                (po (map-new arena Int IdSetMap))
@@ -81,9 +94,17 @@
   ;; Triple it hands over is valid only during that call. snarl-data-graph-add
   ;; therefore copies a term the first time it sees it, and keeps only that
   ;; copy - as the dictionary key too, since a map keeps the key it is given.
-  ;; A blank node is only an id, so it is kept as is. A triple term is keyed
-  ;; by its pointer (slop-rdf's Term equality), so each occurrence is its own
-  ;; entry, as it was before interning.
+  ;; A blank node is only an id, so it is kept as is.
+  ;;
+  ;; A triple term cannot be a key of `ids`. slop-rdf's Term holds it as a
+  ;; (Ptr Triple), and SLOP's derived hash and == compare a Ptr by identity,
+  ;; so two equal triple terms in different allocations would get two ids
+  ;; (snarl issue #19). It is numbered instead by the ids of its subject,
+  ;; predicate and object, interned first (recursively, for a nested triple
+  ;; term), and stored once, built from those components' owned copies.
+  ;; Every term the graph hands out is therefore the one canonical copy of
+  ;; its value, and a Term-keyed Map or Set over terms read from the graph
+  ;; compares triple terms by value, as RDF 1.2 requires.
   ;; ============================================================
 
   (fn copy-string ((arena Arena) (s String))
@@ -130,20 +151,66 @@
     ;; VERIFIER: trusted. Every id stored in `ids` is a map-len, so >= 0, but
     ;; Z3 knows nothing about values read back from a map.
     (@assume (>= $result 0))
-    (match (map-get (. g ids) t)
-      ((some id) id)
-      ((none)
-        (let ((id (map-len (. g terms)))
-              (owned (copy-term arena t)))
-          (map-put (. g ids) owned id)
-          (map-put (. g terms) id owned)
-          id))))
+    (match t
+      ((term-triple tt)
+        (let ((inner (deref tt))
+              (s (intern-term arena g (triple-subject inner)))
+              (p (intern-term arena g (triple-predicate inner)))
+              (o (intern-term arena g (triple-object inner)))
+              (key (record-new TripleKey (s s) (p p) (o o))))
+          (match (map-get (. g triple-ids) key)
+            ((some id) id)
+            ((none)
+              (let ((id (map-len (. g terms)))
+                    (owned (make-triple-term arena
+                             (make-triple arena
+                               (snarl-data-graph-term-of g s)
+                               (snarl-data-graph-term-of g p)
+                               (snarl-data-graph-term-of g o)))))
+                (map-put (. g triple-ids) key id)
+                (map-put (. g terms) id owned)
+                id)))))
+      (_
+        (match (map-get (. g ids) t)
+          ((some id) id)
+          ((none)
+            (let ((id (map-len (. g terms)))
+                  (owned (copy-term arena t)))
+              (map-put (. g ids) owned id)
+              (map-put (. g terms) id owned)
+              id))))))
 
   (fn lookup-term ((g SnarlDataGraph) (t Term))
-    (@intent "t's id if the graph has seen t, without adding it")
+    (@intent "t's id if the graph has seen a term equal to t, without adding it")
     (@spec ((SnarlDataGraph Term) -> (Option Int)))
     (@pure)
-    (map-get (. g ids) t))
+    (match t
+      ((term-triple tt)
+        (let ((inner (deref tt)))
+          (match (lookup-term g (triple-subject inner))
+            ((some s)
+              (match (lookup-term g (triple-predicate inner))
+                ((some p)
+                  (match (lookup-term g (triple-object inner))
+                    ((some o) (map-get (. g triple-ids) (record-new TripleKey (s s) (p p) (o o))))
+                    ((none) (none))))
+                ((none) (none))))
+            ((none) (none)))))
+      (_ (map-get (. g ids) t))))
+
+  (fn snarl-data-graph-canonical-term ((g SnarlDataGraph) (t Term))
+    (@intent "The graph's own copy of t when it holds a triple term equal to t; otherwise t")
+    (@spec ((SnarlDataGraph Term) -> Term))
+    (@pure)
+    ;; For a term that did not come from the graph, such as a shapes-graph
+    ;; constant, before it meets graph terms in a Term-keyed Map or Set. Only
+    ;; a triple term needs it: every other Term already compares by value.
+    (match t
+      ((term-triple _)
+        (match (lookup-term g t)
+          ((some id) (snarl-data-graph-term-of g id))
+          ((none) t)))
+      (_ t)))
 
   (fn snarl-data-graph-term-of ((g SnarlDataGraph) (id Int))
     (@intent "The term an id stands for")
@@ -242,7 +309,7 @@
              (make-triple arena (make-iri arena "http://example.org/s")
                                 (make-iri arena "http://example.org/p")
                                 (make-literal arena "o" (none) (some "en"))))
-      -> (SnarlDataGraph _ _ _ _ 1))
+      -> (SnarlDataGraph _ _ _ _ _ 1))
     ;; t need not outlive the call: what the graph keeps is copied into arena
     ;; by intern-term, so a streaming parser's callback Triple may be passed
     ;; directly. Update the canonical sp index first so duplicate input pays
@@ -258,6 +325,7 @@
           (record-new SnarlDataGraph
             (ids (. g ids))
             (terms (. g terms))
+            (triple-ids (. g triple-ids))
             (index (. g index))
             (no-ids (. g no-ids))
             (size (+ (. g size) 1))))
@@ -447,4 +515,49 @@
       (for-each (t (. g triples))
         (set! out (snarl-data-graph-add arena out t)))
       out)
-    :c-name "snarl_data_graph_from_indexed"))
+    :c-name "snarl_data_graph_from_indexed")
+
+  (fn term-is-triple ((t Term))
+    (@intent "True if t is a triple term")
+    (@spec ((Term) -> Bool))
+    (@pure)
+    (match t
+      ((term-triple _) true)
+      (_ false)))
+
+  (fn graph-has-triple-term ((g IndexedGraph))
+    (@intent "True if some triple of g has a triple term in any position")
+    (@spec ((IndexedGraph) -> Bool))
+    (@pure)
+    (let ((mut found false))
+      (for-each (t (. g triples))
+        (when (or (term-is-triple (triple-subject t))
+                  (term-is-triple (triple-predicate t))
+                  (term-is-triple (triple-object t)))
+          (set! found true)))
+      found))
+
+  (fn canonicalize-triple-terms ((arena Arena) (g IndexedGraph))
+    (@intent "g with each triple term value held once, so equal triple terms share one allocation; g itself when it has no triple term")
+    (@spec ((Arena IndexedGraph) -> IndexedGraph))
+    (@alloc arena)
+    ;; For the shapes graph, which stays an IndexedGraph: its Term-keyed
+    ;; indexes and every Term-keyed Map or Set the parser builds compare a
+    ;; triple term by pointer (see the interning note above). The terms are
+    ;; run through a scratch SnarlDataGraph dictionary, and the triples
+    ;; rebuilt from its canonical copies in their original order, minus any
+    ;; that only repeated an earlier one.
+    (if (not (graph-has-triple-term g))
+      g
+      (let ((mut dict (snarl-data-graph-create arena))
+            (mut out (indexed-graph-create arena)))
+        (for-each (t (. g triples))
+          (let ((before (. dict size)))
+            (set! dict (snarl-data-graph-add arena dict t))
+            (when (> (. dict size) before)
+              (set! out (indexed-graph-add arena out
+                          (make-triple arena
+                            (snarl-data-graph-canonical-term dict (triple-subject t))
+                            (snarl-data-graph-canonical-term dict (triple-predicate t))
+                            (snarl-data-graph-canonical-term dict (triple-object t))))))))
+        out))))

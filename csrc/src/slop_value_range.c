@@ -14,8 +14,8 @@ slop_option_snarl_types_ValidationResult snarl_check_min_exclusive(slop_arena* a
 slop_option_snarl_types_ValidationResult snarl_check_max_exclusive(slop_arena* arena, slop_rdf_rdf_Term focus_node, slop_rdf_rdf_Term value_node, slop_rdf_rdf_Term limit, slop_option_snarl_types_ShaclPath path, slop_rdf_rdf_Term shape_id, snarl_types_Severity severity, slop_option_string message);
 
 uint8_t snarl_value_range_min_inclusive_satisfied(slop_arena* arena, slop_rdf_rdf_Term value_node, slop_rdf_rdf_Term limit) {
-    __auto_type _mv_311 = snarl_literal_compare(arena, value_node, limit);
-    switch (_mv_311) {
+    __auto_type _mv_324 = snarl_literal_compare(arena, value_node, limit);
+    switch (_mv_324) {
         case slop_rdf_xsd_XsdCompareResult_xsd_compare_equal: {
             return 1;
             break;
@@ -32,8 +32,8 @@ uint8_t snarl_value_range_min_inclusive_satisfied(slop_arena* arena, slop_rdf_rd
 }
 
 uint8_t snarl_value_range_max_inclusive_satisfied(slop_arena* arena, slop_rdf_rdf_Term value_node, slop_rdf_rdf_Term limit) {
-    __auto_type _mv_312 = snarl_literal_compare(arena, value_node, limit);
-    switch (_mv_312) {
+    __auto_type _mv_325 = snarl_literal_compare(arena, value_node, limit);
+    switch (_mv_325) {
         case slop_rdf_xsd_XsdCompareResult_xsd_compare_equal: {
             return 1;
             break;
@@ -50,8 +50,8 @@ uint8_t snarl_value_range_max_inclusive_satisfied(slop_arena* arena, slop_rdf_rd
 }
 
 uint8_t snarl_value_range_min_exclusive_satisfied(slop_arena* arena, slop_rdf_rdf_Term value_node, slop_rdf_rdf_Term limit) {
-    __auto_type _mv_313 = snarl_literal_compare(arena, value_node, limit);
-    switch (_mv_313) {
+    __auto_type _mv_326 = snarl_literal_compare(arena, value_node, limit);
+    switch (_mv_326) {
         case slop_rdf_xsd_XsdCompareResult_xsd_compare_greater: {
             return 1;
             break;
@@ -64,8 +64,8 @@ uint8_t snarl_value_range_min_exclusive_satisfied(slop_arena* arena, slop_rdf_rd
 }
 
 uint8_t snarl_value_range_max_exclusive_satisfied(slop_arena* arena, slop_rdf_rdf_Term value_node, slop_rdf_rdf_Term limit) {
-    __auto_type _mv_314 = snarl_literal_compare(arena, value_node, limit);
-    switch (_mv_314) {
+    __auto_type _mv_327 = snarl_literal_compare(arena, value_node, limit);
+    switch (_mv_327) {
         case slop_rdf_xsd_XsdCompareResult_xsd_compare_less: {
             return 1;
             break;

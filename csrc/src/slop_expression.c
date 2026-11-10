@@ -28,16 +28,16 @@ slop_list_slop_rdf_rdf_Term snarl_expression_fixture_outputs_false(slop_arena* a
 }
 
 uint8_t snarl_expression_term_is_true(slop_rdf_rdf_Term t) {
-    __auto_type _mv_293 = t;
-    switch (_mv_293.tag) {
+    __auto_type _mv_306 = t;
+    switch (_mv_306.tag) {
         case slop_rdf_rdf_Term_term_literal:
         {
-            __auto_type lit = _mv_293.data.term_literal;
-            __auto_type _mv_294 = lit.datatype;
-            if (_mv_294.has_value) {
-                __auto_type dt = _mv_294.value;
+            __auto_type lit = _mv_306.data.term_literal;
+            __auto_type _mv_307 = lit.datatype;
+            if (_mv_307.has_value) {
+                __auto_type dt = _mv_307.value;
                 return (string_eq(dt, slop_rdf_vocab_XSD_BOOLEAN) && (string_eq(lit.value, SLOP_STR("true")) || string_eq(lit.value, SLOP_STR("1"))));
-            } else if (!_mv_294.has_value) {
+            } else if (!_mv_307.has_value) {
                 return 0;
             }
             SLOP_UNREACHABLE();
@@ -50,11 +50,11 @@ uint8_t snarl_expression_term_is_true(slop_rdf_rdf_Term t) {
 
 uint8_t snarl_expression_outputs_are_true(slop_list_slop_rdf_rdf_Term outputs) {
     if (((int64_t)((outputs).len)) == 1) {
-        __auto_type _mv_295 = ({ __auto_type _lst = outputs; size_t _idx = (size_t)0; slop_option_slop_rdf_rdf_Term _r = {0}; if (_idx < _lst.len) { _r.has_value = true; _r.value = _lst.data[_idx]; } else { _r.has_value = false; } _r; });
-        if (_mv_295.has_value) {
-            __auto_type t = _mv_295.value;
+        __auto_type _mv_308 = ({ __auto_type _lst = outputs; size_t _idx = (size_t)0; slop_option_slop_rdf_rdf_Term _r = {0}; if (_idx < _lst.len) { _r.has_value = true; _r.value = _lst.data[_idx]; } else { _r.has_value = false; } _r; });
+        if (_mv_308.has_value) {
+            __auto_type t = _mv_308.value;
             return snarl_expression_term_is_true(t);
-        } else if (!_mv_295.has_value) {
+        } else if (!_mv_308.has_value) {
             return 0;
         }
         SLOP_UNREACHABLE();

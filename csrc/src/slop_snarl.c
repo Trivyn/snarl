@@ -56,23 +56,23 @@ snarl_ValidationOutcome snarl_validate_data_graph_with_inference(slop_arena* are
         __auto_type none_inferred = ((slop_list_snarl_rules_InferredTriple){ .data = NULL, .len = 0, .cap = 0, .arena = arena });
         __auto_type none_deferred = ((slop_list_snarl_rules_DeferredRule){ .data = NULL, .len = 0, .cap = 0, .arena = arena });
         __auto_type rules_run = (config.run_rules || snarl_parse_shapes_graph_declares_rules_entailment(arena, shapes_graph, config.shacl12));
-        __auto_type _mv_648 = snarl_prepare_shapes(arena, shapes_graph, config, rules_run);
-        if (!_mv_648.is_ok) {
-            __auto_type msg = _mv_648.data.err;
+        __auto_type _mv_661 = snarl_prepare_shapes(arena, shapes_graph, config, rules_run);
+        if (!_mv_661.is_ok) {
+            __auto_type msg = _mv_661.data.err;
             return ((snarl_ValidationOutcome){.result = ((snarl_types_ValidatorResult){ .tag = snarl_types_ValidatorResult_validate_error, .data.validate_error = msg }), .graph = data_graph, .inferred = none_inferred, .deferred = none_deferred});
-        } else if (_mv_648.is_ok) {
-            __auto_type shapes = _mv_648.data.ok;
+        } else if (_mv_661.is_ok) {
+            __auto_type shapes = _mv_661.data.ok;
             if (rules_run) {
-                __auto_type _mv_649 = snarl_infer_rules(arena, data_graph, shapes, config);
-                switch (_mv_649.tag) {
+                __auto_type _mv_662 = snarl_infer_rules(arena, data_graph, shapes, config);
+                switch (_mv_662.tag) {
                     case snarl_rules_InferResult_infer_error:
                     {
-                        __auto_type msg = _mv_649.data.infer_error;
+                        __auto_type msg = _mv_662.data.infer_error;
                         return ((snarl_ValidationOutcome){.result = ((snarl_types_ValidatorResult){ .tag = snarl_types_ValidatorResult_validate_error, .data.validate_error = msg }), .graph = data_graph, .inferred = none_inferred, .deferred = none_deferred});
                     }
                     case snarl_rules_InferResult_infer_success:
                     {
-                        __auto_type out = _mv_649.data.infer_success;
+                        __auto_type out = _mv_662.data.infer_success;
                         return ((snarl_ValidationOutcome){.result = snarl_engine_validate(arena, out.graph, shapes, config), .graph = out.graph, .inferred = out.inferred, .deferred = out.deferred});
                     }
                 }
@@ -86,23 +86,23 @@ snarl_ValidationOutcome snarl_validate_data_graph_with_inference(slop_arena* are
 }
 
 slop_result_snarl_types_ShapesGraph_string snarl_prepare_shapes(slop_arena* arena, slop_rdf_index_IndexedGraph shapes_graph, snarl_types_ValidatorConfig config, uint8_t rules_run) {
-    __auto_type _mv_650 = snarl_shapes_graph_recursion_hazard_message(arena, shapes_graph);
-    if (_mv_650.has_value) {
-        __auto_type msg = _mv_650.value;
+    __auto_type _mv_663 = snarl_shapes_graph_recursion_hazard_message(arena, shapes_graph);
+    if (_mv_663.has_value) {
+        __auto_type msg = _mv_663.value;
         return ((slop_result_snarl_types_ShapesGraph_string){ .is_ok = false, .data.err = msg });
-    } else if (!_mv_650.has_value) {
-        __auto_type _mv_651 = snarl_shapes_graph_unsupported_feature_message(arena, shapes_graph, config.shacl12, rules_run, config.defer_sparql_rules);
-        if (_mv_651.has_value) {
-            __auto_type msg = _mv_651.value;
+    } else if (!_mv_663.has_value) {
+        __auto_type _mv_664 = snarl_shapes_graph_unsupported_feature_message(arena, shapes_graph, config.shacl12, rules_run, config.defer_sparql_rules);
+        if (_mv_664.has_value) {
+            __auto_type msg = _mv_664.value;
             return ((slop_result_snarl_types_ShapesGraph_string){ .is_ok = false, .data.err = msg });
-        } else if (!_mv_651.has_value) {
+        } else if (!_mv_664.has_value) {
             {
-                __auto_type shapes = snarl_parse_shapes_graph(arena, shapes_graph);
-                __auto_type _mv_652 = snarl_engine_shapes_graph_pattern_error_message(arena, shapes);
-                if (_mv_652.has_value) {
-                    __auto_type msg = _mv_652.value;
+                __auto_type shapes = snarl_parse_shapes_graph(arena, snarl_data_graph_canonicalize_triple_terms(arena, shapes_graph));
+                __auto_type _mv_665 = snarl_engine_shapes_graph_pattern_error_message(arena, shapes);
+                if (_mv_665.has_value) {
+                    __auto_type msg = _mv_665.value;
                     return ((slop_result_snarl_types_ShapesGraph_string){ .is_ok = false, .data.err = msg });
-                } else if (!_mv_652.has_value) {
+                } else if (!_mv_665.has_value) {
                     return ((slop_result_snarl_types_ShapesGraph_string){ .is_ok = true, .data.ok = shapes });
                 }
                 SLOP_UNREACHABLE();
@@ -114,28 +114,28 @@ slop_result_snarl_types_ShapesGraph_string snarl_prepare_shapes(slop_arena* aren
 }
 
 snarl_rules_InferResult snarl_infer(slop_arena* arena, snarl_data_graph_SnarlDataGraph data_graph, slop_rdf_index_IndexedGraph shapes_graph, snarl_types_ValidatorConfig config) {
-    __auto_type _mv_653 = snarl_prepare_shapes(arena, shapes_graph, config, 1);
-    if (!_mv_653.is_ok) {
-        __auto_type msg = _mv_653.data.err;
+    __auto_type _mv_666 = snarl_prepare_shapes(arena, shapes_graph, config, 1);
+    if (!_mv_666.is_ok) {
+        __auto_type msg = _mv_666.data.err;
         return ((snarl_rules_InferResult){ .tag = snarl_rules_InferResult_infer_error, .data.infer_error = msg });
-    } else if (_mv_653.is_ok) {
-        __auto_type shapes = _mv_653.data.ok;
+    } else if (_mv_666.is_ok) {
+        __auto_type shapes = _mv_666.data.ok;
         return snarl_infer_rules(arena, data_graph, shapes, config);
     }
     SLOP_UNREACHABLE();
 }
 
 uint8_t snarl_conforms(slop_arena* arena, slop_rdf_index_IndexedGraph data_graph, slop_rdf_index_IndexedGraph shapes_graph) {
-    __auto_type _mv_654 = snarl_validate(arena, data_graph, shapes_graph);
-    switch (_mv_654.tag) {
+    __auto_type _mv_667 = snarl_validate(arena, data_graph, shapes_graph);
+    switch (_mv_667.tag) {
         case snarl_types_ValidatorResult_validate_success:
         {
-            __auto_type report = _mv_654.data.validate_success;
+            __auto_type report = _mv_667.data.validate_success;
             return snarl_types_report_conforms(report);
         }
         case snarl_types_ValidatorResult_validate_error:
         {
-            __auto_type _ = _mv_654.data.validate_error;
+            __auto_type _ = _mv_667.data.validate_error;
             return 0;
         }
     }
@@ -143,16 +143,16 @@ uint8_t snarl_conforms(slop_arena* arena, slop_rdf_index_IndexedGraph data_graph
 }
 
 uint8_t snarl_conforms_data_graph(slop_arena* arena, snarl_data_graph_SnarlDataGraph data_graph, slop_rdf_index_IndexedGraph shapes_graph) {
-    __auto_type _mv_655 = snarl_validate_data_graph(arena, data_graph, shapes_graph);
-    switch (_mv_655.tag) {
+    __auto_type _mv_668 = snarl_validate_data_graph(arena, data_graph, shapes_graph);
+    switch (_mv_668.tag) {
         case snarl_types_ValidatorResult_validate_success:
         {
-            __auto_type report = _mv_655.data.validate_success;
+            __auto_type report = _mv_668.data.validate_success;
             return snarl_types_report_conforms(report);
         }
         case snarl_types_ValidatorResult_validate_error:
         {
-            __auto_type _ = _mv_655.data.validate_error;
+            __auto_type _ = _mv_668.data.validate_error;
             return 0;
         }
     }
@@ -167,8 +167,8 @@ slop_list_snarl_types_ValidationResult snarl_get_violations(slop_arena* arena, s
             __auto_type _coll = report.results;
             for (size_t _i = 0; _i < _coll.len; _i++) {
                 __auto_type r = _coll.data[_i];
-                __auto_type _mv_656 = r.severity;
-                switch (_mv_656) {
+                __auto_type _mv_669 = r.severity;
+                switch (_mv_669) {
                     case snarl_types_Severity_severity_violation: {
                         ({ __auto_type _lst_p = &(result); __auto_type _item = (r); if (_lst_p->len >= _lst_p->cap) { _lst_p->data = (__typeof__(_lst_p->data))slop_list_grow_raw(_lst_p->arena, _lst_p->data, &_lst_p->cap, _lst_p->len, sizeof(*_lst_p->data)); } _lst_p->data[_lst_p->len++] = _item; (void)0; });
                         break;
@@ -195,8 +195,8 @@ slop_list_snarl_types_ValidationResult snarl_get_warnings(slop_arena* arena, sna
             __auto_type _coll = report.results;
             for (size_t _i = 0; _i < _coll.len; _i++) {
                 __auto_type r = _coll.data[_i];
-                __auto_type _mv_657 = r.severity;
-                switch (_mv_657) {
+                __auto_type _mv_670 = r.severity;
+                switch (_mv_670) {
                     case snarl_types_Severity_severity_warning: {
                         ({ __auto_type _lst_p = &(result); __auto_type _item = (r); if (_lst_p->len >= _lst_p->cap) { _lst_p->data = (__typeof__(_lst_p->data))slop_list_grow_raw(_lst_p->arena, _lst_p->data, &_lst_p->cap, _lst_p->len, sizeof(*_lst_p->data)); } _lst_p->data[_lst_p->len++] = _item; (void)0; });
                         break;
@@ -217,7 +217,7 @@ slop_list_snarl_types_ValidationResult snarl_get_warnings(slop_arena* arena, sna
 
 int64_t snarl_get_result_count(snarl_types_ValidationReport report) {
     int64_t _retval = {0};
-    _retval = SLOP_RANGE(int64_t, ((int64_t)((report.results).len)), 1, 0, 0, 0, "(Int 0 ..) at snarl.slop:255:5");
+    _retval = SLOP_RANGE(int64_t, ((int64_t)((report.results).len)), 1, 0, 0, 0, "(Int 0 ..) at snarl.slop:259:5");
     goto _slop_post;
     _slop_post: ;
     SLOP_POST(((_retval >= 0)), "(>= $result 0)");

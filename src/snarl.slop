@@ -2,7 +2,7 @@
   (import rdf (Term Triple))
   (import index (IndexedGraph indexed-graph-size indexed-graph-create))
   (import data-graph
-    (SnarlDataGraph snarl-data-graph-size snarl-data-graph-create snarl-data-graph-from-indexed))
+    (SnarlDataGraph snarl-data-graph-size snarl-data-graph-create snarl-data-graph-from-indexed canonicalize-triple-terms))
   (import types
     (ShaclPath NodeKind Severity Constraint PropertyShape NodeShape ShapesGraph ValidationResult ValidationReport ValidatorConfig ValidatorResult RuleOrder default-validator-config make-validation-report report-conforms))
   (import parse
@@ -172,7 +172,11 @@
         (match (shapes-graph-unsupported-feature-message arena shapes-graph (. config shacl12) rules-run (. config defer-sparql-rules))
           ((some msg) (error msg))
           ((none)
-            (let ((shapes (parse-shapes-graph arena shapes-graph)))
+            ;; Parsed from a copy in which equal triple terms are one
+            ;; allocation, so the parser's Term-keyed maps and sets, and
+            ;; the constants it hands the engine, compare them by value
+            ;; (issue #19).
+            (let ((shapes (parse-shapes-graph arena (canonicalize-triple-terms arena shapes-graph))))
               ;; An sh:pattern the regex engine cannot compile would
               ;; otherwise report every value as a violation.
               (match (shapes-graph-pattern-error-message arena shapes)
