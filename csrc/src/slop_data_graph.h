@@ -13,6 +13,7 @@
 #include "slop_index.h"
 
 typedef struct snarl_data_graph_SnarlDataIndex snarl_data_graph_SnarlDataIndex;
+typedef struct snarl_data_graph_TripleKey snarl_data_graph_TripleKey;
 typedef struct snarl_data_graph_SnarlDataGraph snarl_data_graph_SnarlDataGraph;
 
 typedef slop_map* snarl_data_graph_IdSet;
@@ -54,9 +55,28 @@ typedef struct snarl_data_graph_SnarlDataIndex snarl_data_graph_SnarlDataIndex;
 SLOP_OPTION_DEFINE(snarl_data_graph_SnarlDataIndex, slop_option_snarl_data_graph_SnarlDataIndex)
 #endif
 
+struct snarl_data_graph_TripleKey {
+    int64_t s;
+    int64_t p;
+    int64_t o;
+};
+typedef struct snarl_data_graph_TripleKey snarl_data_graph_TripleKey;
+
+#ifndef SLOP_OPTION_SNARL_DATA_GRAPH_TRIPLEKEY_DEFINED
+#define SLOP_OPTION_SNARL_DATA_GRAPH_TRIPLEKEY_DEFINED
+SLOP_OPTION_DEFINE(snarl_data_graph_TripleKey, slop_option_snarl_data_graph_TripleKey)
+#endif
+
+#ifndef SLOP_LIST_SNARL_DATA_GRAPH_TRIPLEKEY_DEFINED
+#define SLOP_LIST_SNARL_DATA_GRAPH_TRIPLEKEY_DEFINED
+#define SLOP_LIST_SNARL_DATA_GRAPH_TRIPLEKEY_IMPL_DEFINED
+SLOP_LIST_DEFINE(snarl_data_graph_TripleKey, slop_list_snarl_data_graph_TripleKey)
+#endif
+
 struct snarl_data_graph_SnarlDataGraph {
     slop_map* ids;
     slop_map* terms;
+    slop_map* triple_ids;
     snarl_data_graph_SnarlDataIndex index;
     snarl_data_graph_IdSet no_ids;
     int64_t size;
@@ -156,12 +176,34 @@ static inline bool slop_eq_slop_rdf_rdf_Term(const void* a, const void* b) {
 }
 #endif
 
+#ifndef SNARL_DATA_GRAPH_TRIPLEKEY_HASH_EQ_DEFINED
+#define SNARL_DATA_GRAPH_TRIPLEKEY_HASH_EQ_DEFINED
+static inline uint64_t slop_hash_snarl_data_graph_TripleKey(const void* key) {
+    const snarl_data_graph_TripleKey* _k = (const snarl_data_graph_TripleKey*)key;
+    uint64_t hash = 14695981039346656037ULL;
+    hash ^= slop_hash_int(&_k->s); hash *= 1099511628211ULL;
+    hash ^= slop_hash_int(&_k->p); hash *= 1099511628211ULL;
+    hash ^= slop_hash_int(&_k->o); hash *= 1099511628211ULL;
+    return hash;
+}
+static inline bool slop_eq_snarl_data_graph_TripleKey(const void* a, const void* b) {
+    const snarl_data_graph_TripleKey* _a = (const snarl_data_graph_TripleKey*)a;
+    const snarl_data_graph_TripleKey* _b = (const snarl_data_graph_TripleKey*)b;
+    return true
+        && (_a->s == _b->s)
+        && (_a->p == _b->p)
+        && (_a->o == _b->o)
+    ;
+}
+#endif
+
 snarl_data_graph_SnarlDataGraph snarl_data_graph_create(slop_arena* arena);
 slop_string snarl_data_graph_copy_string(slop_arena* arena, slop_string s);
 slop_option_string snarl_data_graph_copy_option_string(slop_arena* arena, slop_option_string s);
 slop_rdf_rdf_Term snarl_data_graph_copy_term(slop_arena* arena, slop_rdf_rdf_Term t);
 int64_t snarl_data_graph_intern_term(slop_arena* arena, snarl_data_graph_SnarlDataGraph g, slop_rdf_rdf_Term t);
 slop_option_int snarl_data_graph_lookup_term(snarl_data_graph_SnarlDataGraph g, slop_rdf_rdf_Term t);
+slop_rdf_rdf_Term snarl_data_graph_snarl_data_graph_canonical_term(snarl_data_graph_SnarlDataGraph g, slop_rdf_rdf_Term t);
 slop_rdf_rdf_Term snarl_data_graph_term_of(snarl_data_graph_SnarlDataGraph g, int64_t id);
 slop_list_slop_rdf_rdf_Term snarl_data_graph_ids_to_terms(slop_arena* arena, snarl_data_graph_SnarlDataGraph g, snarl_data_graph_IdSet ids);
 snarl_data_graph_IdSet snarl_data_graph_make_id_set(slop_arena* arena, int64_t value);
@@ -185,6 +227,9 @@ slop_list_slop_rdf_rdf_Term snarl_data_graph_snarl_data_graph_predicates_for_sub
 slop_list_slop_rdf_rdf_Triple snarl_data_graph_triples_for_subject(slop_arena* arena, snarl_data_graph_SnarlDataGraph g, slop_rdf_rdf_Term subj);
 slop_rdf_index_IndexedGraph snarl_data_graph_to_indexed(slop_arena* arena, snarl_data_graph_SnarlDataGraph g);
 snarl_data_graph_SnarlDataGraph snarl_data_graph_from_indexed(slop_arena* arena, slop_rdf_index_IndexedGraph g);
+uint8_t snarl_data_graph_term_is_triple(slop_rdf_rdf_Term t);
+uint8_t snarl_data_graph_graph_has_triple_term(slop_rdf_index_IndexedGraph g);
+slop_rdf_index_IndexedGraph snarl_data_graph_canonicalize_triple_terms(slop_arena* arena, slop_rdf_index_IndexedGraph g);
 
 /* Function name aliases for C interop */
 #define snarl_data_graph_snarl_data_graph_create snarl_data_graph_create
@@ -213,6 +258,11 @@ SLOP_OPTION_DEFINE(snarl_data_graph_IdSetMap, slop_option_snarl_data_graph_IdSet
 #ifndef SLOP_OPTION_SNARL_DATA_GRAPH_SNARLDATAINDEX_DEFINED
 #define SLOP_OPTION_SNARL_DATA_GRAPH_SNARLDATAINDEX_DEFINED
 SLOP_OPTION_DEFINE(snarl_data_graph_SnarlDataIndex, slop_option_snarl_data_graph_SnarlDataIndex)
+#endif
+
+#ifndef SLOP_OPTION_SNARL_DATA_GRAPH_TRIPLEKEY_DEFINED
+#define SLOP_OPTION_SNARL_DATA_GRAPH_TRIPLEKEY_DEFINED
+SLOP_OPTION_DEFINE(snarl_data_graph_TripleKey, slop_option_snarl_data_graph_TripleKey)
 #endif
 
 #ifndef SLOP_OPTION_SLOP_RDF_RDF_TERM_DEFINED

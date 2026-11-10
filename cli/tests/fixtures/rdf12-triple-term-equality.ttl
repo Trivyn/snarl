@@ -1,0 +1,55 @@
+# Regression for issue #19: equal RDF 1.2 triple terms are one value, however
+# many times they are written. Data and shapes in one file.
+#
+# Expected with rules on: 4 inferred triples, 1 violation.
+#   - :x :p holds one value, though the triple is stated twice: sh:maxCount 1
+#     conforms.
+#   - :x :p and :x :q hold the same triple term: the intersection rule infers
+#     :x :r <<( :a :b :c )>>.
+#   - The same for a nested triple term on :y: :y :r <<( :a :b <<( :c :d :e )>> )>>.
+#   - A constant triple term intersected with :x's :p values: :x :r2 <<( :a :b :c )>>.
+#   - A constant triple term that is not in the data is still one value:
+#     :x :r3 <<( :m :n :o )>>, once.
+#   - sh:hasValue with a triple term conforms.
+#   - sh:targetNode lists one triple term twice: one focus node, so one
+#     sh:nodeKind violation, not two.
+
+@prefix : <http://example.org/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+
+:x :p <<( :a :b :c )>> .
+:x :p <<( :a :b :c )>> .
+:x :q <<( :a :b :c )>> .
+
+:y :p <<( :a :b <<( :c :d :e )>> )>> .
+:y :q <<( :a :b <<( :c :d :e )>> )>> .
+
+:S a sh:NodeShape ;
+  sh:targetNode :x , :y ;
+  sh:rule [
+    a sh:TripleRule ;
+    sh:subject sh:this ;
+    sh:predicate :r ;
+    sh:object [ sh:intersection ( [ sh:path :p ] [ sh:path :q ] ) ] ;
+  ] .
+
+:X a sh:NodeShape ;
+  sh:targetNode :x ;
+  sh:property [ sh:path :p ; sh:maxCount 1 ] ;
+  sh:property [ sh:path :p ; sh:hasValue <<( :a :b :c )>> ] ;
+  sh:rule [
+    a sh:TripleRule ;
+    sh:subject sh:this ;
+    sh:predicate :r2 ;
+    sh:object [ sh:intersection ( [ sh:path :p ] <<( :a :b :c )>> ) ] ;
+  ] ;
+  sh:rule [
+    a sh:TripleRule ;
+    sh:subject sh:this ;
+    sh:predicate :r3 ;
+    sh:object [ sh:union ( <<( :m :n :o )>> <<( :m :n :o )>> ) ] ;
+  ] .
+
+:T a sh:NodeShape ;
+  sh:targetNode <<( :a :b :c )>> , <<( :a :b :c )>> ;
+  sh:nodeKind sh:IRI .

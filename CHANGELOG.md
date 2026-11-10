@@ -3,6 +3,34 @@
 Releases before 0.8.1 are described on the
 [GitHub releases page](https://github.com/Trivyn/snarl/releases).
 
+## 0.8.2
+
+### Fixed
+
+- **Equal RDF 1.2 triple terms are one value** ([#19](https://github.com/Trivyn/snarl/issues/19)).
+  Triple terms were compared and hashed by allocation, so two equal triple
+  terms written separately were different values. Effects, now fixed:
+  - a triple with a triple-term object stated twice counted as two triples,
+    and as two values for `sh:maxCount` and qualified counts;
+  - `sh:hasValue` with a triple term never matched the data;
+  - `sh:intersection` over equal triple terms was empty;
+  - `sh:targetNode` repeated with one triple term gave two focus nodes;
+  - a rule whose conclusion has a triple-term object reported it as new on
+    every run, so running a level to its fixpoint never settled.
+
+  The data graph now numbers a triple term by the ids of its subject,
+  predicate and object, so equal triple terms share one id and one copy. A
+  shapes graph that holds triple terms is parsed from a copy with the same
+  property. Constants in node expressions and `sh:targetNode` values are
+  swapped for the data graph's copy.
+
+### Breaking
+
+- **C.** `SnarlDataGraph` gains a `triple_ids` map after `terms`. The struct
+  is passed by value, so C callers must rebuild against the new header. The
+  Rust crate's `SnarlDataGraphFfi` mirror is updated; the safe Rust API is
+  unchanged.
+
 ## 0.8.1
 
 For shapes graphs that keep `sh:SPARQLRule`s beside `sh:TripleRule`s, with a

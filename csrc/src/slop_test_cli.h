@@ -156,6 +156,8 @@ uint8_t snarl_cli_tests_test_cli_test_af12_node_exprs(slop_arena* arena);
 uint8_t snarl_cli_tests_test_cli_test_af12_list_duplicates(slop_arena* arena);
 uint8_t snarl_cli_tests_test_cli_test_af12_unsupported_function(slop_arena* arena);
 uint8_t snarl_cli_tests_test_cli_test_af12_global_rule(slop_arena* arena);
+uint8_t snarl_cli_tests_test_cli_test_rdf12_triple_term_equality(slop_arena* arena);
+uint8_t snarl_cli_tests_test_cli_test_rdf12_triple_term_reinfer(slop_arena* arena);
 uint8_t snarl_cli_tests_test_cli_test_af12_global_rule_af_mode(slop_arena* arena);
 slop_option_string snarl_cli_tests_test_cli_report_text(slop_arena* arena, slop_string data_path, slop_string shapes_path);
 uint8_t snarl_cli_tests_test_cli_assert_same_report(slop_arena* arena, slop_string data_path, slop_string shapes_a, slop_string shapes_b, slop_string expected_marker);

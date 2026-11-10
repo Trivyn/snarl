@@ -60,18 +60,18 @@ slop_option_snarl_types_ValidationResult snarl_value_type_check_class_with_index
 }
 
 uint8_t snarl_value_type_datatype_matches(slop_rdf_rdf_Term value_node, slop_rdf_rdf_Term required_datatype) {
-    __auto_type _mv_315 = value_node;
-    switch (_mv_315.tag) {
+    __auto_type _mv_328 = value_node;
+    switch (_mv_328.tag) {
         case slop_rdf_rdf_Term_term_literal:
         {
-            __auto_type lit = _mv_315.data.term_literal;
+            __auto_type lit = _mv_328.data.term_literal;
             {
                 __auto_type required_dt_str = ({ __auto_type _mv = required_datatype; slop_string _mr = {0}; switch (_mv.tag) { case slop_rdf_rdf_Term_term_iri: { __auto_type iri = _mv.data.term_iri; _mr = iri.value; break; } default: { _mr = SLOP_STR(""); break; }  } _mr; });
-                __auto_type _mv_316 = lit.lang;
-                if (_mv_316.has_value) {
-                    __auto_type _ = _mv_316.value;
+                __auto_type _mv_329 = lit.lang;
+                if (_mv_329.has_value) {
+                    __auto_type _ = _mv_329.value;
                     return string_eq(required_dt_str, slop_rdf_vocab_RDF_LANG_STRING);
-                } else if (!_mv_316.has_value) {
+                } else if (!_mv_329.has_value) {
                     {
                         __auto_type dt = ({ __auto_type _mv = lit.datatype; _mv.has_value ? ({ __auto_type d = _mv.value; d; }) : (slop_rdf_vocab_XSD_STRING); });
                         return (string_eq(dt, required_dt_str) && snarl_literal_order_lexical_form_is_valid(lit.value, dt));
@@ -101,11 +101,11 @@ slop_option_snarl_types_ValidationResult snarl_check_datatype(slop_arena* arena,
 }
 
 uint8_t snarl_value_type_node_kind_matches(snarl_types_NodeKind required, slop_rdf_rdf_TermKind kind) {
-    __auto_type _mv_317 = required;
-    switch (_mv_317) {
+    __auto_type _mv_330 = required;
+    switch (_mv_330) {
         case snarl_types_NodeKind_node_kind_blank_node: {
-            __auto_type _mv_318 = kind;
-            switch (_mv_318) {
+            __auto_type _mv_331 = kind;
+            switch (_mv_331) {
                 case slop_rdf_rdf_TermKind_blank: {
                     return 1;
                     break;
@@ -118,8 +118,8 @@ uint8_t snarl_value_type_node_kind_matches(snarl_types_NodeKind required, slop_r
             break;
         }
         case snarl_types_NodeKind_node_kind_iri: {
-            __auto_type _mv_319 = kind;
-            switch (_mv_319) {
+            __auto_type _mv_332 = kind;
+            switch (_mv_332) {
                 case slop_rdf_rdf_TermKind_iri: {
                     return 1;
                     break;
@@ -132,8 +132,8 @@ uint8_t snarl_value_type_node_kind_matches(snarl_types_NodeKind required, slop_r
             break;
         }
         case snarl_types_NodeKind_node_kind_literal: {
-            __auto_type _mv_320 = kind;
-            switch (_mv_320) {
+            __auto_type _mv_333 = kind;
+            switch (_mv_333) {
                 case slop_rdf_rdf_TermKind_literal: {
                     return 1;
                     break;
@@ -146,8 +146,8 @@ uint8_t snarl_value_type_node_kind_matches(snarl_types_NodeKind required, slop_r
             break;
         }
         case snarl_types_NodeKind_node_kind_blank_node_or_iri: {
-            __auto_type _mv_321 = kind;
-            switch (_mv_321) {
+            __auto_type _mv_334 = kind;
+            switch (_mv_334) {
                 case slop_rdf_rdf_TermKind_blank: {
                     return 1;
                     break;
@@ -164,8 +164,8 @@ uint8_t snarl_value_type_node_kind_matches(snarl_types_NodeKind required, slop_r
             break;
         }
         case snarl_types_NodeKind_node_kind_blank_node_or_literal: {
-            __auto_type _mv_322 = kind;
-            switch (_mv_322) {
+            __auto_type _mv_335 = kind;
+            switch (_mv_335) {
                 case slop_rdf_rdf_TermKind_blank: {
                     return 1;
                     break;
@@ -182,8 +182,8 @@ uint8_t snarl_value_type_node_kind_matches(snarl_types_NodeKind required, slop_r
             break;
         }
         case snarl_types_NodeKind_node_kind_iri_or_literal: {
-            __auto_type _mv_323 = kind;
-            switch (_mv_323) {
+            __auto_type _mv_336 = kind;
+            switch (_mv_336) {
                 case slop_rdf_rdf_TermKind_iri: {
                     return 1;
                     break;

@@ -123,8 +123,8 @@ slop_list_snarl_types_ValidationResult snarl_check_less_than(slop_arena* arena, 
                         __auto_type o = _coll.data[_i];
                         {
                             __auto_type cmp = snarl_literal_compare(arena, v, o);
-                            __auto_type _mv_297 = cmp;
-                            switch (_mv_297) {
+                            __auto_type _mv_310 = cmp;
+                            switch (_mv_310) {
                                 case slop_rdf_xsd_XsdCompareResult_xsd_compare_less: {
                                     break;
                                 }
@@ -156,8 +156,8 @@ slop_list_snarl_types_ValidationResult snarl_check_less_than_or_equals(slop_aren
                         __auto_type o = _coll.data[_i];
                         {
                             __auto_type cmp = snarl_literal_compare(arena, v, o);
-                            __auto_type _mv_298 = cmp;
-                            switch (_mv_298) {
+                            __auto_type _mv_311 = cmp;
+                            switch (_mv_311) {
                                 case slop_rdf_xsd_XsdCompareResult_xsd_compare_greater: {
                                     ({ __auto_type _lst_p = &(results); __auto_type _item = (((snarl_types_ValidationResult){.focus_node = focus_node, .result_path = path, .value = (slop_option_slop_rdf_rdf_Term){.has_value = 1, .value = v}, .source_shape = shape_id, .source_constraint_component = snarl_af_vocab_SHACL_LESS_THAN_OR_EQUALS_CONSTRAINT_COMPONENT, .severity = severity, .message = message})); if (_lst_p->len >= _lst_p->cap) { _lst_p->data = (__typeof__(_lst_p->data))slop_list_grow_raw(_lst_p->arena, _lst_p->data, &_lst_p->cap, _lst_p->len, sizeof(*_lst_p->data)); } _lst_p->data[_lst_p->len++] = _item; (void)0; });
                                     break;

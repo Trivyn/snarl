@@ -2,7 +2,7 @@
   (@doc "Node expression evaluation (SHACL-AF section 6, and the overlapping part of SHACL 1.2 Node Expressions)")
 
   (import rdf (Term make-iri))
-  (import data-graph (SnarlDataGraph snarl-data-graph-create))
+  (import data-graph (SnarlDataGraph snarl-data-graph-create snarl-data-graph-canonical-term))
   (import types (NodeExpr))
   (import path (resolve-path))
   (import strlib (string-build))
@@ -39,14 +39,21 @@
         (let ((mut out (list-new arena Term)))
           (list-push out focus)
           out))
+      ;; A constant is a shapes-graph term: a triple term is swapped for the
+      ;; data graph's copy, so it meets data values in the Term-keyed sets
+      ;; below as the same value (issue #19).
       ((nx-constant t)
         (let ((mut out (list-new arena Term)))
-          (list-push out t)
+          (list-push out (snarl-data-graph-canonical-term data-graph t))
           out))
       ;; A SHACL 1.2 list expression outputs its members as written,
       ;; duplicates included (W3C test expression-003: ( true true ) is
       ;; not exactly { true }).
-      ((nx-list ts) ts)
+      ((nx-list ts)
+        (let ((mut out (list-new arena Term)))
+          (for-each (t ts)
+            (list-push out (snarl-data-graph-canonical-term data-graph t)))
+          out))
       ((nx-path path input single-input)
         (let ((inputs (eval-node-expr arena data-graph (deref input) focus conforms errors))
               (mut out (list-new arena Term)))

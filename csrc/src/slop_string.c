@@ -28,29 +28,29 @@ slop_list_snarl_types_ValidationResult snarl_check_unique_lang(slop_arena* arena
 
 slop_string snarl_string_term_string_value(slop_rdf_rdf_Term t) {
     slop_string _retval = {0};
-    __auto_type _mv_302 = t;
-    switch (_mv_302.tag) {
+    __auto_type _mv_315 = t;
+    switch (_mv_315.tag) {
         case slop_rdf_rdf_Term_term_literal:
         {
-            __auto_type lit = _mv_302.data.term_literal;
+            __auto_type lit = _mv_315.data.term_literal;
             _retval = lit.value;
             goto _slop_post;
         }
         case slop_rdf_rdf_Term_term_iri:
         {
-            __auto_type iri = _mv_302.data.term_iri;
+            __auto_type iri = _mv_315.data.term_iri;
             _retval = iri.value;
             goto _slop_post;
         }
         case slop_rdf_rdf_Term_term_blank:
         {
-            __auto_type _ = _mv_302.data.term_blank;
+            __auto_type _ = _mv_315.data.term_blank;
             _retval = SLOP_STR("");
             goto _slop_post;
         }
         case slop_rdf_rdf_Term_term_triple:
         {
-            __auto_type _ = _mv_302.data.term_triple;
+            __auto_type _ = _mv_315.data.term_triple;
             _retval = SLOP_STR("");
             goto _slop_post;
         }
@@ -62,16 +62,16 @@ slop_string snarl_string_term_string_value(slop_rdf_rdf_Term t) {
 }
 
 slop_string snarl_string_term_lang(slop_rdf_rdf_Term t) {
-    __auto_type _mv_303 = t;
-    switch (_mv_303.tag) {
+    __auto_type _mv_316 = t;
+    switch (_mv_316.tag) {
         case slop_rdf_rdf_Term_term_literal:
         {
-            __auto_type lit = _mv_303.data.term_literal;
-            __auto_type _mv_304 = lit.lang;
-            if (_mv_304.has_value) {
-                __auto_type lang = _mv_304.value;
+            __auto_type lit = _mv_316.data.term_literal;
+            __auto_type _mv_317 = lit.lang;
+            if (_mv_317.has_value) {
+                __auto_type lang = _mv_317.value;
                 return lang;
-            } else if (!_mv_304.has_value) {
+            } else if (!_mv_317.has_value) {
                 return SLOP_STR("");
             }
             SLOP_UNREACHABLE();
@@ -83,11 +83,11 @@ slop_string snarl_string_term_lang(slop_rdf_rdf_Term t) {
 }
 
 uint8_t snarl_string_term_is_literal(slop_rdf_rdf_Term t) {
-    __auto_type _mv_305 = t;
-    switch (_mv_305.tag) {
+    __auto_type _mv_318 = t;
+    switch (_mv_318.tag) {
         case slop_rdf_rdf_Term_term_literal:
         {
-            __auto_type _ = _mv_305.data.term_literal;
+            __auto_type _ = _mv_318.data.term_literal;
             return 1;
         }
         default: {
@@ -184,16 +184,16 @@ int64_t snarl_string_string_char_count(slop_string s) {
 }
 
 uint8_t snarl_string_term_has_string_form(slop_rdf_rdf_Term value_node) {
-    __auto_type _mv_306 = value_node;
-    switch (_mv_306.tag) {
+    __auto_type _mv_319 = value_node;
+    switch (_mv_319.tag) {
         case slop_rdf_rdf_Term_term_literal:
         {
-            __auto_type _ = _mv_306.data.term_literal;
+            __auto_type _ = _mv_319.data.term_literal;
             return 1;
         }
         case slop_rdf_rdf_Term_term_iri:
         {
-            __auto_type _ = _mv_306.data.term_iri;
+            __auto_type _ = _mv_319.data.term_iri;
             return 1;
         }
         default: {
