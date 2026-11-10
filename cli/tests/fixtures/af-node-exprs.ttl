@@ -1,0 +1,63 @@
+# SHACL-AF node expressions (AF section 6), exercised through triple rules.
+# Only ex:alice is a target. Each rule's object (or subject) uses one kind of
+# node expression; the comments give the triples it must infer.
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix ex: <http://example.org/> .
+
+ex:alice a ex:Person ;
+    ex:knows ex:bob, ex:carol ;
+    ex:likes ex:carol, ex:dave .
+ex:bob ex:name "Bob" ; ex:age 30 .
+ex:carol ex:name "Carol" ; ex:age 12 .
+ex:dave ex:name "Dave" .
+
+ex:AdultShape
+    sh:property [ sh:path ex:age ; sh:minInclusive 18 ] .
+
+ex:PersonShape
+    a sh:NodeShape ;
+    sh:targetClass ex:Person ;
+    # Path expression with a sequence path: "Bob", "Carol"
+    sh:rule [
+        a sh:TripleRule ;
+        sh:subject sh:this ;
+        sh:predicate ex:friendName ;
+        sh:object [ sh:path ( ex:knows ex:name ) ] ;
+    ] ;
+    # Path expression with sh:nodes input: "Bob", "Carol"
+    sh:rule [
+        a sh:TripleRule ;
+        sh:subject sh:this ;
+        sh:predicate ex:friendName2 ;
+        sh:object [ sh:path ex:name ; sh:nodes [ sh:path ex:knows ] ] ;
+    ] ;
+    # Filter shape expression: ex:bob (the only friend aged 18 or over)
+    sh:rule [
+        a sh:TripleRule ;
+        sh:subject sh:this ;
+        sh:predicate ex:adultFriend ;
+        sh:object [ sh:filterShape ex:AdultShape ; sh:nodes [ sh:path ex:knows ] ] ;
+    ] ;
+    # Intersection expression: ex:carol
+    sh:rule [
+        a sh:TripleRule ;
+        sh:subject sh:this ;
+        sh:predicate ex:knowsAndLikes ;
+        sh:object [ sh:intersection ( [ sh:path ex:knows ] [ sh:path ex:likes ] ) ] ;
+    ] ;
+    # Union expression, duplicates removed: ex:bob, ex:carol, ex:dave
+    sh:rule [
+        a sh:TripleRule ;
+        sh:subject sh:this ;
+        sh:predicate ex:knowsOrLikes ;
+        sh:object [ sh:union ( [ sh:path ex:knows ] [ sh:path ex:likes ] ) ] ;
+    ] ;
+    # Path expression as subject: ex:bob and ex:carol ex:knownBy ex:alice
+    sh:rule [
+        a sh:TripleRule ;
+        sh:subject [ sh:path ex:knows ] ;
+        sh:predicate ex:knownBy ;
+        sh:object sh:this ;
+    ] .

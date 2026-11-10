@@ -15,6 +15,7 @@
 
   (import rdf (Term make-iri))
   (import vocab (SHACL_NOT SHACL_AND SHACL_OR SHACL_XONE))
+  (import af-vocab (SHACL_AND_CONSTRAINT_COMPONENT SHACL_NOT_CONSTRAINT_COMPONENT SHACL_OR_CONSTRAINT_COMPONENT SHACL_XONE_CONSTRAINT_COMPONENT))
   (import types (Severity ValidationResult ShaclPath))
 
   ;; Test URI constants
@@ -31,21 +32,21 @@
   ;; sh:not — Focus node must NOT conform to the referenced shape
   ;; ============================================================
 
-  (fn check-not ((arena Arena) (focus-node Term) (conforms-to-ref Bool)
+  (fn check-not ((arena Arena) (focus-node Term) (value-node Term) (conforms-to-ref Bool)
                  (path (Option ShaclPath)) (shape-id Term)
                  (severity Severity) (message (Option String)))
-    (@intent "Check sh:not: violation if focus conforms to referenced shape")
-    (@spec ((Arena Term Bool (Option ShaclPath) Term Severity (Option String))
+    (@intent "Check sh:not: a violation, with value-node as sh:value, if value-node conforms to the referenced shape")
+    (@spec ((Arena Term Term Bool (Option ShaclPath) Term Severity (Option String))
             -> (Option ValidationResult)))
     (@alloc arena)
-    (@example (arena (make-iri arena EX_FOCUS) true (none) (make-iri arena EX_SHAPE) severity-violation (none)) -> (some (ValidationResult _ _ _ _ _ _ _)))
-    (@example (arena (make-iri arena EX_FOCUS) false (none) (make-iri arena EX_SHAPE) severity-violation (none)) -> (none))
+    (@example (arena (make-iri arena EX_FOCUS) (make-iri arena EX_FOCUS) true (none) (make-iri arena EX_SHAPE) severity-violation (none)) -> (some (ValidationResult _ _ _ _ _ _ _ _ _)))
+    (@example (arena (make-iri arena EX_FOCUS) (make-iri arena EX_FOCUS) false (none) (make-iri arena EX_SHAPE) severity-violation (none)) -> (none))
     (@post {(== (is-none $result) (not conforms-to-ref))})
     (@property correctness (== (is-none $result) (not conforms-to-ref)))
     (if conforms-to-ref
       (some (record-new ValidationResult
-        (focus-node focus-node) (result-path path) (value (none))
-        (source-shape shape-id) (source-constraint-component SHACL_NOT)
+        (focus-node focus-node) (result-path path) (value (some value-node))
+        (source-shape shape-id) (source-constraint-component SHACL_NOT_CONSTRAINT_COMPONENT)
         (severity severity) (message message)))
       (none))
     :c-name "snarl_check_not")
@@ -54,22 +55,22 @@
   ;; sh:and — Focus node must conform to ALL referenced shapes
   ;; ============================================================
 
-  (fn check-and ((arena Arena) (focus-node Term) (all-pass Bool)
+  (fn check-and ((arena Arena) (focus-node Term) (value-node Term) (all-pass Bool)
                  (path (Option ShaclPath)) (shape-id Term)
                  (severity Severity) (message (Option String)))
     (@intent "Check sh:and: violation if any referenced shape fails")
-    (@spec ((Arena Term Bool (Option ShaclPath) Term Severity (Option String))
+    (@spec ((Arena Term Term Bool (Option ShaclPath) Term Severity (Option String))
             -> (Option ValidationResult)))
     (@alloc arena)
-    (@example (arena (make-iri arena EX_FOCUS) true (none) (make-iri arena EX_SHAPE) severity-violation (none)) -> (none))
-    (@example (arena (make-iri arena EX_FOCUS) false (none) (make-iri arena EX_SHAPE) severity-violation (none)) -> (some (ValidationResult _ _ _ _ _ _ _)))
+    (@example (arena (make-iri arena EX_FOCUS) (make-iri arena EX_FOCUS) true (none) (make-iri arena EX_SHAPE) severity-violation (none)) -> (none))
+    (@example (arena (make-iri arena EX_FOCUS) (make-iri arena EX_FOCUS) false (none) (make-iri arena EX_SHAPE) severity-violation (none)) -> (some (ValidationResult _ _ _ _ _ _ _ _ _)))
     (@post {(== (is-none $result) all-pass)})
     (@property correctness (== (is-none $result) all-pass))
     (if all-pass
       (none)
       (some (record-new ValidationResult
-        (focus-node focus-node) (result-path path) (value (none))
-        (source-shape shape-id) (source-constraint-component SHACL_AND)
+        (focus-node focus-node) (result-path path) (value (some value-node))
+        (source-shape shape-id) (source-constraint-component SHACL_AND_CONSTRAINT_COMPONENT)
         (severity severity) (message message))))
     :c-name "snarl_check_and")
 
@@ -77,22 +78,22 @@
   ;; sh:or — Focus node must conform to at least one referenced shape
   ;; ============================================================
 
-  (fn check-or ((arena Arena) (focus-node Term) (any-pass Bool)
+  (fn check-or ((arena Arena) (focus-node Term) (value-node Term) (any-pass Bool)
                 (path (Option ShaclPath)) (shape-id Term)
                 (severity Severity) (message (Option String)))
     (@intent "Check sh:or: violation if no referenced shape passes")
-    (@spec ((Arena Term Bool (Option ShaclPath) Term Severity (Option String))
+    (@spec ((Arena Term Term Bool (Option ShaclPath) Term Severity (Option String))
             -> (Option ValidationResult)))
     (@alloc arena)
-    (@example (arena (make-iri arena EX_FOCUS) true (none) (make-iri arena EX_SHAPE) severity-violation (none)) -> (none))
-    (@example (arena (make-iri arena EX_FOCUS) false (none) (make-iri arena EX_SHAPE) severity-violation (none)) -> (some (ValidationResult _ _ _ _ _ _ _)))
+    (@example (arena (make-iri arena EX_FOCUS) (make-iri arena EX_FOCUS) true (none) (make-iri arena EX_SHAPE) severity-violation (none)) -> (none))
+    (@example (arena (make-iri arena EX_FOCUS) (make-iri arena EX_FOCUS) false (none) (make-iri arena EX_SHAPE) severity-violation (none)) -> (some (ValidationResult _ _ _ _ _ _ _ _ _)))
     (@post {(== (is-none $result) any-pass)})
     (@property correctness (== (is-none $result) any-pass))
     (if any-pass
       (none)
       (some (record-new ValidationResult
-        (focus-node focus-node) (result-path path) (value (none))
-        (source-shape shape-id) (source-constraint-component SHACL_OR)
+        (focus-node focus-node) (result-path path) (value (some value-node))
+        (source-shape shape-id) (source-constraint-component SHACL_OR_CONSTRAINT_COMPONENT)
         (severity severity) (message message))))
     :c-name "snarl_check_or")
 
@@ -100,22 +101,22 @@
   ;; sh:xone — Focus node must conform to exactly one referenced shape
   ;; ============================================================
 
-  (fn check-xone ((arena Arena) (focus-node Term) (pass-count Int)
+  (fn check-xone ((arena Arena) (focus-node Term) (value-node Term) (pass-count Int)
                   (path (Option ShaclPath)) (shape-id Term)
                   (severity Severity) (message (Option String)))
     (@intent "Check sh:xone: violation if not exactly one referenced shape passes")
-    (@spec ((Arena Term Int (Option ShaclPath) Term Severity (Option String))
+    (@spec ((Arena Term Term Int (Option ShaclPath) Term Severity (Option String))
             -> (Option ValidationResult)))
     (@alloc arena)
-    (@example (arena (make-iri arena EX_FOCUS) 1 (none) (make-iri arena EX_SHAPE) severity-violation (none)) -> (none))
-    (@example (arena (make-iri arena EX_FOCUS) 0 (none) (make-iri arena EX_SHAPE) severity-violation (none)) -> (some (ValidationResult _ _ _ _ _ _ _)))
-    (@example (arena (make-iri arena EX_FOCUS) 2 (none) (make-iri arena EX_SHAPE) severity-violation (none)) -> (some (ValidationResult _ _ _ _ _ _ _)))
+    (@example (arena (make-iri arena EX_FOCUS) (make-iri arena EX_FOCUS) 1 (none) (make-iri arena EX_SHAPE) severity-violation (none)) -> (none))
+    (@example (arena (make-iri arena EX_FOCUS) (make-iri arena EX_FOCUS) 0 (none) (make-iri arena EX_SHAPE) severity-violation (none)) -> (some (ValidationResult _ _ _ _ _ _ _ _ _)))
+    (@example (arena (make-iri arena EX_FOCUS) (make-iri arena EX_FOCUS) 2 (none) (make-iri arena EX_SHAPE) severity-violation (none)) -> (some (ValidationResult _ _ _ _ _ _ _ _ _)))
     (@post {(== (is-none $result) (== pass-count 1))})
     (@property correctness (== (is-none $result) (== pass-count 1)))
     (if (== pass-count 1)
       (none)
       (some (record-new ValidationResult
-        (focus-node focus-node) (result-path path) (value (none))
-        (source-shape shape-id) (source-constraint-component SHACL_XONE)
+        (focus-node focus-node) (result-path path) (value (some value-node))
+        (source-shape shape-id) (source-constraint-component SHACL_XONE_CONSTRAINT_COMPONENT)
         (severity severity) (message message))))
     :c-name "snarl_check_xone"))

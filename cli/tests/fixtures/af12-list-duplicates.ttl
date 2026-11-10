@@ -1,0 +1,6 @@
+# A SHACL 1.2 list expression keeps duplicates: ( true true ) is not exactly
+# { true }, so ex:n violates (W3C test expression-003). 1 violation.
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix ex: <http://example.org/> .
+ex:n a ex:Thing .
+ex:Shape a sh:NodeShape ; sh:targetClass ex:Thing ; sh:expression ( true true ) .

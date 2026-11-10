@@ -65,6 +65,9 @@ uint8_t snarl_cli_tests_test_cli_test_valid_library(slop_arena* arena);
 uint8_t snarl_cli_tests_test_cli_test_multi_shape(slop_arena* arena);
 uint8_t snarl_cli_tests_test_cli_test_pattern_unicode(slop_arena* arena);
 uint8_t snarl_cli_tests_test_cli_test_pattern_noncapturing(slop_arena* arena);
+uint8_t snarl_cli_tests_test_cli_test_core_value_range_types(slop_arena* arena);
+uint8_t snarl_cli_tests_test_cli_test_core_string_details(slop_arena* arena);
+uint8_t snarl_cli_tests_test_cli_test_core_flags_unsupported(slop_arena* arena);
 uint8_t snarl_cli_tests_test_cli_test_pattern_uncompilable(slop_arena* arena);
 uint8_t snarl_cli_tests_test_cli_test_subclass_class_conforms(slop_arena* arena);
 uint8_t snarl_cli_tests_test_cli_test_subclass_class(slop_arena* arena);
@@ -106,6 +109,33 @@ uint8_t snarl_cli_tests_test_cli_test_cycle_acyclic_controls_poisoned(slop_arena
 uint8_t snarl_cli_tests_test_cli_test_path_depth_over_budget(slop_arena* arena);
 uint8_t snarl_cli_tests_test_cli_test_path_depth_at_budget(slop_arena* arena);
 uint8_t snarl_cli_tests_test_cli_test_diverse_input_soak(slop_arena* arena);
+slop_option_snarl_data_graph_SnarlDataGraph snarl_cli_tests_test_cli_load_test_data_graph(slop_arena* arena, slop_string path);
+snarl_types_ValidatorConfig snarl_cli_tests_test_cli_af_config(uint8_t run_rules, uint8_t shacl12);
+uint8_t snarl_cli_tests_test_cli_assert_inference(slop_arena* arena, slop_string path, snarl_types_ValidatorConfig config, int64_t expected_inferred, int64_t expected_violations);
+uint8_t snarl_cli_tests_test_cli_assert_af_error(slop_arena* arena, slop_string path, snarl_types_ValidatorConfig config, slop_string expected_substring);
+uint8_t snarl_cli_tests_test_cli_test_af_node_exprs(slop_arena* arena);
+uint8_t snarl_cli_tests_test_cli_test_af_rules_off(slop_arena* arena);
+uint8_t snarl_cli_tests_test_cli_test_af_rules_condition(slop_arena* arena);
+uint8_t snarl_cli_tests_test_cli_test_af_entailment(slop_arena* arena);
+uint8_t snarl_cli_tests_test_cli_test_af_entailment_shacl12_name(slop_arena* arena);
+uint8_t snarl_cli_tests_test_cli_test_af_order_visible(slop_arena* arena);
+uint8_t snarl_cli_tests_test_cli_test_af_order_same(slop_arena* arena);
+uint8_t snarl_cli_tests_test_cli_test_af_deactivated(slop_arena* arena);
+uint8_t snarl_cli_tests_test_cli_test_af_expression(slop_arena* arena);
+uint8_t snarl_cli_tests_test_cli_test_af_expression_report(slop_arena* arena);
+uint8_t snarl_cli_tests_test_cli_test_af_report_blank_nodes(slop_arena* arena);
+uint8_t snarl_cli_tests_test_cli_test_af_sparql_rule(slop_arena* arena);
+uint8_t snarl_cli_tests_test_cli_test_af_function_expr(slop_arena* arena);
+uint8_t snarl_cli_tests_test_cli_test_af_unknown_entailment(slop_arena* arena);
+uint8_t snarl_cli_tests_test_cli_test_af_shnex_without_flag(slop_arena* arena);
+uint8_t snarl_cli_tests_test_cli_test_af_expr_cycle(slop_arena* arena);
+uint8_t snarl_cli_tests_test_cli_test_af_triplerule_missing_slot(slop_arena* arena);
+uint8_t snarl_cli_tests_test_cli_test_af_triplerule_default_slot_shacl12(slop_arena* arena);
+uint8_t snarl_cli_tests_test_cli_test_af12_node_exprs(slop_arena* arena);
+uint8_t snarl_cli_tests_test_cli_test_af12_list_duplicates(slop_arena* arena);
+uint8_t snarl_cli_tests_test_cli_test_af12_unsupported_function(slop_arena* arena);
+uint8_t snarl_cli_tests_test_cli_test_af12_global_rule(slop_arena* arena);
+uint8_t snarl_cli_tests_test_cli_test_af12_global_rule_af_mode(slop_arena* arena);
 int main(int argc, char** _c_argv);
 
 #ifndef SLOP_OPTION_SLOP_RDF_INDEX_INDEXEDGRAPH_DEFINED
@@ -116,6 +146,11 @@ SLOP_OPTION_DEFINE(slop_rdf_index_IndexedGraph, slop_option_slop_rdf_index_Index
 #ifndef SLOP_OPTION_SNARL_DATA_GRAPH_SNARLDATAGRAPH_DEFINED
 #define SLOP_OPTION_SNARL_DATA_GRAPH_SNARLDATAGRAPH_DEFINED
 SLOP_OPTION_DEFINE(snarl_data_graph_SnarlDataGraph, slop_option_snarl_data_graph_SnarlDataGraph)
+#endif
+
+#ifndef SLOP_OPTION_SLOP_RDF_RDF_TERM_DEFINED
+#define SLOP_OPTION_SLOP_RDF_RDF_TERM_DEFINED
+SLOP_OPTION_DEFINE(slop_rdf_rdf_Term, slop_option_slop_rdf_rdf_Term)
 #endif
 
 

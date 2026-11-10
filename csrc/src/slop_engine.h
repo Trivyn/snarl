@@ -13,6 +13,7 @@
 #include "slop_strlib.h"
 #include "slop_data_graph.h"
 #include "slop_vocab.h"
+#include "slop_af_vocab.h"
 #include "slop_types.h"
 #include "slop_target.h"
 #include "slop_path.h"
@@ -24,6 +25,8 @@
 #include "slop_pair.h"
 #include "slop_logical.h"
 #include "slop_shape.h"
+#include "slop_expression.h"
+#include "slop_node_expr.h"
 
 typedef struct snarl_engine_CycleGuard snarl_engine_CycleGuard;
 
@@ -185,6 +188,7 @@ uint8_t snarl_evaluate_shape_against_node_cached(slop_arena* arena, snarl_data_g
 uint8_t snarl_property_shape_conforms(slop_arena* arena, snarl_data_graph_SnarlDataGraph data_graph, snarl_types_ShapesGraph shapes_graph, slop_rdf_rdf_Term node, snarl_types_PropertyShape ps);
 uint8_t snarl_property_shape_conforms_cached(slop_arena* arena, snarl_data_graph_SnarlDataGraph data_graph, snarl_types_ShapesGraph shapes_graph, snarl_target_ClassIndex class_index, slop_rdf_rdf_Term node, snarl_types_PropertyShape ps);
 uint8_t snarl_engine_property_shape_conforms_with_guard(slop_arena* arena, snarl_data_graph_SnarlDataGraph data_graph, snarl_types_ShapesGraph shapes_graph, snarl_target_ClassIndex class_index, slop_rdf_rdf_Term node, snarl_types_PropertyShape ps, snarl_engine_CycleGuard visited);
+snarl_types_ValidationResult snarl_engine_with_shape_severity(snarl_types_ShapesGraph shapes_graph, snarl_types_ValidationResult r);
 slop_option_string snarl_engine_constraints_pattern_error_message(slop_arena* arena, slop_rdf_rdf_Term shape_id, slop_list_snarl_types_Constraint constraints);
 slop_option_string snarl_engine_property_shape_pattern_error_message(slop_arena* arena, snarl_types_PropertyShape ps);
 slop_option_string snarl_engine_node_shape_pattern_error_message(slop_arena* arena, snarl_types_NodeShape ns);
@@ -197,6 +201,7 @@ slop_list_snarl_types_ValidationResult snarl_evaluate_property_shape_cached(slop
 slop_list_snarl_types_ValidationResult snarl_engine_evaluate_simple_predicate_property_shape_cached(slop_arena* arena, snarl_data_graph_SnarlDataGraph data_graph, snarl_types_ShapesGraph shapes_graph, snarl_target_ClassIndex class_index, snarl_types_PropertyShape shape, slop_rdf_rdf_Term focus_node, slop_rdf_rdf_Term pred, snarl_engine_CycleGuard visited, snarl_types_ValidatorConfig config, slop_list_slop_rdf_rdf_Term sibling_qvs_refs);
 slop_list_snarl_types_ValidationResult snarl_evaluate_constraint(slop_arena* arena, snarl_data_graph_SnarlDataGraph data_graph, snarl_types_ShapesGraph shapes_graph, slop_rdf_rdf_Term focus_node, slop_rdf_rdf_Term value_node, snarl_types_Constraint constraint, slop_option_snarl_types_ShaclPath path, slop_rdf_rdf_Term shape_id, snarl_types_Severity severity, slop_option_string message, snarl_engine_CycleGuard visited);
 slop_list_snarl_types_ValidationResult snarl_evaluate_constraint_cached(slop_arena* arena, snarl_data_graph_SnarlDataGraph data_graph, snarl_types_ShapesGraph shapes_graph, snarl_target_ClassIndex class_index, slop_rdf_rdf_Term focus_node, slop_rdf_rdf_Term value_node, snarl_types_Constraint constraint, slop_option_snarl_types_ShaclPath path, slop_rdf_rdf_Term shape_id, snarl_types_Severity severity, slop_option_string message, snarl_engine_CycleGuard visited);
+uint8_t snarl_node_conforms_to_shape_ref(slop_arena* arena, snarl_data_graph_SnarlDataGraph data_graph, snarl_types_ShapesGraph shapes_graph, snarl_target_ClassIndex class_index, slop_rdf_rdf_Term node, slop_rdf_rdf_Term shape_ref, snarl_engine_CycleGuard visited);
 slop_list_snarl_types_ValidationResult snarl_evaluate_constraint_for_property(slop_arena* arena, snarl_data_graph_SnarlDataGraph data_graph, snarl_types_ShapesGraph shapes_graph, slop_rdf_rdf_Term focus_node, slop_list_slop_rdf_rdf_Term value_nodes, int64_t value_count, snarl_types_Constraint constraint, slop_option_snarl_types_ShaclPath path, slop_rdf_rdf_Term shape_id, snarl_types_Severity severity, slop_option_string message, snarl_engine_CycleGuard visited, slop_list_slop_rdf_rdf_Term sibling_qvs_refs);
 slop_list_snarl_types_ValidationResult snarl_evaluate_constraint_for_property_cached(slop_arena* arena, snarl_data_graph_SnarlDataGraph data_graph, snarl_types_ShapesGraph shapes_graph, snarl_target_ClassIndex class_index, slop_rdf_rdf_Term focus_node, slop_list_slop_rdf_rdf_Term value_nodes, int64_t value_count, snarl_types_Constraint constraint, slop_option_snarl_types_ShaclPath path, slop_rdf_rdf_Term shape_id, snarl_types_Severity severity, slop_option_string message, snarl_engine_CycleGuard visited, slop_list_slop_rdf_rdf_Term sibling_qvs_refs);
 slop_list_snarl_types_ValidationResult snarl_engine_evaluate_constraint_for_simple_predicate_cached(slop_arena* arena, snarl_data_graph_SnarlDataGraph data_graph, snarl_types_ShapesGraph shapes_graph, snarl_target_ClassIndex class_index, slop_rdf_rdf_Term focus_node, slop_rdf_rdf_Term pred, snarl_data_graph_IdSet value_set, int64_t value_count, snarl_types_Constraint constraint, slop_option_snarl_types_ShaclPath path, slop_rdf_rdf_Term shape_id, snarl_types_Severity severity, slop_option_string message, snarl_engine_CycleGuard visited, slop_list_slop_rdf_rdf_Term sibling_qvs_refs);
@@ -213,6 +218,7 @@ slop_list_snarl_types_ValidationResult snarl_engine_evaluate_constraint_for_simp
 #define snarl_engine_evaluate_property_shape_cached snarl_evaluate_property_shape_cached
 #define snarl_engine_evaluate_constraint snarl_evaluate_constraint
 #define snarl_engine_evaluate_constraint_cached snarl_evaluate_constraint_cached
+#define snarl_engine_node_conforms_to_shape_ref snarl_node_conforms_to_shape_ref
 #define snarl_engine_evaluate_constraint_for_property snarl_evaluate_constraint_for_property
 #define snarl_engine_evaluate_constraint_for_property_cached snarl_evaluate_constraint_for_property_cached
 

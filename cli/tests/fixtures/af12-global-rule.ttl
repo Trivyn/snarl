@@ -1,0 +1,6 @@
+# A SHACL 1.2 global rule (not attached through sh:rule): rejected in
+# --shacl12 mode rather than silently skipped.
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix ex: <http://example.org/> .
+ex:n a ex:Thing .
+ex:GlobalRule a sh:TripleRule ; sh:subject ex:n ; sh:predicate ex:p ; sh:object true .

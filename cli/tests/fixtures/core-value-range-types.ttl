@@ -1,0 +1,27 @@
+@prefix ex: <http://example.org/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# Value-range constraints order literals as SPARQL does: across the numeric
+# types (xsd:int against an xsd:integer bound), dates and dateTimes on the
+# timeline, strings by code point. Expected: 5 violations, marked below.
+
+ex:S a sh:NodeShape ;
+    sh:targetClass ex:T ;
+    sh:property [ sh:path ex:age ; sh:minInclusive 18 ; sh:maxExclusive 65 ] ;
+    sh:property [ sh:path ex:born ; sh:minInclusive "2000-01-01"^^xsd:date ] ;
+    sh:property [ sh:path ex:seen ; sh:maxInclusive "2024-06-01T00:00:00Z"^^xsd:dateTime ] ;
+    sh:property [ sh:path ex:code ; sh:minInclusive "m" ] .
+
+ex:ok a ex:T ;
+    ex:age "18"^^xsd:int , "64"^^xsd:long , "20.5"^^xsd:decimal ;
+    ex:born "2000-01-01"^^xsd:date , "2010-12-31"^^xsd:date ;
+    ex:seen "2024-05-31T19:00:00-05:00"^^xsd:dateTime ;   # 2024-06-01T00:00:00Z
+    ex:code "m" , "zebra" .
+
+ex:bad a ex:T ;
+    ex:age "17"^^xsd:short ;                              # violation: below 18
+    ex:age "65"^^xsd:unsignedByte ;                       # violation: not below 65
+    ex:born "1999-12-31"^^xsd:date ;                      # violation
+    ex:seen "2024-06-01T00:00:00.5Z"^^xsd:dateTime ;      # violation: half a second late
+    ex:code "apple" .                                     # violation

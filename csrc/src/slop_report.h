@@ -14,6 +14,9 @@
 #include "slop_vocab.h"
 #include "slop_strlib.h"
 #include "slop_types.h"
+#include "slop_af_vocab.h"
+
+typedef struct snarl_report_PathEmit snarl_report_PathEmit;
 
 #ifndef SLOP_LIST_SNARL_TYPES_SHACLPATH_DEFINED
 #define SLOP_LIST_SNARL_TYPES_SHACLPATH_DEFINED
@@ -26,10 +29,27 @@ SLOP_LIST_DEFINE(snarl_types_ShaclPath, slop_list_snarl_types_ShaclPath)
 SLOP_OPTION_DEFINE(snarl_types_ShaclPath, slop_option_snarl_types_ShaclPath)
 #endif
 
+struct snarl_report_PathEmit {
+    slop_rdf_index_IndexedGraph graph;
+    slop_rdf_rdf_Term node;
+    int64_t next;
+};
+typedef struct snarl_report_PathEmit snarl_report_PathEmit;
+
+#ifndef SLOP_OPTION_SNARL_REPORT_PATHEMIT_DEFINED
+#define SLOP_OPTION_SNARL_REPORT_PATHEMIT_DEFINED
+SLOP_OPTION_DEFINE(snarl_report_PathEmit, slop_option_snarl_report_PathEmit)
+#endif
+
 slop_list_snarl_types_ShaclPath snarl_report_fixture_path_list_ab(slop_arena* arena);
 void snarl_print_report(slop_arena* arena, snarl_types_ValidationReport report);
 slop_string snarl_report_to_string(slop_arena* arena, snarl_types_ValidationReport report);
 slop_rdf_index_IndexedGraph snarl_report_to_graph(slop_arena* arena, snarl_types_ValidationReport report);
+snarl_report_PathEmit snarl_report_emit_path_list(slop_arena* arena, slop_rdf_index_IndexedGraph g, slop_list_snarl_types_ShaclPath members, int64_t next);
+snarl_report_PathEmit snarl_report_emit_path_wrapper(slop_arena* arena, slop_rdf_index_IndexedGraph g, slop_string pred, snarl_report_PathEmit inner);
+snarl_report_PathEmit snarl_report_emit_path(slop_arena* arena, slop_rdf_index_IndexedGraph g, snarl_types_ShaclPath p, int64_t next);
+int64_t snarl_report_blank_id_or_minus_one(slop_rdf_rdf_Term t);
+int64_t snarl_report_report_max_blank_id(snarl_types_ValidationReport report);
 slop_string snarl_severity_to_string(snarl_types_Severity sev);
 slop_string snarl_term_to_display_string(slop_arena* arena, slop_rdf_rdf_Term t);
 slop_string snarl_report_sequence_to_display_string(slop_arena* arena, slop_list_snarl_types_ShaclPath steps);
@@ -47,6 +67,11 @@ slop_string snarl_path_to_display_string(slop_arena* arena, snarl_types_ShaclPat
 #ifndef SLOP_OPTION_SNARL_TYPES_SHACLPATH_DEFINED
 #define SLOP_OPTION_SNARL_TYPES_SHACLPATH_DEFINED
 SLOP_OPTION_DEFINE(snarl_types_ShaclPath, slop_option_snarl_types_ShaclPath)
+#endif
+
+#ifndef SLOP_OPTION_SNARL_REPORT_PATHEMIT_DEFINED
+#define SLOP_OPTION_SNARL_REPORT_PATHEMIT_DEFINED
+SLOP_OPTION_DEFINE(snarl_report_PathEmit, slop_option_snarl_report_PathEmit)
 #endif
 
 

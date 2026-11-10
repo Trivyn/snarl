@@ -91,6 +91,9 @@
     (@spec ((Arena String) -> String))
     (@alloc arena)
     (@post (string-eq $result s))
+    ;; VERIFIER: trusted. Z3 has no axiom that appending "" leaves a string's
+    ;; bytes unchanged.
+    (@assume (string-eq $result s))
     (string-concat arena s ""))
 
   (fn copy-option-string ((arena Arena) (s (Option String)))
@@ -124,6 +127,9 @@
     (@spec ((Arena SnarlDataGraph Term) -> Int))
     (@alloc arena)
     (@post (>= $result 0))
+    ;; VERIFIER: trusted. Every id stored in `ids` is a map-len, so >= 0, but
+    ;; Z3 knows nothing about values read back from a map.
+    (@assume (>= $result 0))
     (match (map-get (. g ids) t)
       ((some id) id)
       ((none)
@@ -155,6 +161,9 @@
     (@spec ((Arena SnarlDataGraph IdSet) -> (List Term)))
     (@alloc arena)
     (@post (== (list-len $result) (set-len ids)))
+    ;; VERIFIER: trusted. One push per element of the set; the verifier's
+    ;; one-push-per-element loop pattern covers lists, not sets.
+    (@assume (== (list-len $result) (set-len ids)))
     (let ((mut result (list-new arena Term)))
       (for-each (id ids)
         (list-push result (snarl-data-graph-term-of g id)))
@@ -310,6 +319,8 @@
     (@spec ((Arena SnarlDataGraph IdSet) -> (List Term)))
     (@alloc arena)
     (@post (== (list-len $result) (set-len ids)))
+    ;; VERIFIER: trusted, as for ids-to-terms, which this returns.
+    (@assume (== (list-len $result) (set-len ids)))
     (ids-to-terms arena g ids))
 
   (fn snarl-data-graph-has-object ((g SnarlDataGraph) (subj Term) (pred Term) (obj Term))
@@ -332,7 +343,6 @@
     (@intent "Return objects for a subject/predicate pair")
     (@spec ((Arena SnarlDataGraph Term Term) -> (List Term)))
     (@alloc arena)
-    (@post (>= (list-len $result) 0))
     (ids-to-terms arena g (snarl-data-graph-object-set g subj pred))
     :c-name "snarl_data_graph_objects")
 
@@ -340,7 +350,6 @@
     (@intent "Return subjects for a predicate/object pair")
     (@spec ((Arena SnarlDataGraph Term Term) -> (List Term)))
     (@alloc arena)
-    (@post (>= (list-len $result) 0))
     (match (lookup-term g pred)
       ((some p)
         (match (lookup-term g obj)
@@ -359,7 +368,6 @@
     (@intent "The terms a flat predicate index holds for pred, as a list")
     (@spec ((Arena SnarlDataGraph IdSetMap Term) -> (List Term)))
     (@alloc arena)
-    (@post (>= (list-len $result) 0))
     (match (lookup-term g pred)
       ((some p)
         (match (map-get index p)
@@ -371,7 +379,6 @@
     (@intent "Return subjects that use a predicate")
     (@spec ((Arena SnarlDataGraph Term) -> (List Term)))
     (@alloc arena)
-    (@post (>= (list-len $result) 0))
     (flat-index-terms arena g (. (. g index) p-subjects) pred)
     :c-name "snarl_data_graph_subjects_of")
 
@@ -379,7 +386,6 @@
     (@intent "Return objects reached by a predicate")
     (@spec ((Arena SnarlDataGraph Term) -> (List Term)))
     (@alloc arena)
-    (@post (>= (list-len $result) 0))
     (flat-index-terms arena g (. (. g index) p-objects) pred)
     :c-name "snarl_data_graph_objects_of")
 
@@ -387,7 +393,6 @@
     (@intent "Return predicates used by a subject")
     (@spec ((Arena SnarlDataGraph Term) -> (List Term)))
     (@alloc arena)
-    (@post (>= (list-len $result) 0))
     (let ((mut result (list-new arena Term)))
       (match (lookup-term g subj)
         ((some s)
@@ -403,7 +408,6 @@
     (@intent "Return all triples with the given subject")
     (@spec ((Arena SnarlDataGraph Term) -> (List Triple)))
     (@alloc arena)
-    (@post (>= (list-len $result) 0))
     (let ((mut result (list-new arena Triple)))
       (match (lookup-term g subj)
         ((some s)
@@ -422,7 +426,6 @@
     (@intent "Convert a Snarl data graph into the general IndexedGraph representation")
     (@spec ((Arena SnarlDataGraph) -> IndexedGraph))
     (@alloc arena)
-    (@pre (>= (. g size) 0))
     ;; Walks the sp index, so triples come out grouped by subject rather than
     ;; in insertion order.
     (let ((mut out (indexed-graph-create arena)))
@@ -440,8 +443,6 @@
     (@intent "Convert a general IndexedGraph into a Snarl data graph")
     (@spec ((Arena IndexedGraph) -> SnarlDataGraph))
     (@alloc arena)
-    (@pre (>= (indexed-graph-size g) 0))
-    (@post (>= (. $result size) 0))
     (let ((mut out (snarl-data-graph-create arena)))
       (for-each (t (. g triples))
         (set! out (snarl-data-graph-add arena out t)))

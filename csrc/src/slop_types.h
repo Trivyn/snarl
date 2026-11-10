@@ -10,9 +10,11 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include "slop_rdf.h"
-#include "slop_vocab.h"
+#include "slop_af_vocab.h"
 
 typedef struct snarl_types_ShaclPath snarl_types_ShaclPath;
+typedef struct snarl_types_NodeExpr snarl_types_NodeExpr;
+typedef struct snarl_types_Rule snarl_types_Rule;
 typedef struct snarl_types_Constraint snarl_types_Constraint;
 typedef struct snarl_types_PropertyShape snarl_types_PropertyShape;
 typedef struct snarl_types_NodeShape snarl_types_NodeShape;
@@ -53,6 +55,8 @@ struct snarl_types_ValidatorConfig {
     int64_t max_errors;
     uint8_t include_warnings;
     uint8_t include_infos;
+    uint8_t run_rules;
+    uint8_t shacl12;
 };
 typedef struct snarl_types_ValidatorConfig snarl_types_ValidatorConfig;
 
@@ -66,6 +70,11 @@ SLOP_OPTION_DEFINE(snarl_types_ValidatorConfig, slop_option_snarl_types_Validato
 SLOP_LIST_DECLARE(snarl_types_ShaclPath, slop_list_snarl_types_ShaclPath)
 #endif
 
+#ifndef SLOP_LIST_SNARL_TYPES_NODEEXPR_DEFINED
+#define SLOP_LIST_SNARL_TYPES_NODEEXPR_DEFINED
+SLOP_LIST_DECLARE(snarl_types_NodeExpr, slop_list_snarl_types_NodeExpr)
+#endif
+
 #ifndef SLOP_LIST_SNARL_TYPES_CONSTRAINT_DEFINED
 #define SLOP_LIST_SNARL_TYPES_CONSTRAINT_DEFINED
 SLOP_LIST_DECLARE(snarl_types_Constraint, slop_list_snarl_types_Constraint)
@@ -74,6 +83,11 @@ SLOP_LIST_DECLARE(snarl_types_Constraint, slop_list_snarl_types_Constraint)
 #ifndef SLOP_LIST_SNARL_TYPES_PROPERTYSHAPE_DEFINED
 #define SLOP_LIST_SNARL_TYPES_PROPERTYSHAPE_DEFINED
 SLOP_LIST_DECLARE(snarl_types_PropertyShape, slop_list_snarl_types_PropertyShape)
+#endif
+
+#ifndef SLOP_LIST_SNARL_TYPES_RULE_DEFINED
+#define SLOP_LIST_SNARL_TYPES_RULE_DEFINED
+SLOP_LIST_DECLARE(snarl_types_Rule, slop_list_snarl_types_Rule)
 #endif
 
 #ifndef SLOP_LIST_SNARL_TYPES_NODESHAPE_DEFINED
@@ -121,6 +135,66 @@ SLOP_LIST_IMPL(snarl_types_ShaclPath, slop_list_snarl_types_ShaclPath)
 #endif
 
 typedef enum {
+    snarl_types_NodeExpr_nx_focus,
+    snarl_types_NodeExpr_nx_constant,
+    snarl_types_NodeExpr_nx_path,
+    snarl_types_NodeExpr_nx_filter,
+    snarl_types_NodeExpr_nx_intersection,
+    snarl_types_NodeExpr_nx_union,
+    snarl_types_NodeExpr_nx_list
+} snarl_types_NodeExpr_tag;
+
+struct snarl_types_NodeExpr {
+    snarl_types_NodeExpr_tag tag;
+    union {
+        slop_rdf_rdf_Term nx_constant;
+        struct {
+            snarl_types_ShaclPath f0;
+            snarl_types_NodeExpr* f1;
+            uint8_t f2;
+        } nx_path;
+        struct {
+            slop_rdf_rdf_Term f0;
+            snarl_types_NodeExpr* f1;
+        } nx_filter;
+        slop_list_snarl_types_NodeExpr nx_intersection;
+        slop_list_snarl_types_NodeExpr nx_union;
+        slop_list_slop_rdf_rdf_Term nx_list;
+    } data;
+};
+typedef struct snarl_types_NodeExpr snarl_types_NodeExpr;
+
+#ifndef SLOP_OPTION_SNARL_TYPES_NODEEXPR_DEFINED
+#define SLOP_OPTION_SNARL_TYPES_NODEEXPR_DEFINED
+SLOP_OPTION_DEFINE(snarl_types_NodeExpr, slop_option_snarl_types_NodeExpr)
+#endif
+
+#ifndef SLOP_LIST_SNARL_TYPES_NODEEXPR_IMPL_DEFINED
+#define SLOP_LIST_SNARL_TYPES_NODEEXPR_IMPL_DEFINED
+SLOP_LIST_IMPL(snarl_types_NodeExpr, slop_list_snarl_types_NodeExpr)
+#endif
+
+struct snarl_types_Rule {
+    slop_rdf_rdf_Term id;
+    snarl_types_NodeExpr subject;
+    snarl_types_NodeExpr predicate;
+    snarl_types_NodeExpr object;
+    slop_list_slop_rdf_rdf_Term conditions;
+    double order;
+};
+typedef struct snarl_types_Rule snarl_types_Rule;
+
+#ifndef SLOP_OPTION_SNARL_TYPES_RULE_DEFINED
+#define SLOP_OPTION_SNARL_TYPES_RULE_DEFINED
+SLOP_OPTION_DEFINE(snarl_types_Rule, slop_option_snarl_types_Rule)
+#endif
+
+#ifndef SLOP_LIST_SNARL_TYPES_RULE_IMPL_DEFINED
+#define SLOP_LIST_SNARL_TYPES_RULE_IMPL_DEFINED
+SLOP_LIST_IMPL(snarl_types_Rule, slop_list_snarl_types_Rule)
+#endif
+
+typedef enum {
     snarl_types_Constraint_con_class,
     snarl_types_Constraint_con_datatype,
     snarl_types_Constraint_con_node_kind,
@@ -148,7 +222,8 @@ typedef enum {
     snarl_types_Constraint_con_qualified_value_shape,
     snarl_types_Constraint_con_has_value,
     snarl_types_Constraint_con_in,
-    snarl_types_Constraint_con_closed
+    snarl_types_Constraint_con_closed,
+    snarl_types_Constraint_con_expression
 } snarl_types_Constraint_tag;
 
 struct snarl_types_Constraint {
@@ -165,7 +240,10 @@ struct snarl_types_Constraint {
         slop_rdf_rdf_Term con_max_exclusive;
         int64_t con_min_length;
         int64_t con_max_length;
-        slop_string con_pattern;
+        struct {
+            slop_string f0;
+            slop_string f1;
+        } con_pattern;
         slop_list_string con_language_in;
         uint8_t con_unique_lang;
         snarl_types_ShaclPath con_equals;
@@ -190,6 +268,11 @@ struct snarl_types_Constraint {
             uint8_t f0;
             slop_list_snarl_types_ShaclPath f1;
         } con_closed;
+        struct {
+            snarl_types_NodeExpr f0;
+            slop_rdf_rdf_Term f1;
+            slop_option_string f2;
+        } con_expression;
     } data;
 };
 typedef struct snarl_types_Constraint snarl_types_Constraint;
@@ -235,6 +318,8 @@ struct snarl_types_NodeShape {
     snarl_types_Severity severity;
     slop_option_string message;
     uint8_t deactivated;
+    slop_list_snarl_types_Rule rules;
+    double order;
 };
 typedef struct snarl_types_NodeShape snarl_types_NodeShape;
 
@@ -253,6 +338,7 @@ struct snarl_types_ShapesGraph {
     slop_list_snarl_types_PropertyShape property_shapes;
     slop_map* shape_map;
     slop_map* property_shape_map;
+    slop_map* custom_severities;
 };
 typedef struct snarl_types_ShapesGraph snarl_types_ShapesGraph;
 
@@ -269,6 +355,8 @@ struct snarl_types_ValidationResult {
     slop_string source_constraint_component;
     snarl_types_Severity severity;
     slop_option_string message;
+    slop_option_slop_rdf_rdf_Term source_constraint;
+    slop_option_slop_rdf_rdf_Term severity_iri;
 };
 typedef struct snarl_types_ValidationResult snarl_types_ValidationResult;
 
@@ -324,9 +412,19 @@ uint8_t snarl_types_report_conforms(snarl_types_ValidationReport report);
 SLOP_OPTION_DEFINE(snarl_types_ShaclPath, slop_option_snarl_types_ShaclPath)
 #endif
 
+#ifndef SLOP_OPTION_SNARL_TYPES_NODEEXPR_DEFINED
+#define SLOP_OPTION_SNARL_TYPES_NODEEXPR_DEFINED
+SLOP_OPTION_DEFINE(snarl_types_NodeExpr, slop_option_snarl_types_NodeExpr)
+#endif
+
 #ifndef SLOP_OPTION_SLOP_RDF_RDF_TERM_DEFINED
 #define SLOP_OPTION_SLOP_RDF_RDF_TERM_DEFINED
 SLOP_OPTION_DEFINE(slop_rdf_rdf_Term, slop_option_slop_rdf_rdf_Term)
+#endif
+
+#ifndef SLOP_OPTION_SNARL_TYPES_RULE_DEFINED
+#define SLOP_OPTION_SNARL_TYPES_RULE_DEFINED
+SLOP_OPTION_DEFINE(snarl_types_Rule, slop_option_snarl_types_Rule)
 #endif
 
 #ifndef SLOP_OPTION_SNARL_TYPES_CONSTRAINT_DEFINED
@@ -374,6 +472,11 @@ SLOP_OPTION_DEFINE(snarl_types_ValidatorResult, slop_option_snarl_types_Validato
 SLOP_LIST_IMPL(snarl_types_ShaclPath, slop_list_snarl_types_ShaclPath)
 #endif
 
+#ifndef SLOP_LIST_SNARL_TYPES_NODEEXPR_IMPL_DEFINED
+#define SLOP_LIST_SNARL_TYPES_NODEEXPR_IMPL_DEFINED
+SLOP_LIST_IMPL(snarl_types_NodeExpr, slop_list_snarl_types_NodeExpr)
+#endif
+
 #ifndef SLOP_LIST_SNARL_TYPES_CONSTRAINT_IMPL_DEFINED
 #define SLOP_LIST_SNARL_TYPES_CONSTRAINT_IMPL_DEFINED
 SLOP_LIST_IMPL(snarl_types_Constraint, slop_list_snarl_types_Constraint)
@@ -382,6 +485,11 @@ SLOP_LIST_IMPL(snarl_types_Constraint, slop_list_snarl_types_Constraint)
 #ifndef SLOP_LIST_SNARL_TYPES_PROPERTYSHAPE_IMPL_DEFINED
 #define SLOP_LIST_SNARL_TYPES_PROPERTYSHAPE_IMPL_DEFINED
 SLOP_LIST_IMPL(snarl_types_PropertyShape, slop_list_snarl_types_PropertyShape)
+#endif
+
+#ifndef SLOP_LIST_SNARL_TYPES_RULE_IMPL_DEFINED
+#define SLOP_LIST_SNARL_TYPES_RULE_IMPL_DEFINED
+SLOP_LIST_IMPL(snarl_types_Rule, slop_list_snarl_types_Rule)
 #endif
 
 #ifndef SLOP_LIST_SNARL_TYPES_NODESHAPE_IMPL_DEFINED

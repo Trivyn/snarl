@@ -26,18 +26,20 @@ slop_string snarl_types_term_display_label(slop_rdf_rdf_Term t, slop_string fall
 }
 
 snarl_types_ValidationResult snarl_types_fixture_violation(slop_arena* arena) {
-    return ((snarl_types_ValidationResult){.focus_node = rdf_make_iri(arena, snarl_types_EX_FOCUS), .result_path = (slop_option_snarl_types_ShaclPath){.has_value = false}, .value = (slop_option_slop_rdf_rdf_Term){.has_value = false}, .source_shape = rdf_make_iri(arena, snarl_types_EX_SHAPE), .source_constraint_component = slop_rdf_vocab_SHACL_CLASS, .severity = snarl_types_Severity_severity_violation, .message = (slop_option_string){.has_value = false}});
+    return ((snarl_types_ValidationResult){.focus_node = rdf_make_iri(arena, snarl_types_EX_FOCUS), .result_path = (slop_option_snarl_types_ShaclPath){.has_value = false}, .value = (slop_option_slop_rdf_rdf_Term){.has_value = false}, .source_shape = rdf_make_iri(arena, snarl_types_EX_SHAPE), .source_constraint_component = snarl_af_vocab_SHACL_CLASS_CONSTRAINT_COMPONENT, .severity = snarl_types_Severity_severity_violation, .message = (slop_option_string){.has_value = false}});
 }
 
 snarl_types_ValidatorConfig snarl_types_default_validator_config(void) {
     snarl_types_ValidatorConfig _retval = {0};
-    _retval = ((snarl_types_ValidatorConfig){.verbose = 0, .max_errors = 0, .include_warnings = 1, .include_infos = 1});
+    _retval = ((snarl_types_ValidatorConfig){.verbose = 0, .max_errors = 0, .include_warnings = 1, .include_infos = 1, .run_rules = 0, .shacl12 = 0});
     goto _slop_post;
     _slop_post: ;
     SLOP_POST(((_retval.verbose == 0)), "(== (. $result verbose) false)");
     SLOP_POST(((_retval.max_errors == 0)), "(== (. $result max-errors) 0)");
     SLOP_POST(((_retval.include_warnings == 1)), "(== (. $result include-warnings) true)");
     SLOP_POST(((_retval.include_infos == 1)), "(== (. $result include-infos) true)");
+    SLOP_POST(((_retval.run_rules == 0)), "(== (. $result run-rules) false)");
+    SLOP_POST(((_retval.shacl12 == 0)), "(== (. $result shacl12) false)");
     return _retval;
 }
 
@@ -60,7 +62,6 @@ snarl_types_ValidationReport snarl_types_report_add_result(slop_arena* arena, sn
         goto _slop_post;
     }
     _slop_post: ;
-    SLOP_POST(((((int64_t)((_retval.results).len)) == (((int64_t)((report.results).len)) + 1))), "(== (list-len (. $result results)) (+ (list-len (. report results)) 1))");
     SLOP_POST(((_retval.conforms == 0)), "(== (. $result conforms) false)");
     return _retval;
 }

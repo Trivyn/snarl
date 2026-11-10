@@ -1,0 +1,145 @@
+# W3C SHACL 1.2 tests that snarl's experimental --shacl12 mode is expected to
+# fail. One test id (file#entry) per line, then the reason. Lines starting
+# with # are comments. The reasons, which repeat a lot:
+#   sparql     needs SPARQL (sh:SPARQLRule, SPARQL rule templates)
+#   1.2-only   a SHACL 1.2 construct beyond the AF overlap snarl implements
+#   harness    the CLI-driven runner cannot express the test
+
+inference-rules/SPARQLRule-focus-nodes-isolated#SPARQLRule-focus-nodes-isolated sparql: sh:SPARQLRule
+inference-rules/SPARQLRuleTemplate-example-Multiply#SPARQLRuleTemplate-example-Multiply 1.2-only: sh:ShapeClass
+inference-rules/SPARQLRuleTemplate-example-SymmetricProperty#SPARQLRuleTemplate-example-SymmetricProperty sparql: SPARQL rule template
+inference-rules/SPARQLRuleTemplate-optional-param#SPARQLRuleTemplate-optional-param 1.2-only: sh:ShapeClass
+inference-rules/TripleRule-example-childCount#TripleRule-example-childCount 1.2-only: sh:runOnce
+inference-rules/TripleRule-example-squares#TripleRule-example-squares 1.2-only: sh:ShapeClass
+inference-rules/TripleRule-global#TripleRule-global 1.2-only: global rules (not attached through sh:rule)
+inference-rules/condition-shape-class-superclass#condition-shape-class-superclass 1.2-only: sh:ShapeClass
+inference-rules/deactivated-shape#deactivated-shape sparql: sh:SPARQLRule
+inference-rules/expectedPredicate-also-inferred#expectedPredicate-also-inferred 1.2-only: sh:expectedPredicate
+inference-rules/expectedPredicate-example#expectedPredicate-example 1.2-only: sh:expectedPredicate
+inference-rules/expectedPredicate-layers#expectedPredicate-layers 1.2-only: sh:layer
+inference-rules/global-symmetric#global-symmetric 1.2-only: global rules (not attached through sh:rule)
+inference-rules/layers-decimal#layers-decimal 1.2-only: sh:layer
+inference-rules/layers-example#layers-example 1.2-only: sh:layer
+inference-rules/multiple-rule-types#multiple-rule-types sparql: sh:SPARQLRule
+inference-rules/rectangle-condition#rectangle-condition sparql: sh:SPARQLRule
+inference-rules/rectangle-order#rectangle-order sparql: sh:SPARQLRule
+inference-rules/rectangle-prefixes#rectangle-prefixes sparql: sh:SPARQLRule
+inference-rules/rectangle-simple#rectangle-simple sparql: sh:SPARQLRule
+inference-rules/rule-order-visibility#rule-order-visibility sparql: sh:SPARQLRule
+inference-rules/rules-entailment-ruleset-and-all#rules-entailment-ruleset-and-all 1.2-only: rule sets as entailment regimes
+inference-rules/rules-entailment-ruleset-includes#rules-entailment-ruleset-includes 1.2-only: rule sets as entailment regimes
+inference-rules/rules-entailment-ruleset-multiple#rules-entailment-ruleset-multiple 1.2-only: rule sets as entailment regimes
+inference-rules/rules-entailment-ruleset-validation#rules-entailment-ruleset-validation 1.2-only: rule sets as entailment regimes
+inference-rules/rules-entailment-validation#rules-entailment-validation sparql: sh:SPARQLRule
+inference-rules/run-once-blank-node-feed#run-once-blank-node-feed 1.2-only: sh:runOnce
+inference-rules/run-once-example harness: rdflib cannot parse RDF 1.2 triple terms
+inference-rules/run-once-shared-shapes#run-once-shared-shapes 1.2-only: sh:runOnce
+inference-rules/same-order#same-order 1.2-only: global rules (not attached through sh:rule)
+inference-rules/temp-triples-example#temp-triples-example 1.2-only: sh:layer
+node-expr/shnex/concat#concat-two-lists 1.2-only: shnex:concat
+node-expr/shnex/concat#concat-three-constants 1.2-only: shnex:concat
+node-expr/shnex/concat#concat-nested 1.2-only: shnex:concat
+node-expr/shnex/concat#concat-empty-list 1.2-only: shnex:concat
+node-expr/shnex/concat#concat-empty-members 1.2-only: shnex:concat
+node-expr/shnex/conformsToShape#conformsToShape-example-invalid 1.2-only: shnex:conformsToShape
+node-expr/shnex/conformsToShape#conformsToShape-example-valid 1.2-only: shnex:conformsToShape
+node-expr/shnex/conformsToShape#conformsToShape-empty-input 1.2-only: shnex:conformsToShape
+node-expr/shnex/conformsToShape#conformsToShape-focusNode-var 1.2-only: shnex:conformsToShape
+node-expr/shnex/conformsToShape#conformsToShape-node-expression 1.2-only: shnex:conformsToShape
+node-expr/shnex/conformsToShape#conformsToShape-shape-expression 1.2-only: shnex:conformsToShape
+node-expr/shnex/conformsToShape#conformsToShape-empty-shape 1.2-only: shnex:conformsToShape
+node-expr/shnex/constant harness: rdflib cannot parse RDF 1.2 triple terms
+node-expr/shnex/count#count-empty 1.2-only: shnex:count
+node-expr/shnex/count#count-list-3 1.2-only: shnex:count
+node-expr/shnex/count#count-duplicates 1.2-only: shnex:count
+node-expr/shnex/count#count-pathValues 1.2-only: shnex:count
+node-expr/shnex/distinct#distinct-focusNode 1.2-only: shnex:distinct
+node-expr/shnex/distinct#distinct-list 1.2-only: shnex:distinct
+node-expr/shnex/distinct#distinct-termEquality 1.2-only: shnex:distinct
+node-expr/shnex/distinct#distinct-keeps-first-occurrence 1.2-only: shnex:distinct
+node-expr/shnex/exists#exists-constant 1.2-only: shnex:exists
+node-expr/shnex/exists#exists-empty 1.2-only: shnex:exists
+node-expr/shnex/exists#exists-multiple 1.2-only: shnex:exists
+node-expr/shnex/exists#exists-pathValues-true 1.2-only: shnex:exists
+node-expr/shnex/exists#exists-pathValues-false 1.2-only: shnex:exists
+node-expr/shnex/findFirst#findFirst-empty 1.2-only: shnex:findFirst
+node-expr/shnex/findFirst#findFirst-minInclusive-3 1.2-only: shnex:findFirst
+node-expr/shnex/findFirst#findFirst-none-conform 1.2-only: shnex:findFirst
+node-expr/shnex/findFirst#findFirst-default-focusNode 1.2-only: shnex:findFirst
+node-expr/shnex/findFirst#findFirst-default-focusNode-nonconforming 1.2-only: shnex:findFirst
+node-expr/shnex/flatMap#flatMap-list 1.2-only: shnex:flatMap
+node-expr/shnex/flatMap#flatMap-allSkills 1.2-only: shnex:flatMap
+node-expr/shnex/flatMap#flatMap-default-focusNode 1.2-only: shnex:flatMap
+node-expr/shnex/flatMap#flatMap-empty-nodes 1.2-only: shnex:flatMap
+node-expr/shnex/flatMap#flatMap-constant 1.2-only: shnex:flatMap
+node-expr/shnex/if#if-then-constant 1.2-only: shnex:if
+node-expr/shnex/if#if-then-else 1.2-only: shnex:if
+node-expr/shnex/if#if-then-no-else 1.2-only: shnex:if
+node-expr/shnex/if#if-then-complex 1.2-only: shnex:if
+node-expr/shnex/if#if-two-trues 1.2-only: shnex:if
+node-expr/shnex/if#if-string-true 1.2-only: shnex:if
+node-expr/shnex/if#if-empty-condition 1.2-only: shnex:if
+node-expr/shnex/if#if-else-only-true 1.2-only: shnex:if
+node-expr/shnex/if#if-lazy-then 1.2-only: shnex:if
+node-expr/shnex/if#if-lazy-else 1.2-only: shnex:if
+node-expr/shnex/instancesOf#instancesOf-base-class 1.2-only: shnex:instancesOf
+node-expr/shnex/instancesOf#instancesOf-sub-class 1.2-only: shnex:instancesOf
+node-expr/shnex/instancesOf#instancesOf-two-classes 1.2-only: shnex:instancesOf
+node-expr/shnex/instancesOf#instancesOf-expression 1.2-only: shnex:instancesOf
+node-expr/shnex/instancesOf#instancesOf-empty 1.2-only: shnex:instancesOf
+node-expr/shnex/instancesOf#instancesOf-no-instances 1.2-only: shnex:instancesOf
+node-expr/shnex/limit#limit-none 1.2-only: shnex:limit
+node-expr/shnex/limit#limit-2 1.2-only: shnex:limit
+node-expr/shnex/limit#limit-0 1.2-only: shnex:limit
+node-expr/shnex/limit#limit-exceeds 1.2-only: shnex:limit
+node-expr/shnex/limit#limit-duplicates 1.2-only: shnex:limit
+node-expr/shnex/matchAll#matchAll-empty 1.2-only: shnex:matchAll
+node-expr/shnex/matchAll#matchAll-minInclusive-3-false 1.2-only: shnex:matchAll
+node-expr/shnex/matchAll#matchAll-minInclusive-3-true 1.2-only: shnex:matchAll
+node-expr/shnex/matchAll#matchAll-default-focusNode 1.2-only: shnex:matchAll
+node-expr/shnex/matchAll#matchAll-default-focusNode-false 1.2-only: shnex:matchAll
+node-expr/shnex/max#max-empty 1.2-only: shnex:max
+node-expr/shnex/max#max-list-3 1.2-only: shnex:max
+node-expr/shnex/max#max-mixed-numerics 1.2-only: shnex:max
+node-expr/shnex/max#max-strings 1.2-only: shnex:max
+node-expr/shnex/max#max-dates 1.2-only: shnex:max
+node-expr/shnex/min#min-empty 1.2-only: shnex:min
+node-expr/shnex/min#min-list-3 1.2-only: shnex:min
+node-expr/shnex/min#min-mixed-numerics 1.2-only: shnex:min
+node-expr/shnex/min#min-strings 1.2-only: shnex:min
+node-expr/shnex/min#min-dates 1.2-only: shnex:min
+node-expr/shnex/nodesMatching#nodesMatching-base-class 1.2-only: shnex:nodesMatching
+node-expr/shnex/nodesMatching#nodesMatching-sub-class 1.2-only: shnex:nodesMatching
+node-expr/shnex/nodesMatching#nodesMatching-property-shape 1.2-only: shnex:nodesMatching
+node-expr/shnex/nodesMatching#nodesMatching-iri-shape 1.2-only: shnex:nodesMatching
+node-expr/shnex/offset#offset-2-empty 1.2-only: shnex:offset
+node-expr/shnex/offset#offset-2-list-4 1.2-only: shnex:offset
+node-expr/shnex/offset#offset-1-limit-2-list-4 1.2-only: shnex:offset
+node-expr/shnex/offset#offset-0 1.2-only: shnex:offset
+node-expr/shnex/offset#offset-exceeds 1.2-only: shnex:offset
+node-expr/shnex/orderBy#orderBy-integer-list 1.2-only: shnex:orderBy
+node-expr/shnex/orderBy#orderBy-integer-list-desc 1.2-only: shnex:orderBy
+node-expr/shnex/orderBy#orderBy-birthDay 1.2-only: shnex:orderBy
+node-expr/shnex/orderBy#orderBy-height 1.2-only: shnex:orderBy
+node-expr/shnex/orderBy#orderBy-desc-false 1.2-only: shnex:orderBy
+node-expr/shnex/orderBy#orderBy-height-desc 1.2-only: shnex:orderBy
+node-expr/shnex/orderBy#orderBy-iris-before-literals 1.2-only: shnex:orderBy
+node-expr/shnex/orderBy#orderBy-mixed-numerics 1.2-only: shnex:orderBy
+node-expr/shnex/orderBy#orderBy-strings 1.2-only: shnex:orderBy
+node-expr/shnex/remove#remove-list-from-list 1.2-only: shnex:remove
+node-expr/shnex/remove#remove-nested 1.2-only: shnex:remove
+node-expr/shnex/remove#remove-all-occurrences 1.2-only: shnex:remove
+node-expr/shnex/remove#remove-empty 1.2-only: shnex:remove
+node-expr/shnex/sum#sum-empty 1.2-only: shnex:sum
+node-expr/shnex/sum#sum-list-3-integers 1.2-only: shnex:sum
+node-expr/shnex/sum#sum-list-3-mixed 1.2-only: shnex:sum
+node-expr/shnex/sum#sum-totalRevenue 1.2-only: shnex:sum
+node-expr/shnex/sum#sum-duplicates 1.2-only: shnex:sum
+node-expr/shnex/sum#sum-single 1.2-only: shnex:sum
+node-expr/shnex/var#var-bound harness: variable bindings (sht:scope-*) cannot be passed through the CLI
+node-expr/constraints/expression-002#expression-002 1.2-only: shnex:exists
+node-expr/constraints/nodeByExpression-001#nodeByExpression-001 1.2-only: sh:nodeByExpression
+node-expr/constraints/nodeByExpression-002#nodeByExpression-002 1.2-only: sh:nodeByExpression
+node-expr/constraints/nodeByExpression-003#nodeByExpression-003 1.2-only: sh:nodeByExpression
+node-expr/constraints/nodeByExpression-004#nodeByExpression-004 1.2-only: sh:nodeByExpression
+node-expr/constraints/nodeByExpression-005#nodeByExpression-005 1.2-only: sh:nodeByExpression

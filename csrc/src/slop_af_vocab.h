@@ -1,0 +1,75 @@
+#ifndef SLOP_af_vocab_H
+#define SLOP_af_vocab_H
+
+#include "../runtime/slop_runtime.h"
+#ifndef SLOP_RUNTIME_ABI
+#error "this module was generated for SLOP runtime ABI 2026-1 (SLOP_RUNTIME_ABI 202601), but slop_runtime.h predates runtime ABI versioning: use the slop_runtime.h of the SLOP release that generated this code"
+#elif SLOP_RUNTIME_ABI != 202601
+#error "this module was generated for SLOP runtime ABI 2026-1 (SLOP_RUNTIME_ABI 202601), which this slop_runtime.h does not provide (SLOP_RUNTIME_ABI differs): regenerate the C with the SLOP release that matches the runtime, or use the slop_runtime.h of the release that generated it"
+#endif
+#include <stdint.h>
+#include <stdbool.h>
+
+slop_list_string snarl_af_vocab_shacl12_unsupported_properties(slop_arena* arena);
+slop_list_string snarl_af_vocab_shacl12_unsupported_classes(slop_arena* arena);
+
+extern const slop_string snarl_af_vocab_SHACL_CLASS_CONSTRAINT_COMPONENT;
+extern const slop_string snarl_af_vocab_SHACL_DATATYPE_CONSTRAINT_COMPONENT;
+extern const slop_string snarl_af_vocab_SHACL_NODE_KIND_CONSTRAINT_COMPONENT;
+extern const slop_string snarl_af_vocab_SHACL_MIN_COUNT_CONSTRAINT_COMPONENT;
+extern const slop_string snarl_af_vocab_SHACL_MAX_COUNT_CONSTRAINT_COMPONENT;
+extern const slop_string snarl_af_vocab_SHACL_MIN_INCLUSIVE_CONSTRAINT_COMPONENT;
+extern const slop_string snarl_af_vocab_SHACL_MAX_INCLUSIVE_CONSTRAINT_COMPONENT;
+extern const slop_string snarl_af_vocab_SHACL_MIN_EXCLUSIVE_CONSTRAINT_COMPONENT;
+extern const slop_string snarl_af_vocab_SHACL_MAX_EXCLUSIVE_CONSTRAINT_COMPONENT;
+extern const slop_string snarl_af_vocab_SHACL_MIN_LENGTH_CONSTRAINT_COMPONENT;
+extern const slop_string snarl_af_vocab_SHACL_MAX_LENGTH_CONSTRAINT_COMPONENT;
+extern const slop_string snarl_af_vocab_SHACL_PATTERN_CONSTRAINT_COMPONENT;
+extern const slop_string snarl_af_vocab_SHACL_LANGUAGE_IN_CONSTRAINT_COMPONENT;
+extern const slop_string snarl_af_vocab_SHACL_UNIQUE_LANG_CONSTRAINT_COMPONENT;
+extern const slop_string snarl_af_vocab_SHACL_EQUALS_CONSTRAINT_COMPONENT;
+extern const slop_string snarl_af_vocab_SHACL_DISJOINT_CONSTRAINT_COMPONENT;
+extern const slop_string snarl_af_vocab_SHACL_LESS_THAN_CONSTRAINT_COMPONENT;
+extern const slop_string snarl_af_vocab_SHACL_LESS_THAN_OR_EQUALS_CONSTRAINT_COMPONENT;
+extern const slop_string snarl_af_vocab_SHACL_NOT_CONSTRAINT_COMPONENT;
+extern const slop_string snarl_af_vocab_SHACL_AND_CONSTRAINT_COMPONENT;
+extern const slop_string snarl_af_vocab_SHACL_OR_CONSTRAINT_COMPONENT;
+extern const slop_string snarl_af_vocab_SHACL_XONE_CONSTRAINT_COMPONENT;
+extern const slop_string snarl_af_vocab_SHACL_NODE_CONSTRAINT_COMPONENT;
+extern const slop_string snarl_af_vocab_SHACL_PROPERTY_CONSTRAINT_COMPONENT;
+extern const slop_string snarl_af_vocab_SHACL_QUALIFIED_MIN_COUNT_CONSTRAINT_COMPONENT;
+extern const slop_string snarl_af_vocab_SHACL_QUALIFIED_MAX_COUNT_CONSTRAINT_COMPONENT;
+extern const slop_string snarl_af_vocab_SHACL_HAS_VALUE_CONSTRAINT_COMPONENT;
+extern const slop_string snarl_af_vocab_SHACL_IN_CONSTRAINT_COMPONENT;
+extern const slop_string snarl_af_vocab_SHACL_CLOSED_CONSTRAINT_COMPONENT;
+extern const slop_string snarl_af_vocab_SHACL_THIS;
+extern const slop_string snarl_af_vocab_SHACL_FILTER_SHAPE;
+extern const slop_string snarl_af_vocab_SHACL_NODES;
+extern const slop_string snarl_af_vocab_SHACL_INTERSECTION;
+extern const slop_string snarl_af_vocab_SHACL_UNION;
+extern const slop_string snarl_af_vocab_SHACL_EXPRESSION;
+extern const slop_string snarl_af_vocab_SHACL_EXPRESSION_CONSTRAINT_COMPONENT;
+extern const slop_string snarl_af_vocab_SHACL_SOURCE_CONSTRAINT;
+extern const slop_string snarl_af_vocab_SHACL_RULE;
+extern const slop_string snarl_af_vocab_SHACL_TRIPLE_RULE;
+extern const slop_string snarl_af_vocab_SHACL_SPARQL_RULE;
+extern const slop_string snarl_af_vocab_SHACL_SUBJECT;
+extern const slop_string snarl_af_vocab_SHACL_PREDICATE;
+extern const slop_string snarl_af_vocab_SHACL_OBJECT;
+extern const slop_string snarl_af_vocab_SHACL_CONDITION;
+extern const slop_string snarl_af_vocab_SHACL_ORDER;
+extern const slop_string snarl_af_vocab_SHACL_DEACTIVATED;
+extern const slop_string snarl_af_vocab_SHACL_ENTAILMENT;
+extern const slop_string snarl_af_vocab_SHACL_RULES;
+extern const slop_string snarl_af_vocab_SHACL_RULES_ENTAILMENT;
+extern const slop_string snarl_af_vocab_SHNEX_NS;
+extern const slop_string snarl_af_vocab_SHNEX_VAR;
+extern const slop_string snarl_af_vocab_SHNEX_PATH_VALUES;
+extern const slop_string snarl_af_vocab_SHNEX_FOCUS_NODE;
+extern const slop_string snarl_af_vocab_SHNEX_FILTER_SHAPE;
+extern const slop_string snarl_af_vocab_SHNEX_NODES;
+extern const slop_string snarl_af_vocab_SHNEX_INTERSECTION;
+extern const slop_string snarl_af_vocab_SHNEX_FOCUS_NODE_VAR;
+
+
+#endif

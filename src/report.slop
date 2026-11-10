@@ -3,10 +3,11 @@
     (Term Triple term-eq term-kind make-iri make-blank make-literal make-triple triple-subject triple-predicate triple-object IRI BlankNode Literal))
   (import index (IndexedGraph indexed-graph-create indexed-graph-add))
   (import vocab
-    (RDF_TYPE XSD_BOOLEAN XSD_INTEGER SHACL_VALIDATION_REPORT SHACL_CONFORMS SHACL_RESULT SHACL_VALIDATION_RESULT SHACL_FOCUS_NODE SHACL_RESULT_PATH SHACL_RESULT_SEVERITY SHACL_SOURCE_CONSTRAINT_COMPONENT SHACL_SOURCE_SHAPE SHACL_VIOLATION SHACL_WARNING SHACL_INFO))
+    (RDF_TYPE RDF_FIRST RDF_REST RDF_NIL SHACL_INVERSE_PATH SHACL_ALTERNATIVE_PATH SHACL_ZERO_OR_MORE_PATH SHACL_ONE_OR_MORE_PATH SHACL_ZERO_OR_ONE_PATH XSD_BOOLEAN XSD_INTEGER SHACL_VALIDATION_REPORT SHACL_CONFORMS SHACL_RESULT SHACL_VALIDATION_RESULT SHACL_FOCUS_NODE SHACL_RESULT_PATH SHACL_RESULT_SEVERITY SHACL_SOURCE_CONSTRAINT_COMPONENT SHACL_SOURCE_SHAPE SHACL_VIOLATION SHACL_WARNING SHACL_INFO))
   (import strlib (string-build))
   (import types
     (ShaclPath Severity ValidationResult ValidationReport make-validation-report))
+  (import af-vocab (SHACL_SOURCE_CONSTRAINT))
   (export
     report-to-string
     report-to-graph
@@ -69,6 +70,11 @@
         (println (term-to-display-string arena (. r source-shape)))
         (print "  Component: ")
         (println (. r source-constraint-component))
+        (match (. r source-constraint)
+          ((some c)
+            (print "  Source constraint: ")
+            (println (term-to-display-string arena c)))
+          ((none) (do)))
         (match (. r message)
           ((some msg) (print "  Message: ") (println msg))
           ((none) (do)))))
@@ -116,6 +122,12 @@
         (list-push parts "  Component: ")
         (list-push parts (. r source-constraint-component))
         (list-push parts "\n")
+        (match (. r source-constraint)
+          ((some c)
+            (list-push parts "  Source constraint: ")
+            (list-push parts (term-to-display-string arena c))
+            (list-push parts "\n"))
+          ((none) (do)))
         (match (. r message)
           ((some msg)
             (list-push parts "  Message: ")
@@ -131,8 +143,12 @@
     (@spec ((Arena ValidationReport) -> IndexedGraph))
     (@alloc arena)
     (@example (arena (make-validation-report arena)))
-    (let ((mut g (indexed-graph-create arena))
-          (report-node (make-blank arena 0))
+    ;; The report's own blank nodes are numbered above every blank node a
+    ;; result refers to (an inline shape, an sh:expression node, a blank
+    ;; focus node or value), so the two can never collide.
+    (let ((base (+ (report-max-blank-id report) 1))
+          (mut g (indexed-graph-create arena))
+          (report-node (make-blank arena base))
           (type-pred (make-iri arena RDF_TYPE))
           (report-type (make-iri arena SHACL_VALIDATION_REPORT))
           (conforms-pred (make-iri arena SHACL_CONFORMS))
@@ -149,14 +165,17 @@
           arena
           g
           (make-triple arena report-node conforms-pred conforms-val)))
-      (let ((mut result-id 1))
+      (let ((mut result-id (+ base 1))
+            (mut path-id (+ (+ base 1) (list-len (. report results)))))
         (for-each (r (. report results))
           (let ((result-node (make-blank arena result-id))
                 (result-pred (make-iri arena SHACL_RESULT))
                 (result-type (make-iri arena SHACL_VALIDATION_RESULT))
                 (focus-pred (make-iri arena SHACL_FOCUS_NODE))
                 (sev-pred (make-iri arena SHACL_RESULT_SEVERITY))
-                (sev-val (make-iri arena (match (. r severity) (severity-violation SHACL_VIOLATION) (severity-warning SHACL_WARNING) (severity-info SHACL_INFO))))
+                (sev-val (match (. r severity-iri)
+                           ((some custom) custom)
+                           ((none) (make-iri arena (match (. r severity) (severity-violation SHACL_VIOLATION) (severity-warning SHACL_WARNING) (severity-info SHACL_INFO))))))
                 (src-shape-pred (make-iri arena SHACL_SOURCE_SHAPE))
                 (src-comp-pred (make-iri arena SHACL_SOURCE_CONSTRAINT_COMPONENT)))
             (set!
@@ -213,18 +232,28 @@
                       g
                       (make-triple arena result-node val-pred v)))))
               ((none) (do)))
+            (match (. r source-constraint)
+              ((some c)
+                (set!
+                  g
+                  (indexed-graph-add
+                    arena
+                    g
+                    (make-triple arena result-node (make-iri arena SHACL_SOURCE_CONSTRAINT) c))))
+              ((none) (do)))
             (match (. r result-path)
               ((some p)
                 (let ((path-pred (make-iri arena SHACL_RESULT_PATH)))
-                  (match p
-                    ((path-predicate pred-term)
-                      (set!
-                        g
-                        (indexed-graph-add
-                          arena
-                          g
-                          (make-triple arena result-node path-pred pred-term))))
-                    (_ (do)))))
+                  ;; A predicate path is its IRI; any other path is written
+                  ;; out as SHACL path syntax on fresh blank nodes.
+                  (let ((e (emit-path arena g p path-id)))
+                    (set! path-id (. e next))
+                    (set!
+                      g
+                      (indexed-graph-add
+                        arena
+                        (. e graph)
+                        (make-triple arena result-node path-pred (. e node)))))))
               ((none) (do)))
             (match (. r message)
               ((some msg)
@@ -244,6 +273,93 @@
       g)
     :c-name
     "snarl_report_to_graph")
+
+  ;; A path written into a graph: the graph, the node that stands for the
+  ;; path, and the next unused blank node id.
+  (type PathEmit (record
+    (graph IndexedGraph)
+    (node Term)
+    (next Int)))
+
+  (fn emit-path-list ((arena Arena) (g IndexedGraph) (members (List ShaclPath)) (next Int))
+    (@intent "Write paths as an rdf:List, on blank nodes numbered from next. The node is the list head (rdf:nil for no members).")
+    (@spec ((Arena IndexedGraph (List ShaclPath) Int) -> PathEmit))
+    (@alloc arena)
+    (let ((n (list-len members))
+          (first-pred (make-iri arena RDF_FIRST))
+          (rest-pred (make-iri arena RDF_REST))
+          (list-end (make-iri arena RDF_NIL))
+          (mut graph g)
+          (mut free (+ next (list-len members)))
+          (mut i 0))
+      (for-each (m members)
+        (let ((e (emit-path arena graph m free))
+              (cell (make-blank arena (+ next i)))
+              (rest (if (< (+ i 1) n) (make-blank arena (+ next (+ i 1))) list-end)))
+          (set! free (. e next))
+          (set! graph (indexed-graph-add arena (. e graph) (make-triple arena cell first-pred (. e node))))
+          (set! graph (indexed-graph-add arena graph (make-triple arena cell rest-pred rest)))
+          (set! i (+ i 1))))
+      (record-new PathEmit
+        (graph graph)
+        (node (if (> n 0) (make-blank arena next) list-end))
+        (next free))))
+
+  (fn emit-path-wrapper ((arena Arena) (g IndexedGraph) (pred String) (inner PathEmit))
+    (@intent "Write [ pred inner ] on a fresh blank node, for the path forms that wrap one path or list")
+    (@spec ((Arena IndexedGraph String PathEmit) -> PathEmit))
+    (@alloc arena)
+    (@post (== (. $result next) (+ (. inner next) 1)))
+    (let ((node (make-blank arena (. inner next))))
+      (record-new PathEmit
+        (graph (indexed-graph-add arena (. inner graph) (make-triple arena node (make-iri arena pred) (. inner node))))
+        (node node)
+        (next (+ (. inner next) 1)))))
+
+  (fn emit-path ((arena Arena) (g IndexedGraph) (p ShaclPath) (next Int))
+    (@intent "Write a SHACL path into g in SHACL path syntax (SHACL 2.3.1), using blank nodes numbered from next. A predicate path adds nothing and is its own node.")
+    (@spec ((Arena IndexedGraph ShaclPath Int) -> PathEmit))
+    (@alloc arena)
+    (match p
+      ((path-predicate pred) (record-new PathEmit (graph g) (node pred) (next next)))
+      ((path-sequence steps) (emit-path-list arena g steps next))
+      ((path-alternative alts)
+        (emit-path-wrapper arena g SHACL_ALTERNATIVE_PATH (emit-path-list arena g alts next)))
+      ((path-inverse inner)
+        (emit-path-wrapper arena g SHACL_INVERSE_PATH (emit-path arena g (deref inner) next)))
+      ((path-zero-or-more inner)
+        (emit-path-wrapper arena g SHACL_ZERO_OR_MORE_PATH (emit-path arena g (deref inner) next)))
+      ((path-one-or-more inner)
+        (emit-path-wrapper arena g SHACL_ONE_OR_MORE_PATH (emit-path arena g (deref inner) next)))
+      ((path-zero-or-one inner)
+        (emit-path-wrapper arena g SHACL_ZERO_OR_ONE_PATH (emit-path arena g (deref inner) next)))))
+
+  (fn blank-id-or-minus-one ((t Term))
+    (@intent "The id of a blank node, or -1 for any other term")
+    (@spec ((Term) -> Int))
+    (@pure)
+    (@post (>= $result -1))
+    (match t
+      ((term-blank b) (. b id))
+      (_ -1)))
+
+  (fn report-max-blank-id ((report ValidationReport))
+    (@intent "The largest blank node id among the terms the report's results refer to, or -1 if none is a blank node")
+    (@spec ((ValidationReport) -> Int))
+    (@pure)
+    (@post (>= $result -1))
+    (let ((mut m -1))
+      (for-each (r (. report results))
+        (@loop-invariant (>= m -1))
+        (let ((a (blank-id-or-minus-one (. r focus-node)))
+              (b (blank-id-or-minus-one (. r source-shape)))
+              (c (match (. r value) ((some v) (blank-id-or-minus-one v)) ((none) -1)))
+              (d (match (. r source-constraint) ((some x) (blank-id-or-minus-one x)) ((none) -1))))
+          (when (> a m) (set! m a))
+          (when (> b m) (set! m b))
+          (when (> c m) (set! m c))
+          (when (> d m) (set! m d))))
+      m))
 
   (fn severity-to-string ((sev Severity))
     (@intent "Convert severity enum to display string")

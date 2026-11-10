@@ -12,6 +12,8 @@
 #include "slop_rdf.h"
 #include "slop_data_graph.h"
 #include "slop_vocab.h"
+#include "slop_literal_order.h"
+#include "slop_af_vocab.h"
 #include "slop_types.h"
 #include "slop_target.h"
 

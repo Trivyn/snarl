@@ -1,4 +1,7 @@
-//! Safe Rust bindings for the Snarl SHACL Core validator.
+//! Safe Rust bindings for the Snarl SHACL Core validator, which also runs
+//! the non-SPARQL part of SHACL Advanced Features: node expressions,
+//! `sh:expression` constraints and `sh:TripleRule` inference (see
+//! [`ValidatorConfig::run_rules`] and [`infer`]).
 //!
 //! # Example
 //! ```no_run
@@ -540,6 +543,22 @@ impl ValidatorConfig {
         self.raw.include_infos = v as u8;
         self
     }
+
+    /// Run the shapes graph's SHACL-AF rules (`sh:TripleRule`) before
+    /// validating. They also run, regardless of this setting, when the shapes
+    /// graph declares `sh:entailment sh:Rules`.
+    pub fn run_rules(mut self, v: bool) -> Self {
+        self.raw.run_rules = v as u8;
+        self
+    }
+
+    /// **Experimental.** Also accept the SHACL 1.2 Working Draft syntax that
+    /// overlaps SHACL-AF (`shnex:` node expressions, `sh:RulesEntailment`).
+    /// The drafts are still changing, and so will this mode.
+    pub fn shacl12(mut self, v: bool) -> Self {
+        self.raw.shacl12 = v as u8;
+        self
+    }
 }
 
 impl Default for ValidatorConfig {
@@ -562,6 +581,11 @@ pub struct ValidationResult<'a> {
     pub source_constraint_component: &'a str,
     pub severity: Severity,
     pub message: Option<&'a str>,
+    /// The `sh:expression` node, for `sh:ExpressionConstraintComponent` results.
+    pub source_constraint: Option<Term<'a>>,
+    /// The shape's `sh:severity` when it is an IRI other than `sh:Violation`,
+    /// `sh:Warning` and `sh:Info`; `severity` is then `Violation`.
+    pub severity_iri: Option<Term<'a>>,
 }
 
 impl<'a> ValidationResult<'a> {
@@ -593,6 +617,16 @@ impl<'a> ValidationResult<'a> {
             source_constraint_component: slop_string_to_str(raw.source_constraint_component),
             severity: Severity::from_ffi(raw.severity),
             message,
+            source_constraint: if raw.source_constraint.has_value {
+                Some(Term::from_ffi(raw.source_constraint.value))
+            } else {
+                None
+            },
+            severity_iri: if raw.severity_iri.has_value {
+                Some(Term::from_ffi(raw.severity_iri.value))
+            } else {
+                None
+            },
         }
     }
 }
@@ -713,6 +747,65 @@ pub fn validate_data_graph_with_config<'a>(
             config.raw,
         );
         ValidatorResult::from_ffi(raw, arena)
+    }
+}
+
+/// Validate a Snarl-optimized data graph, running the shapes graph's rules
+/// first when `config` asks for them or the shapes graph declares
+/// `sh:entailment sh:Rules`. The inferred triples are added to `data_graph`,
+/// and also returned.
+pub fn validate_data_graph_with_inference<'a>(
+    arena: &'a Arena,
+    data_graph: &mut SnarlDataGraph<'a>,
+    shapes_graph: &IndexedGraph,
+    config: &ValidatorConfig,
+) -> (ValidatorResult<'a>, Vec<Triple<'a>>) {
+    unsafe {
+        let raw = ffi::snarl_validate_data_graph_with_inference(
+            arena.as_ptr(),
+            data_graph.raw(),
+            shapes_graph.raw(),
+            config.raw,
+        );
+        data_graph.raw = raw.graph;
+        (
+            ValidatorResult::from_ffi(raw.result, arena),
+            ffi_triple_list_to_vec(raw.inferred),
+        )
+    }
+}
+
+/// The result of running SHACL rules with [`infer`].
+pub enum InferResult<'a> {
+    /// The rules ran; these are the triples they added, in inference order.
+    Success(Vec<Triple<'a>>),
+    /// The shapes graph has input snarl cannot execute (e.g. `sh:SPARQLRule`),
+    /// or evaluating a rule failed.
+    Error(String),
+}
+
+/// Run the shapes graph's SHACL-AF rules (`sh:TripleRule`) over `data_graph`
+/// without validating, adding the inferred triples to it. AF executes the
+/// rules once (section 8.4): running them again over the result can infer
+/// more, because earlier rules then see later rules' triples.
+pub fn infer<'a>(
+    arena: &'a Arena,
+    data_graph: &mut SnarlDataGraph<'a>,
+    shapes_graph: &IndexedGraph,
+    config: &ValidatorConfig,
+) -> InferResult<'a> {
+    unsafe {
+        let raw = ffi::snarl_infer(arena.as_ptr(), data_graph.raw(), shapes_graph.raw(), config.raw);
+        match raw.tag {
+            ffi::InferResultTag::Success => {
+                let out = raw.data.infer_success;
+                data_graph.raw = out.graph;
+                InferResult::Success(ffi_triple_list_to_vec(out.inferred))
+            }
+            ffi::InferResultTag::Error => {
+                InferResult::Error(slop_string_to_str(raw.data.infer_error).to_string())
+            }
+        }
     }
 }
 
@@ -859,6 +952,11 @@ pub struct OwnedValidationResult {
     pub source_constraint_component: String,
     pub severity: Severity,
     pub message: Option<String>,
+    /// The `sh:expression` node, for `sh:ExpressionConstraintComponent` results.
+    pub source_constraint: Option<OwnedTerm>,
+    /// The shape's `sh:severity` when it is an IRI other than `sh:Violation`,
+    /// `sh:Warning` and `sh:Info`; `severity` is then `Violation`.
+    pub severity_iri: Option<OwnedTerm>,
 }
 
 impl<'a> From<ValidationResult<'a>> for OwnedValidationResult {
@@ -871,6 +969,8 @@ impl<'a> From<ValidationResult<'a>> for OwnedValidationResult {
             source_constraint_component: r.source_constraint_component.to_string(),
             severity: r.severity,
             message: r.message.map(|s| s.to_string()),
+            source_constraint: r.source_constraint.map(OwnedTerm::from),
+            severity_iri: r.severity_iri.map(OwnedTerm::from),
         }
     }
 }
@@ -1034,6 +1134,21 @@ impl Validator {
         }
     }
 
+    /// Run SHACL validation with a custom configuration (for example
+    /// [`ValidatorConfig::run_rules`]). The data graph is copied first, so
+    /// inferred triples do not accumulate across calls.
+    pub fn validate_with_config(&self, config: &ValidatorConfig) -> OwnedValidatorResult {
+        unsafe {
+            let raw = ffi::snarl_validate_with_config(
+                self.arena.as_ptr(),
+                self.data_raw,
+                self.shapes_raw,
+                config.raw,
+            );
+            self.convert_result(raw)
+        }
+    }
+
     /// Check whether the data graph conforms to the shapes graph.
     pub fn conforms(&self) -> bool {
         unsafe { ffi::snarl_conforms(self.arena.as_ptr(), self.data_raw, self.shapes_raw) != 0 }
@@ -1096,6 +1211,16 @@ impl Validator {
             severity: Severity::from_ffi(raw.severity),
             message: if raw.message.has_value {
                 Some(slop_string_to_str(raw.message.value).to_string())
+            } else {
+                None
+            },
+            source_constraint: if raw.source_constraint.has_value {
+                Some(OwnedTerm::from(Term::from_ffi(raw.source_constraint.value)))
+            } else {
+                None
+            },
+            severity_iri: if raw.severity_iri.has_value {
+                Some(OwnedTerm::from(Term::from_ffi(raw.severity_iri.value)))
             } else {
                 None
             },

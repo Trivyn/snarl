@@ -1,0 +1,31 @@
+# SHACL 1.2 node expressions (experimental --shacl12 mode), exercised
+# through triple rules. Only ex:alice is a target. Expected inferences:
+#   var focusNode, default subject   ex:alice ex:self ex:alice            1
+#   list predicate x pathValues      ex:alice ex:p1|ex:p2 ex:bob|ex:carol 4
+#   pathValues with focusNode        ex:alice ex:bobName "Bob"            1
+#   filterShape + nodes              ex:alice ex:adultFriend ex:bob       1
+#   intersection                     ex:alice ex:knowsAndLikes ex:carol   1
+#   empty expression                 (nothing)                            0
+#                                                                 total   8
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix shnex: <http://www.w3.org/ns/shacl-node-expr#> .
+@prefix ex: <http://example.org/> .
+
+ex:alice a ex:Person ; ex:knows ex:bob, ex:carol ; ex:likes ex:carol .
+ex:bob ex:name "Bob" ; ex:age 30 .
+ex:carol ex:age 12 .
+
+ex:AdultShape sh:property [ sh:path ex:age ; sh:minInclusive 18 ] .
+
+ex:PersonShape
+    a sh:NodeShape ;
+    sh:targetClass ex:Person ;
+    sh:rule [ a sh:TripleRule ; sh:predicate ex:self ; sh:object [ shnex:var "focusNode" ] ] ;
+    sh:rule [ a sh:TripleRule ; sh:predicate ( ex:p1 ex:p2 ) ; sh:object [ shnex:pathValues ex:knows ] ] ;
+    sh:rule [ a sh:TripleRule ; sh:predicate ex:bobName ;
+              sh:object [ shnex:pathValues ex:name ; shnex:focusNode ex:bob ] ] ;
+    sh:rule [ a sh:TripleRule ; sh:predicate ex:adultFriend ;
+              sh:object [ shnex:filterShape ex:AdultShape ; shnex:nodes [ shnex:pathValues ex:knows ] ] ] ;
+    sh:rule [ a sh:TripleRule ; sh:predicate ex:knowsAndLikes ;
+              sh:object [ shnex:intersection ( [ shnex:pathValues ex:knows ] [ shnex:pathValues ex:likes ] ) ] ] ;
+    sh:rule [ a sh:TripleRule ; sh:predicate ex:nothing ; sh:object [ ] ] .

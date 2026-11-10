@@ -1,8 +1,10 @@
 (module types
   (import rdf (Term Triple make-iri))
-  (import vocab (SHACL_CLASS))
+  (import af-vocab (SHACL_CLASS_CONSTRAINT_COMPONENT))
   (export
     ShaclPath
+    NodeExpr
+    Rule
     NodeKind
     Severity
     Constraint
@@ -43,17 +45,46 @@
       (result-path (none))
       (value (none))
       (source-shape (make-iri arena EX_SHAPE))
-      (source-constraint-component SHACL_CLASS)
+      (source-constraint-component SHACL_CLASS_CONSTRAINT_COMPONENT)
       (severity severity-violation)
       (message (none))))
 
   (type ShaclPath (union (path-predicate Term) (path-sequence (List ShaclPath)) (path-alternative (List ShaclPath)) (path-inverse (Ptr ShaclPath)) (path-zero-or-more (Ptr ShaclPath)) (path-one-or-more (Ptr ShaclPath)) (path-zero-or-one (Ptr ShaclPath))))
 
+  ;; A node expression: SHACL-AF 1.0 (AF section 6) or the overlapping part
+  ;; of SHACL 1.2 Node Expressions (experimental --shacl12 mode). Function
+  ;; expressions need SPARQL-defined functions and are rejected before
+  ;; parsing. Shapes are referenced by Term, like con-node, and resolved
+  ;; through the ShapesGraph maps at evaluation time. Every expression
+  ;; evaluates to an ordered, duplicate-free list of nodes.
+  ;;
+  ;;   nx-path: path, input expression, and whether the input must yield
+  ;;     exactly one node (1.2 shnex:focusNode) rather than any number
+  ;;     (AF sh:nodes, whose results are unioned).
+  ;;   nx-list: a 1.2 list expression, whose members are constants.
+  (type NodeExpr (union
+      (nx-focus)
+      (nx-constant Term)
+      (nx-path ShaclPath (Ptr NodeExpr) Bool)
+      (nx-filter Term (Ptr NodeExpr))
+      (nx-intersection (List NodeExpr))
+      (nx-union (List NodeExpr))
+      (nx-list (List Term))))
+
+  ;; A SHACL-AF sh:TripleRule (AF section 8.5). `conditions` are shape refs.
+  (type Rule (record
+      (id Term)
+      (subject NodeExpr)
+      (predicate NodeExpr)
+      (object NodeExpr)
+      (conditions (List Term))
+      (order Float)))
+
   (type NodeKind (enum node-kind-blank-node node-kind-iri node-kind-literal node-kind-blank-node-or-iri node-kind-blank-node-or-literal node-kind-iri-or-literal))
 
   (type Severity (enum severity-violation severity-warning severity-info))
 
-  (type Constraint (union (con-class Term) (con-datatype Term) (con-node-kind NodeKind) (con-min-count (Int 0 ..)) (con-max-count (Int 0 ..)) (con-min-inclusive Term) (con-max-inclusive Term) (con-min-exclusive Term) (con-max-exclusive Term) (con-min-length (Int 0 ..)) (con-max-length (Int 0 ..)) (con-pattern String) (con-language-in (List String)) (con-unique-lang Bool) (con-equals ShaclPath) (con-disjoint ShaclPath) (con-less-than ShaclPath) (con-less-than-or-equals ShaclPath) (con-not Term) (con-and (List Term)) (con-or (List Term)) (con-xone (List Term)) (con-node Term) (con-property Term) (con-qualified-value-shape Term (Int 0 ..) (Option (Int 0 ..)) Bool) (con-has-value Term) (con-in (List Term)) (con-closed Bool (List ShaclPath))))
+  (type Constraint (union (con-class Term) (con-datatype Term) (con-node-kind NodeKind) (con-min-count (Int 0 ..)) (con-max-count (Int 0 ..)) (con-min-inclusive Term) (con-max-inclusive Term) (con-min-exclusive Term) (con-max-exclusive Term) (con-min-length (Int 0 ..)) (con-max-length (Int 0 ..)) (con-pattern String String) (con-language-in (List String)) (con-unique-lang Bool) (con-equals ShaclPath) (con-disjoint ShaclPath) (con-less-than ShaclPath) (con-less-than-or-equals ShaclPath) (con-not Term) (con-and (List Term)) (con-or (List Term)) (con-xone (List Term)) (con-node Term) (con-property Term) (con-qualified-value-shape Term (Int 0 ..) (Option (Int 0 ..)) Bool) (con-has-value Term) (con-in (List Term)) (con-closed Bool (List ShaclPath)) (con-expression NodeExpr Term (Option String))))
 
   (type PropertyShape (record
       (id Term)
@@ -73,13 +104,18 @@
       (constraints (List Constraint))
       (severity Severity)
       (message (Option String))
-      (deactivated Bool)))
+      (deactivated Bool)
+      (rules (List Rule))
+      (order Float)))
 
   (type ShapesGraph (record
       (node-shapes (List NodeShape))
       (property-shapes (List PropertyShape))
       (shape-map (Map Term NodeShape))
-      (property-shape-map (Map Term PropertyShape))))
+      (property-shape-map (Map Term PropertyShape))
+      ;; Shape id -> its sh:severity, for the shapes whose severity is not
+      ;; one of the three SHACL defines.
+      (custom-severities (Map Term Term))))
 
   (type ValidationResult (record
       (focus-node Term)
@@ -88,7 +124,14 @@
       (source-shape Term)
       (source-constraint-component String)
       (severity Severity)
-      (message (Option String))))
+      (message (Option String))
+      ;; sh:sourceConstraint, set only by constraints that have one (today
+      ;; sh:expression). Construction sites that omit the field get none.
+      (source-constraint (Option Term))
+      ;; The shape's sh:severity when it is an IRI other than sh:Violation,
+      ;; sh:Warning and sh:Info (SHACL 2.1.4 allows any IRI); `severity` is
+      ;; then severity-violation. Set by the engine as it builds the report.
+      (severity-iri (Option Term))))
 
   (type ValidationReport (record
       (conforms Bool)
@@ -98,7 +141,12 @@
       (verbose Bool)
       (max-errors (Int 0 ..))
       (include-warnings Bool)
-      (include-infos Bool)))
+      (include-infos Bool)
+      ;; Run SHACL rules before validating, even when the shapes graph does
+      ;; not declare the rules entailment regime.
+      (run-rules Bool)
+      ;; Experimental: also accept SHACL 1.2 (Working Draft) syntax.
+      (shacl12 Bool)))
 
   (type ValidatorResult (union (validate-success ValidationReport) (validate-error String)))
 
@@ -110,13 +158,17 @@
     (@post (== (. $result max-errors) 0))
     (@post (== (. $result include-warnings) true))
     (@post (== (. $result include-infos) true))
-    (@example () -> (ValidatorConfig false 0 true true))
+    (@post (== (. $result run-rules) false))
+    (@post (== (. $result shacl12) false))
+    (@example () -> (ValidatorConfig false 0 true true false false))
     (record-new
       ValidatorConfig
       (verbose false)
       (max-errors 0)
       (include-warnings true)
-      (include-infos true)))
+      (include-infos true)
+      (run-rules false)
+      (shacl12 false)))
 
   (fn make-validation-report ((arena Arena))
     (@intent "Create an empty validation report that conforms")
@@ -135,8 +187,8 @@
     (@spec ((Arena ValidationReport ValidationResult) -> ValidationReport))
     (@alloc arena)
     (@example (arena (make-validation-report arena) (fixture-violation arena)))
-    (@post
-      (== (list-len (. $result results)) (+ (list-len (. report results)) 1)))
+    ;; The result shares its list with `report`, which the push also grows,
+    ;; so a post relating the two lengths would compare the list with itself.
     (@post (== (. $result conforms) false))
     (list-push (. report results) result)
     (let ((still-conforms false))

@@ -1,0 +1,193 @@
+(module rules
+  (@doc "SHACL rules (SHACL-AF section 8, sh:TripleRule): an inference stage that runs before validation")
+
+  (import rdf (Term Triple make-triple))
+  (import data-graph (SnarlDataGraph snarl-data-graph-add snarl-data-graph-contains))
+  (import types (NodeShape ShapesGraph Rule NodeExpr ValidatorConfig))
+  (import target (ClassIndex build-class-index resolve-targets))
+  (import engine (CycleGuard cycle-guard-new node-conforms-to-shape-ref))
+  (import node-expr (eval-node-expr))
+  (export
+    InferOutput
+    InferResult
+    infer-rules)
+
+  ;; ============================================================
+  ;; Execution model
+  ;;
+  ;; One pass over the rules (AF section 8.4 covers "a single iteration";
+  ;; SHACL 1.2's iterating rules are not implemented), ordered by sh:order:
+  ;; in AF mode by the shape's sh:order and then the rule's, in SHACL 1.2
+  ;; mode by the rule's alone (1.2 ignores sh:order on shapes). Ties keep
+  ;; parse order.
+  ;;
+  ;; Rules with the same order key form a level and run concurrently: each
+  ;; sees the data graph as it was when the level began, and the level's
+  ;; triples are added to the graph only when the whole level has run. A
+  ;; later level sees them. This is SHACL 1.2 Inference Rules' rule (W3C
+  ;; tests rule-order-visibility and same-order), and a faithful reading
+  ;; of AF section 8.4's "inferred triples do not immediately become part
+  ;; of the data graph".
+  ;;
+  ;; Each level rebuilds what depends on the data graph -- targets, the
+  ;; class index for sh:condition checks -- since the previous level may
+  ;; have added triples (an inferred rdf:type makes new sh:targetClass
+  ;; focus nodes). Inferred triples are never visible to the shapes graph.
+  ;; ============================================================
+
+  (type InferOutput (record
+    (graph SnarlDataGraph)       ;; the data graph with every inferred triple added
+    (inferred (List Triple))))   ;; the triples that were new, in inference order
+
+  (type InferResult (union (infer-success InferOutput) (infer-error String)))
+
+  (type RuleTask (record
+    (shape NodeShape)
+    (rule Rule)
+    (shape-order Float)
+    (rule-order Float)))
+
+  (fn task-before ((a RuleTask) (b RuleTask))
+    (@intent "Strict order-key comparison of two rule tasks: by shape order, then rule order")
+    (@spec ((RuleTask RuleTask) -> Bool))
+    (@pure)
+    (or
+      (< (. a shape-order) (. b shape-order))
+      (and
+        (== (. a shape-order) (. b shape-order))
+        (< (. a rule-order) (. b rule-order)))))
+
+  (fn task-same-level ((a RuleTask) (b RuleTask))
+    (@intent "True when two rule tasks share an order key, and so run in the same level")
+    (@spec ((RuleTask RuleTask) -> Bool))
+    (@pure)
+    (and
+      (== (. a shape-order) (. b shape-order))
+      (== (. a rule-order) (. b rule-order))))
+
+  (fn collect-rule-tasks ((arena Arena) (shapes-graph ShapesGraph) (shacl12 Bool))
+    (@intent "One task per rule of every active node shape, sorted stably by order key")
+    (@spec ((Arena ShapesGraph Bool) -> (List RuleTask)))
+    (@alloc arena)
+    (let ((mut tasks (list-new arena RuleTask))
+          (mut sorted (list-new arena RuleTask)))
+      (for-each (ns (. shapes-graph node-shapes))
+        (when (not (. ns deactivated))
+          (for-each (r (. ns rules))
+            (list-push tasks
+              (record-new RuleTask
+                (shape ns)
+                (rule r)
+                (shape-order (if shacl12 0.0 (. ns order)))
+                (rule-order (. r order)))))))
+      ;; Selection sort, picking the earliest-listed minimum each round, so
+      ;; equal keys keep parse order. Rule counts are small.
+      (let ((taken (set-new arena Int))
+            (n (list-len tasks)))
+        (while (< (list-len sorted) n)
+          (let ((mut best -1)
+                (mut i 0))
+            (while (< i n)
+              (when (not (set-has taken i))
+                (if (< best 0)
+                  (set! best i)
+                  (match (list-get tasks i)
+                    ((some ti)
+                      (match (list-get tasks best)
+                        ((some tb) (when (task-before ti tb) (set! best i)))
+                        ((none) (do))))
+                    ((none) (do)))))
+              (set! i (+ i 1)))
+            (set-put taken best)
+            (match (list-get tasks best)
+              ((some t) (list-push sorted t))
+              ((none) (do))))))
+      sorted))
+
+  (fn triple-is-well-formed ((s Term) (p Term))
+    (@intent "True when (s, p, _) can be an RDF triple: the subject an IRI or blank node, the predicate an IRI. Combinations that cannot are skipped, not inferred (W3C SHACL 1.2 test TripleRule-skips-ill-formed).")
+    (@spec ((Term Term) -> Bool))
+    (@pure)
+    (and
+      (match s
+        ((term-iri _) true)
+        ((term-blank _) true)
+        (_ false))
+      (match p
+        ((term-iri _) true)
+        (_ false))))
+
+  (fn conforms-to-all ((arena Arena) (data-graph SnarlDataGraph) (shapes-graph ShapesGraph) (class-index ClassIndex) (node Term) (shape-refs (List Term)) (guard CycleGuard))
+    (@intent "True when node conforms to every shape in shape-refs (a rule's sh:condition list, AF section 8.2.1)")
+    (@spec ((Arena SnarlDataGraph ShapesGraph ClassIndex Term (List Term) CycleGuard) -> Bool))
+    (@alloc arena)
+    (let ((mut ok true))
+      (for-each (ref shape-refs)
+        (when ok
+          (when (not (node-conforms-to-shape-ref arena data-graph shapes-graph class-index node ref guard))
+            (set! ok false))))
+      ok))
+
+  (fn infer-rules ((arena Arena) (data-graph SnarlDataGraph) (shapes-graph ShapesGraph) (config ValidatorConfig))
+    (@intent
+      "Execute every active rule of the shapes graph once, level by level (see the execution model above), adding the inferred triples to the data graph. Returns the updated graph and the new triples, or an engine error: shape recursion in a condition or filter shape, or a node-expression evaluation failure.")
+    (@spec ((Arena SnarlDataGraph ShapesGraph ValidatorConfig) -> InferResult))
+    (@alloc arena)
+    (let ((tasks (collect-rule-tasks arena shapes-graph (. config shacl12)))
+          (mut graph data-graph)
+          (mut inferred (list-new arena Triple))
+          (mut error (Option String) (none))
+          (mut i 0))
+      (while (and (< i (list-len tasks)) (is-none error))
+        ;; One level: tasks[i .. j) share an order key.
+        (let ((class-index (build-class-index arena graph shapes-graph))
+              (mut level (list-new arena Triple))
+              (level-seen (set-new arena Triple))
+              (mut j i))
+          (match (list-get tasks i)
+            ((some first)
+              (while (and (< j (list-len tasks))
+                          (match (list-get tasks j)
+                            ((some t) (task-same-level t first))
+                            ((none) false)))
+                (match (list-get tasks j)
+                  ((some task)
+                    (let ((rule (. task rule))
+                          (guard (cycle-guard-new arena))
+                          (conforms
+                            (fn ((n Term) (ref Term))
+                              (node-conforms-to-shape-ref arena graph shapes-graph class-index n ref guard))))
+                      (for-each (focus (resolve-targets arena graph (. task shape)))
+                        (when (and
+                                (is-none error)
+                                (conforms-to-all arena graph shapes-graph class-index focus (. rule conditions) guard))
+                          (let ((subjects (eval-node-expr arena graph (. rule subject) focus conforms (. guard errors)))
+                                (predicates (eval-node-expr arena graph (. rule predicate) focus conforms (. guard errors)))
+                                (objects (eval-node-expr arena graph (. rule object) focus conforms (. guard errors))))
+                            (for-each (s subjects)
+                              (for-each (p predicates)
+                                (when (triple-is-well-formed s p)
+                                  (for-each (o objects)
+                                    (let ((t (make-triple arena s p o)))
+                                      (when (and
+                                              (not (set-has level-seen t))
+                                              (not (snarl-data-graph-contains graph t)))
+                                        (set-put level-seen t)
+                                        (list-push level t))))))))
+                          (match (map-get (. guard errors) 0)
+                            ((some msg) (set! error (some msg)))
+                            ((none) (do)))))))
+                  ((none) (do)))
+                (set! j (+ j 1))))
+            ((none) (set! j (+ j 1))))
+          (for-each (t level)
+            (set! graph (snarl-data-graph-add arena graph t))
+            (list-push inferred t))
+          (set! i j)))
+      (match error
+        ((some msg) (union-new InferResult infer-error msg))
+        ((none)
+          (union-new InferResult infer-success
+            (record-new InferOutput (graph graph) (inferred inferred))))))
+    :c-name
+    "snarl_infer_rules"))

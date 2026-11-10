@@ -1,0 +1,11 @@
+@prefix ex: <http://example.org/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+
+# An sh:flags value snarl does not implement is an engine error: matching
+# without the flag would give wrong results.
+
+ex:S a sh:NodeShape ;
+    sh:targetClass ex:T ;
+    sh:property [ sh:path ex:code ; sh:pattern "^a b$" ; sh:flags "x" ] .
+
+ex:t a ex:T ; ex:code "ab" .

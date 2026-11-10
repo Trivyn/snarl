@@ -13,8 +13,10 @@
   (import rdf (Term term-eq make-iri make-literal make-triple))
   (import data-graph (SnarlDataGraph snarl-data-graph-create snarl-data-graph-add))
   (import path (resolve-path))
-  (import xsd (xsd-compare XsdCompareResult))
+  (import xsd (XsdCompareResult))
+  (import literal-order (literal-compare))
   (import vocab (SHACL_EQUALS SHACL_DISJOINT SHACL_LESS_THAN SHACL_LESS_THAN_OR_EQUALS))
+  (import af-vocab (SHACL_DISJOINT_CONSTRAINT_COMPONENT SHACL_EQUALS_CONSTRAINT_COMPONENT SHACL_LESS_THAN_CONSTRAINT_COMPONENT SHACL_LESS_THAN_OR_EQUALS_CONSTRAINT_COMPONENT))
   (import types (Severity Constraint ValidationResult ShaclPath))
 
   ;; Test URI constants
@@ -61,8 +63,6 @@
     (@spec ((Arena SnarlDataGraph Term (List Term) ShaclPath (Option ShaclPath) Term Severity (Option String))
             -> (List ValidationResult)))
     (@alloc arena)
-    (@pre {(list-len value-nodes) >= 0})
-    (@post {(list-len $result) >= 0})
     (@example (arena (fixture-g-focus-p2-a arena) (make-iri arena EX_FOCUS) (fixture-term-list-a arena) (union-new ShaclPath path-predicate (make-iri arena EX_P2)) (none) (make-iri arena EX_SHAPE) severity-violation (none))
       ;; value-nodes=[ex:a], other-path resolves to [ex:a] → sets equal → no violations
       )
@@ -81,7 +81,7 @@
                 (result-path path)
                 (value (some v))
                 (source-shape shape-id)
-                (source-constraint-component SHACL_EQUALS)
+                (source-constraint-component SHACL_EQUALS_CONSTRAINT_COMPONENT)
                 (severity severity)
                 (message message))))))
       ;; For each value in other-values not in value-nodes, create violation
@@ -97,7 +97,7 @@
                 (result-path path)
                 (value (some v))
                 (source-shape shape-id)
-                (source-constraint-component SHACL_EQUALS)
+                (source-constraint-component SHACL_EQUALS_CONSTRAINT_COMPONENT)
                 (severity severity)
                 (message message))))))
       results)
@@ -115,8 +115,6 @@
     (@spec ((Arena SnarlDataGraph Term (List Term) ShaclPath (Option ShaclPath) Term Severity (Option String))
             -> (List ValidationResult)))
     (@alloc arena)
-    (@pre {(list-len value-nodes) >= 0})
-    (@post {(list-len $result) >= 0})
     (@example (arena (fixture-g-focus-p2-a arena) (make-iri arena EX_FOCUS) (fixture-term-list-a arena) (union-new ShaclPath path-predicate (make-iri arena EX_P2)) (none) (make-iri arena EX_SHAPE) severity-violation (none))
       ;; value-nodes=[ex:a], other-path resolves to [ex:a] → overlap → violations
       )
@@ -135,7 +133,7 @@
                 (result-path path)
                 (value (some v))
                 (source-shape shape-id)
-                (source-constraint-component SHACL_DISJOINT)
+                (source-constraint-component SHACL_DISJOINT_CONSTRAINT_COMPONENT)
                 (severity severity)
                 (message message))))))
       results)
@@ -153,14 +151,12 @@
     (@spec ((Arena SnarlDataGraph Term (List Term) ShaclPath (Option ShaclPath) Term Severity (Option String))
             -> (List ValidationResult)))
     (@alloc arena)
-    (@pre {(list-len value-nodes) >= 0})
-    (@post {(list-len $result) >= 0})
     ;; VERIFIER: "Could not translate" — resolve-path and xsd-compare have no @post
     (@property correctness
       (== (== (list-len $result) 0)
         (forall (v value-nodes)
           (forall (o (resolve-path arena data-graph focus-node other-path))
-            (== (xsd-compare arena v o) xsd-compare-less)))))
+            (== (literal-compare arena v o) xsd-compare-less)))))
     (@example (arena (fixture-g-focus-p2-a arena) (make-iri arena EX_FOCUS) (fixture-term-list-a arena) (union-new ShaclPath path-predicate (make-iri arena EX_P2)) (none) (make-iri arena EX_SHAPE) severity-violation (none))
       ;; Tests lessThan comparison between value nodes and other-path values
       )
@@ -168,7 +164,7 @@
           (other-values (resolve-path arena data-graph focus-node other-path)))
       (for-each (v value-nodes)
         (for-each (o other-values)
-          (let ((cmp (xsd-compare arena v o)))
+          (let ((cmp (literal-compare arena v o)))
             ;; v must be < o; if v >= o, create violation
             (match cmp
               (xsd-compare-less (do))
@@ -178,7 +174,7 @@
                      (result-path path)
                      (value (some v))
                      (source-shape shape-id)
-                     (source-constraint-component SHACL_LESS_THAN)
+                     (source-constraint-component SHACL_LESS_THAN_CONSTRAINT_COMPONENT)
                      (severity severity)
                      (message message))))))))
       results)
@@ -196,14 +192,12 @@
     (@spec ((Arena SnarlDataGraph Term (List Term) ShaclPath (Option ShaclPath) Term Severity (Option String))
             -> (List ValidationResult)))
     (@alloc arena)
-    (@pre {(list-len value-nodes) >= 0})
-    (@post {(list-len $result) >= 0})
     ;; VERIFIER: "Could not translate" — resolve-path and xsd-compare have no @post
     (@property correctness
       (== (== (list-len $result) 0)
         (forall (v value-nodes)
           (forall (o (resolve-path arena data-graph focus-node other-path))
-            (!= (xsd-compare arena v o) xsd-compare-greater)))))
+            (!= (literal-compare arena v o) xsd-compare-greater)))))
     (@example (arena (fixture-g-focus-p2-a arena) (make-iri arena EX_FOCUS) (fixture-term-list-a arena) (union-new ShaclPath path-predicate (make-iri arena EX_P2)) (none) (make-iri arena EX_SHAPE) severity-violation (none))
       ;; Tests lessThanOrEquals comparison between value nodes and other-path values
       )
@@ -211,7 +205,7 @@
           (other-values (resolve-path arena data-graph focus-node other-path)))
       (for-each (v value-nodes)
         (for-each (o other-values)
-          (let ((cmp (xsd-compare arena v o)))
+          (let ((cmp (literal-compare arena v o)))
             ;; v must be <= o; if v > o, create violation
             (match cmp
               (xsd-compare-greater
@@ -221,7 +215,7 @@
                     (result-path path)
                     (value (some v))
                     (source-shape shape-id)
-                    (source-constraint-component SHACL_LESS_THAN_OR_EQUALS)
+                    (source-constraint-component SHACL_LESS_THAN_OR_EQUALS_CONSTRAINT_COMPONENT)
                     (severity severity)
                     (message message))))
               (_ (do))))))

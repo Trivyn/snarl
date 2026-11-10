@@ -29,6 +29,12 @@ extern "C" {
 int64_t snarl_regex_match(const char *pattern, size_t pattern_len,
                           const char *input, size_t input_len);
 
+/* The same, matching letters without regard to case when ignore_case is
+ * non-zero (the "i" of sh:flags). */
+int64_t snarl_regex_match_flags(const char *pattern, size_t pattern_len,
+                                const char *input, size_t input_len,
+                                int64_t ignore_case);
+
 #ifdef __cplusplus
 }
 #endif

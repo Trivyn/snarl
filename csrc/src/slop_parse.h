@@ -13,6 +13,7 @@
 #include "slop_index.h"
 #include "slop_list.h"
 #include "slop_vocab.h"
+#include "slop_af_vocab.h"
 #include "slop_strlib.h"
 #include "slop_types.h"
 
@@ -47,6 +48,18 @@ SLOP_LIST_DEFINE(snarl_types_PropertyShape, slop_list_snarl_types_PropertyShape)
 SLOP_LIST_DEFINE(snarl_types_Constraint, slop_list_snarl_types_Constraint)
 #endif
 
+#ifndef SLOP_LIST_SNARL_TYPES_NODEEXPR_DEFINED
+#define SLOP_LIST_SNARL_TYPES_NODEEXPR_DEFINED
+#define SLOP_LIST_SNARL_TYPES_NODEEXPR_IMPL_DEFINED
+SLOP_LIST_DEFINE(snarl_types_NodeExpr, slop_list_snarl_types_NodeExpr)
+#endif
+
+#ifndef SLOP_LIST_SNARL_TYPES_RULE_DEFINED
+#define SLOP_LIST_SNARL_TYPES_RULE_DEFINED
+#define SLOP_LIST_SNARL_TYPES_RULE_IMPL_DEFINED
+SLOP_LIST_DEFINE(snarl_types_Rule, slop_list_snarl_types_Rule)
+#endif
+
 #ifndef SLOP_OPTION_SLOP_RDF_RDF_TERM_DEFINED
 #define SLOP_OPTION_SLOP_RDF_RDF_TERM_DEFINED
 SLOP_OPTION_DEFINE(slop_rdf_rdf_Term, slop_option_slop_rdf_rdf_Term)
@@ -75,6 +88,16 @@ SLOP_OPTION_DEFINE(snarl_types_Constraint, slop_option_snarl_types_Constraint)
 #ifndef SLOP_OPTION_SNARL_TYPES_NODEKIND_DEFINED
 #define SLOP_OPTION_SNARL_TYPES_NODEKIND_DEFINED
 SLOP_OPTION_DEFINE(snarl_types_NodeKind, slop_option_snarl_types_NodeKind)
+#endif
+
+#ifndef SLOP_OPTION_SNARL_TYPES_NODEEXPR_DEFINED
+#define SLOP_OPTION_SNARL_TYPES_NODEEXPR_DEFINED
+SLOP_OPTION_DEFINE(snarl_types_NodeExpr, slop_option_snarl_types_NodeExpr)
+#endif
+
+#ifndef SLOP_OPTION_SNARL_TYPES_RULE_DEFINED
+#define SLOP_OPTION_SNARL_TYPES_RULE_DEFINED
+SLOP_OPTION_DEFINE(snarl_types_Rule, slop_option_snarl_types_Rule)
 #endif
 
 struct snarl_parse_PathScanItem {
@@ -195,6 +218,7 @@ slop_option_string snarl_shapes_graph_recursion_hazard_message(slop_arena* arena
 uint8_t snarl_parse_shape_has_path(slop_arena* arena, slop_rdf_index_IndexedGraph g, slop_rdf_rdf_Term ref);
 void snarl_parse_register_inline_shapes(slop_arena* arena, slop_rdf_index_IndexedGraph g, slop_list_snarl_types_NodeShape node_shapes, slop_list_snarl_types_PropertyShape prop_shapes, slop_map* shape_map, slop_map* property_shape_map);
 snarl_types_ShapesGraph snarl_parse_shapes_graph(slop_arena* arena, slop_rdf_index_IndexedGraph shapes_graph);
+slop_map* snarl_parse_parse_custom_severities(slop_arena* arena, slop_rdf_index_IndexedGraph g);
 snarl_types_NodeShape snarl_parse_node_shape(slop_arena* arena, slop_rdf_index_IndexedGraph g, slop_rdf_rdf_Term shape_id);
 snarl_types_PropertyShape snarl_parse_property_shape(slop_arena* arena, slop_rdf_index_IndexedGraph g, slop_rdf_rdf_Term shape_id);
 snarl_types_ShaclPath snarl_parse_parse_path_built_or_leaf(slop_map* built, slop_rdf_rdf_Term child);
@@ -210,6 +234,36 @@ slop_option_int snarl_parse_term_to_int(slop_rdf_rdf_Term t);
 slop_option_string snarl_parse_term_to_string(slop_rdf_rdf_Term t);
 slop_option_u8 snarl_parse_term_to_bool(slop_rdf_rdf_Term t);
 slop_list_string snarl_parse_parse_string_list(slop_arena* arena, slop_rdf_index_IndexedGraph g, slop_rdf_rdf_Term list_head);
+int64_t snarl_parse_node_expr_max_eval_depth(void);
+slop_list_slop_rdf_rdf_Term snarl_parse_objects_of(slop_arena* arena, slop_rdf_index_IndexedGraph g, slop_rdf_rdf_Term n, slop_string pred);
+uint8_t snarl_parse_term_is_blank(slop_rdf_rdf_Term t);
+slop_option_string snarl_parse_unsupported_shnex_predicate(slop_arena* arena, slop_rdf_index_IndexedGraph g, slop_rdf_rdf_Term n);
+slop_option_string snarl_parse_shapes_graph_shacl12_unsupported_message(slop_arena* arena, slop_rdf_index_IndexedGraph g);
+uint8_t snarl_parse_node_has_no_properties(slop_arena* arena, slop_rdf_index_IndexedGraph g, slop_rdf_rdf_Term n);
+slop_option_string snarl_parse_literal_lexical(slop_rdf_rdf_Term t);
+uint8_t snarl_parse_term_is_iri_value(slop_rdf_rdf_Term t, slop_string iri_value);
+uint8_t snarl_parse_rule_is_active(slop_arena* arena, slop_rdf_index_IndexedGraph g, slop_rdf_rdf_Term rule);
+slop_list_slop_rdf_rdf_Term snarl_parse_node_expr_children(slop_arena* arena, slop_rdf_index_IndexedGraph g, slop_rdf_rdf_Term n);
+slop_list_slop_rdf_rdf_Term snarl_parse_active_rule_nodes(slop_arena* arena, slop_rdf_index_IndexedGraph g);
+slop_list_slop_rdf_rdf_Term snarl_parse_node_expr_roots(slop_arena* arena, slop_rdf_index_IndexedGraph g);
+int64_t snarl_parse_node_expr_depth(slop_arena* arena, slop_rdf_index_IndexedGraph g, slop_rdf_rdf_Term root, slop_map* depths);
+slop_option_string snarl_parse_shapes_graph_node_expr_hazard_message(slop_arena* arena, slop_rdf_index_IndexedGraph g);
+slop_option_string snarl_parse_list_arity_message(slop_arena* arena, slop_rdf_index_IndexedGraph g, slop_rdf_rdf_Term n, slop_string pred, slop_string label);
+slop_string snarl_parse_function_expression_message(slop_arena* arena, slop_rdf_index_IndexedGraph g, slop_rdf_rdf_Term n, slop_string label);
+slop_option_string snarl_parse_node_expr_12_form_message(slop_arena* arena, slop_rdf_index_IndexedGraph g, slop_rdf_rdf_Term n, slop_string label);
+slop_option_string snarl_parse_node_expr_form_message(slop_arena* arena, slop_rdf_index_IndexedGraph g, slop_rdf_rdf_Term n, uint8_t shacl12);
+slop_option_string snarl_parse_rule_form_message(slop_arena* arena, slop_rdf_index_IndexedGraph g, slop_rdf_rdf_Term rule, uint8_t shacl12);
+uint8_t snarl_parse_shapes_graph_declares_rules_entailment(slop_arena* arena, slop_rdf_index_IndexedGraph g, uint8_t shacl12);
+slop_option_string snarl_shapes_graph_unsupported_feature_message(slop_arena* arena, slop_rdf_index_IndexedGraph g, uint8_t shacl12);
+snarl_types_NodeExpr* snarl_parse_node_expr_box(slop_arena* arena, snarl_types_NodeExpr e);
+snarl_types_NodeExpr snarl_parse_parse_node_expr_input(slop_arena* arena, slop_rdf_index_IndexedGraph g, slop_list_slop_rdf_rdf_Term nodes_objs);
+snarl_types_NodeExpr snarl_parse_node_expr(slop_arena* arena, slop_rdf_index_IndexedGraph g, slop_rdf_rdf_Term n);
+slop_list_snarl_types_NodeExpr snarl_parse_parse_node_expr_list(slop_arena* arena, slop_rdf_index_IndexedGraph g, slop_list_slop_rdf_rdf_Term heads);
+slop_list_slop_rdf_rdf_Term snarl_node_expr_shape_refs(slop_arena* arena, snarl_types_NodeExpr e);
+slop_list_slop_rdf_rdf_Term snarl_parse_rule_shape_refs(slop_arena* arena, slop_list_snarl_types_Rule rules);
+double snarl_parse_parse_order(slop_arena* arena, slop_rdf_index_IndexedGraph g, slop_rdf_rdf_Term n);
+snarl_types_NodeExpr snarl_parse_parse_rule_slot(slop_arena* arena, slop_rdf_index_IndexedGraph g, slop_rdf_rdf_Term rule, slop_string pred);
+slop_list_snarl_types_Rule snarl_parse_parse_shape_rules(slop_arena* arena, slop_rdf_index_IndexedGraph g, slop_rdf_rdf_Term shape_id);
 
 /* Function name aliases for C interop */
 #define snarl_parse_shapes_graph_recursion_hazard_message snarl_shapes_graph_recursion_hazard_message
@@ -220,6 +274,9 @@ slop_list_string snarl_parse_parse_string_list(slop_arena* arena, slop_rdf_index
 #define snarl_parse_parse_constraints snarl_parse_constraints
 #define snarl_parse_parse_node_kind snarl_parse_node_kind
 #define snarl_parse_parse_severity snarl_parse_severity
+#define snarl_parse_shapes_graph_unsupported_feature_message snarl_shapes_graph_unsupported_feature_message
+#define snarl_parse_parse_node_expr snarl_parse_node_expr
+#define snarl_parse_node_expr_shape_refs snarl_node_expr_shape_refs
 
 #ifndef SLOP_OPTION_SNARL_PARSE_PATHSCANITEM_DEFINED
 #define SLOP_OPTION_SNARL_PARSE_PATHSCANITEM_DEFINED
@@ -259,6 +316,16 @@ SLOP_OPTION_DEFINE(snarl_types_NodeKind, slop_option_snarl_types_NodeKind)
 #ifndef SLOP_OPTION_U8_DEFINED
 #define SLOP_OPTION_U8_DEFINED
 SLOP_OPTION_DEFINE(uint8_t, slop_option_u8)
+#endif
+
+#ifndef SLOP_OPTION_SNARL_TYPES_NODEEXPR_DEFINED
+#define SLOP_OPTION_SNARL_TYPES_NODEEXPR_DEFINED
+SLOP_OPTION_DEFINE(snarl_types_NodeExpr, slop_option_snarl_types_NodeExpr)
+#endif
+
+#ifndef SLOP_OPTION_SNARL_TYPES_RULE_DEFINED
+#define SLOP_OPTION_SNARL_TYPES_RULE_DEFINED
+SLOP_OPTION_DEFINE(snarl_types_Rule, slop_option_snarl_types_Rule)
 #endif
 
 #ifndef SLOP_LIST_SNARL_TYPES_SHACLPATH_DEFINED

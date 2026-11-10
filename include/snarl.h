@@ -135,6 +135,11 @@ struct snarl_engine_CycleGuard {
 typedef struct snarl_engine_CycleGuard snarl_engine_CycleGuard;
 
 typedef enum {
+    snarl_rules_InferResult_infer_success,
+    snarl_rules_InferResult_infer_error
+} snarl_rules_InferResult_tag;
+
+typedef enum {
     snarl_types_NodeKind_node_kind_blank_node,
     snarl_types_NodeKind_node_kind_iri,
     snarl_types_NodeKind_node_kind_literal,
@@ -166,6 +171,8 @@ struct snarl_types_ValidatorConfig {
     int64_t max_errors;
     uint8_t include_warnings;
     uint8_t include_infos;
+    uint8_t run_rules;
+    uint8_t shacl12;
 };
 typedef struct snarl_types_ValidatorConfig snarl_types_ValidatorConfig;
 
@@ -183,6 +190,8 @@ typedef struct { size_t len; size_t cap; snarl_target_ClassInstances* data; slop
 typedef struct { size_t len; size_t cap; snarl_types_NodeShape* data; slop_arena* arena; } slop_list_snarl_types_NodeShape;
 
 typedef struct { size_t len; size_t cap; snarl_types_PropertyShape* data; slop_arena* arena; } slop_list_snarl_types_PropertyShape;
+
+typedef struct { size_t len; size_t cap; snarl_types_Rule* data; slop_arena* arena; } slop_list_snarl_types_Rule;
 
 typedef struct { size_t len; size_t cap; snarl_types_ShaclPath* data; slop_arena* arena; } slop_list_snarl_types_ShaclPath;
 
@@ -225,6 +234,28 @@ struct slop_rdf_rdf_Triple {
 };
 typedef struct slop_rdf_rdf_Triple slop_rdf_rdf_Triple;
 
+struct snarl_ValidationOutcome {
+    snarl_types_ValidatorResult result;
+    snarl_data_graph_SnarlDataGraph graph;
+    slop_list_slop_rdf_rdf_Triple inferred;
+};
+typedef struct snarl_ValidationOutcome snarl_ValidationOutcome;
+
+struct snarl_rules_InferOutput {
+    snarl_data_graph_SnarlDataGraph graph;
+    slop_list_slop_rdf_rdf_Triple inferred;
+};
+typedef struct snarl_rules_InferOutput snarl_rules_InferOutput;
+
+struct snarl_rules_InferResult {
+    snarl_rules_InferResult_tag tag;
+    union {
+        snarl_rules_InferOutput infer_success;
+        slop_string infer_error;
+    } data;
+};
+typedef struct snarl_rules_InferResult snarl_rules_InferResult;
+
 struct snarl_target_ClassIndex {
     slop_list_snarl_target_ClassInstances entries;
     slop_map* entry_map;
@@ -248,6 +279,8 @@ struct snarl_types_NodeShape {
     snarl_types_Severity severity;
     slop_option_string message;
     uint8_t deactivated;
+    slop_list_snarl_types_Rule rules;
+    double order;
 };
 typedef struct snarl_types_NodeShape snarl_types_NodeShape;
 
@@ -260,6 +293,16 @@ struct snarl_types_PropertyShape {
     uint8_t deactivated;
 };
 typedef struct snarl_types_PropertyShape snarl_types_PropertyShape;
+
+struct snarl_types_Rule {
+    slop_rdf_rdf_Term id;
+    snarl_types_NodeExpr subject;
+    snarl_types_NodeExpr predicate;
+    snarl_types_NodeExpr object;
+    slop_list_slop_rdf_rdf_Term conditions;
+    double order;
+};
+typedef struct snarl_types_Rule snarl_types_Rule;
 
 struct snarl_types_ShaclPath {
     snarl_types_ShaclPath_tag tag;
@@ -280,6 +323,7 @@ struct snarl_types_ShapesGraph {
     slop_list_snarl_types_PropertyShape property_shapes;
     slop_map* shape_map;
     slop_map* property_shape_map;
+    slop_map* custom_severities;
 };
 typedef struct snarl_types_ShapesGraph snarl_types_ShapesGraph;
 
@@ -297,6 +341,8 @@ struct snarl_types_ValidationResult {
     slop_string source_constraint_component;
     snarl_types_Severity severity;
     slop_option_string message;
+    slop_option_slop_rdf_rdf_Term source_constraint;
+    slop_option_slop_rdf_rdf_Term severity_iri;
 };
 typedef struct snarl_types_ValidationResult snarl_types_ValidationResult;
 
@@ -347,12 +393,13 @@ void rdf_triple_free(slop_rdf_rdf_Triple* t);
 slop_rdf_rdf_Term rdf_triple_object(slop_rdf_rdf_Triple t);
 slop_rdf_rdf_Term rdf_triple_predicate(slop_rdf_rdf_Triple t);
 slop_rdf_rdf_Term rdf_triple_subject(slop_rdf_rdf_Triple t);
-slop_option_snarl_types_ValidationResult snarl_check_and(slop_arena* arena, slop_rdf_rdf_Term focus_node, uint8_t all_pass, slop_option_snarl_types_ShaclPath path, slop_rdf_rdf_Term shape_id, snarl_types_Severity severity, slop_option_string message);
+slop_option_snarl_types_ValidationResult snarl_check_and(slop_arena* arena, slop_rdf_rdf_Term focus_node, slop_rdf_rdf_Term value_node, uint8_t all_pass, slop_option_snarl_types_ShaclPath path, slop_rdf_rdf_Term shape_id, snarl_types_Severity severity, slop_option_string message);
 slop_option_snarl_types_ValidationResult snarl_check_class(slop_arena* arena, snarl_data_graph_SnarlDataGraph data_graph, slop_rdf_rdf_Term focus_node, slop_rdf_rdf_Term value_node, slop_rdf_rdf_Term required_class, slop_option_snarl_types_ShaclPath path, slop_rdf_rdf_Term shape_id, snarl_types_Severity severity, slop_option_string message);
 slop_list_snarl_types_ValidationResult snarl_check_closed(slop_arena* arena, snarl_data_graph_SnarlDataGraph data_graph, slop_rdf_rdf_Term focus_node, slop_list_snarl_types_ShaclPath allowed_paths, slop_option_snarl_types_ShaclPath path, slop_rdf_rdf_Term shape_id, snarl_types_Severity severity, slop_option_string message);
 slop_option_snarl_types_ValidationResult snarl_check_datatype(slop_arena* arena, slop_rdf_rdf_Term focus_node, slop_rdf_rdf_Term value_node, slop_rdf_rdf_Term required_datatype, slop_option_snarl_types_ShaclPath path, slop_rdf_rdf_Term shape_id, snarl_types_Severity severity, slop_option_string message);
 slop_list_snarl_types_ValidationResult snarl_check_disjoint(slop_arena* arena, snarl_data_graph_SnarlDataGraph data_graph, slop_rdf_rdf_Term focus_node, slop_list_slop_rdf_rdf_Term value_nodes, snarl_types_ShaclPath other_path, slop_option_snarl_types_ShaclPath path, slop_rdf_rdf_Term shape_id, snarl_types_Severity severity, slop_option_string message);
 slop_list_snarl_types_ValidationResult snarl_check_equals(slop_arena* arena, snarl_data_graph_SnarlDataGraph data_graph, slop_rdf_rdf_Term focus_node, slop_list_slop_rdf_rdf_Term value_nodes, snarl_types_ShaclPath other_path, slop_option_snarl_types_ShaclPath path, slop_rdf_rdf_Term shape_id, snarl_types_Severity severity, slop_option_string message);
+slop_option_snarl_types_ValidationResult snarl_check_expression(slop_arena* arena, slop_rdf_rdf_Term focus_node, slop_rdf_rdf_Term value_node, slop_list_slop_rdf_rdf_Term outputs, slop_rdf_rdf_Term expression, slop_option_snarl_types_ShaclPath path, slop_rdf_rdf_Term shape_id, snarl_types_Severity severity, slop_option_string message);
 slop_option_snarl_types_ValidationResult snarl_check_has_value(slop_arena* arena, slop_rdf_rdf_Term focus_node, slop_list_slop_rdf_rdf_Term value_nodes, slop_rdf_rdf_Term required_value, slop_option_snarl_types_ShaclPath path, slop_rdf_rdf_Term shape_id, snarl_types_Severity severity, slop_option_string message);
 slop_option_snarl_types_ValidationResult snarl_check_in(slop_arena* arena, slop_rdf_rdf_Term focus_node, slop_rdf_rdf_Term value_node, slop_list_slop_rdf_rdf_Term allowed_values, slop_option_snarl_types_ShaclPath path, slop_rdf_rdf_Term shape_id, snarl_types_Severity severity, slop_option_string message);
 slop_option_snarl_types_ValidationResult snarl_check_language_in(slop_arena* arena, slop_rdf_rdf_Term focus_node, slop_rdf_rdf_Term value_node, slop_list_string allowed_langs, slop_option_snarl_types_ShaclPath path, slop_rdf_rdf_Term shape_id, snarl_types_Severity severity, slop_option_string message);
@@ -368,12 +415,12 @@ slop_option_snarl_types_ValidationResult snarl_check_min_inclusive(slop_arena* a
 slop_option_snarl_types_ValidationResult snarl_check_min_length(slop_arena* arena, slop_rdf_rdf_Term focus_node, slop_rdf_rdf_Term value_node, int64_t min_len, slop_option_snarl_types_ShaclPath path, slop_rdf_rdf_Term shape_id, snarl_types_Severity severity, slop_option_string message);
 slop_option_snarl_types_ValidationResult snarl_check_node(slop_arena* arena, slop_rdf_rdf_Term focus_node, slop_rdf_rdf_Term value_node, uint8_t value_conforms, slop_option_snarl_types_ShaclPath path, slop_rdf_rdf_Term shape_id, snarl_types_Severity severity, slop_option_string message);
 slop_option_snarl_types_ValidationResult snarl_check_node_kind(slop_arena* arena, slop_rdf_rdf_Term focus_node, slop_rdf_rdf_Term value_node, snarl_types_NodeKind required_kind, slop_option_snarl_types_ShaclPath path, slop_rdf_rdf_Term shape_id, snarl_types_Severity severity, slop_option_string message);
-slop_option_snarl_types_ValidationResult snarl_check_not(slop_arena* arena, slop_rdf_rdf_Term focus_node, uint8_t conforms_to_ref, slop_option_snarl_types_ShaclPath path, slop_rdf_rdf_Term shape_id, snarl_types_Severity severity, slop_option_string message);
-slop_option_snarl_types_ValidationResult snarl_check_or(slop_arena* arena, slop_rdf_rdf_Term focus_node, uint8_t any_pass, slop_option_snarl_types_ShaclPath path, slop_rdf_rdf_Term shape_id, snarl_types_Severity severity, slop_option_string message);
-slop_option_snarl_types_ValidationResult snarl_check_pattern(slop_arena* arena, slop_rdf_rdf_Term focus_node, slop_rdf_rdf_Term value_node, slop_string pattern, slop_option_snarl_types_ShaclPath path, slop_rdf_rdf_Term shape_id, snarl_types_Severity severity, slop_option_string message);
+slop_option_snarl_types_ValidationResult snarl_check_not(slop_arena* arena, slop_rdf_rdf_Term focus_node, slop_rdf_rdf_Term value_node, uint8_t conforms_to_ref, slop_option_snarl_types_ShaclPath path, slop_rdf_rdf_Term shape_id, snarl_types_Severity severity, slop_option_string message);
+slop_option_snarl_types_ValidationResult snarl_check_or(slop_arena* arena, slop_rdf_rdf_Term focus_node, slop_rdf_rdf_Term value_node, uint8_t any_pass, slop_option_snarl_types_ShaclPath path, slop_rdf_rdf_Term shape_id, snarl_types_Severity severity, slop_option_string message);
+slop_option_snarl_types_ValidationResult snarl_check_pattern(slop_arena* arena, slop_rdf_rdf_Term focus_node, slop_rdf_rdf_Term value_node, slop_string pattern, slop_string flags, slop_option_snarl_types_ShaclPath path, slop_rdf_rdf_Term shape_id, snarl_types_Severity severity, slop_option_string message);
 slop_list_snarl_types_ValidationResult snarl_check_qualified_value_shape(slop_arena* arena, slop_rdf_rdf_Term focus_node, int64_t conforming_count, int64_t q_min, slop_option_int q_max, slop_option_snarl_types_ShaclPath path, slop_rdf_rdf_Term shape_id, snarl_types_Severity severity, slop_option_string message);
 slop_list_snarl_types_ValidationResult snarl_check_unique_lang(slop_arena* arena, slop_rdf_rdf_Term focus_node, slop_list_slop_rdf_rdf_Term value_nodes, slop_option_snarl_types_ShaclPath path, slop_rdf_rdf_Term shape_id, snarl_types_Severity severity, slop_option_string message);
-slop_option_snarl_types_ValidationResult snarl_check_xone(slop_arena* arena, slop_rdf_rdf_Term focus_node, int64_t pass_count, slop_option_snarl_types_ShaclPath path, slop_rdf_rdf_Term shape_id, snarl_types_Severity severity, slop_option_string message);
+slop_option_snarl_types_ValidationResult snarl_check_xone(slop_arena* arena, slop_rdf_rdf_Term focus_node, slop_rdf_rdf_Term value_node, int64_t pass_count, slop_option_snarl_types_ShaclPath path, slop_rdf_rdf_Term shape_id, snarl_types_Severity severity, slop_option_string message);
 uint8_t snarl_conforms(slop_arena* arena, slop_rdf_index_IndexedGraph data_graph, slop_rdf_index_IndexedGraph shapes_graph);
 uint8_t snarl_conforms_data_graph(slop_arena* arena, snarl_data_graph_SnarlDataGraph data_graph, slop_rdf_index_IndexedGraph shapes_graph);
 snarl_data_graph_SnarlDataGraph snarl_data_graph_add(slop_arena* arena, snarl_data_graph_SnarlDataGraph g, slop_rdf_rdf_Triple t);
@@ -390,6 +437,7 @@ slop_rdf_index_IndexedGraph snarl_data_graph_to_indexed(slop_arena* arena, snarl
 slop_list_slop_rdf_rdf_Triple snarl_data_graph_triples_for_subject(slop_arena* arena, snarl_data_graph_SnarlDataGraph g, slop_rdf_rdf_Term subj);
 snarl_types_ValidatorConfig snarl_default_config(void);
 snarl_types_ValidatorResult snarl_engine_validate(slop_arena* arena, snarl_data_graph_SnarlDataGraph data_graph, snarl_types_ShapesGraph shapes_graph, snarl_types_ValidatorConfig config);
+slop_list_slop_rdf_rdf_Term snarl_eval_node_expr(slop_arena* arena, snarl_data_graph_SnarlDataGraph data_graph, snarl_types_NodeExpr expr, slop_rdf_rdf_Term focus, slop_closure_t conforms, slop_map* errors);
 slop_list_snarl_types_ValidationResult snarl_evaluate_constraint(slop_arena* arena, snarl_data_graph_SnarlDataGraph data_graph, snarl_types_ShapesGraph shapes_graph, slop_rdf_rdf_Term focus_node, slop_rdf_rdf_Term value_node, snarl_types_Constraint constraint, slop_option_snarl_types_ShaclPath path, slop_rdf_rdf_Term shape_id, snarl_types_Severity severity, slop_option_string message, snarl_engine_CycleGuard visited);
 slop_list_snarl_types_ValidationResult snarl_evaluate_constraint_cached(slop_arena* arena, snarl_data_graph_SnarlDataGraph data_graph, snarl_types_ShapesGraph shapes_graph, snarl_target_ClassIndex class_index, slop_rdf_rdf_Term focus_node, slop_rdf_rdf_Term value_node, snarl_types_Constraint constraint, slop_option_snarl_types_ShaclPath path, slop_rdf_rdf_Term shape_id, snarl_types_Severity severity, slop_option_string message, snarl_engine_CycleGuard visited);
 slop_list_snarl_types_ValidationResult snarl_evaluate_constraint_for_property(slop_arena* arena, snarl_data_graph_SnarlDataGraph data_graph, snarl_types_ShapesGraph shapes_graph, slop_rdf_rdf_Term focus_node, slop_list_slop_rdf_rdf_Term value_nodes, int64_t value_count, snarl_types_Constraint constraint, slop_option_snarl_types_ShaclPath path, slop_rdf_rdf_Term shape_id, snarl_types_Severity severity, slop_option_string message, snarl_engine_CycleGuard visited, slop_list_slop_rdf_rdf_Term sibling_qvs_refs);
@@ -403,8 +451,14 @@ uint8_t snarl_evaluate_shape_against_node_cached(slop_arena* arena, snarl_data_g
 int64_t snarl_get_result_count(snarl_types_ValidationReport report);
 slop_list_snarl_types_ValidationResult snarl_get_violations(slop_arena* arena, snarl_types_ValidationReport report);
 slop_list_snarl_types_ValidationResult snarl_get_warnings(slop_arena* arena, snarl_types_ValidationReport report);
+snarl_rules_InferResult snarl_infer(slop_arena* arena, snarl_data_graph_SnarlDataGraph data_graph, slop_rdf_index_IndexedGraph shapes_graph, snarl_types_ValidatorConfig config);
+snarl_rules_InferResult snarl_infer_rules(slop_arena* arena, snarl_data_graph_SnarlDataGraph data_graph, snarl_types_ShapesGraph shapes_graph, snarl_types_ValidatorConfig config);
 uint8_t snarl_is_shacl_instance_of_class(slop_arena* arena, snarl_data_graph_SnarlDataGraph data_graph, slop_rdf_rdf_Term node, slop_rdf_rdf_Term class_term);
+slop_rdf_xsd_XsdCompareResult snarl_literal_compare(slop_arena* arena, slop_rdf_rdf_Term a, slop_rdf_rdf_Term b);
+uint8_t snarl_node_conforms_to_shape_ref(slop_arena* arena, snarl_data_graph_SnarlDataGraph data_graph, snarl_types_ShapesGraph shapes_graph, snarl_target_ClassIndex class_index, slop_rdf_rdf_Term node, slop_rdf_rdf_Term shape_ref, snarl_engine_CycleGuard visited);
+slop_list_slop_rdf_rdf_Term snarl_node_expr_shape_refs(slop_arena* arena, snarl_types_NodeExpr e);
 slop_list_snarl_types_Constraint snarl_parse_constraints(slop_arena* arena, slop_rdf_index_IndexedGraph g, slop_rdf_rdf_Term shape_id);
+snarl_types_NodeExpr snarl_parse_node_expr(slop_arena* arena, slop_rdf_index_IndexedGraph g, slop_rdf_rdf_Term n);
 slop_option_snarl_types_NodeKind snarl_parse_node_kind(slop_rdf_rdf_Term term);
 snarl_types_NodeShape snarl_parse_node_shape(slop_arena* arena, slop_rdf_index_IndexedGraph g, slop_rdf_rdf_Term shape_id);
 snarl_types_ShaclPath snarl_parse_path(slop_arena* arena, slop_rdf_index_IndexedGraph g, slop_rdf_rdf_Term path_node);
@@ -427,10 +481,12 @@ slop_list_slop_rdf_rdf_Term snarl_resolve_target_subjects_of(slop_arena* arena, 
 slop_list_slop_rdf_rdf_Term snarl_resolve_targets(slop_arena* arena, snarl_data_graph_SnarlDataGraph data_graph, snarl_types_NodeShape shape);
 slop_string snarl_severity_to_string(snarl_types_Severity sev);
 slop_option_string snarl_shapes_graph_recursion_hazard_message(slop_arena* arena, slop_rdf_index_IndexedGraph g);
+slop_option_string snarl_shapes_graph_unsupported_feature_message(slop_arena* arena, slop_rdf_index_IndexedGraph g, uint8_t shacl12);
 slop_string snarl_term_to_display_string(slop_arena* arena, slop_rdf_rdf_Term t);
 snarl_types_ValidatorResult snarl_validate(slop_arena* arena, slop_rdf_index_IndexedGraph data_graph, slop_rdf_index_IndexedGraph shapes_graph);
 snarl_types_ValidatorResult snarl_validate_data_graph(slop_arena* arena, snarl_data_graph_SnarlDataGraph data_graph, slop_rdf_index_IndexedGraph shapes_graph);
 snarl_types_ValidatorResult snarl_validate_data_graph_with_config(slop_arena* arena, snarl_data_graph_SnarlDataGraph data_graph, slop_rdf_index_IndexedGraph shapes_graph, snarl_types_ValidatorConfig config);
+snarl_ValidationOutcome snarl_validate_data_graph_with_inference(slop_arena* arena, snarl_data_graph_SnarlDataGraph data_graph, slop_rdf_index_IndexedGraph shapes_graph, snarl_types_ValidatorConfig config);
 snarl_types_ValidatorResult snarl_validate_with_config(slop_arena* arena, slop_rdf_index_IndexedGraph data_graph, slop_rdf_index_IndexedGraph shapes_graph, snarl_types_ValidatorConfig config);
 slop_rdf_xsd_XsdCompareResult xsd_compare(slop_arena* arena, slop_rdf_rdf_Term a, slop_rdf_rdf_Term b);
 slop_rdf_xsd_XsdCompareResult xsd_float_cmp(double a, double b);
@@ -513,12 +569,16 @@ uint8_t xsd_values_equal(slop_rdf_xsd_XsdValue a, slop_rdf_xsd_XsdValue b);
 #define snarl_engine_evaluate_property_shape_cached snarl_evaluate_property_shape_cached
 #define snarl_engine_evaluate_shape_against_node snarl_evaluate_shape_against_node
 #define snarl_engine_evaluate_shape_against_node_cached snarl_evaluate_shape_against_node_cached
+#define snarl_engine_node_conforms_to_shape_ref snarl_node_conforms_to_shape_ref
 #define snarl_engine_property_shape_conforms snarl_property_shape_conforms
 #define snarl_engine_property_shape_conforms_cached snarl_property_shape_conforms_cached
+#define snarl_expression_check_expression snarl_check_expression
+#define snarl_literal_order_literal_compare snarl_literal_compare
 #define snarl_logical_check_and snarl_check_and
 #define snarl_logical_check_not snarl_check_not
 #define snarl_logical_check_or snarl_check_or
 #define snarl_logical_check_xone snarl_check_xone
+#define snarl_node_expr_eval_node_expr snarl_eval_node_expr
 #define snarl_other_check_closed snarl_check_closed
 #define snarl_other_check_has_value snarl_check_has_value
 #define snarl_other_check_in snarl_check_in
@@ -526,7 +586,9 @@ uint8_t xsd_values_equal(slop_rdf_xsd_XsdValue a, slop_rdf_xsd_XsdValue b);
 #define snarl_pair_check_equals snarl_check_equals
 #define snarl_pair_check_less_than snarl_check_less_than
 #define snarl_pair_check_less_than_or_equals snarl_check_less_than_or_equals
+#define snarl_parse_node_expr_shape_refs snarl_node_expr_shape_refs
 #define snarl_parse_parse_constraints snarl_parse_constraints
+#define snarl_parse_parse_node_expr snarl_parse_node_expr
 #define snarl_parse_parse_node_kind snarl_parse_node_kind
 #define snarl_parse_parse_node_shape snarl_parse_node_shape
 #define snarl_parse_parse_path snarl_parse_path
@@ -534,6 +596,7 @@ uint8_t xsd_values_equal(slop_rdf_xsd_XsdValue a, slop_rdf_xsd_XsdValue b);
 #define snarl_parse_parse_severity snarl_parse_severity
 #define snarl_parse_parse_shapes_graph snarl_parse_shapes_graph
 #define snarl_parse_shapes_graph_recursion_hazard_message snarl_shapes_graph_recursion_hazard_message
+#define snarl_parse_shapes_graph_unsupported_feature_message snarl_shapes_graph_unsupported_feature_message
 #define snarl_path_resolve_path snarl_resolve_path
 #define snarl_path_resolve_path_from snarl_resolve_path_from
 #define snarl_report_path_to_display_string snarl_path_to_display_string
@@ -542,6 +605,7 @@ uint8_t xsd_values_equal(slop_rdf_xsd_XsdValue a, slop_rdf_xsd_XsdValue b);
 #define snarl_report_report_to_string snarl_report_to_string
 #define snarl_report_severity_to_string snarl_severity_to_string
 #define snarl_report_term_to_display_string snarl_term_to_display_string
+#define snarl_rules_infer_rules snarl_infer_rules
 #define snarl_shape_check_node snarl_check_node
 #define snarl_shape_check_qualified_value_shape snarl_check_qualified_value_shape
 #define snarl_string_check_language_in snarl_check_language_in

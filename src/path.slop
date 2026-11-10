@@ -110,8 +110,6 @@
       "Resolve a SHACL property path from a focus node, returning all value nodes")
     (@spec ((Arena SnarlDataGraph Term ShaclPath) -> (List Term)))
     (@alloc arena)
-    (@pre (>= (snarl-data-graph-size data-graph) 0))
-    (@post (>= (list-len $result) 0))
     (@example
       (arena
         (fixture-g-alice-name arena)
@@ -139,8 +137,6 @@
     (@intent "Resolve a SHACL path in reverse: given an object, find subjects")
     (@spec ((Arena SnarlDataGraph Term ShaclPath) -> (List Term)))
     (@alloc arena)
-    (@pre (>= (snarl-data-graph-size data-graph) 0))
-    (@post (>= (list-len $result) 0))
     (@example
       (arena
         (fixture-g-alice-name arena)
@@ -155,7 +151,7 @@
 
   (fn resolve-sequence ((arena Arena) (g SnarlDataGraph) (focus Term) (steps (List ShaclPath)))
     (@intent
-      "Resolve sequence path by chaining each step's results as input to the next")
+      "Resolve sequence path by chaining each step's results as input to the next, without duplicates")
     (@spec ((Arena SnarlDataGraph Term (List ShaclPath)) -> (List Term)))
     (@alloc arena)
     (@example
@@ -166,16 +162,22 @@
     (let ((mut current-nodes (list-new arena Term)))
       (list-push current-nodes focus)
       (for-each (step steps)
-        (let ((mut next-nodes (list-new arena Term)))
+        ;; Value nodes are a set (SHACL 2.3.1.3): two routes to one node
+        ;; yield it once, at each step.
+        (let ((mut next-nodes (list-new arena Term))
+              (seen (set-new arena Term)))
           (for-each (node current-nodes)
             (let ((step-results (resolve-path arena g node step)))
-              (for-each (r step-results) (list-push next-nodes r))))
+              (for-each (r step-results)
+                (when (not (set-has seen r))
+                  (set-put seen r)
+                  (list-push next-nodes r)))))
           (set! current-nodes next-nodes)))
       current-nodes))
 
   (fn resolve-alternative ((arena Arena) (g SnarlDataGraph) (focus Term) (alts (List ShaclPath)))
     (@intent
-      "Resolve alternative path by collecting results from all alternatives")
+      "Resolve alternative path by collecting results from all alternatives, without duplicates")
     (@spec ((Arena SnarlDataGraph Term (List ShaclPath)) -> (List Term)))
     (@alloc arena)
     (@example
@@ -183,10 +185,14 @@
         (fixture-g-alice-name arena)
         (make-iri arena EX_ALICE)
         (fixture-path-seq-knows-name arena)))
-    (let ((mut result (list-new arena Term)))
+    (let ((mut result (list-new arena Term))
+          (seen (set-new arena Term)))
       (for-each (alt alts)
         (let ((alt-results (resolve-path arena g focus alt)))
-          (for-each (r alt-results) (list-push result r))))
+          (for-each (r alt-results)
+            (when (not (set-has seen r))
+              (set-put seen r)
+              (list-push result r)))))
       result))
 
   (fn resolve-inverse ((arena Arena) (g SnarlDataGraph) (focus Term) (inner ShaclPath))

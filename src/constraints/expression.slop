@@ -1,0 +1,101 @@
+;; ============================================================
+;; Snarl: Expression Constraints (SHACL-AF section 7)
+;;
+;; sh:expression
+;;
+;; Pure result constructor -- the engine evaluates the node expression
+;; (node-expr.slop) and passes its output nodes in.
+;; ============================================================
+
+(module expression
+  (@doc "SHACL-AF expression constraints: sh:expression")
+
+  (import rdf (Term make-iri make-literal))
+  (import vocab (XSD_BOOLEAN))
+  (import af-vocab (SHACL_EXPRESSION_CONSTRAINT_COMPONENT))
+  (import types (Severity ValidationResult ShaclPath))
+
+  ;; Test URI constants
+  (const EX_FOCUS String "http://example.org/focus")
+  (const EX_SHAPE String "http://example.org/Shape1")
+  (const EX_EXPR String "http://example.org/expr")
+
+  (export
+    check-expression
+    term-is-true)
+
+  ;; ============================================================
+  ;; Test Fixtures
+  ;; ============================================================
+
+  (fn fixture-outputs-true ((arena Arena))
+    (@intent "Expression output: [true]")
+    (@spec ((Arena) -> (List Term)))
+    (let ((mut terms (list-new arena Term)))
+      (list-push terms (make-literal arena "true" (some XSD_BOOLEAN) (none)))
+      terms))
+
+  (fn fixture-outputs-false ((arena Arena))
+    (@intent "Expression output: [false]")
+    (@spec ((Arena) -> (List Term)))
+    (let ((mut terms (list-new arena Term)))
+      (list-push terms (make-literal arena "false" (some XSD_BOOLEAN) (none)))
+      terms))
+
+  ;; ============================================================
+  ;; Truth predicate -- extracted so the result <-> predicate equivalence
+  ;; is a single uninterpreted call the verifier can prove.
+  ;; ============================================================
+
+  (fn term-is-true ((t Term))
+    (@intent "True for the xsd:boolean literal true, in either lexical form (true, 1)")
+    (@spec ((Term) -> Bool))
+    (@pure)
+    (match t
+      ((term-literal lit)
+        (match (. lit datatype)
+          ((some dt)
+            (and
+              (string-eq dt XSD_BOOLEAN)
+              (or (string-eq (. lit value) "true") (string-eq (. lit value) "1"))))
+          ((none) false)))
+      (_ false)))
+
+  (fn outputs-are-true ((outputs (List Term)))
+    (@intent "True when the expression's output is exactly { true } (AF section 7)")
+    (@spec (((List Term)) -> Bool))
+    (@pure)
+    (if (== (list-len outputs) 1)
+      (match (list-get outputs 0)
+        ((some t) (term-is-true t))
+        ((none) false))
+      false))
+
+  ;; ============================================================
+  ;; sh:expression -- the expression, evaluated with each value node as
+  ;; the focus node, must produce exactly { true }
+  ;; ============================================================
+
+  (fn check-expression ((arena Arena) (focus-node Term) (value-node Term)
+                        (outputs (List Term)) (expression Term) (path (Option ShaclPath))
+                        (shape-id Term) (severity Severity) (message (Option String)))
+    (@intent "Check sh:expression: a violation for the value node unless the expression's outputs are exactly { true }. The result carries the value node as sh:value and the expression node as sh:sourceConstraint.")
+    (@spec ((Arena Term Term (List Term) Term (Option ShaclPath) Term Severity (Option String))
+            -> (Option ValidationResult)))
+    (@alloc arena)
+    (@post {(== (is-none $result) (outputs-are-true outputs))})
+    (@property correctness (== (is-none $result) (outputs-are-true outputs)))
+    (@example (arena (make-iri arena EX_FOCUS) (make-iri arena EX_FOCUS) (fixture-outputs-true arena) (make-iri arena EX_EXPR) (none) (make-iri arena EX_SHAPE) severity-violation (none)) -> (none))
+    (@example (arena (make-iri arena EX_FOCUS) (make-iri arena EX_FOCUS) (fixture-outputs-false arena) (make-iri arena EX_EXPR) (none) (make-iri arena EX_SHAPE) severity-violation (none)) -> (some (ValidationResult _ _ _ _ _ _ _ _ _)))
+    (if (outputs-are-true outputs)
+      (none)
+      (some (record-new ValidationResult
+              (focus-node focus-node)
+              (result-path path)
+              (value (some value-node))
+              (source-shape shape-id)
+              (source-constraint-component SHACL_EXPRESSION_CONSTRAINT_COMPONENT)
+              (severity severity)
+              (message message)
+              (source-constraint (some expression)))))
+    :c-name "snarl_check_expression"))

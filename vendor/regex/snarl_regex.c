@@ -23,6 +23,13 @@ static char *terminated_copy(const char *s, size_t len)
 int64_t snarl_regex_match(const char *pattern, size_t pattern_len,
                           const char *input, size_t input_len)
 {
+    return snarl_regex_match_flags(pattern, pattern_len, input, input_len, 0);
+}
+
+int64_t snarl_regex_match_flags(const char *pattern, size_t pattern_len,
+                                const char *input, size_t input_len,
+                                int64_t ignore_case)
+{
     char *pat = terminated_copy(pattern, pattern_len);
     char *str = terminated_copy(input, input_len);
     regex_t re;
@@ -33,7 +40,7 @@ int64_t snarl_regex_match(const char *pattern, size_t pattern_len,
         free(str);
         return -REG_ESPACE;
     }
-    rc = regcomp(&re, pat, REG_EXTENDED | REG_NOSUB);
+    rc = regcomp(&re, pat, REG_EXTENDED | REG_NOSUB | (ignore_case ? REG_ICASE : 0));
     free(pat);
     if (rc != REG_OK) {
         free(str);

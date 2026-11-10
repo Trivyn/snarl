@@ -1,0 +1,29 @@
+# Deactivated rules are ignored (AF section 8.2.3) -- even an unsupported
+# sh:SPARQLRule. Only the active rule fires (1 triple). Combinations that
+# cannot form a triple (literal subject) are skipped, not errors.
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix ex: <http://example.org/> .
+
+ex:n a ex:Node ; ex:name "n" .
+
+ex:NodeShape
+    a sh:NodeShape ;
+    sh:targetClass ex:Node ;
+    sh:rule [
+        a sh:TripleRule ;
+        sh:subject sh:this ; sh:predicate ex:active ; sh:object true ;
+    ] ;
+    sh:rule [
+        a sh:TripleRule ;
+        sh:deactivated true ;
+        sh:subject sh:this ; sh:predicate ex:inactive ; sh:object true ;
+    ] ;
+    sh:rule [
+        a sh:SPARQLRule ;
+        sh:deactivated true ;
+        sh:construct "CONSTRUCT { $this <http://example.org/sparql> true } WHERE { }" ;
+    ] ;
+    sh:rule [
+        a sh:TripleRule ;
+        sh:subject [ sh:path ex:name ] ; sh:predicate ex:p ; sh:object ex:o ;
+    ] .

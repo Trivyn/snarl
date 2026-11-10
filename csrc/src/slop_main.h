@@ -16,11 +16,18 @@
 #include "slop_common.h"
 #include "slop_snarl.h"
 #include "slop_report.h"
+#include "slop_serialize_ttl.h"
 #include "slop_strlib.h"
 #include <string.h>
 #include <slop_runtime.h>
 
 typedef struct snarl_cli_main_CliArgs snarl_cli_main_CliArgs;
+
+#ifndef SLOP_LIST_SLOP_RDF_RDF_TRIPLE_DEFINED
+#define SLOP_LIST_SLOP_RDF_RDF_TRIPLE_DEFINED
+#define SLOP_LIST_SLOP_RDF_RDF_TRIPLE_IMPL_DEFINED
+SLOP_LIST_DEFINE(slop_rdf_rdf_Triple, slop_list_slop_rdf_rdf_Triple)
+#endif
 
 #ifndef SLOP_OPTION_SLOP_RDF_INDEX_INDEXEDGRAPH_DEFINED
 #define SLOP_OPTION_SLOP_RDF_INDEX_INDEXEDGRAPH_DEFINED
@@ -32,6 +39,11 @@ SLOP_OPTION_DEFINE(slop_rdf_index_IndexedGraph, slop_option_slop_rdf_index_Index
 SLOP_OPTION_DEFINE(snarl_data_graph_SnarlDataGraph, slop_option_snarl_data_graph_SnarlDataGraph)
 #endif
 
+#ifndef SLOP_OPTION_SLOP_RDF_RDF_TRIPLE_DEFINED
+#define SLOP_OPTION_SLOP_RDF_RDF_TRIPLE_DEFINED
+SLOP_OPTION_DEFINE(slop_rdf_rdf_Triple, slop_option_slop_rdf_rdf_Triple)
+#endif
+
 struct snarl_cli_main_CliArgs {
     slop_option_string data_file;
     slop_option_string shapes_file;
@@ -40,6 +52,9 @@ struct snarl_cli_main_CliArgs {
     int64_t max_errors;
     uint8_t no_warnings;
     uint8_t no_infos;
+    uint8_t rules;
+    slop_option_string emit_inferred_file;
+    uint8_t shacl12;
     uint8_t show_help;
     uint8_t show_version;
 };
@@ -57,6 +72,9 @@ void snarl_cli_main_print_usage(void);
 void snarl_cli_main_print_ttl_error(slop_arena* arena, slop_string path, slop_rdf_ttl_TtlFileError e);
 slop_option_slop_rdf_index_IndexedGraph snarl_cli_main_load_graph(slop_arena* arena, slop_string path, uint8_t quiet);
 slop_option_snarl_data_graph_SnarlDataGraph snarl_cli_main_load_data_graph(slop_arena* arena, slop_string path, uint8_t quiet);
+uint8_t snarl_cli_main_write_turtle(slop_arena* arena, slop_string path, slop_list_slop_rdf_rdf_Triple triples);
+void snarl_cli_main_write_inferred(slop_arena* arena, slop_string path, slop_list_slop_rdf_rdf_Triple inferred, uint8_t quiet);
+void snarl_cli_main_write_report(slop_arena* arena, slop_string path, snarl_types_ValidationReport report, uint8_t quiet);
 int main(int argc, char** _c_argv);
 
 #ifndef SLOP_OPTION_SNARL_CLI_MAIN_CLIARGS_DEFINED
@@ -72,6 +90,11 @@ SLOP_OPTION_DEFINE(slop_rdf_index_IndexedGraph, slop_option_slop_rdf_index_Index
 #ifndef SLOP_OPTION_SNARL_DATA_GRAPH_SNARLDATAGRAPH_DEFINED
 #define SLOP_OPTION_SNARL_DATA_GRAPH_SNARLDATAGRAPH_DEFINED
 SLOP_OPTION_DEFINE(snarl_data_graph_SnarlDataGraph, slop_option_snarl_data_graph_SnarlDataGraph)
+#endif
+
+#ifndef SLOP_OPTION_SLOP_RDF_RDF_TRIPLE_DEFINED
+#define SLOP_OPTION_SLOP_RDF_RDF_TRIPLE_DEFINED
+SLOP_OPTION_DEFINE(slop_rdf_rdf_Triple, slop_option_slop_rdf_rdf_Triple)
 #endif
 
 
