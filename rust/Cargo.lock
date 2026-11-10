@@ -26,9 +26,9 @@ checksum = "0fda2ff0d084019ba4d7c6f371c95d8fd75ce3524c3cb8fb653a3023f6323e64"
 
 [[package]]
 name = "slop-rdf-sys"
-version = "0.6.1"
+version = "0.6.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "aa13d9ba65ef470a9f6cd8c1683226e1280219a2578d751f22cc8f840801efb1"
+checksum = "feb1d8465cd4ad6c1ca17a43ce39310792fc212d653373e48f2eda47a8255838"
 dependencies = [
  "cc",
  "slop-std-sys",
