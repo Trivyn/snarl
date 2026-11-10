@@ -53,6 +53,12 @@ size_t snarl_ffi_sizeof(int which) {
         case 15: return sizeof(snarl_rules_InferOutput);
         case 16: return sizeof(snarl_rules_InferResult);
         case 17: return sizeof(snarl_ValidationOutcome);
+        case 18: return sizeof(snarl_types_RuleOrder);
+        case 19: return sizeof(slop_option_snarl_types_RuleOrder);
+        case 20: return sizeof(snarl_rules_InferredTriple);
+        case 21: return sizeof(snarl_rules_DeferredRule);
+        case 22: return sizeof(slop_list_snarl_rules_InferredTriple);
+        case 23: return sizeof(slop_list_snarl_rules_DeferredRule);
         default: return 0;
     }
 }

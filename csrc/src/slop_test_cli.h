@@ -19,6 +19,12 @@
 #include "slop_types.h"
 #include "slop_strlib.h"
 
+#ifndef SLOP_LIST_SNARL_RULES_INFERREDTRIPLE_DEFINED
+#define SLOP_LIST_SNARL_RULES_INFERREDTRIPLE_DEFINED
+#define SLOP_LIST_SNARL_RULES_INFERREDTRIPLE_IMPL_DEFINED
+SLOP_LIST_DEFINE(snarl_rules_InferredTriple, slop_list_snarl_rules_InferredTriple)
+#endif
+
 #ifndef SLOP_OPTION_SLOP_RDF_INDEX_INDEXEDGRAPH_DEFINED
 #define SLOP_OPTION_SLOP_RDF_INDEX_INDEXEDGRAPH_DEFINED
 SLOP_OPTION_DEFINE(slop_rdf_index_IndexedGraph, slop_option_slop_rdf_index_IndexedGraph)
@@ -27,6 +33,21 @@ SLOP_OPTION_DEFINE(slop_rdf_index_IndexedGraph, slop_option_slop_rdf_index_Index
 #ifndef SLOP_OPTION_SNARL_DATA_GRAPH_SNARLDATAGRAPH_DEFINED
 #define SLOP_OPTION_SNARL_DATA_GRAPH_SNARLDATAGRAPH_DEFINED
 SLOP_OPTION_DEFINE(snarl_data_graph_SnarlDataGraph, slop_option_snarl_data_graph_SnarlDataGraph)
+#endif
+
+#ifndef SLOP_OPTION_SNARL_TYPES_RULEORDER_DEFINED
+#define SLOP_OPTION_SNARL_TYPES_RULEORDER_DEFINED
+SLOP_OPTION_DEFINE(snarl_types_RuleOrder, slop_option_snarl_types_RuleOrder)
+#endif
+
+#ifndef SLOP_OPTION_SNARL_RULES_INFERREDTRIPLE_DEFINED
+#define SLOP_OPTION_SNARL_RULES_INFERREDTRIPLE_DEFINED
+SLOP_OPTION_DEFINE(snarl_rules_InferredTriple, slop_option_snarl_rules_InferredTriple)
+#endif
+
+#ifndef SLOP_OPTION_SNARL_RULES_INFEROUTPUT_DEFINED
+#define SLOP_OPTION_SNARL_RULES_INFEROUTPUT_DEFINED
+SLOP_OPTION_DEFINE(snarl_rules_InferOutput, slop_option_snarl_rules_InferOutput)
 #endif
 
 slop_option_slop_rdf_index_IndexedGraph snarl_cli_tests_test_cli_load_test_graph(slop_arena* arena, slop_string path);
@@ -136,6 +157,35 @@ uint8_t snarl_cli_tests_test_cli_test_af12_list_duplicates(slop_arena* arena);
 uint8_t snarl_cli_tests_test_cli_test_af12_unsupported_function(slop_arena* arena);
 uint8_t snarl_cli_tests_test_cli_test_af12_global_rule(slop_arena* arena);
 uint8_t snarl_cli_tests_test_cli_test_af12_global_rule_af_mode(slop_arena* arena);
+slop_option_string snarl_cli_tests_test_cli_report_text(slop_arena* arena, slop_string data_path, slop_string shapes_path);
+uint8_t snarl_cli_tests_test_cli_assert_same_report(slop_arena* arena, slop_string data_path, slop_string shapes_a, slop_string shapes_b, slop_string expected_marker);
+uint8_t snarl_cli_tests_test_cli_test_sparql_rule_validate_only_violates(slop_arena* arena);
+uint8_t snarl_cli_tests_test_cli_test_sparql_rule_validate_only_conforms(slop_arena* arena);
+uint8_t snarl_cli_tests_test_cli_test_sparql_rule_run_rules_fails(slop_arena* arena);
+uint8_t snarl_cli_tests_test_cli_test_sparql_rule_entailment_fails(slop_arena* arena);
+uint8_t snarl_cli_tests_test_cli_test_af12_rules_validate_only(slop_arena* arena);
+uint8_t snarl_cli_tests_test_cli_test_af12_rules_run_fails(slop_arena* arena);
+snarl_types_ValidatorConfig snarl_cli_tests_test_cli_rule_config(uint8_t run_rules, uint8_t shacl12, uint8_t defer, slop_option_snarl_types_RuleOrder order_min, slop_option_snarl_types_RuleOrder order_max);
+slop_option_snarl_types_RuleOrder snarl_cli_tests_test_cli_order_key(double shape_order, double rule_order);
+slop_option_snarl_types_RuleOrder snarl_cli_tests_test_cli_no_order(void);
+slop_rdf_rdf_Term snarl_cli_tests_test_cli_ex_iri(slop_arena* arena, slop_string local);
+uint8_t snarl_cli_tests_test_cli_has_inferred(slop_arena* arena, slop_list_snarl_rules_InferredTriple inferred, slop_string s, slop_string p, slop_rdf_rdf_Term o, slop_string rule, slop_string focus);
+int64_t snarl_cli_tests_test_cli_infer_count(slop_arena* arena, slop_string path, snarl_types_ValidatorConfig config);
+uint8_t snarl_cli_tests_test_cli_assert_infer_count(slop_arena* arena, slop_string label, slop_string path, snarl_types_ValidatorConfig config, int64_t expected);
+uint8_t snarl_cli_tests_test_cli_assert_infer_error(slop_arena* arena, slop_string path, snarl_types_ValidatorConfig config, slop_string expected_substring);
+uint8_t snarl_cli_tests_test_cli_assert_deferred(slop_arena* arena, slop_string label, slop_string path, snarl_types_ValidatorConfig config, int64_t expected_inferred, int64_t expected_deferred, slop_string rule, slop_string shape, double shape_order, double rule_order);
+uint8_t snarl_cli_tests_test_cli_test_defer_sparql_rules(slop_arena* arena);
+uint8_t snarl_cli_tests_test_cli_test_defer_sparql_rules_shacl12(slop_arena* arena);
+uint8_t snarl_cli_tests_test_cli_test_defer_off_fails(slop_arena* arena);
+uint8_t snarl_cli_tests_test_cli_test_defer_unknown_rule_type_fails(slop_arena* arena);
+uint8_t snarl_cli_tests_test_cli_test_defer_follows_order_range(slop_arena* arena);
+uint8_t snarl_cli_tests_test_cli_test_defer_validate_entailment(slop_arena* arena);
+uint8_t snarl_cli_tests_test_cli_test_order_range_bounds(slop_arena* arena);
+slop_option_snarl_rules_InferOutput snarl_cli_tests_test_cli_infer_step(slop_arena* arena, snarl_data_graph_SnarlDataGraph dg, slop_rdf_index_IndexedGraph sg, double lo, double hi);
+uint8_t snarl_cli_tests_test_cli_test_order_range_stepping(slop_arena* arena);
+uint8_t snarl_cli_tests_test_cli_triple_inferred(slop_arena* arena, slop_list_snarl_rules_InferredTriple inferred, slop_string s, slop_string p, slop_rdf_rdf_Term o);
+uint8_t snarl_cli_tests_test_cli_test_attribution(slop_arena* arena);
+slop_string snarl_cli_tests_test_cli_term_display(slop_arena* arena, slop_rdf_rdf_Term t);
 int main(int argc, char** _c_argv);
 
 #ifndef SLOP_OPTION_SLOP_RDF_INDEX_INDEXEDGRAPH_DEFINED
@@ -146,6 +196,21 @@ SLOP_OPTION_DEFINE(slop_rdf_index_IndexedGraph, slop_option_slop_rdf_index_Index
 #ifndef SLOP_OPTION_SNARL_DATA_GRAPH_SNARLDATAGRAPH_DEFINED
 #define SLOP_OPTION_SNARL_DATA_GRAPH_SNARLDATAGRAPH_DEFINED
 SLOP_OPTION_DEFINE(snarl_data_graph_SnarlDataGraph, slop_option_snarl_data_graph_SnarlDataGraph)
+#endif
+
+#ifndef SLOP_OPTION_SNARL_TYPES_RULEORDER_DEFINED
+#define SLOP_OPTION_SNARL_TYPES_RULEORDER_DEFINED
+SLOP_OPTION_DEFINE(snarl_types_RuleOrder, slop_option_snarl_types_RuleOrder)
+#endif
+
+#ifndef SLOP_OPTION_SNARL_RULES_INFERREDTRIPLE_DEFINED
+#define SLOP_OPTION_SNARL_RULES_INFERREDTRIPLE_DEFINED
+SLOP_OPTION_DEFINE(snarl_rules_InferredTriple, slop_option_snarl_rules_InferredTriple)
+#endif
+
+#ifndef SLOP_OPTION_SNARL_RULES_INFEROUTPUT_DEFINED
+#define SLOP_OPTION_SNARL_RULES_INFEROUTPUT_DEFINED
+SLOP_OPTION_DEFINE(snarl_rules_InferOutput, slop_option_snarl_rules_InferOutput)
 #endif
 
 #ifndef SLOP_OPTION_SLOP_RDF_RDF_TERM_DEFINED

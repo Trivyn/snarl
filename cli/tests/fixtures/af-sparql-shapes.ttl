@@ -1,0 +1,24 @@
+# Rules snarl cannot execute, beside a shape it can validate. Validation that
+# runs no rules must report exactly what af-sparql-shapes-norules.ttl does:
+# an sh:SPARQLRule, an unknown rule type, an ill-formed sh:TripleRule and a
+# function expression in a rule slot only matter when rules run.
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix ex: <http://example.org/> .
+
+ex:PersonShape
+    a sh:NodeShape ;
+    sh:targetClass ex:Person ;
+    sh:property ex:NameShape ;
+    sh:rule [
+        a sh:SPARQLRule ;
+        sh:construct "CONSTRUCT { $this <http://example.org/seen> true } WHERE { }" ;
+    ] ;
+    sh:rule [ a ex:ScriptRule ] ;
+    sh:rule [ a sh:TripleRule ; sh:subject sh:this ; sh:predicate ex:p ] ;
+    sh:rule [
+        a sh:TripleRule ;
+        sh:subject sh:this ; sh:predicate ex:q ;
+        sh:object [ ex:upper ( sh:this ) ] ;
+    ] .
+
+ex:NameShape sh:path ex:name ; sh:minCount 1 .

@@ -61,12 +61,22 @@ const slop_string snarl_af_vocab_SHNEX_FOCUS_NODE_VAR = SLOP_STR("focusNode");
 
 slop_list_string snarl_af_vocab_shacl12_unsupported_properties(slop_arena* arena);
 slop_list_string snarl_af_vocab_shacl12_unsupported_classes(slop_arena* arena);
+slop_list_string snarl_af_vocab_shacl12_unsupported_rule_properties(slop_arena* arena);
+slop_list_string snarl_af_vocab_shacl12_unsupported_rule_classes(slop_arena* arena);
 
 slop_list_string snarl_af_vocab_shacl12_unsupported_properties(slop_arena* arena) {
-    return ({ slop_list_string _ll = (slop_list_string){ .data = (slop_string*)slop_arena_alloc(arena, 10 * sizeof(slop_string)), .len = 10, .cap = 10, .arena = arena }; _ll.data[0] = SLOP_STR("http://www.w3.org/ns/shacl#layer"); _ll.data[1] = SLOP_STR("http://www.w3.org/ns/shacl#runOnce"); _ll.data[2] = SLOP_STR("http://www.w3.org/ns/shacl#hasRule"); _ll.data[3] = SLOP_STR("http://www.w3.org/ns/shacl#includesRuleSet"); _ll.data[4] = SLOP_STR("http://www.w3.org/ns/shacl#ruleProcessor"); _ll.data[5] = SLOP_STR("http://www.w3.org/ns/shacl#expectedPredicate"); _ll.data[6] = SLOP_STR("http://www.w3.org/ns/shacl#tempTriple"); _ll.data[7] = SLOP_STR("http://www.w3.org/ns/shacl#nodeByExpression"); _ll.data[8] = SLOP_STR("http://www.w3.org/ns/shacl#values"); _ll.data[9] = SLOP_STR("http://www.w3.org/ns/shacl#defaultValue"); _ll; });
+    return ({ slop_list_string _ll = (slop_list_string){ .data = (slop_string*)slop_arena_alloc(arena, 3 * sizeof(slop_string)), .len = 3, .cap = 3, .arena = arena }; _ll.data[0] = SLOP_STR("http://www.w3.org/ns/shacl#nodeByExpression"); _ll.data[1] = SLOP_STR("http://www.w3.org/ns/shacl#values"); _ll.data[2] = SLOP_STR("http://www.w3.org/ns/shacl#defaultValue"); _ll; });
 }
 
 slop_list_string snarl_af_vocab_shacl12_unsupported_classes(slop_arena* arena) {
-    return ({ slop_list_string _ll = (slop_list_string){ .data = (slop_string*)slop_arena_alloc(arena, 3 * sizeof(slop_string)), .len = 3, .cap = 3, .arena = arena }; _ll.data[0] = SLOP_STR("http://www.w3.org/ns/shacl#ShapeClass"); _ll.data[1] = SLOP_STR("http://www.w3.org/ns/shacl#RuleSet"); _ll.data[2] = SLOP_STR("http://www.w3.org/ns/shacl#SPARQLRuleTemplate"); _ll; });
+    return ({ slop_list_string _ll = (slop_list_string){ .data = (slop_string*)slop_arena_alloc(arena, 1 * sizeof(slop_string)), .len = 1, .cap = 1, .arena = arena }; _ll.data[0] = SLOP_STR("http://www.w3.org/ns/shacl#ShapeClass"); _ll; });
+}
+
+slop_list_string snarl_af_vocab_shacl12_unsupported_rule_properties(slop_arena* arena) {
+    return ({ slop_list_string _ll = (slop_list_string){ .data = (slop_string*)slop_arena_alloc(arena, 7 * sizeof(slop_string)), .len = 7, .cap = 7, .arena = arena }; _ll.data[0] = SLOP_STR("http://www.w3.org/ns/shacl#layer"); _ll.data[1] = SLOP_STR("http://www.w3.org/ns/shacl#runOnce"); _ll.data[2] = SLOP_STR("http://www.w3.org/ns/shacl#hasRule"); _ll.data[3] = SLOP_STR("http://www.w3.org/ns/shacl#includesRuleSet"); _ll.data[4] = SLOP_STR("http://www.w3.org/ns/shacl#ruleProcessor"); _ll.data[5] = SLOP_STR("http://www.w3.org/ns/shacl#expectedPredicate"); _ll.data[6] = SLOP_STR("http://www.w3.org/ns/shacl#tempTriple"); _ll; });
+}
+
+slop_list_string snarl_af_vocab_shacl12_unsupported_rule_classes(slop_arena* arena) {
+    return ({ slop_list_string _ll = (slop_list_string){ .data = (slop_string*)slop_arena_alloc(arena, 2 * sizeof(slop_string)), .len = 2, .cap = 2, .arena = arena }; _ll.data[0] = SLOP_STR("http://www.w3.org/ns/shacl#RuleSet"); _ll.data[1] = SLOP_STR("http://www.w3.org/ns/shacl#SPARQLRuleTemplate"); _ll; });
 }
 

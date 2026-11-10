@@ -5,6 +5,8 @@
     ShaclPath
     NodeExpr
     Rule
+    RuleOrder
+    SparqlRuleRef
     NodeKind
     Severity
     Constraint
@@ -80,6 +82,19 @@
       (conditions (List Term))
       (order Float)))
 
+  ;; The order key rules run by: the sh:order of the rule's shape, then the
+  ;; rule's own. Keys compare shape order first. In SHACL 1.2 mode, which
+  ;; ignores sh:order on shapes, shape-order is always 0.
+  (type RuleOrder (record
+      (shape-order Float)
+      (rule-order Float)))
+
+  ;; An active sh:SPARQLRule attached to a shape through sh:rule. Snarl cannot
+  ;; execute it; with defer-sparql-rules it is reported to the caller.
+  (type SparqlRuleRef (record
+      (id Term)
+      (order Float)))
+
   (type NodeKind (enum node-kind-blank-node node-kind-iri node-kind-literal node-kind-blank-node-or-iri node-kind-blank-node-or-literal node-kind-iri-or-literal))
 
   (type Severity (enum severity-violation severity-warning severity-info))
@@ -106,7 +121,8 @@
       (message (Option String))
       (deactivated Bool)
       (rules (List Rule))
-      (order Float)))
+      (order Float)
+      (sparql-rules (List SparqlRuleRef))))
 
   (type ShapesGraph (record
       (node-shapes (List NodeShape))
@@ -146,7 +162,16 @@
       ;; not declare the rules entailment regime.
       (run-rules Bool)
       ;; Experimental: also accept SHACL 1.2 (Working Draft) syntax.
-      (shacl12 Bool)))
+      (shacl12 Bool)
+      ;; When rules run, skip sh:SPARQLRule nodes instead of failing, and
+      ;; report them (InferOutput.deferred) so the caller can execute them
+      ;; on its own SPARQL engine. Any other non-triple rule type still fails.
+      (defer-sparql-rules Bool)
+      ;; Run only the rules whose order key lies in [order-min, order-max],
+      ;; both bounds inclusive; an absent bound is open. Deferred SPARQL
+      ;; rules are reported for the same range.
+      (order-min (Option RuleOrder))
+      (order-max (Option RuleOrder))))
 
   (type ValidatorResult (union (validate-success ValidationReport) (validate-error String)))
 
@@ -160,7 +185,9 @@
     (@post (== (. $result include-infos) true))
     (@post (== (. $result run-rules) false))
     (@post (== (. $result shacl12) false))
-    (@example () -> (ValidatorConfig false 0 true true false false))
+    (@post (== (. $result defer-sparql-rules) false))
+    (@post (is-none (. $result order-min)))
+    (@post (is-none (. $result order-max)))
     (record-new
       ValidatorConfig
       (verbose false)
@@ -168,7 +195,10 @@
       (include-warnings true)
       (include-infos true)
       (run-rules false)
-      (shacl12 false)))
+      (shacl12 false)
+      (defer-sparql-rules false)
+      (order-min (none))
+      (order-max (none))))
 
   (fn make-validation-report ((arena Arena))
     (@intent "Create an empty validation report that conforms")

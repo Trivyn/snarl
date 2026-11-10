@@ -12,6 +12,8 @@
 
 slop_list_string snarl_af_vocab_shacl12_unsupported_properties(slop_arena* arena);
 slop_list_string snarl_af_vocab_shacl12_unsupported_classes(slop_arena* arena);
+slop_list_string snarl_af_vocab_shacl12_unsupported_rule_properties(slop_arena* arena);
+slop_list_string snarl_af_vocab_shacl12_unsupported_rule_classes(slop_arena* arena);
 
 extern const slop_string snarl_af_vocab_SHACL_CLASS_CONSTRAINT_COMPONENT;
 extern const slop_string snarl_af_vocab_SHACL_DATATYPE_CONSTRAINT_COMPONENT;

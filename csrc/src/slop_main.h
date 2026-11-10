@@ -29,6 +29,12 @@ typedef struct snarl_cli_main_CliArgs snarl_cli_main_CliArgs;
 SLOP_LIST_DEFINE(slop_rdf_rdf_Triple, slop_list_slop_rdf_rdf_Triple)
 #endif
 
+#ifndef SLOP_LIST_SNARL_RULES_INFERREDTRIPLE_DEFINED
+#define SLOP_LIST_SNARL_RULES_INFERREDTRIPLE_DEFINED
+#define SLOP_LIST_SNARL_RULES_INFERREDTRIPLE_IMPL_DEFINED
+SLOP_LIST_DEFINE(snarl_rules_InferredTriple, slop_list_snarl_rules_InferredTriple)
+#endif
+
 #ifndef SLOP_OPTION_SLOP_RDF_INDEX_INDEXEDGRAPH_DEFINED
 #define SLOP_OPTION_SLOP_RDF_INDEX_INDEXEDGRAPH_DEFINED
 SLOP_OPTION_DEFINE(slop_rdf_index_IndexedGraph, slop_option_slop_rdf_index_IndexedGraph)
@@ -42,6 +48,11 @@ SLOP_OPTION_DEFINE(snarl_data_graph_SnarlDataGraph, slop_option_snarl_data_graph
 #ifndef SLOP_OPTION_SLOP_RDF_RDF_TRIPLE_DEFINED
 #define SLOP_OPTION_SLOP_RDF_RDF_TRIPLE_DEFINED
 SLOP_OPTION_DEFINE(slop_rdf_rdf_Triple, slop_option_slop_rdf_rdf_Triple)
+#endif
+
+#ifndef SLOP_OPTION_SNARL_RULES_INFERREDTRIPLE_DEFINED
+#define SLOP_OPTION_SNARL_RULES_INFERREDTRIPLE_DEFINED
+SLOP_OPTION_DEFINE(snarl_rules_InferredTriple, slop_option_snarl_rules_InferredTriple)
 #endif
 
 struct snarl_cli_main_CliArgs {
@@ -73,7 +84,8 @@ void snarl_cli_main_print_ttl_error(slop_arena* arena, slop_string path, slop_rd
 slop_option_slop_rdf_index_IndexedGraph snarl_cli_main_load_graph(slop_arena* arena, slop_string path, uint8_t quiet);
 slop_option_snarl_data_graph_SnarlDataGraph snarl_cli_main_load_data_graph(slop_arena* arena, slop_string path, uint8_t quiet);
 uint8_t snarl_cli_main_write_turtle(slop_arena* arena, slop_string path, slop_list_slop_rdf_rdf_Triple triples);
-void snarl_cli_main_write_inferred(slop_arena* arena, slop_string path, slop_list_slop_rdf_rdf_Triple inferred, uint8_t quiet);
+slop_list_slop_rdf_rdf_Triple snarl_cli_main_inferred_triples(slop_arena* arena, slop_list_snarl_rules_InferredTriple inferred);
+void snarl_cli_main_write_inferred(slop_arena* arena, slop_string path, slop_list_snarl_rules_InferredTriple inferred, uint8_t quiet);
 void snarl_cli_main_write_report(slop_arena* arena, slop_string path, snarl_types_ValidationReport report, uint8_t quiet);
 int main(int argc, char** _c_argv);
 
@@ -95,6 +107,11 @@ SLOP_OPTION_DEFINE(snarl_data_graph_SnarlDataGraph, slop_option_snarl_data_graph
 #ifndef SLOP_OPTION_SLOP_RDF_RDF_TRIPLE_DEFINED
 #define SLOP_OPTION_SLOP_RDF_RDF_TRIPLE_DEFINED
 SLOP_OPTION_DEFINE(slop_rdf_rdf_Triple, slop_option_slop_rdf_rdf_Triple)
+#endif
+
+#ifndef SLOP_OPTION_SNARL_RULES_INFERREDTRIPLE_DEFINED
+#define SLOP_OPTION_SNARL_RULES_INFERREDTRIPLE_DEFINED
+SLOP_OPTION_DEFINE(snarl_rules_InferredTriple, slop_option_snarl_rules_InferredTriple)
 #endif
 
 

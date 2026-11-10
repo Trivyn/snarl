@@ -4,11 +4,11 @@
   (import data-graph
     (SnarlDataGraph snarl-data-graph-size snarl-data-graph-create snarl-data-graph-from-indexed))
   (import types
-    (ShaclPath NodeKind Severity Constraint PropertyShape NodeShape ShapesGraph ValidationResult ValidationReport ValidatorConfig ValidatorResult default-validator-config make-validation-report report-conforms))
+    (ShaclPath NodeKind Severity Constraint PropertyShape NodeShape ShapesGraph ValidationResult ValidationReport ValidatorConfig ValidatorResult RuleOrder default-validator-config make-validation-report report-conforms))
   (import parse
     (parse-shapes-graph shapes-graph-recursion-hazard-message shapes-graph-unsupported-feature-message shapes-graph-declares-rules-entailment))
   (import engine (engine-validate shapes-graph-pattern-error-message))
-  (import rules (InferOutput InferResult infer-rules))
+  (import rules (InferredTriple DeferredRule InferOutput InferResult infer-rules))
   (import report
     (report-to-string report-to-graph severity-to-string term-to-display-string path-to-display-string))
   (export
@@ -23,6 +23,9 @@
     ValidationReport
     ValidatorConfig
     ValidatorResult
+    RuleOrder
+    InferredTriple
+    DeferredRule
     InferOutput
     InferResult
     ValidationOutcome
@@ -43,15 +46,18 @@
 
   (@doc "SHACL Core validator, with the non-SPARQL part of SHACL-AF, and a stable C FFI")
 
-  ;; A validation result together with the data graph that was validated
-  ;; and the triples the rules inferred before validating (empty when no
-  ;; rules ran). The graph's maps are shared with the caller's copy, but its
-  ;; triple count is held by value, so callers that keep using the graph
-  ;; should switch to this one.
+  ;; A validation result together with the data graph that was validated,
+  ;; the triples the rules inferred before validating, each with the rule
+  ;; and focus node that produced it (empty when no rules ran), and the
+  ;; SPARQL rules that were skipped and left to the caller (empty unless the
+  ;; config defers them and rules ran). The graph's maps are shared with the
+  ;; caller's copy, but its triple count is held by value, so callers that
+  ;; keep using the graph should switch to this one.
   (type ValidationOutcome (record
     (result ValidatorResult)
     (graph SnarlDataGraph)
-    (inferred (List Triple))))
+    (inferred (List InferredTriple))
+    (deferred (List DeferredRule))))
 
   (fn default-config ()
     (@intent "Create default validator configuration")
@@ -63,7 +69,9 @@
     (@post (== (. $result include-infos) true))
     (@post (== (. $result run-rules) false))
     (@post (== (. $result shacl12) false))
-    (@example () -> (ValidatorConfig false 0 true true false false))
+    (@post (== (. $result defer-sparql-rules) false))
+    (@post (is-none (. $result order-min)))
+    (@post (is-none (. $result order-max)))
     :c-name
     "snarl_default_config"
     (default-validator-config))
@@ -110,35 +118,40 @@
     (. (validate-data-graph-with-inference arena data-graph shapes-graph config) result))
 
   (fn validate-data-graph-with-inference ((arena Arena) (data-graph SnarlDataGraph) (shapes-graph IndexedGraph) (config ValidatorConfig))
-    (@intent "Validate a Snarl fast data graph against a shapes graph, running the shapes graph's rules first when the config asks for them or the shapes graph declares the rules entailment regime (AF section 8.3). Returns the validation result and the inferred triples. The rules add their triples to data-graph; the outcome carries the updated graph (see ValidationOutcome). Running rules again over a graph that already holds their output is not a no-op -- a second pass lets earlier rules see later rules' triples -- which is why this returns the triples rather than leaving callers to call infer and then validate.")
+    (@intent "Validate a Snarl fast data graph against a shapes graph, running the shapes graph's rules first when the config asks for them or the shapes graph declares the rules entailment regime (AF section 8.3). Returns the validation result, the inferred triples with their rule and focus node, and the SPARQL rules deferred to the caller. The rules add their triples to data-graph; the outcome carries the updated graph (see ValidationOutcome). When rules do not run, the shapes graph's rules are not examined: one snarl could not execute (an sh:SPARQLRule, say) does not affect the result. Running rules again over a graph that already holds their output is not a no-op -- a second pass lets earlier rules see later rules' triples -- which is why this returns the triples rather than leaving callers to call infer and then validate.")
     (@spec ((Arena SnarlDataGraph IndexedGraph ValidatorConfig) -> ValidationOutcome))
     (@alloc arena)
     :c-name
     "snarl_validate_data_graph_with_inference"
-    (let ((none-inferred (list-new arena Triple)))
-      (match (prepare-shapes arena shapes-graph config)
+    (let ((none-inferred (list-new arena InferredTriple))
+          (none-deferred (list-new arena DeferredRule))
+          (rules-run
+            (or
+              (. config run-rules)
+              (shapes-graph-declares-rules-entailment arena shapes-graph (. config shacl12)))))
+      (match (prepare-shapes arena shapes-graph config rules-run)
         ((error msg)
-          (record-new ValidationOutcome (result (union-new ValidatorResult validate-error msg)) (graph data-graph) (inferred none-inferred)))
+          (record-new ValidationOutcome (result (union-new ValidatorResult validate-error msg)) (graph data-graph) (inferred none-inferred) (deferred none-deferred)))
         ((ok shapes)
-          (if (or
-                (. config run-rules)
-                (shapes-graph-declares-rules-entailment arena shapes-graph (. config shacl12)))
+          (if rules-run
             (match (infer-rules arena data-graph shapes config)
               ((infer-error msg)
-                (record-new ValidationOutcome (result (union-new ValidatorResult validate-error msg)) (graph data-graph) (inferred none-inferred)))
+                (record-new ValidationOutcome (result (union-new ValidatorResult validate-error msg)) (graph data-graph) (inferred none-inferred) (deferred none-deferred)))
               ((infer-success out)
                 (record-new ValidationOutcome
                   (result (engine-validate arena (. out graph) shapes config))
                   (graph (. out graph))
-                  (inferred (. out inferred)))))
+                  (inferred (. out inferred))
+                  (deferred (. out deferred)))))
             (record-new ValidationOutcome
               (result (engine-validate arena data-graph shapes config))
               (graph data-graph)
-              (inferred none-inferred)))))))
+              (inferred none-inferred)
+              (deferred none-deferred)))))))
 
-  (fn prepare-shapes ((arena Arena) (shapes-graph IndexedGraph) (config ValidatorConfig))
-    (@intent "Check the raw shapes graph for input that cannot be parsed or executed, then parse it. The checks run in order, each assuming the earlier ones passed.")
-    (@spec ((Arena IndexedGraph ValidatorConfig) -> (Result ShapesGraph String)))
+  (fn prepare-shapes ((arena Arena) (shapes-graph IndexedGraph) (config ValidatorConfig) (rules-run Bool))
+    (@intent "Check the raw shapes graph for input that cannot be parsed or executed, then parse it. The checks run in order, each assuming the earlier ones passed. rules-run says whether the caller will execute the shapes graph's rules; when it will not, the rules are not checked for executability.")
+    (@spec ((Arena IndexedGraph ValidatorConfig Bool) -> (Result ShapesGraph String)))
     (@alloc arena)
     ;; Guard against the parse-time recursion hazards (cyclic sh:path or
     ;; node expression; malformed cyclic rdf:list reachable from sh:and/
@@ -146,14 +159,17 @@
     ;; expression) BEFORE real parsing runs -- parse-shapes-graph's own
     ;; recursive descent (via parse-path, parse-node-expr and the vendored
     ;; rdf-list-elements-indexed) has no cycle guard of its own and would
-    ;; otherwise crash or hang on exactly the inputs this rules out.
+    ;; otherwise crash or hang on exactly the inputs this rules out. This
+    ;; scan covers rule slots even when rules will not run, because the
+    ;; parser walks them either way.
     (match (shapes-graph-recursion-hazard-message arena shapes-graph)
       ((some msg) (error msg))
       ((none)
         ;; SHACL-AF input snarl cannot execute (SPARQL rules, function
         ;; expressions, unknown entailment regimes, ...) must fail, not be
-        ;; silently skipped.
-        (match (shapes-graph-unsupported-feature-message arena shapes-graph (. config shacl12))
+        ;; silently skipped -- except rules in a call that runs none, and
+        ;; SPARQL rules the config defers to the caller (they are reported).
+        (match (shapes-graph-unsupported-feature-message arena shapes-graph (. config shacl12) rules-run (. config defer-sparql-rules))
           ((some msg) (error msg))
           ((none)
             (let ((shapes (parse-shapes-graph arena shapes-graph)))
@@ -164,12 +180,12 @@
                 ((none) (ok shapes)))))))))
 
   (fn infer ((arena Arena) (data-graph SnarlDataGraph) (shapes-graph IndexedGraph) (config ValidatorConfig))
-    (@intent "Run the shapes graph's SHACL rules (SHACL-AF sh:TripleRule) over a Snarl data graph, without validating. The inferred triples are added to data-graph. Its maps are shared with the caller's copy but its triple count is held by value, so the result carries the updated graph, along with the list of new triples.")
+    (@intent "Run the shapes graph's SHACL rules (SHACL-AF sh:TripleRule) over a Snarl data graph, without validating. The inferred triples are added to data-graph. Its maps are shared with the caller's copy but its triple count is held by value, so the result carries the updated graph, along with the new triples (each with its rule and focus node) and, when the config defers SPARQL rules, the sh:SPARQLRule nodes that were skipped. The config's order range limits which rules run.")
     (@spec ((Arena SnarlDataGraph IndexedGraph ValidatorConfig) -> InferResult))
     (@alloc arena)
     :c-name
     "snarl_infer"
-    (match (prepare-shapes arena shapes-graph config)
+    (match (prepare-shapes arena shapes-graph config true)
       ((error msg) (union-new InferResult infer-error msg))
       ((ok shapes) (infer-rules arena data-graph shapes config))))
 

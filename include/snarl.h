@@ -150,6 +150,14 @@ typedef enum {
 
 typedef struct { bool has_value; snarl_types_NodeKind value; } slop_option_snarl_types_NodeKind;
 
+struct snarl_types_RuleOrder {
+    double shape_order;
+    double rule_order;
+};
+typedef struct snarl_types_RuleOrder snarl_types_RuleOrder;
+
+typedef struct { bool has_value; snarl_types_RuleOrder value; } slop_option_snarl_types_RuleOrder;
+
 typedef enum {
     snarl_types_Severity_severity_violation,
     snarl_types_Severity_severity_warning,
@@ -173,6 +181,9 @@ struct snarl_types_ValidatorConfig {
     uint8_t include_infos;
     uint8_t run_rules;
     uint8_t shacl12;
+    uint8_t defer_sparql_rules;
+    slop_option_snarl_types_RuleOrder order_min;
+    slop_option_snarl_types_RuleOrder order_max;
 };
 typedef struct snarl_types_ValidatorConfig snarl_types_ValidatorConfig;
 
@@ -185,6 +196,10 @@ typedef struct { size_t len; size_t cap; slop_rdf_rdf_Term* data; slop_arena* ar
 
 typedef struct { size_t len; size_t cap; slop_rdf_rdf_Triple* data; slop_arena* arena; } slop_list_slop_rdf_rdf_Triple;
 
+typedef struct { size_t len; size_t cap; snarl_rules_DeferredRule* data; slop_arena* arena; } slop_list_snarl_rules_DeferredRule;
+
+typedef struct { size_t len; size_t cap; snarl_rules_InferredTriple* data; slop_arena* arena; } slop_list_snarl_rules_InferredTriple;
+
 typedef struct { size_t len; size_t cap; snarl_target_ClassInstances* data; slop_arena* arena; } slop_list_snarl_target_ClassInstances;
 
 typedef struct { size_t len; size_t cap; snarl_types_NodeShape* data; slop_arena* arena; } slop_list_snarl_types_NodeShape;
@@ -194,6 +209,8 @@ typedef struct { size_t len; size_t cap; snarl_types_PropertyShape* data; slop_a
 typedef struct { size_t len; size_t cap; snarl_types_Rule* data; slop_arena* arena; } slop_list_snarl_types_Rule;
 
 typedef struct { size_t len; size_t cap; snarl_types_ShaclPath* data; slop_arena* arena; } slop_list_snarl_types_ShaclPath;
+
+typedef struct { size_t len; size_t cap; snarl_types_SparqlRuleRef* data; slop_arena* arena; } slop_list_snarl_types_SparqlRuleRef;
 
 typedef struct { size_t len; size_t cap; snarl_types_ValidationResult* data; slop_arena* arena; } slop_list_snarl_types_ValidationResult;
 
@@ -237,13 +254,22 @@ typedef struct slop_rdf_rdf_Triple slop_rdf_rdf_Triple;
 struct snarl_ValidationOutcome {
     snarl_types_ValidatorResult result;
     snarl_data_graph_SnarlDataGraph graph;
-    slop_list_slop_rdf_rdf_Triple inferred;
+    slop_list_snarl_rules_InferredTriple inferred;
+    slop_list_snarl_rules_DeferredRule deferred;
 };
 typedef struct snarl_ValidationOutcome snarl_ValidationOutcome;
 
+struct snarl_rules_DeferredRule {
+    slop_rdf_rdf_Term rule;
+    slop_rdf_rdf_Term shape;
+    snarl_types_RuleOrder order;
+};
+typedef struct snarl_rules_DeferredRule snarl_rules_DeferredRule;
+
 struct snarl_rules_InferOutput {
     snarl_data_graph_SnarlDataGraph graph;
-    slop_list_slop_rdf_rdf_Triple inferred;
+    slop_list_snarl_rules_InferredTriple inferred;
+    slop_list_snarl_rules_DeferredRule deferred;
 };
 typedef struct snarl_rules_InferOutput snarl_rules_InferOutput;
 
@@ -255,6 +281,13 @@ struct snarl_rules_InferResult {
     } data;
 };
 typedef struct snarl_rules_InferResult snarl_rules_InferResult;
+
+struct snarl_rules_InferredTriple {
+    slop_rdf_rdf_Triple triple;
+    slop_rdf_rdf_Term rule;
+    slop_rdf_rdf_Term focus_node;
+};
+typedef struct snarl_rules_InferredTriple snarl_rules_InferredTriple;
 
 struct snarl_target_ClassIndex {
     slop_list_snarl_target_ClassInstances entries;
@@ -281,6 +314,7 @@ struct snarl_types_NodeShape {
     uint8_t deactivated;
     slop_list_snarl_types_Rule rules;
     double order;
+    slop_list_snarl_types_SparqlRuleRef sparql_rules;
 };
 typedef struct snarl_types_NodeShape snarl_types_NodeShape;
 
@@ -326,6 +360,12 @@ struct snarl_types_ShapesGraph {
     slop_map* custom_severities;
 };
 typedef struct snarl_types_ShapesGraph snarl_types_ShapesGraph;
+
+struct snarl_types_SparqlRuleRef {
+    slop_rdf_rdf_Term id;
+    double order;
+};
+typedef struct snarl_types_SparqlRuleRef snarl_types_SparqlRuleRef;
 
 struct snarl_types_ValidationReport {
     uint8_t conforms;
@@ -481,7 +521,7 @@ slop_list_slop_rdf_rdf_Term snarl_resolve_target_subjects_of(slop_arena* arena, 
 slop_list_slop_rdf_rdf_Term snarl_resolve_targets(slop_arena* arena, snarl_data_graph_SnarlDataGraph data_graph, snarl_types_NodeShape shape);
 slop_string snarl_severity_to_string(snarl_types_Severity sev);
 slop_option_string snarl_shapes_graph_recursion_hazard_message(slop_arena* arena, slop_rdf_index_IndexedGraph g);
-slop_option_string snarl_shapes_graph_unsupported_feature_message(slop_arena* arena, slop_rdf_index_IndexedGraph g, uint8_t shacl12);
+slop_option_string snarl_shapes_graph_unsupported_feature_message(slop_arena* arena, slop_rdf_index_IndexedGraph g, uint8_t shacl12, uint8_t rules_run, uint8_t defer_sparql);
 slop_string snarl_term_to_display_string(slop_arena* arena, slop_rdf_rdf_Term t);
 snarl_types_ValidatorResult snarl_validate(slop_arena* arena, slop_rdf_index_IndexedGraph data_graph, slop_rdf_index_IndexedGraph shapes_graph);
 snarl_types_ValidatorResult snarl_validate_data_graph(slop_arena* arena, snarl_data_graph_SnarlDataGraph data_graph, slop_rdf_index_IndexedGraph shapes_graph);

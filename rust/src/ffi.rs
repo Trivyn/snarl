@@ -237,6 +237,21 @@ pub enum Severity {
     Info = 2,
 }
 
+/// A rule order key: the `sh:order` of the rule's shape, then the rule's own.
+#[repr(C)]
+#[derive(Copy, Clone, Debug, PartialEq)]
+pub struct RuleOrderFfi {
+    pub shape_order: f64,
+    pub rule_order: f64,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct SlopOptionRuleOrder {
+    pub has_value: bool,
+    pub value: RuleOrderFfi,
+}
+
 #[repr(C)]
 #[derive(Copy, Clone)]
 pub struct ValidatorConfigFfi {
@@ -248,6 +263,12 @@ pub struct ValidatorConfigFfi {
     pub run_rules: u8,
     /// Experimental: accept SHACL 1.2 Working Draft syntax.
     pub shacl12: u8,
+    /// When rules run, skip `sh:SPARQLRule` nodes and report them.
+    pub defer_sparql_rules: u8,
+    /// Run only rules whose order key is at least this (inclusive).
+    pub order_min: SlopOptionRuleOrder,
+    /// Run only rules whose order key is at most this (inclusive).
+    pub order_max: SlopOptionRuleOrder,
 }
 
 #[repr(C)]
@@ -296,11 +317,48 @@ pub struct ValidatorResultFfi {
 
 // SHACL-AF rules
 
+/// A triple a rule added, with the rule node and focus node that produced it.
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct InferredTripleFfi {
+    pub triple: RdfTriple,
+    pub rule: RdfTerm,
+    pub focus_node: RdfTerm,
+}
+
+/// An `sh:SPARQLRule` the rules stage skipped and left to the caller.
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct DeferredRuleFfi {
+    pub rule: RdfTerm,
+    pub shape: RdfTerm,
+    pub order: RuleOrderFfi,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct SlopListInferredTriple {
+    pub len: usize,
+    pub cap: usize,
+    pub data: *mut InferredTripleFfi,
+    pub arena: *mut SlopArena,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct SlopListDeferredRule {
+    pub len: usize,
+    pub cap: usize,
+    pub data: *mut DeferredRuleFfi,
+    pub arena: *mut SlopArena,
+}
+
 #[repr(C)]
 #[derive(Copy, Clone)]
 pub struct InferOutputFfi {
     pub graph: SnarlDataGraphFfi,
-    pub inferred: SlopListRdfTriple,
+    pub inferred: SlopListInferredTriple,
+    pub deferred: SlopListDeferredRule,
 }
 
 #[repr(C)]
@@ -329,7 +387,8 @@ pub struct InferResultFfi {
 pub struct ValidationOutcomeFfi {
     pub result: ValidatorResultFfi,
     pub graph: SnarlDataGraphFfi,
-    pub inferred: SlopListRdfTriple,
+    pub inferred: SlopListInferredTriple,
+    pub deferred: SlopListDeferredRule,
 }
 
 // ---------------------------------------------------------------------------
@@ -501,6 +560,12 @@ mod tests {
             ("snarl_rules_InferOutput", size_of::<InferOutputFfi>()),
             ("snarl_rules_InferResult", size_of::<InferResultFfi>()),
             ("snarl_ValidationOutcome", size_of::<ValidationOutcomeFfi>()),
+            ("snarl_types_RuleOrder", size_of::<RuleOrderFfi>()),
+            ("slop_option_snarl_types_RuleOrder", size_of::<SlopOptionRuleOrder>()),
+            ("snarl_rules_InferredTriple", size_of::<InferredTripleFfi>()),
+            ("snarl_rules_DeferredRule", size_of::<DeferredRuleFfi>()),
+            ("slop_list_snarl_rules_InferredTriple", size_of::<SlopListInferredTriple>()),
+            ("slop_list_snarl_rules_DeferredRule", size_of::<SlopListDeferredRule>()),
         ];
         for (i, (name, rust)) in rust_sizes.iter().enumerate() {
             let c = unsafe { snarl_ffi_sizeof(i as i32) };

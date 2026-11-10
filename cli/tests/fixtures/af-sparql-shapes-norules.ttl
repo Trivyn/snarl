@@ -1,0 +1,10 @@
+# The rule-free twin of af-sparql-shapes.ttl.
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix ex: <http://example.org/> .
+
+ex:PersonShape
+    a sh:NodeShape ;
+    sh:targetClass ex:Person ;
+    sh:property ex:NameShape .
+
+ex:NameShape sh:path ex:name ; sh:minCount 1 .

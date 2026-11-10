@@ -1,0 +1,19 @@
+# SHACL 1.2 rule constructs snarl does not implement: a global SPARQL rule, a
+# SPARQL rule template and sh:runOnce. In --shacl12 mode they are errors when
+# rules run, and ignored by validation that runs none (0 violations).
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix ex: <http://example.org/> .
+
+ex:n a ex:Node ; ex:name "n" .
+
+ex:NodeShape
+    a sh:NodeShape ;
+    sh:targetClass ex:Node ;
+    sh:property [ sh:path ex:name ; sh:minCount 1 ] .
+
+ex:GlobalRule
+    a sh:SPARQLRule ;
+    sh:runOnce true ;
+    sh:construct "CONSTRUCT { ?s <http://example.org/p> true } WHERE { ?s a <http://example.org/Node> }" .
+
+ex:Template a sh:SPARQLRuleTemplate .

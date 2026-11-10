@@ -15,6 +15,8 @@
 typedef struct snarl_types_ShaclPath snarl_types_ShaclPath;
 typedef struct snarl_types_NodeExpr snarl_types_NodeExpr;
 typedef struct snarl_types_Rule snarl_types_Rule;
+typedef struct snarl_types_RuleOrder snarl_types_RuleOrder;
+typedef struct snarl_types_SparqlRuleRef snarl_types_SparqlRuleRef;
 typedef struct snarl_types_Constraint snarl_types_Constraint;
 typedef struct snarl_types_PropertyShape snarl_types_PropertyShape;
 typedef struct snarl_types_NodeShape snarl_types_NodeShape;
@@ -50,6 +52,34 @@ SLOP_LIST_DEFINE(slop_rdf_rdf_Term, slop_list_slop_rdf_rdf_Term)
 SLOP_OPTION_DEFINE(slop_rdf_rdf_Term, slop_option_slop_rdf_rdf_Term)
 #endif
 
+struct snarl_types_RuleOrder {
+    double shape_order;
+    double rule_order;
+};
+typedef struct snarl_types_RuleOrder snarl_types_RuleOrder;
+
+#ifndef SLOP_OPTION_SNARL_TYPES_RULEORDER_DEFINED
+#define SLOP_OPTION_SNARL_TYPES_RULEORDER_DEFINED
+SLOP_OPTION_DEFINE(snarl_types_RuleOrder, slop_option_snarl_types_RuleOrder)
+#endif
+
+struct snarl_types_SparqlRuleRef {
+    slop_rdf_rdf_Term id;
+    double order;
+};
+typedef struct snarl_types_SparqlRuleRef snarl_types_SparqlRuleRef;
+
+#ifndef SLOP_OPTION_SNARL_TYPES_SPARQLRULEREF_DEFINED
+#define SLOP_OPTION_SNARL_TYPES_SPARQLRULEREF_DEFINED
+SLOP_OPTION_DEFINE(snarl_types_SparqlRuleRef, slop_option_snarl_types_SparqlRuleRef)
+#endif
+
+#ifndef SLOP_LIST_SNARL_TYPES_SPARQLRULEREF_DEFINED
+#define SLOP_LIST_SNARL_TYPES_SPARQLRULEREF_DEFINED
+#define SLOP_LIST_SNARL_TYPES_SPARQLRULEREF_IMPL_DEFINED
+SLOP_LIST_DEFINE(snarl_types_SparqlRuleRef, slop_list_snarl_types_SparqlRuleRef)
+#endif
+
 struct snarl_types_ValidatorConfig {
     uint8_t verbose;
     int64_t max_errors;
@@ -57,6 +87,9 @@ struct snarl_types_ValidatorConfig {
     uint8_t include_infos;
     uint8_t run_rules;
     uint8_t shacl12;
+    uint8_t defer_sparql_rules;
+    slop_option_snarl_types_RuleOrder order_min;
+    slop_option_snarl_types_RuleOrder order_max;
 };
 typedef struct snarl_types_ValidatorConfig snarl_types_ValidatorConfig;
 
@@ -320,6 +353,7 @@ struct snarl_types_NodeShape {
     uint8_t deactivated;
     slop_list_snarl_types_Rule rules;
     double order;
+    slop_list_snarl_types_SparqlRuleRef sparql_rules;
 };
 typedef struct snarl_types_NodeShape snarl_types_NodeShape;
 
@@ -425,6 +459,16 @@ SLOP_OPTION_DEFINE(slop_rdf_rdf_Term, slop_option_slop_rdf_rdf_Term)
 #ifndef SLOP_OPTION_SNARL_TYPES_RULE_DEFINED
 #define SLOP_OPTION_SNARL_TYPES_RULE_DEFINED
 SLOP_OPTION_DEFINE(snarl_types_Rule, slop_option_snarl_types_Rule)
+#endif
+
+#ifndef SLOP_OPTION_SNARL_TYPES_RULEORDER_DEFINED
+#define SLOP_OPTION_SNARL_TYPES_RULEORDER_DEFINED
+SLOP_OPTION_DEFINE(snarl_types_RuleOrder, slop_option_snarl_types_RuleOrder)
+#endif
+
+#ifndef SLOP_OPTION_SNARL_TYPES_SPARQLRULEREF_DEFINED
+#define SLOP_OPTION_SNARL_TYPES_SPARQLRULEREF_DEFINED
+SLOP_OPTION_DEFINE(snarl_types_SparqlRuleRef, slop_option_snarl_types_SparqlRuleRef)
 #endif
 
 #ifndef SLOP_OPTION_SNARL_TYPES_CONSTRAINT_DEFINED

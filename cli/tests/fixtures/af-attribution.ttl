@@ -1,0 +1,23 @@
+# Per-triple attribution. Four rules on one shape, two focus nodes, all in one
+# order level:
+#   RuleA  this ex:p ex:v           -> (n1 p v) by A/n1, (n2 p v) by A/n2
+#   RuleB  this ex:q ex:w           -> (n1 q w) by B/n1, (n2 q w) by B/n2
+#   RuleC  this ex:p ex:v           -> nothing new: RuleA produced both first
+#   RuleD  ex:shared ex:from ex:k   -> one triple from both focus nodes,
+#                                      attributed to the first, n1
+# 5 inferred triples.
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix ex: <http://example.org/> .
+
+ex:n1 a ex:Node .
+ex:n2 a ex:Node .
+
+ex:NodeShape
+    a sh:NodeShape ;
+    sh:targetClass ex:Node ;
+    sh:rule ex:RuleA , ex:RuleB , ex:RuleC , ex:RuleD .
+
+ex:RuleA a sh:TripleRule ; sh:subject sh:this ; sh:predicate ex:p ; sh:object ex:v .
+ex:RuleB a sh:TripleRule ; sh:subject sh:this ; sh:predicate ex:q ; sh:object ex:w .
+ex:RuleC a sh:TripleRule ; sh:subject sh:this ; sh:predicate ex:p ; sh:object ex:v .
+ex:RuleD a sh:TripleRule ; sh:subject ex:shared ; sh:predicate ex:from ; sh:object ex:k .

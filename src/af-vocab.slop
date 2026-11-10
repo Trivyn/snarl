@@ -66,7 +66,9 @@
     SHNEX_INTERSECTION
     SHNEX_FOCUS_NODE_VAR
     shacl12-unsupported-properties
-    shacl12-unsupported-classes)
+    shacl12-unsupported-classes
+    shacl12-unsupported-rule-properties
+    shacl12-unsupported-rule-classes)
 
   ;; SHACL Core constraint component IRIs (SHACL section 4), the values of
   ;; sh:sourceConstraintComponent. slop-rdf's vocab has the parameter IRIs
@@ -172,8 +174,30 @@
   ;; unknown terms, and AF mode keeps doing so; SHACL 1.2 mode rejects these
   ;; instead, so that 1.2 input never validates or infers silently wrong.
 
+  ;; The SHACL 1.2 terms snarl does not implement come in two groups. Those
+  ;; that bear on validation are rejected by every call in SHACL 1.2 mode.
+  ;; Those that only bear on rule execution are rejected when rules run, and
+  ;; ignored by validation that runs none: a rule that will not run must not
+  ;; change the validation result.
+
   (fn shacl12-unsupported-properties ((arena Arena))
-    (@intent "SHACL 1.2 properties snarl does not implement. Inference Rules: layers, run-once rules, rule sets and rule processors, expected predicates, temporary triples. Core and Node Expressions: sh:nodeByExpression, sh:values, sh:defaultValue.")
+    (@intent "SHACL 1.2 Core and Node Expressions properties snarl does not implement, and which bear on validation: sh:nodeByExpression, sh:values, sh:defaultValue")
+    (@spec ((Arena) -> (List String)))
+    (@alloc arena)
+    (list String
+      "http://www.w3.org/ns/shacl#nodeByExpression"
+      "http://www.w3.org/ns/shacl#values"
+      "http://www.w3.org/ns/shacl#defaultValue"))
+
+  (fn shacl12-unsupported-classes ((arena Arena))
+    (@intent "SHACL 1.2 classes snarl does not implement, and which bear on validation: shape classes (implicit class targets)")
+    (@spec ((Arena) -> (List String)))
+    (@alloc arena)
+    (list String
+      "http://www.w3.org/ns/shacl#ShapeClass"))
+
+  (fn shacl12-unsupported-rule-properties ((arena Arena))
+    (@intent "SHACL 1.2 Inference Rules properties snarl does not implement: layers, run-once rules, rule sets and rule processors, expected predicates, temporary triples. They only bear on rule execution.")
     (@spec ((Arena) -> (List String)))
     (@alloc arena)
     (list String
@@ -183,16 +207,12 @@
       "http://www.w3.org/ns/shacl#includesRuleSet"
       "http://www.w3.org/ns/shacl#ruleProcessor"
       "http://www.w3.org/ns/shacl#expectedPredicate"
-      "http://www.w3.org/ns/shacl#tempTriple"
-      "http://www.w3.org/ns/shacl#nodeByExpression"
-      "http://www.w3.org/ns/shacl#values"
-      "http://www.w3.org/ns/shacl#defaultValue"))
+      "http://www.w3.org/ns/shacl#tempTriple"))
 
-  (fn shacl12-unsupported-classes ((arena Arena))
-    (@intent "SHACL 1.2 classes snarl does not implement: shape classes (implicit class targets), rule sets, SPARQL rule templates")
+  (fn shacl12-unsupported-rule-classes ((arena Arena))
+    (@intent "SHACL 1.2 Inference Rules classes snarl does not implement: rule sets, SPARQL rule templates. They only bear on rule execution.")
     (@spec ((Arena) -> (List String)))
     (@alloc arena)
     (list String
-      "http://www.w3.org/ns/shacl#ShapeClass"
       "http://www.w3.org/ns/shacl#RuleSet"
       "http://www.w3.org/ns/shacl#SPARQLRuleTemplate")))

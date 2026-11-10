@@ -1,0 +1,7 @@
+# A rule of a type snarl does not know. Deferral covers sh:SPARQLRule only,
+# so this fails whenever rules run (AF section 8.2).
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix ex: <http://example.org/> .
+ex:n a ex:Node .
+ex:NodeShape a sh:NodeShape ; sh:targetClass ex:Node ;
+    sh:rule [ a ex:ScriptRule ] .

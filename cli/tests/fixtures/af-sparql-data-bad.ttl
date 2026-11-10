@@ -1,0 +1,4 @@
+# Data for the validate-only SPARQL-rule tests: ex:bob has no ex:name (1 violation).
+@prefix ex: <http://example.org/> .
+ex:alice a ex:Person ; ex:name "Alice" .
+ex:bob a ex:Person .

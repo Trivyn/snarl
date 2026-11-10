@@ -31,7 +31,7 @@ snarl_types_ValidationResult snarl_types_fixture_violation(slop_arena* arena) {
 
 snarl_types_ValidatorConfig snarl_types_default_validator_config(void) {
     snarl_types_ValidatorConfig _retval = {0};
-    _retval = ((snarl_types_ValidatorConfig){.verbose = 0, .max_errors = 0, .include_warnings = 1, .include_infos = 1, .run_rules = 0, .shacl12 = 0});
+    _retval = ((snarl_types_ValidatorConfig){.verbose = 0, .max_errors = 0, .include_warnings = 1, .include_infos = 1, .run_rules = 0, .shacl12 = 0, .defer_sparql_rules = 0, .order_min = (slop_option_snarl_types_RuleOrder){.has_value = false}, .order_max = (slop_option_snarl_types_RuleOrder){.has_value = false}});
     goto _slop_post;
     _slop_post: ;
     SLOP_POST(((_retval.verbose == 0)), "(== (. $result verbose) false)");
@@ -40,6 +40,9 @@ snarl_types_ValidatorConfig snarl_types_default_validator_config(void) {
     SLOP_POST(((_retval.include_infos == 1)), "(== (. $result include-infos) true)");
     SLOP_POST(((_retval.run_rules == 0)), "(== (. $result run-rules) false)");
     SLOP_POST(((_retval.shacl12 == 0)), "(== (. $result shacl12) false)");
+    SLOP_POST(((_retval.defer_sparql_rules == 0)), "(== (. $result defer-sparql-rules) false)");
+    SLOP_POST(((!((_retval.order_min).has_value))), "(is-none (. $result order-min))");
+    SLOP_POST(((!((_retval.order_max).has_value))), "(is-none (. $result order-max))");
     return _retval;
 }
 
